@@ -16,7 +16,7 @@ function createMcpBridge(_deps) {
   let written = false;
 
   function writeConfig() {
-    const coreUrl = process.env.NR_CORE_URL || `http://127.0.0.1:${process.env.NR_CORE_PORT || 8730}`;
+    const coreUrl = process.env.NR_CORE_URL || `http://127.0.0.1:${process.env.NR_CORE_PORT || 8760}`;
     const token = process.env.NR_CORE_TOKEN || '';
     const cfg = {
       mcpServers: {

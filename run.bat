@@ -111,10 +111,9 @@ if errorlevel 1 goto :failed
 call :sync_dependencies
 if errorlevel 1 goto :failed
 
-rem No core port check here. The Tauri shell sweeps 8730-8749 for a FREE port at every spawn
+rem No core port check here. The Tauri shell sweeps 8760-8779 for a FREE port at every spawn
 rem (`pick_core_port`, src-tauri/src/lib.rs) and hands it to the renderer, so an occupied port is
-rem not a failure. Killing whatever holds the first port of the range would take down NetsuRush,
-rem which lives in that same range.
+rem not a failure and nothing has to be killed first.
 
 call :find_listener 1430
 if defined LISTENER_PID (

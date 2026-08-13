@@ -4,7 +4,7 @@
 // tools/call sont reforwardés au core (HTTP /rpc) → exécution dans le process core (pont Python
 // unique + permission). Lancé hors du core ; ne require AUCUN module métier.
 
-const CORE_URL = process.env.NR_CORE_URL || 'http://127.0.0.1:8730';
+const CORE_URL = process.env.NR_CORE_URL || 'http://127.0.0.1:8760';
 const TOKEN = process.env.NR_CORE_TOKEN || '';
 
 async function rpc(channel, args) {

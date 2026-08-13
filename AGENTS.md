@@ -9,7 +9,7 @@ NetsuBoard was copied out of NetsuRush and **not trimmed**. The tree still carri
 - Do **not** extend, document or cite inherited modules as if they were NetsuBoard.
 - Inherited docs live in `docs/legacy-netsurush/` and describe NetsuRush, not this product.
 - 23 of the 82 Node suites and all 13 `test/test_*.py` fail for that reason. The quarantine list is in `.github/workflows/ci.yml`; a failure inside it is not yours.
-- Known name/path collisions still in code (tmp caches, core port range, log directory, `/healthz`) are listed at the end of `docs/invariants.md`. They are defects, not design.
+- Known name/path collisions still in code (tmp caches, log directory) are listed at the end of `docs/invariants.md`. They are defects, not design.
 
 ## Language
 

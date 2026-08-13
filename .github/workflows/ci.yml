@@ -64,7 +64,11 @@ jobs:
     runs-on: ubuntu-latest
     # Informatif tant que la séparation d'avec NetsuRush n'est pas terminée : la suite complète est
     # rouge et ne doit pas bloquer une PR dont elle ne juge pas le code. À supprimer avec la quarantaine.
-    continue-on-error: true
+    #
+    # `continue-on-error` est posé sur l'ÉTAPE, pas sur le job : au niveau du job, l'échec est bien
+    # non bloquant mais le check reste affiché en ROUGE, ce qui rend illisible la seule information
+    # qui compte — un job obligatoire qui casse. Sur l'étape, le job conclut au vert et le détail des
+    # suites rouges reste dans le log.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -73,6 +77,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Suite complète
+        continue-on-error: true
         run: node --test test/*.test.cjs
 
   # Pas de job Python : NetsuBoard n'embarque aucun sidecar ML et le dossier `python/` n'existe plus

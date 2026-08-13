@@ -95,6 +95,17 @@ Full notes in `docs/modules.md`. The rules that break data if violated:
 - **Session registry keys on the resolved lowercase path**: two spellings of the same file on Windows would open two databases over one file.
 - **On shutdown, open projects are closed** (`rpc.closeProjects`). Without that WAL checkpoint a `-wal` file stays next to every project and the next open replays a journal.
 
+## Reference board at scale
+
+A board carries hundreds of media, many of them animated. Four rules keep it usable; `test/board-scale.test.cjs` locks them.
+
+- **The playing frame of a sequence is view state, not document state.** It lives in `seqFrames`, outside `items`. Held inside `items`, every frame of every sequence rebuilt the whole array: culling re-filtered, toolbar and panel woke up, and ten sequences at 12 fps re-rendered the board 120 times a second — a cost in O(items × sequences × rate). `commitSeqFrame` folds the live position back into the document when playback stops, so a scene reopens where it was left.
+- **Mounted media are capped** (`MEDIA_BUDGET`, `useBoardCulling`). The cull zone spans 2.5× the viewport in each direction — 6.25× its area — so on a dense board it holds hundreds of items, while Chromium stops creating media players past ~75 per frame *without an error*. Only media kinds count against the budget; the closest to the viewport centre win, and the item under an active gesture is never dropped.
+- **Freezing the board stops animated images too.** An animated `<img>` (GIF, WebP — Giphy ingestion produces many) cannot be paused, so the explicit freeze paints the current frame into a canvas and shows that instead. Only the explicit freeze does this: swapping on the transient pan/zoom pause would cost more than it saves. Drawing a cross-origin image taints the canvas, which is irrelevant — it is displayed, never read back.
+- **Local board media go through the shell's asset protocol**, like every other preview surface. The live remux (`/stream`, mkv and friends) is the exception: it has no file on disk, so it stays on the HTTP server.
+
+Reverse playback (`playMode: "pingpong"`) steps `currentTime` on a `BACKSTEP_MS` budget rather than every animation frame: each write forces a decode from the previous keyframe, and one board can hold dozens of them.
+
 ## Preferences shared across origins
 
 `core/prefs.js` + `src/hooks/useSharedPrefs.ts`, tested by `test/shared-prefs.test.cjs`. `localStorage` is **per origin** — the Tauri window and the detached board window each had their own copy, so a setting changed in one did not exist in the other.
@@ -125,7 +136,5 @@ Bug report (`components/settings/console/` → `bug:report` → `core/bugreport.
 These are **defects**, documented so they are not mistaken for design. Each needs a code change.
 
 - `core/config.js` still names its temporary directories `netsurush-session` and `netsurush-proxies`, and `core/server.js` calls `sessionCache.resetSync()` at startup. With both applications installed, starting one **purges the other's session cache**.
-- `src-tauri/src/lib.rs` sweeps for a free core port from **8730**, the NetsuRush range, while `core/server.js` sweeps from 8760 when run alone.
 - `src-tauri/src/lib.rs` still resolves its log directory to `%LOCALAPPDATA%\NetsuRush`, whereas `core/config.js` resolves `NR_HOME` to `%LOCALAPPDATA%\NetsuBoard`.
-- `/healthz` still answers `app: "netsurush"`, which is exactly the field a port sweep uses to tell the two services apart.
 - `core/shaderUpscale.js` still imports `importToMediaPool` from `core/resolve.js`.

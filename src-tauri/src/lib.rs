@@ -24,12 +24,16 @@ static CORE_SHUTDOWN: AtomicBool = AtomicBool::new(false);
 const CORE_LOG_MAX: u64 = 2 * 1024 * 1024;
 
 // ── Port du service de fond ─────────────────────────────────────────────────────────────────────
-// 8730 en dur ne tenait pas : une seconde instance de NetsuRush, une session de développement, ou
-// n'importe quel logiciel tiers sur ce port, et le core mourait en EADDRINUSE — l'app restait sans
-// backend, sans recours pour quelqu'un qui n'ouvre pas un terminal. La coquille choisit donc un port
-// LIBRE au lancement et le renderer le lui demande (`nr_core_port`). Le choix est refait à chaque
-// spawn : si le port est pris entre-temps, le redémarrage du watchdog en prend un autre tout seul.
-const CORE_PORT_FIRST: u16 = 8730;
+// Un port en dur ne tenait pas : une seconde instance, une session de développement, ou n'importe
+// quel logiciel tiers sur ce port, et le core mourait en EADDRINUSE — l'app restait sans backend,
+// sans recours pour quelqu'un qui n'ouvre pas un terminal. La coquille choisit donc un port LIBRE au
+// lancement et le renderer le lui demande (`nr_core_port`). Le choix est refait à chaque spawn : si
+// le port est pris entre-temps, le redémarrage du watchdog en prend un autre tout seul.
+//
+// La plage part de 8760, comme `core/server.js` lancé seul, et NON de 8730 : cette dernière est
+// celle de NetsuRush, qui tourne côte à côte. Balayer la même base faisait tomber le core d'une
+// application sur le port de l'autre.
+const CORE_PORT_FIRST: u16 = 8760;
 const CORE_PORT_SPAN: u16 = 20;
 static CORE_PORT: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(CORE_PORT_FIRST);
 

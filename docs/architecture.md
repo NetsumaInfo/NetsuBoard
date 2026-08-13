@@ -25,7 +25,7 @@ src/                  React renderer
 ```
 
 - `core/` is CommonJS (`core/package.json`). The root `package.json` is `type: module` for the Vite renderer.
-- **Ports.** Vite serves development on `localhost:1430` with `strictPort` (NetsuRush holds 1420, and both dev servers must be able to run at once). The core's port is **not fixed**: the Rust shell binds a free one and passes it as `NR_CORE_PORT`, and the renderer asks the shell for it (`nr_core_port`). Run alone (`npm run core`), the service sweeps `8760`–`8779` itself. The retained port is published to `NR_HOME/core-port.json` for out-of-process clients.
+- **Ports.** Vite serves development on `localhost:1430` with `strictPort` (NetsuRush holds 1420, and both dev servers must be able to run at once). The core's port is **not fixed**: the Rust shell sweeps `8760`–`8779` for a free one, passes it as `NR_CORE_PORT`, and the renderer asks the shell for it (`nr_core_port`). Run alone (`npm run core`), the service sweeps the same range itself. That range is **disjoint from NetsuRush's** (`8730`–`8749`), and `/healthz` answers `app: "netsuboard"` so a sweep can tell the two services apart. The retained port is published to `NR_HOME/core-port.json` for out-of-process clients.
 - **`NR_HOME`** = `%LOCALAPPDATA%\NetsuBoard` (`~/.netsuboard` elsewhere), overridable with the `NR_HOME` environment variable. It holds `nr.config.json`, the provisioned runtime, wallpapers and logs. It is deliberately **distinct** from NetsuRush's home: the two applications are installed side by side.
 - Opening the Vite URL in a plain browser renders the UI against `bridge.ts`'s no-op mock, so the layout is inspectable without the core.
 

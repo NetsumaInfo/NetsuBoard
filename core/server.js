@@ -68,7 +68,7 @@ const server = http.createServer((req, res) => {
     // `app` identifie le service : un client qui balaie la plage de ports doit pouvoir écarter un
     // logiciel tiers qui répondrait 200 sur le même port.
     res.writeHead(200, { "Content-Type": "application/json" })
-      .end(JSON.stringify({ ok: true, app: "netsurush", port: activePort, channels: rpc.channels.length }));
+      .end(JSON.stringify({ ok: true, app: "netsuboard", port: activePort, channels: rpc.channels.length }));
     return;
   }
   // Renderer buildé sous /app (vue remote du panneau CEP en production, sans Vite).
