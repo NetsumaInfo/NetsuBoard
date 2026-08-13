@@ -6,7 +6,6 @@ rem Double-click for the interactive menu, or use: run.bat --launch|--switch|--p
 
 set "ROOT=%~dp0"
 set "LOCK_STAMP=%ROOT%node_modules\.netsuboard-package-lock.hash"
-set "LAUNCHER_VERSION=3.0"
 
 cd /d "%ROOT%" || goto :fatal_root
 title NetsuBoard - Development launcher
@@ -28,7 +27,7 @@ if errorlevel 1 goto :failed
 :menu
 cls
 echo ============================================================
-echo   NetsuBoard - Simple Dev Launcher v%LAUNCHER_VERSION%
+echo   NetsuBoard - Dev launcher
 echo ============================================================
 call :print_git_summary
 echo.
@@ -112,26 +111,10 @@ if errorlevel 1 goto :failed
 call :sync_dependencies
 if errorlevel 1 goto :failed
 
-call :find_listener 8730
-if defined LISTENER_PID (
-  echo.
-  echo [WARNING] The core port 8730 is already used by PID !LISTENER_PID!.
-  call :show_process !LISTENER_PID!
-  set "KILL_CORE="
-  set /p "KILL_CORE=Stop this process before starting Tauri? (y/N): "
-  if /i not "!KILL_CORE!"=="y" (
-    echo [ERROR] Start cancelled. Tauri cannot start its core.
-    goto :failed
-  )
-  taskkill /PID !LISTENER_PID! /T /F >nul 2>&1
-  if errorlevel 1 (
-    echo [ERROR] Could not stop PID !LISTENER_PID!.
-    goto :failed
-  )
-  echo [OK] Old core stopped.
-)
-
-rem NetsuBoard has no backend and no account: nothing to start besides Vite and Tauri.
+rem No core port check here. The Tauri shell sweeps 8730-8749 for a FREE port at every spawn
+rem (`pick_core_port`, src-tauri/src/lib.rs) and hands it to the renderer, so an occupied port is
+rem not a failure. Killing whatever holds the first port of the range would take down NetsuRush,
+rem which lives in that same range.
 
 call :find_listener 1430
 if defined LISTENER_PID (
