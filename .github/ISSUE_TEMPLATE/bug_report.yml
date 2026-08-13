@@ -1,0 +1,76 @@
+name: Signaler un bug
+description: Quelque chose ne marche pas comme prévu
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Le plus simple reste **Paramètres ▸ Système ▸ Console ▸ Signaler un bug** dans
+        l'application : le journal et les caractéristiques de la machine partent tout seuls.
+        Ce formulaire est là si vous préférez GitHub, ou si l'application ne démarre pas.
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Partie concernée
+      options:
+        - Board (canvas, éléments, dessin)
+        - Médias (lecture, proxy, vignettes)
+        - Liens en ligne (YouTube, pages web)
+        - Upscale Turbo (shaders GPU)
+        - Projets et scènes (.netsu)
+        - Fenêtre détachée / épinglage
+        - Apparence (thèmes, fond d'écran)
+        - Paramètres
+        - Installation / mise à jour
+        - Je ne sais pas
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: Il se passe quoi ?
+      description: Ce que vous attendiez, et ce qui arrive à la place.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Comment le reproduire
+      placeholder: |
+        1. Ouvrir ...
+        2. Cliquer sur ...
+        3. Le bug apparaît
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Journal
+      description: >
+        Paramètres ▸ Système ▸ Console ▸ Exporter. Relisez-le avant de le coller :
+        il contient des chemins de fichiers.
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: Version de NetsuBoard
+      description: Paramètres ▸ À propos
+    validations:
+      required: true
+
+  - type: input
+    id: machine
+    attributes:
+      label: Windows, GPU et pilote
+      placeholder: "Windows 11 24H2, RTX 4070, pilote 561.09"
+
+  - type: input
+    id: media
+    attributes:
+      label: Média concerné, si le bug en dépend
+      placeholder: "MKV HEVC 4K / lien YouTube / image PNG collée"

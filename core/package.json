@@ -1,0 +1,8 @@
+{
+  "name": "netsuboard-core",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "author": "Haim Faraj",
+  "type": "commonjs",
+  "description": "NetsuBoard core - service Node headless (media, board, projets .netsu, ffmpeg). CommonJS."
+}

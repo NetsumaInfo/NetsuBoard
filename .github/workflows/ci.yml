@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Une seule exécution par branche : un push qui suit de près annule le précédent.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  renderer:
+    name: Renderer (tsc + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check et build du renderer
+        run: npm run build
+      - name: Textes et traductions
+        run: npm run check:i18n
+
+  core:
+    name: Core (type-check + tests Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check du service core
+        run: npm run check:core
+      # Suites en QUARANTAINE : elles échouent depuis la séparation d'avec NetsuRush (modules Resolve,
+      # Adobe, transfert et sidecars Python que l'application n'atteint plus, ou dont le `python/`
+      # a disparu). Elles sont listées UNE PAR UNE et non exclues par motif : chaque ligne retirée est
+      # une suite réparée, et rien de nouveau ne peut se glisser dans la liste sans être vu en revue.
+      # Elles restent exécutées par le job informatif ci-dessous.
+      - name: Tests Node (hors quarantaine)
+        run: |
+          node --test $(ls test/*.test.cjs | grep -vxF -e test/adobe-jsx-es3.test.cjs \
+            -e test/adobe-timeline-live.test.cjs -e test/ae-options-logic.test.cjs \
+            -e test/cache-lifecycle.test.cjs -e test/dictation-microphone.test.cjs \
+            -e test/export-black-pause.test.cjs -e test/model-catalog.test.cjs \
+            -e test/netsulab-interpolate.test.cjs -e test/netsulab-upscale.test.cjs \
+            -e test/packaging.test.cjs -e test/preview-generation.test.cjs \
+            -e test/rush-grid-resize-perf.test.cjs -e test/setup-selection.test.cjs \
+            -e test/shared-prefs.test.cjs -e test/timeline-insertion.test.cjs \
+            -e test/timeline-list-safety.test.cjs -e test/timeline-live-cache.test.cjs \
+            -e test/timeline-live-player.test.cjs -e test/transfer-encoding.test.cjs \
+            -e test/transfer-place-jsx.test.cjs -e test/transfer-ppro-units.test.cjs \
+            -e test/transfer-xml-to-script.test.cjs -e test/wallpaper.test.cjs)
+
+  quarantine:
+    name: Tests Node en quarantaine (informatif)
+    runs-on: ubuntu-latest
+    # Informatif tant que la séparation d'avec NetsuRush n'est pas terminée : la suite complète est
+    # rouge et ne doit pas bloquer une PR dont elle ne juge pas le code. À supprimer avec la quarantaine.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Suite complète
+        run: node --test test/*.test.cjs
+
+  # Pas de job Python : NetsuBoard n'embarque aucun sidecar ML et le dossier `python/` n'existe plus
+  # dans ce dépôt. Les `test/test_*.py` hérités de NetsuRush importent ce dossier et ne peuvent donc
+  # plus s'exécuter ; ils partiront avec le code qu'ils couvrent.
+
+  rust:
+    name: Coquille Rust (check)
+    runs-on: windows-latest
+    # `cargo check` sur les dépendances Tauri est long et dépend d'un cache externe : il ne doit
+    # pas bloquer une PR dont il ne juge pas le code. Volontairement informatif.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # `tauri build` embarque resources/**, dont le runtime mpv (non versionné, cf.
+      # scripts/fetch-mpv.ps1). `cargo check` ne lit pas les ressources : la coquille se
+      # vérifie sans lui. Aucun build complet n'est lancé ici.
+      - name: cargo check
+        working-directory: src-tauri
+        run: cargo check --locked

@@ -1,0 +1,40 @@
+name: Proposer une fonctionnalité
+description: Une idée pour améliorer le workflow
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Le problème
+      description: >
+        Qu'est-ce qui vous ralentit aujourd'hui ? Décrivez la situation réelle,
+        pas la solution — c'est ce qui permet d'en trouver une meilleure.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Ce que vous imaginez
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Partie concernée
+      options:
+        - Board (canvas, éléments, dessin)
+        - Médias (lecture, proxy, vignettes)
+        - Liens en ligne (YouTube, pages web)
+        - Upscale Turbo (shaders GPU)
+        - Projets et scènes (.netsu)
+        - Fenêtre détachée / épinglage
+        - Apparence (thèmes, fond d'écran)
+        - Transversal
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Comment vous faites en attendant
+      description: Un autre outil, une manipulation manuelle, un script.

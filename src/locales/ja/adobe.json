@@ -1,0 +1,80 @@
+{
+  "title": "Adobe",
+  "subtitle": "Premiere Pro / After Effects（2020 以降）との連携。NetsuBoard パネルが開いているプロジェクトを読み取り、ここへ送ります。",
+  "installPanel": "パネルをインストール",
+  "reinstallPanel": "パネルを再インストール",
+  "panel": {
+    "cepTitle": "CEP パネル",
+    "installed": "インストール済み",
+    "notInstalled": "未インストール",
+    "copiedIn": "コピー先",
+    "inApp": "Premiere Pro / After Effects で：",
+    "menuPath": "ウィンドウ ▸ エクステンション ▸ NetsuBoard",
+    "restartHint": "（起動中だった場合はアプリを再起動）。",
+    "installHint": "「パネルをインストール」をクリックし、Premiere Pro / After Effects ▸ ウィンドウ ▸ エクステンション ▸ NetsuBoard を開きます。",
+    "diagnose": "診断",
+    "autoUpdate": "自動管理",
+    "autoUpdateHint": "Adobe アプリを検出すると自動でインストールし、その後は NetsuBoard に合わせて更新します",
+    "autoUpdateOn": "オン",
+    "autoUpdateOff": "オフ",
+    "updatePending": "このバージョンの NetsuBoard には新しいパネルが含まれています",
+    "updateNow": "今すぐ更新",
+    "restartApps": "パネルを更新しました — 再読み込みするには {{apps}} を再起動してください。"
+  },
+  "diag": {
+    "verdictOk": "判定：インストール済み ✓（フォルダー、manifest、PlayerDebugMode）。Adobe でパネルを開く：ウィンドウ ▸ エクステンション ▸ NetsuBoard。",
+    "verdictIncomplete": "判定：インストールが不完全です。以下を確認してください。",
+    "folder": "フォルダー：{{dir}}",
+    "manifestPresent": "manifest：{{yesNo}}",
+    "yes": "はい",
+    "no": "いいえ",
+    "files": "ファイル：{{files}}",
+    "filesEmpty": "（なし）",
+    "manifestHead": "manifest（冒頭）：",
+    "cepLogFound": "CEP ログ（NetsuBoard のエラーあり）：",
+    "cepLogNone": "CEP ログ：NetsuBoard のエラーなし（正常です。読み込みに問題がある場合のみ記録されます）。"
+  },
+  "status": {
+    "installed": "インストール済み",
+    "notFound": "見つかりません",
+    "running": "起動中",
+    "closed": "終了",
+    "panelConnected": "パネル接続中",
+    "panelOffline": "パネル オフライン",
+    "launch": "起動",
+    "scanProject": "プロジェクトをスキャン",
+    "openPanelHint": "パネルを開く：ウィンドウ ▸ エクステンション ▸ NetsuBoard。",
+    "launchThenOpenHint": "アプリを起動し、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開きます。"
+  },
+  "snapshot": {
+    "timecodes": "タイムライン {{tlStart}} → {{tlEnd}} · ソース {{srcIn}} → {{srcOut}}",
+    "copySourcePath": "ソースのパスをコピー",
+    "copyTimecodes": "タイムコードをコピー",
+    "copyName": "名前をコピー",
+    "copyPath": "パスをコピー",
+    "sendToNetsulab": "NetsuLab へ送信",
+    "shotsCount": "{{n}} ショット",
+    "thTrack": "トラック",
+    "thShot": "ショット",
+    "thTimeline": "タイムライン",
+    "thSource": "ソース",
+    "noProject": "プロジェクトを受信していません — アプリで NetsuBoard パネルを開き、「NetsuBoard へ送信」を実行してください。",
+    "receivedAt": "{{time}} 受信",
+    "rushes": "素材",
+    "noFileMedia": "プロジェクトにファイル素材がありません。"
+  },
+  "notice": {
+    "launchFailed": "起動できません",
+    "alreadyOpen": "アプリは起動済みです",
+    "panelUnreachable": "パネルに接続できません",
+    "installFailed": "インストールできません",
+    "installedRestart": "パネルをインストールしました。{{apps}} を再起動し、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開きます。",
+    "installedOpen": "パネルをインストールしました。Premiere Pro / After Effects を開き、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開きます。",
+    "autoUpdateFailed": "アップデート設定を変更できませんでした"
+  },
+  "remote": {
+    "settings": "設定",
+    "reload": "NetsuBoard を再読み込み",
+    "close": "NetsuBoard を閉じる"
+  }
+}

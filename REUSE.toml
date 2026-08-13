@@ -1,0 +1,46 @@
+version = 1
+
+[[annotations]]
+path = [
+  "package.json",
+  "package-lock.json",
+  "index.html",
+  "vite.config.ts",
+  "tsconfig*.json",
+  "src/**/*.ts",
+  "src/**/*.tsx",
+  "src/**/*.js",
+  "src/**/*.jsx",
+  "src/**/*.css",
+  "src/**/*.json",
+  "core/**/*.js",
+  "core/**/*.cjs",
+  "core/**/*.mjs",
+  "core/**/*.py",
+  "core/**/*.json",
+  "scripts/**/*.ps1",
+  "scripts/**/*.mjs",
+  "scripts/**/*.js",
+  "test/**/*.cjs",
+  "test/**/*.js",
+  "test/**/*.mjs",
+  "test/**/*.ts",
+  "test/**/*.py",
+  "src-tauri/build.rs",
+  "src-tauri/windows/**/*.nsh",
+  "src-tauri/Cargo.toml",
+  "src-tauri/tauri.conf.json",
+  "src-tauri/src/**/*.rs",
+  "README.md",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "CONTRIBUTING.md",
+  "CODE_OF_CONDUCT.md",
+  "PRODUCT.md",
+  "SECURITY.md",
+  "docs/**/*.md",
+  "run.bat"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Haim Faraj <https://github.com/NetsumaInfo/NetsuBoard>"
+SPDX-License-Identifier = "AGPL-3.0-only"

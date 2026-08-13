@@ -1,0 +1,113 @@
+{
+  "action": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "continue": "Continue",
+    "add": "Add",
+    "remove": "Remove",
+    "rename": "Rename",
+    "edit": "Edit",
+    "copy": "Copy",
+    "reset": "Reset",
+    "apply": "Apply",
+    "open": "Open",
+    "retry": "Retry",
+    "error": "Error",
+    "import": "Import",
+    "decrease": "Decrease",
+    "increase": "Increase",
+    "loading": "Loading…"
+  },
+  "status": {
+    "loading": "Loading…",
+    "error": "Error",
+    "ok": "OK",
+    "empty": "Nothing to show"
+  },
+  "color": {
+    "hexValue": "Hex value",
+    "transparent": "Transparent",
+    "choose": "Choose a color",
+    "swatch": "Color {{color}}"
+  },
+  "player": {
+    "scenePreview": "Shot preview",
+    "progress": "Progress bar",
+    "play": "Play",
+    "pause": "Pause",
+    "prevFrame": "Previous frame",
+    "nextFrame": "Next frame",
+    "prevFrameShortcut": "Previous frame (←)",
+    "nextFrameShortcut": "Next frame (→)",
+    "soundOn": "Turn sound on",
+    "soundOff": "Mute sound",
+    "volume": "Volume",
+    "muted": "Muted",
+    "fullscreen": "Full screen",
+    "seek": "Seek in the video"
+  },
+  "fileType": {
+    "video": "Video",
+    "image": "Image",
+    "media": "Media"
+  },
+  "window": {
+    "reference": "NetsuBoard — Reference",
+    "notebook": "NetsuBoard — Notebook"
+  },
+  "mock": {
+    "resolveUnavailable": "Resolve is unavailable in the browser.",
+    "appUnavailable": "This feature is unavailable in the browser.",
+    "outsideApp": "This feature is only available in the app.",
+    "pageNotFound": "Page not found",
+    "collectionNotFound": "Collection not found",
+    "archiveUnavailable": "Archiving is unavailable outside the app.",
+    "folderImportUnavailable": "Folder import is unavailable outside the app.",
+    "emptyFolderName": "Folder name is empty",
+    "invalidFolderName": "Folder names cannot contain '/' or '\\'",
+    "folder": "Folder"
+  },
+  "spell": {
+    "title": "Spelling",
+    "unknownWord": "Unknown word",
+    "searching": "Looking for suggestions…",
+    "noSuggestion": "No suggestion",
+    "addToDictionary": "Add to dictionary",
+    "ignoreOnce": "Ignore in this session",
+    "replaceAll": "Replace all {{count}} occurrences"
+  },
+  "beta": {
+    "title": "Module in beta",
+    "body": "Features are still missing, others will change. I'm looking for testers: tell me what doesn't work and what you need.",
+    "modules": {
+      "script": {
+        "title": "Still a prototype",
+        "body": "NetsuDraft is very incomplete and barely tested: a lot is missing or doesn't work yet. Tell me what you would need first."
+      },
+      "chat": {
+        "title": "Not working yet",
+        "body": "NetsuPilot is still in development: it does nothing useful yet. Follow its progress on Discord."
+      },
+      "voice": {
+        "title": "Not tested enough yet",
+        "body": "NetsuTalk works, but it has had very little real-world use. Let me know if anything behaves oddly."
+      },
+      "transfer": {
+        "title": "Not tested on every version",
+        "body": "NetsuBridge has only been tested on a few versions of Resolve, Premiere Pro and After Effects: depending on yours, the copy may work, work only in part, or not work at all. Tell me your version and what doesn't work."
+      }
+    },
+    "discord": "Join the Discord",
+    "feedback": "Report a problem",
+    "dismiss": "Hide"
+  },
+  "report": {
+    "action": "Report this error",
+    "sent": "Sent, thanks!",
+    "saved": "Sending failed. Message saved."
+  }
+}

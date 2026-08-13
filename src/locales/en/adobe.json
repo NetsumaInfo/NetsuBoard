@@ -1,0 +1,80 @@
+{
+  "title": "Adobe",
+  "subtitle": "Bridge to Premiere Pro and After Effects (2020+): the NetsuBoard panel reads the open project and sends it here.",
+  "installPanel": "Install panel",
+  "reinstallPanel": "Reinstall panel",
+  "panel": {
+    "cepTitle": "CEP panel",
+    "installed": "Installed",
+    "notInstalled": "Not installed",
+    "copiedIn": "Copied to",
+    "inApp": "In Premiere Pro/After Effects: ",
+    "menuPath": "Window ▸ Extensions ▸ NetsuBoard",
+    "restartHint": " (restart the app if it was already open).",
+    "installHint": "Click \"Install panel\", then open Premiere Pro/After Effects ▸ Window ▸ Extensions ▸ NetsuBoard.",
+    "diagnose": "Diagnostics",
+    "autoUpdate": "Automatic management",
+    "autoUpdateHint": "the panel is installed as soon as an Adobe app is detected, then kept in sync with NetsuBoard",
+    "autoUpdateOn": "On",
+    "autoUpdateOff": "Off",
+    "updatePending": "A newer panel ships with this version of NetsuBoard",
+    "updateNow": "Update now",
+    "restartApps": "Panel updated — restart {{apps}} to reload it."
+  },
+  "diag": {
+    "verdictOk": "VERDICT: Install OK ✓ (folder + manifest + PlayerDebugMode). Open the panel in Adobe: Window ▸ Extensions ▸ NetsuBoard.",
+    "verdictIncomplete": "VERDICT: Install incomplete — see below.",
+    "folder": "Folder: {{dir}}",
+    "manifestPresent": "Manifest present: {{yesNo}}",
+    "yes": "YES",
+    "no": "NO",
+    "files": "Files: {{files}}",
+    "filesEmpty": "(empty)",
+    "manifestHead": "Manifest (start):",
+    "cepLogFound": "CEP log (NetsuBoard errors found):",
+    "cepLogNone": "CEP log: no NetsuBoard ERROR (normal — the log only mentions the extension when it fails to load)."
+  },
+  "status": {
+    "installed": "Installed",
+    "notFound": "Not found",
+    "running": "Running",
+    "closed": "Closed",
+    "panelConnected": "Panel connected",
+    "panelOffline": "Panel offline",
+    "launch": "Launch",
+    "scanProject": "Scan project",
+    "openPanelHint": "Open the panel: Window ▸ Extensions ▸ NetsuBoard.",
+    "launchThenOpenHint": "Launch the app, then open Window ▸ Extensions ▸ NetsuBoard."
+  },
+  "snapshot": {
+    "timecodes": "Timeline {{tlStart}} → {{tlEnd}} · Source {{srcIn}} → {{srcOut}}",
+    "copySourcePath": "Copy source path",
+    "copyTimecodes": "Copy timecodes",
+    "copyName": "Copy name",
+    "copyPath": "Copy path",
+    "sendToNetsulab": "Send to NetsuLab",
+    "shotsCount": "{{n}} shots",
+    "thTrack": "Track",
+    "thShot": "Shot",
+    "thTimeline": "Timeline",
+    "thSource": "Source",
+    "noProject": "No project received — open the NetsuBoard panel in the app, then \"Send to NetsuBoard\".",
+    "receivedAt": "received at {{time}}",
+    "rushes": "Footage",
+    "noFileMedia": "No file-based media in the project."
+  },
+  "notice": {
+    "launchFailed": "Couldn't launch",
+    "alreadyOpen": "App already open",
+    "panelUnreachable": "Can't reach the panel",
+    "installFailed": "Install failed",
+    "installedRestart": "Panel installed. RESTART {{apps}}, then Window ▸ Extensions ▸ NetsuBoard.",
+    "installedOpen": "Panel installed. Open Premiere Pro/After Effects, then Window ▸ Extensions ▸ NetsuBoard.",
+    "autoUpdateFailed": "Could not change the update setting"
+  },
+  "remote": {
+    "settings": "Settings",
+    "reload": "Reload NetsuBoard",
+    "close": "Close NetsuBoard"
+  }
+}
