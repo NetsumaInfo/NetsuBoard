@@ -593,6 +593,7 @@
   "tidy": {
     "title": "Ordnen",
     "layout": "Anordnung",
+    "layoutBlock": "Block",
     "layoutPack": "Optimal",
     "layoutGrid": "Raster",
     "layoutRow": "Zeile",
@@ -644,7 +645,6 @@
     "folderEmpty": "Keine Medien in diesem Ordner",
     "folderDone": "{{count}} Medien importiert",
     "folderDoneTruncated": "{{count}} Medien importiert (Ordner gekürzt)",
-    "folderNoPath": "Ordnerpfad nicht gefunden",
     "progress": "Import {{done}}/{{total}}…",
     "reading": "{{count}} Dateien werden gelesen…",
     "done": "{{count}} Medien importiert",

@@ -593,6 +593,7 @@
   "tidy": {
     "title": "Ordenar",
     "layout": "Disposición",
+    "layoutBlock": "Bloque",
     "layoutPack": "Óptima",
     "layoutGrid": "Cuadrícula",
     "layoutRow": "Fila",
@@ -644,7 +645,6 @@
     "folderEmpty": "No hay medios en esta carpeta",
     "folderDone": "{{count}} medios importados",
     "folderDoneTruncated": "{{count}} medios importados (carpeta truncada)",
-    "folderNoPath": "No se encontró la ruta de la carpeta",
     "progress": "Importando {{done}}/{{total}}…",
     "reading": "Leyendo {{count}} archivos…",
     "done": "{{count}} medios importados",
