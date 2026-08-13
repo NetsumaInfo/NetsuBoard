@@ -9,9 +9,11 @@ import {
   FilePlus2, Save, SaveAll, FileSymlink, FolderOpen, ClipboardPaste, BoxSelect, Play, Pause, Grid2x2, Square,
   Copy, FlipHorizontal, FlipVertical, Crop, BringToFront, SendToBack, Trash2,
   Minimize2, Home, Pin, Layers, Download, AppWindow, Undo2, Redo2, Settings2,
-  FolderSearch,
+  FolderSearch, ClipboardCopy, Scissors, RotateCcw, Wand2, Ruler, Palette, ImageDown,
 } from "lucide-react";
 import { convertToEmbed, downloadMediaFromEmbed, relocateMissingMedia } from "./boardMediaActions";
+import { shifted } from "./drawGeometry";
+import { uid } from "./referenceShared";
 import { iconForLink } from "./brandIcons";
 import { nr } from "@/lib/bridge";
 import {
@@ -20,6 +22,8 @@ import {
 } from "@/components/ui/context-menu";
 import { useBoard } from "./useReferenceBoard";
 import { AddLinkDialog } from "./AddLinkDialog";
+import { ExportImageDialog } from "./ExportImageDialog";
+import { extractPaletteToBoard } from "./boardPaletteActions";
 import type { BoardHandle } from "./ReferenceBoard";
 
 export function BoardContextMenu({
@@ -56,9 +60,17 @@ export function BoardContextMenu({
   const groupable = useBoard(
     (s) => s.selectedIds.filter((id) => s.items.find((i) => i.id === id)?.kind === "image").length >= 2,
   );
+  // ≥2 items sélectionnés → actions de groupe (ranger, uniformiser).
+  const multi = useBoard((s) => s.selectedIds.length >= 2);
+  // Au moins un média dont on peut lire les pixels → extraction de palette (sélection, ou board entier).
+  const hasSampleable = useBoard((s) => {
+    const pool = s.selectedIds.length ? s.items.filter((i) => s.selectedIds.includes(i.id)) : s.items;
+    return pool.some((i) => (i.kind === "image" || i.kind === "video" || i.kind === "sequence") && !i.missing);
+  });
   const frozen = useBoard((s) => s.frozen);
   const drawMode = useBoard((s) => s.drawMode);
   const drawBack = useBoard((s) => s.drawBack);
+  const drawSel = useBoard((s) => s.drawSel);
   const hasDraw = useBoard((s) => s.items.some((i) => i.kind === "draw" && (i.shapes?.length ?? 0) > 0));
   const background = useBoard((s) => s.background);
   const canUndo = useBoard((s) => s.past.length > 0);
@@ -66,15 +78,41 @@ export function BoardContextMenu({
   // Board reçu d'ailleurs : ses rushs référencés sont ailleurs sur le disque de celui qui l'ouvre.
   const missingCount = useBoard((s) => s.items.filter((i) => !!i.missing && i.kind !== "sequence").length);
   const [ytOpen, setYtOpen] = useState(false);
+  const [imgExport, setImgExport] = useState(false);
 
   const store = useBoard.getState;
 
-  // Avant ouverture du menu : sélectionne l'item sous le curseur (ou désélectionne sur le vide).
+  // Before the menu opens: target what is under the cursor. A right-click inside an existing
+  // multi-selection keeps it (its group actions are the whole point of aiming there); otherwise the
+  // item — or the drawn shape — under the cursor becomes the selection, and empty space clears it.
   const onContextMenu = (e: React.MouseEvent) => {
-    const el = (e.target as HTMLElement).closest("[data-board-item]");
-    const id = el?.getAttribute("data-board-item") ?? null;
-    if (id) store().select(id);
+    const target = e.target as HTMLElement;
+    const id = target.closest("[data-board-item]")?.getAttribute("data-board-item") ?? null;
+    if (id) {
+      if (!store().selectedIds.includes(id)) store().select(id);
+      return;
+    }
+    const shapeId = target.closest("[data-draw-shape]")?.getAttribute("data-draw-shape") ?? null;
+    if (shapeId) store().selectDrawShape(shapeId);
     else store().select(null);
+  };
+
+  // Selected drawn shape: same two actions as its keyboard shortcuts (Ctrl+D / Suppr).
+  const duplicateShape = () => {
+    const st = store();
+    const shapes = st.items.find((i) => i.kind === "draw")?.shapes ?? [];
+    const src = shapes.find((s) => s.id === st.drawSel);
+    if (!src) return;
+    const off = 16 / st.view.scale;
+    const copy = { ...shifted(src, off, off), id: uid() };
+    st.drawSetShapes([...shapes, copy]);
+    st.selectDrawShape(copy.id);
+  };
+  const deleteShape = () => {
+    const st = store();
+    const shapes = st.items.find((i) => i.kind === "draw")?.shapes ?? [];
+    st.drawSetShapes(shapes.filter((s) => s.id !== st.drawSel));
+    st.selectDrawShape(null);
   };
 
   return (
@@ -89,6 +127,26 @@ export function BoardContextMenu({
               <ContextMenuItem onClick={() => store().duplicateItem(item.id)}>
                 <Copy /> {t("actions.duplicate")}
               </ContextMenuItem>
+              <ContextMenuItem onClick={() => void board.current?.copySelection(false)}>
+                <ClipboardCopy /> {t("actions.copy")}
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => void board.current?.copySelection(true)}>
+                <Scissors /> {t("actions.cut")}
+              </ContextMenuItem>
+              <ContextMenuCheckboxItem checked={!!item.grayscale} onClick={() => store().toggleGrayscale()}>
+                {t("actions.grayscale")}
+              </ContextMenuCheckboxItem>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger><RotateCcw /> {t("actions.reset")}</ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                  <ContextMenuItem onClick={() => store().reset("scale")}>{t("actions.resetScale")}</ContextMenuItem>
+                  <ContextMenuItem onClick={() => store().reset("rotation")}>{t("actions.resetRotation")}</ContextMenuItem>
+                  <ContextMenuItem onClick={() => store().reset("flip")}>{t("actions.resetFlip")}</ContextMenuItem>
+                  <ContextMenuItem onClick={() => store().reset("crop")}>{t("actions.resetCrop")}</ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem onClick={() => store().reset("all")}>{t("actions.resetAll")}</ContextMenuItem>
+                </ContextMenuSubContent>
+              </ContextMenuSub>
               <ContextMenuItem onClick={() => store().patchItem(item.id, { flipH: !item.flipH })}>
                 <FlipHorizontal /> {t("actions.flipH")}
               </ContextMenuItem>
@@ -136,6 +194,44 @@ export function BoardContextMenu({
             </>
           )}
 
+          {drawSel && (
+            <>
+              <ContextMenuItem onClick={duplicateShape}>
+                <Copy /> {t("actions.duplicate")}
+              </ContextMenuItem>
+              <ContextMenuItem variant="destructive" onClick={deleteShape}>
+                <Trash2 /> {t("common:action.delete")}
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+
+          {multi && (
+            <>
+              <ContextMenuItem onClick={() => { const p = store().prefs; store().tidy({ layout: p.arrangeLayout, uniform: p.arrangeUniform, gap: p.arrangeGap, sort: p.arrangeSort }); }}>
+                <Wand2 /> {t("tidy.title")}
+              </ContextMenuItem>
+              <ContextMenuSub>
+                <ContextMenuSubTrigger><Ruler /> {t("tidy.uniform")}</ContextMenuSubTrigger>
+                <ContextMenuSubContent>
+                  <ContextMenuItem onClick={() => store().normalize("height")}>{t("tidy.uniformHeight")}</ContextMenuItem>
+                  <ContextMenuItem onClick={() => store().normalize("width")}>{t("tidy.uniformWidth")}</ContextMenuItem>
+                  <ContextMenuItem onClick={() => store().normalize("area")}>{t("tidy.uniformArea")}</ContextMenuItem>
+                </ContextMenuSubContent>
+              </ContextMenuSub>
+              <ContextMenuSeparator />
+            </>
+          )}
+
+          {hasSampleable && (
+            <>
+              <ContextMenuItem onClick={() => void extractPaletteToBoard()}>
+                <Palette /> {t("palette.extract")}
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+            </>
+          )}
+
           {groupable && (
             <>
               <ContextMenuItem onClick={() => store().groupSequence(store().selectedIds)}>
@@ -156,6 +252,10 @@ export function BoardContextMenu({
               </ContextMenuItem>
               <ContextMenuItem onClick={async () => { const p = await nr.chooseImages(); if (p?.length) board.current?.addSequence(p); }}>
                 <Film /> {t("boardMenu.imageSequence")}
+              </ContextMenuItem>
+              {/* Import GROUPÉ : le dossier devient un cadre titré, contenu rangé automatiquement. */}
+              <ContextMenuItem onClick={async () => { const d = await nr.chooseDir(); if (d) board.current?.addFolder(d); }}>
+                <FolderOpen /> {t("boardMenu.folder")}
               </ContextMenuItem>
               <ContextMenuItem onClick={() => setYtOpen(true)}>
                 <Globe /> {t("boardMenu.onlineVideo")}
@@ -233,6 +333,11 @@ export function BoardContextMenu({
           {onSaveAs && <ContextMenuItem onClick={onSaveAs}><SaveAll /> {t("toolbar.saveAs")}</ContextMenuItem>}
           {onOpenProject && <ContextMenuItem onClick={onOpenProject}><FileSymlink /> {t("boardMenu.openProject")}</ContextMenuItem>}
           {onOpen && <ContextMenuItem onClick={onOpen}><FolderOpen /> {t("boardMenu.openScene")}</ContextMenuItem>}
+          {hasItems && (
+            <ContextMenuItem onClick={() => setImgExport(true)}>
+              <ImageDown /> {t("exportImage.menu")}
+            </ContextMenuItem>
+          )}
 
           {(onHome || onAttach || onTogglePin || onSettings) && <ContextMenuSeparator />}
           {onSettings && <ContextMenuItem onClick={onSettings}><Settings2 /> {t("actions.settings")}</ContextMenuItem>}
@@ -247,6 +352,7 @@ export function BoardContextMenu({
       </ContextMenu>
 
       <AddLinkDialog board={board} open={ytOpen} onOpenChange={setYtOpen} />
+      <ExportImageDialog open={imgExport} onOpenChange={setImgExport} />
     </>
   );
 }
