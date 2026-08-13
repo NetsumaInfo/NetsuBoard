@@ -59,6 +59,8 @@ Tauri's **WebView2 decodes HEVC** through `<video>` — verified `canPlayType('v
 - Shader ids map either to a custom `.glsl` file (`custom_shader_path`) or to a built-in libplacebo scaler. Animation uses the ArtCNN and Anime4K GLSL networks; live action uses `lanczossharp`.
 - The ArtCNN suffixes are **distinct weights, not a post-filter**: `_DS` doubles while denoising and sharpening, `_DN` doubles while denoising and softening. They do not combine with the neutral variant of the same network.
 - `libplacebo` handles colour management itself — do **not** reintroduce the swscale workaround an AI path would need.
+- **An animated GIF keeps its frames.** `runShaderGif` shades the whole stream, then re-quantises it through `palettegen`/`paletteuse` (the GIF muxer only takes palettised frames, the filter outputs `yuv444p`). The still-image path writes `-frames:v 1` and therefore still refuses a GIF: sending one there returns a first frame, not a GIF.
+- **A missing shader directory is named as such.** Jobs run ffmpeg with `cwd = SHADER_DIR` so the shader can be passed as a relative name; an absent directory makes `spawn` fail with ENOENT, which read as "ffmpeg not found" and pointed at the wrong culprit.
 - The shaders come from the provisioned runtime (`NR_HOME/runtime/shaders`, staged from `resources/shaders` in release). Missing shaders make the upscaler unusable and `setupStatus` reports the install as not ready.
 - **Never a `master` ffmpeg build**: its libplacebo/Vulkan sometimes fails to initialise, which breaks Turbo upscaling outright.
 

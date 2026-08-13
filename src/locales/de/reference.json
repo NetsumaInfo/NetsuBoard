@@ -15,7 +15,6 @@
     "zoomOut": "Verkleinern",
     "fitAll": "Alles einpassen",
     "newScene": "Neue Szene",
-    "detach": "Abdocken",
     "attach": "Andocken",
     "pin": "Anheften",
     "unpin": "Lösen",
@@ -43,6 +42,7 @@
     "saveAs": "Speichern unter…"
   },
   "settings": {
+    "navBoard": "Board",
     "tabLook": "Aussehen",
     "tabMedia": "Medien",
     "tabBehavior": "Verhalten",

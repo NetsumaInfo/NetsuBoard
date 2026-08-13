@@ -15,7 +15,6 @@
     "zoomOut": "缩小",
     "fitAll": "全部适配",
     "newScene": "新建场景",
-    "detach": "分离",
     "attach": "合并",
     "pin": "固定",
     "unpin": "取消固定",
@@ -43,6 +42,7 @@
     "saveAs": "另存为…"
   },
   "settings": {
+    "navBoard": "画板",
     "tabLook": "外观",
     "tabMedia": "媒体",
     "tabBehavior": "行为",

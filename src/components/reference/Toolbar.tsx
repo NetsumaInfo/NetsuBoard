@@ -1,11 +1,11 @@
 // Barre d'outils du board : ajout (image / vidéo / YouTube), zoom, cadrage, nouvelle scène,
-// et actions de scène (sauver / ouvrir) + détacher (injectées par le parent selon le contexte).
+// et actions de scène (sauver / ouvrir) (injectées par le parent selon le contexte).
 
 import { useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ImagePlus, Video, Globe, Type, Frame, Film, Pencil, Clapperboard, ZoomIn, ZoomOut, Maximize, FilePlus2,
-  Save, SaveAll, FileCheck2, FolderOpen, Share2, PictureInPicture2, Minimize2, Pin, PinOff, Play, Pause,
+  Save, SaveAll, FileCheck2, FolderOpen, Share2, Minimize2, Pin, PinOff, Play, Pause,
   Settings2, Home, Undo2, Redo2, RotateCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,6 @@ export function Toolbar({
   onSave,
   onSaveAs,
   onOpen,
-  onDetach,
   onAttach,
   onProject,
   onSettings,
@@ -56,7 +55,6 @@ export function Toolbar({
   onSave?: () => void;
   onSaveAs?: () => void;
   onOpen?: () => void;
-  onDetach?: () => void;
   onAttach?: () => void;
   onProject?: () => void;
   onSettings?: () => void;
@@ -222,9 +220,6 @@ export function Toolbar({
             label={pinned ? t("actions.unpin") : t("actions.pin")}
             onClick={onTogglePin}
           />
-        )}
-        {onDetach && (
-          <IconBtn icon={PictureInPicture2} label={t("actions.detach")} onClick={onDetach} />
         )}
         {onAttach && (
           <IconBtn icon={Minimize2} label={t("actions.attach")} onClick={onAttach} />

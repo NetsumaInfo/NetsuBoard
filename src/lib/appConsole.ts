@@ -142,5 +142,5 @@ export function initConsoleCapture(): void {
     })
     .catch(() => {});
 
-  logAt("log", "system", "Console NetsuRush prête.");
+  logAt("log", "system", "Console NetsuBoard prête.");
 }

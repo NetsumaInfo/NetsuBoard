@@ -15,7 +15,6 @@
     "zoomOut": "Dézoomer",
     "fitAll": "Tout cadrer",
     "newScene": "Nouvelle scène",
-    "detach": "Détacher",
     "attach": "Rattacher",
     "pin": "Épingler",
     "unpin": "Désépingler",
@@ -43,6 +42,7 @@
     "saveAs": "Enregistrer sous…"
   },
   "settings": {
+    "navBoard": "Board",
     "tabLook": "Apparence",
     "tabMedia": "Médias",
     "tabBehavior": "Comportement",

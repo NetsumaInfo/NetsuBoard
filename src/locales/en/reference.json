@@ -15,7 +15,6 @@
     "zoomOut": "Zoom out",
     "fitAll": "Fit all",
     "newScene": "New scene",
-    "detach": "Detach",
     "attach": "Attach",
     "pin": "Pin",
     "unpin": "Unpin",
@@ -43,6 +42,7 @@
     "saveAs": "Save as…"
   },
   "settings": {
+    "navBoard": "Board",
     "tabLook": "Look",
     "tabMedia": "Media",
     "tabBehavior": "Behavior",

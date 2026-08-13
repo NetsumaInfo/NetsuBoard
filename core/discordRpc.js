@@ -1,6 +1,6 @@
 // @ts-check
 // core/discordRpc.js
-// Rich Presence Discord : montre « joue à NetsuRush — Derush » sur le profil de l'utilisateur.
+// Rich Presence Discord : montre « joue à NetsuBoard » sur le profil de l'utilisateur.
 //
 // Client IPC MAISON (zéro dépendance). La lib officielle `discord/discord-rpc` est du C++ DÉPRÉCIÉ par
 // Discord ; le protocole local, lui, tient en une page : une named pipe + des frames JSON préfixées.
@@ -26,7 +26,7 @@ const crypto = require('node:crypto');
 
 // App ID (client_id OAuth) de l'application Discord — publique. Vide = présence inactive tant qu'elle
 // n'est pas renseignée (constante ici, ou `discordAppId` dans nr.config.json, ou env NR_DISCORD_APP_ID).
-const DEFAULT_APP_ID = '1528402947522953316';
+const DEFAULT_APP_ID = '1537488675904946258';
 
 const OP_HANDSHAKE = 0;
 const OP_FRAME = 1;
@@ -39,7 +39,7 @@ const THROTTLE_MS = 15_000;     // plafond Discord : 1 SET_ACTIVITY / 15 s
 const RECONNECT_MIN_MS = 1_000;
 const RECONNECT_MAX_MS = 30_000;
 const HANDSHAKE_TIMEOUT_MS = 10_000; // pipe qui accepte sans jamais répondre READY
-const LARGE_IMAGE = 'nr_logo';  // clé d'asset (portail dev › Rich Presence › Art Assets)
+const LARGE_IMAGE = 'nb_logo';  // clé d'asset (portail dev › Rich Presence › Art Assets)
 // Info PUBLIQUE de l'application (nom + icône), sans authentification : c'est ce que Discord affiche
 // réellement sur le profil. Sert UNIQUEMENT à rendre l'aperçu des Paramètres fidèle.
 const API = 'https://discord.com/api';
@@ -139,7 +139,7 @@ function createDiscordRpc({ CONFIG, broadcast, dataDir }) {
 
   /** @type {{ module:string|null, project:string|null }} */
   let ctx = { module: null, project: null };
-  const startedAt = Math.floor(Date.now() / 1000); // « temps écoulé » = depuis l'ouverture de NetsuRush
+  const startedAt = Math.floor(Date.now() / 1000); // « temps écoulé » = depuis l'ouverture de NetsuBoard
 
   let retryMs = RECONNECT_MIN_MS;
   /** @type {NodeJS.Timeout | null} */
@@ -159,7 +159,7 @@ function createDiscordRpc({ CONFIG, broadcast, dataDir }) {
     } catch (_) { /* best-effort */ }
   }
   /**
-   * Nom + vignette RÉELS de l'application, tels que Discord les affichera. Sans l'asset `nr_logo`,
+   * Nom + vignette RÉELS de l'application, tels que Discord les affichera. Sans l'asset `nb_logo`,
    * Discord retombe sur l'icône de l'app : l'aperçu doit faire exactement le même repli, sinon il
    * montre une image que personne ne verra jamais. Endpoints publics, aucun jeton — et le core les
    * appelle plutôt que le renderer : pas de CORS, et une seule requête pour toute la session.
@@ -176,7 +176,7 @@ function createDiscordRpc({ CONFIG, broadcast, dataDir }) {
         const hit = Array.isArray(assets) && assets.find((a) => a && a.name === LARGE_IMAGE);
         if (hit) imageUrl = `${CDN}/app-assets/${appId}/${hit.id}.png?size=160`;
       } catch (_) { /* pas d'asset publié : l'icône fait le travail, comme sur le profil */ }
-      appInfo = { name: String(rpc?.name || 'NetsuRush'), imageUrl };
+      appInfo = { name: String(rpc?.name || 'NetsuBoard'), imageUrl };
       emit();
     } catch (_) {
       /* hors ligne ou App ID inconnue : l'aperçu garde son repli local, rien à signaler */
@@ -327,7 +327,7 @@ function createDiscordRpc({ CONFIG, broadcast, dataDir }) {
       : clampText(projectLabel);
 
     /** @type {Record<string, any>} */
-    const activity = { assets: { large_image: LARGE_IMAGE, large_text: 'NetsuRush' } };
+    const activity = { assets: { large_image: LARGE_IMAGE, large_text: 'NetsuBoard' } };
     if (details) activity.details = details;
     if (state) activity.state = state;
     if (prefs.showElapsed) activity.timestamps = { start: startedAt }; // SECONDES (pas des ms)

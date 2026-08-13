@@ -12,7 +12,7 @@
     "about": "Über"
   },
   "about": {
-    "tagline": "Lokaler Sichtungs-Hub, verbunden mit DaVinci Resolve, Premiere Pro und After Effects.",
+    "tagline": "Unendliches Referenz-Board: Bilder, Videos, soziale Netzwerke, Notizen und Zeichnungen.",
     "socialTitle": "Soziale Netzwerke",
     "social": {
       "discord": "Server beitreten"
@@ -200,7 +200,7 @@
     },
     "custom": {
       "title": "Meine Designs",
-      "subtitle": "Sichert das aktuelle Aussehen: Palette, Farben und Hintergrund.",
+      "subtitle": "Speichert das aktuelle Erscheinungsbild: Palette und Farben.",
       "create": "Neues Design",
       "save": "Sichern",
       "delete": "Dieses Design löschen",
@@ -285,7 +285,7 @@
   },
   "console": {
     "title": "Konsole",
-    "subtitle": "Was App, Dienst und KI geschrieben haben.",
+    "subtitle": "Was App und Dienst geschrieben haben.",
     "copy": "Kopieren",
     "errors": "Fehler",
     "export": "Exportieren",

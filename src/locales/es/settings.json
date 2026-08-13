@@ -12,7 +12,7 @@
     "about": "Acerca de"
   },
   "about": {
-    "tagline": "Centro local de preparación de brutos, conectado a DaVinci Resolve, Premiere Pro y After Effects.",
+    "tagline": "Tablero de referencia infinito: imágenes, vídeos, redes sociales, notas y dibujo.",
     "socialTitle": "Redes sociales",
     "social": {
       "discord": "Unirse al servidor"
@@ -200,7 +200,7 @@
     },
     "custom": {
       "title": "Mis temas",
-      "subtitle": "Guarda el aspecto actual: paleta, colores y fondo.",
+      "subtitle": "Guarda la apariencia actual: paleta y colores.",
       "create": "Nuevo tema",
       "save": "Guardar",
       "delete": "Eliminar este tema",
@@ -285,7 +285,7 @@
   },
   "console": {
     "title": "Consola",
-    "subtitle": "Lo que han escrito la app, el servicio y la IA.",
+    "subtitle": "Lo que han escrito la app y el servicio.",
     "copy": "Copiar",
     "errors": "Errores",
     "export": "Exportar",

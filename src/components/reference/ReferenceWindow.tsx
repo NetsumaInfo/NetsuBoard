@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { BoardContextMenu } from "./BoardMenu";
 import { SceneDialog } from "./SceneDialog";
 import { MediaPicker } from "./MediaPicker";
-import { BoardSettings } from "./BoardSettings";
+import { AppSettings } from "@/components/settings/AppSettings";
+import { openSettings } from "@/components/settings/useSettingsUi";
 import { Inspector } from "./Inspector";
 import { SequencePlayer } from "./SequencePlayer";
 import { CropOverlay } from "./CropOverlay";
@@ -35,7 +36,6 @@ export function ReferenceWindow() {
   const persistence = useScenePersistence();
   const [sceneDlg, setSceneDlg] = useState(false);
   const [pickDlg, setPickDlg] = useState(false);
-  const [settingsDlg, setSettingsDlg] = useState(false);
   const [pinned, setPinned] = useState(true);
 
   // Reprend le board transféré par la fenêtre principale (handoff) au premier rendu.
@@ -95,7 +95,7 @@ export function ReferenceWindow() {
           onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
           onProject={() => setPickDlg(true)}
           onAttach={nr.reference ? () => nr.reference!.attach() : undefined}
-          onSettings={() => setSettingsDlg(true)}
+          onSettings={() => openSettings()}
           pinned={pinned}
           onTogglePin={togglePin}
         >
@@ -105,7 +105,7 @@ export function ReferenceWindow() {
         </BoardContextMenu>
         <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
         <MediaPicker open={pickDlg} onOpenChange={setPickDlg} board={boardRef} />
-        <BoardSettings open={settingsDlg} onOpenChange={setSettingsDlg} />
+        <AppSettings />
         <CropOverlay />
       </div>
     </TooltipProvider>

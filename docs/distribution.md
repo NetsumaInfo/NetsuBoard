@@ -15,11 +15,11 @@
 
 `SetupGate` wraps the shell (not the detached window). At boot the renderer calls `setup:status`; if the runtime is incomplete it shows the install screen, and `setup:run` launches `scripts/setup.ps1`. Progress is streamed over SSE with `STAGE:`/`PROGRESS:`/`ERROR:` markers, and the config file is written at the end. **A restart is required afterwards**, since the config is read when the core starts. The browser mock always reports ready, so the gate never appears outside the app. `setup.ps1` is idempotent.
 
-The runtime has **three** items, and only the first two gate readiness:
+The runtime has **three** items, and **all three gate readiness**:
 
 1. **ffmpeg + ffprobe** — decoding, thumbnails, frame extraction, and the `libplacebo` filter the upscaler runs on. The archive is a **release asset of the NetsuRush repository**, pinned by version and SHA-256 and served by GitHub's CDN; it is produced from an upstream build by [`scripts/ffmpeg-mirror.ps1`](../scripts/ffmpeg-mirror.ps1). The fallback is a BtbN zip, also on GitHub — no source outside a CDN, and no external extractor.
 2. **The GLSL shaders** (ArtCNN, Anime4K) — a few hundred kilobytes of text, staged from `resources/vendor/shaders` or fetched by `scripts/fetch-shaders.ps1`.
-3. **`yt-dlp.exe`** — standalone, carrying its own interpreter. **Optional**: without it, links to online media stop resolving, but a board of local files works entirely, so it never blocks the install screen.
+3. **`yt-dlp.exe`** — standalone, carrying its own interpreter, so online links resolve with no Python environment. **Mandatory** since `setupRuntimeVersion` 5: online links are half of what lands on a reference board, and while it was best effort a skipped download produced an install that looked complete and failed months later on a bare `spawn yt-dlp.exe ENOENT`. Installs provisioned before the bump carry no `ytDlp` path and are sent back through the installer.
 
 `probeRuntime` **looks at files**; it launches nothing. NetsuRush started Python and imported torch here — there is no interpreter to start any more. `quickSetupReady` short-circuits the full probe for an install that already carries `setupCompletedAt` and a matching `setupRuntimeVersion`, and it checks the **ffmpeg version** itself: putting that check only in `ffmpegReady` made it unreachable for exactly the installs a version bump must catch.
 

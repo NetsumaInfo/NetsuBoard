@@ -39,8 +39,11 @@ const MAX_REDIRECTS = 3;
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
 // yt-dlp AUTONOME (exe qui embarque son interpréteur), posé par le setup. Aucun venv, aucun module
-// Python : résolu une fois pour toutes par core/config.js, qui garde un repli si un venv existe.
-const YTDLP = ytDlpCommand();
+// Python : core/config.js choisit entre le binaire installé, le module d'un venv de dev et le PATH.
+//
+// Résolu À CHAQUE APPEL, jamais mis en cache au chargement du module : yt-dlp est FACULTATIF et
+// s'installe après coup (setup.ps1). Figé au démarrage, le core continuait de chercher un binaire
+// absent jusqu'au prochain redémarrage — l'installation qu'on venait de faire ne servait à rien.
 
 /** @type {Map<string, { url: string, at: number }>} */
 const cache = new Map();
@@ -61,12 +64,24 @@ function runYtdlp(id) {
       "--socket-timeout", "20",
       "-g",
     ];
-    const child = spawn(YTDLP.bin, [...YTDLP.args, ...args], { env: DETECT_ENV });
+    const ytdlp = ytDlpCommand();
+    const child = spawn(ytdlp.bin, [...ytdlp.args, ...args], { env: DETECT_ENV });
     let out = "", err = "";
     const killer = setTimeout(() => { try { child.kill("SIGKILL"); } catch (_) {} }, RESOLVE_TIMEOUT_MS);
     child.stdout.on("data", (d) => { out += d.toString(); });
     child.stderr.on("data", (d) => { err += d.toString(); });
-    child.on("error", (e) => { clearTimeout(killer); resolve({ ok: false, error: String(e) }); });
+    // ENOENT = outil absent, pas un lien invalide. Le message brut (« spawn yt-dlp.exe ENOENT »)
+    // n'indiquait ni ce qui manque ni comment le poser : l'utilisateur voyait un lecteur vide et une
+    // ligne de journal illisible pour une dépendance que le setup annonce pourtant comme facultative.
+    child.on("error", (e) => {
+      clearTimeout(killer);
+      const missing = /** @type {NodeJS.ErrnoException} */ (e)?.code === "ENOENT";
+      resolve({
+        ok: false,
+        error: missing ? `yt-dlp introuvable (${ytdlp.bin}) — relance l'installation pour poser l'outil` : String(e),
+        missingTool: missing || undefined,
+      });
+    });
     child.on("close", (code) => {
       clearTimeout(killer);
       // Un manifeste (HLS/DASH) qui passerait malgré le filtre de protocole vaut un échec : mieux

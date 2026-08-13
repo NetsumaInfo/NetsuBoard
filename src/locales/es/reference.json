@@ -15,7 +15,6 @@
     "zoomOut": "Alejar",
     "fitAll": "Encuadrar todo",
     "newScene": "Nueva escena",
-    "detach": "Desacoplar",
     "attach": "Acoplar",
     "pin": "Fijar",
     "unpin": "Quitar fijación",
@@ -43,6 +42,7 @@
     "saveAs": "Guardar como…"
   },
   "settings": {
+    "navBoard": "Tablero",
     "tabLook": "Apariencia",
     "tabMedia": "Medios",
     "tabBehavior": "Comportamiento",

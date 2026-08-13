@@ -8,8 +8,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorBadge } from "@/components/ErrorBadge";
 import { WindowControls } from "@/components/WindowControls";
 import { BrandIcon } from "@/components/BrandIcon";
+import { BetaBadge } from "@/components/BetaBadge";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/toast";
+import { AppSettings } from "@/components/settings/AppSettings";
 
 // Fenêtre détachée du board (hash #reference, 2e WebviewWindow Tauri) : le board nu, sans le cadre.
 const ReferenceWindow = lazy(() => import("@/components/reference/ReferenceWindow").then((m) => ({ default: m.ReferenceWindow })));
@@ -25,6 +27,7 @@ export function WindowLoading() {
       <div data-tauri-drag-region className="flex h-9 shrink-0 items-center gap-2 px-3">
         <BrandIcon className="size-6" />
         <span className="text-xs font-semibold tracking-tight">NetsuBoard</span>
+        <BetaBadge />
         <div className="ml-auto"><WindowControls /></div>
       </div>
       <div className="flex flex-1 items-center justify-center"><Spinner /></div>
@@ -47,12 +50,17 @@ function Shell() {
         <div data-tauri-drag-region className="flex h-9 shrink-0 items-center gap-2 px-3">
           <BrandIcon className="size-6" />
           <span className="text-xs font-semibold tracking-tight">{t("app.name", "NetsuBoard")}</span>
+          <BetaBadge />
           <div className="ml-auto"><WindowControls /></div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           <ReferencePanel />
         </div>
+
+        {/* Paramètres : rendus au niveau de la coquille, pas dans la page — ils s'ouvrent aussi
+            depuis la pastille d'erreur, qui vit ici, et doivent survivre au passage accueil ↔ board. */}
+        <AppSettings />
 
         {/* Colonne flottante du coin bas-droit : les pastilles transitoires s'empilent au-dessus de
             l'indicateur d'erreur, qui reste ancré au bas. */}

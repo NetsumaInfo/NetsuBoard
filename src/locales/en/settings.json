@@ -12,7 +12,7 @@
     "about": "About"
   },
   "about": {
-    "tagline": "Local rush-prep hub, wired to DaVinci Resolve, Premiere Pro and After Effects.",
+    "tagline": "Infinite reference board: images, video, social media, notes and drawing.",
     "socialTitle": "Social",
     "social": {
       "discord": "Join the server"
@@ -200,7 +200,7 @@
     },
     "custom": {
       "title": "My themes",
-      "subtitle": "Save the current look: palette, colors and background.",
+      "subtitle": "Save the current look: palette and colours.",
       "create": "New theme",
       "save": "Save",
       "delete": "Delete this theme",
@@ -285,7 +285,7 @@
   },
   "console": {
     "title": "Console",
-    "subtitle": "What the app, the service and the AI wrote.",
+    "subtitle": "What the app and the service wrote.",
     "copy": "Copy",
     "errors": "Errors",
     "export": "Export",

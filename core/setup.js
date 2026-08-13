@@ -32,7 +32,9 @@ const PACKAGED = !!process.env.NR_RESOURCE_DIR;
 const FFMPEG_ACCEPTED_VERSIONS = ['9.0', '8.1'];
 // Bump when an update adds a mandatory runtime capability. Existing installs without this marker
 // leave the quick path and run `probeRuntime`, which sends incomplete environments to repair.
-const SETUP_RUNTIME_VERSION = 4;
+// 5 — yt-dlp became mandatory: installs provisioned by an earlier setup carry no `ytDlp` path and
+// must go back through the installer, otherwise every online link fails with a bare spawn ENOENT.
+const SETUP_RUNTIME_VERSION = 5;
 
 const SETUP_LABELS = {
   fr: { video: 'Prérequis vidéo', ai: 'Prérequis de calcul' },
@@ -146,6 +148,16 @@ function ffmpegReady(config = CONFIG) {
   const { usable, version } = ffmpegProbe(config.ffmpeg);
   return usable && ffmpegVersionAccepted(version);
 }
+// yt-dlp prêt : l'exécutable autonome posé par setup.ps1 est là. OBLIGATOIRE — un board de
+// références sans lien en ligne (YouTube, Vimeo, réseaux) n'est pas le produit, et le rendre
+// facultatif faisait échouer la résolution des liens sur un `spawn yt-dlp.exe ENOENT` illisible,
+// des mois après une installation que rien n'avait signalée comme incomplète.
+// En dev (non packagé), on ne gate jamais : le poste du développeur fournit ses propres outils.
+function ytDlpReady(config = CONFIG) {
+  if (!PACKAGED) return true;
+  return exists(config.ytDlp);
+}
+
 // venv ML prêt : interpréteur python du venv configuré et présent. En dev, venv/python local.
 function venvReady() {
   if (!PACKAGED) return true;
@@ -174,6 +186,7 @@ function quickSetupReady(config = CONFIG, options = {}) {
   if (!exists(config.ffmpeg)) return false;
   if (config.ffprobe && !exists(config.ffprobe)) return false;
   if (!shadersReady(config)) return false;
+  if (!ytDlpReady(config)) return false;
   // La VERSION de ffmpeg se juge ici, pas seulement dans `ffmpegReady`. `setupStatus` court-circuite
   // ce dernier dès que le contrôle rapide passe (`quickReady ? true : ffmpegReady(...)`) : tester la
   // version uniquement là-bas la rendait inatteignable sur une installation déjà complète, soit
@@ -189,11 +202,13 @@ function probeRuntime(config = CONFIG) {
   if (!PACKAGED) return true;
   const shaders = shadersReady(config);
   const ffmpeg = ffmpegReady(config);
+  const online = ytDlpReady(config);
   return {
-    ok: shaders && ffmpeg,
+    ok: shaders && ffmpeg && online,
     shaders,
     ffmpeg,
-    error: ffmpeg ? (shaders ? null : "shaders absents") : "ffmpeg absent ou inutilisable",
+    online,
+    error: !ffmpeg ? "ffmpeg absent ou inutilisable" : !shaders ? "shaders absents" : online ? null : "yt-dlp absent",
   };
 }
 
@@ -203,17 +218,18 @@ async function setupStatus() {
   const quickReady = quickSetupReady(installed);
   // Le chemin nominal ne regarde que des fichiers. Il n'y a plus de sonde coûteuse à éviter : le
   // runtime de NetsuBoard ne contient aucun interpréteur à démarrer.
-  const runtime = quickReady ? { ok: true, shaders: true, ffmpeg: true, error: null } : probeRuntime(installed);
+  const runtime = quickReady ? { ok: true, shaders: true, ffmpeg: true, online: true, error: null } : probeRuntime(installed);
   const ffmpeg = quickReady ? true : ffmpegReady(installed);
   const shaders = quickReady || runtime === true || !!runtime.shaders;
-  // yt-dlp est FACULTATIF : sans lui les liens en ligne ne se résolvent plus, mais un board de
-  // fichiers locaux fonctionne entièrement. Il ne doit donc jamais bloquer l'écran d'installation.
-  const online = exists(installed.ytDlp);
+  // yt-dlp est OBLIGATOIRE (cf. ytDlpReady) : les liens en ligne — YouTube, Vimeo, réseaux — sont la
+  // moitié de ce qu'on pose sur un board de références. Une installation sans lui est incomplète et
+  // doit repasser par l'installeur, pas découvrir le manque au premier lien collé.
+  const online = quickReady || runtime === true || ytDlpReady(installed);
   const hardware = await detectHardware();
   const labels = SETUP_LABELS[language()] || SETUP_LABELS.fr;
   return {
-    // « prêt » = de quoi afficher un board et agrandir un média : ffmpeg et les shaders.
-    ready: ffmpeg && shaders,
+    // « prêt » = de quoi afficher un board, agrandir un média ET résoudre un lien en ligne.
+    ready: ffmpeg && shaders && online,
     ffmpeg, shaders, online,
     hardware,
     runtime,

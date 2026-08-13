@@ -1083,8 +1083,13 @@ function createRpc() {
     // Une image est une vidéo d'une seule frame pour libplacebo : même filtre, même shader, sortie
     // PNG au lieu d'un conteneur vidéo.
     if (kind === "image") {
-      const out = refStore.assetPath(`${base}.png`);
-      const r = await shaderUpscale.runShaderImage({ input: src, out, shader, scale });
+      // GIF animé → chemin dédié (toutes les frames repassent par le shader, sortie GIF) ; image
+      // fixe → une frame, sortie PNG. Un GIF envoyé sur le chemin fixe ne rendrait que sa 1re image.
+      const isGif = /\.gif$/i.test(String(src));
+      const out = refStore.assetPath(`${base}.${isGif ? "gif" : "png"}`);
+      const r = isGif
+        ? await shaderUpscale.runShaderGif({ input: src, out, shader, scale })
+        : await shaderUpscale.runShaderImage({ input: src, out, shader, scale });
       if (!r || !r.ok || !r.output) return { ok: false, error: (r && r.error) || "échec upscale image" };
       return { ok: true, path: remember(r.output), width: r.width, height: r.height };
     }

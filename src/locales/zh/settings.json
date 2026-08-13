@@ -12,7 +12,7 @@
     "about": "关于"
   },
   "about": {
-    "tagline": "本地素材整理中心，直连 DaVinci Resolve、Premiere Pro 和 After Effects。",
+    "tagline": "无限参考画板：图片、视频、社交媒体、便笺与绘制。",
     "socialTitle": "社交网络",
     "social": {
       "discord": "加入服务器"
@@ -200,7 +200,7 @@
     },
     "custom": {
       "title": "我的主题",
-      "subtitle": "保存当前外观：调色板、颜色和背景。",
+      "subtitle": "保存当前外观：配色方案与颜色。",
       "create": "新建主题",
       "save": "保存",
       "delete": "删除此主题",
@@ -285,7 +285,7 @@
   },
   "console": {
     "title": "控制台",
-    "subtitle": "应用、服务和 AI 写下的内容。",
+    "subtitle": "应用与服务写下的内容。",
     "copy": "复制",
     "errors": "错误",
     "export": "导出",

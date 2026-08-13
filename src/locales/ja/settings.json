@@ -12,7 +12,7 @@
     "about": "情報"
   },
   "about": {
-    "tagline": "ローカルの素材整理ハブ。DaVinci Resolve、Premiere Pro、After Effects と連携します。",
+    "tagline": "無限のリファレンスボード。画像・動画・SNS・メモ・描画をひとつの場所に。",
     "socialTitle": "ソーシャル",
     "social": {
       "discord": "サーバーに参加"
@@ -200,7 +200,7 @@
     },
     "custom": {
       "title": "マイテーマ",
-      "subtitle": "現在の外観（パレット・色・背景）を保存します。",
+      "subtitle": "現在の外観を保存します。パレットと色。",
       "create": "新しいテーマ",
       "save": "保存",
       "delete": "このテーマを削除",
@@ -285,7 +285,7 @@
   },
   "console": {
     "title": "コンソール",
-    "subtitle": "アプリ・サービス・AI が書き出した内容。",
+    "subtitle": "アプリとサービスが書き出した内容。",
     "copy": "コピー",
     "errors": "エラー",
     "export": "書き出し",

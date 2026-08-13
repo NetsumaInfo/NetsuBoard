@@ -3,6 +3,7 @@
 // Tauri standalone. Même interface que le bridge Electron (window.nr) → composants inchangés.
 // Dialogs / openExternal passent par les plugins Tauri (chargés à la demande, seulement sous Tauri).
 
+import { convertFileSrc } from "@tauri-apps/api/core";
 import type { NrApi, RefApi, WallpaperApi, ScriptApi, CollectionsApi, LibraryApi, ChatApi, NotebookApi, OutboxApi, PowerApi, SnapshotApi, CacheApi } from "./bridge";
 import i18n from "@/i18n";
 import { logError } from "@/lib/appLog";
@@ -10,6 +11,33 @@ import { readPreviewSettings } from "@/lib/previewSettings";
 import { beginHeavyCall, isHeavyChannel } from "@/lib/busyBus";
 
 const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+// URL d'un fichier local servie par la coquille Rust (protocole `asset`), ou null hors Tauri.
+// Import STATIQUE volontaire : la fonction est synchrone (elle alimente un `src=` en plein rendu),
+// un import à la demande imposerait une promesse à chaque vignette. Le module ne touche à rien à
+// l'évaluation — il lit `__TAURI_INTERNALS__` seulement à l'appel — donc il reste inerte en CEP.
+//
+// `convertFileSrc` fabrique l'URL côté JS : elle réussit MÊME si la coquille ne sert pas le
+// protocole (binaire compilé avant l'activation d'`assetProtocol`). On sonde donc une fois : un
+// protocole absent échoue au niveau réseau (fetch rejeté), un protocole présent répond — 404 ou 403
+// pour un chemin bidon, mais la réponse existe. `no-cors` rend le verdict indépendant des en-têtes
+// CORS : seule l'existence du protocole est testée. Tant que la sonde n'a pas répondu, on reste sur
+// le serveur HTTP : une grille qui charge trop tôt est plus lente, jamais vide.
+let assetProtocolOk = false;
+if (isTauri) {
+  void fetch(convertFileSrc("nr-asset-probe"), { mode: "no-cors" })
+    .then(() => { assetProtocolOk = true; })
+    .catch(() => { assetProtocolOk = false; });
+}
+
+function assetSrc(filePath: string): string | null {
+  if (!isTauri || !assetProtocolOk || !filePath) return null;
+  try {
+    return convertFileSrc(filePath);
+  } catch {
+    return null;   // coquille sans protocole asset → l'appelant retombe sur le serveur HTTP
+  }
+}
 
 // ---- Adresse du core ----
 // Le port n'est plus figé : la coquille Tauri en choisit un LIBRE au lancement (un port occupé par
@@ -921,6 +949,7 @@ export function makeCoreClient(): NrApi {
     pathsForFiles: (files) => resolveFilePaths(files),
     saveFile: (defaultName) => dlgSave(defaultName),
     mediaUrl: (p) => `${BASE}/media?p=${encodeURIComponent(p)}${tkParam}`,
+    assetUrl: (p) => assetSrc(p) ?? `${BASE}/media?p=${encodeURIComponent(p)}${tkParam}`,
     ytStreamUrl: (id) => `${BASE}/ytstream?id=${encodeURIComponent(id)}${tkParam}`,
     openExternal: (url) => openUrl(url),
     openPath: (p) => openPath(p),

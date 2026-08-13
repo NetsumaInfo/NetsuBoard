@@ -2,14 +2,12 @@
 // inspecteur d'item + sélecteur de rushs/plans du projet.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { nr } from "@/lib/bridge";
 import { useApp } from "@/store";
 import { Toolbar } from "./Toolbar";
 import { BoardContextMenu } from "./BoardMenu";
 import { SceneDialog } from "./SceneDialog";
 import { ExportDialog } from "./ExportDialog";
 import { MediaPicker } from "./MediaPicker";
-import { BoardSettings } from "./BoardSettings";
 import { Inspector } from "./Inspector";
 import { SequencePlayer } from "./SequencePlayer";
 import { CropOverlay } from "./CropOverlay";
@@ -22,6 +20,7 @@ import { useProjectActions } from "./useProjectActions";
 import { useReferencePush } from "./useReferencePush";
 import { useAutosave } from "./useAutosave";
 import { useUnsavedWarning } from "./useUnsavedWarning";
+import { openSettings } from "@/components/settings/useSettingsUi";
 
 // Import en attente : posé par l'accueil (dépôt/parcourir), ingéré une fois le board monté.
 type Pending = { files?: File[]; paths?: string[] };
@@ -32,7 +31,6 @@ export function ReferencePanel() {
   const [sceneDlg, setSceneDlg] = useState(false);
   const [exportDlg, setExportDlg] = useState(false);
   const [pickDlg, setPickDlg] = useState(false);
-  const [settingsDlg, setSettingsDlg] = useState(false);
   // Landing : toujours l'accueil au montage de l'onglet (le board en session reste dans le store).
   const [mode, setMode] = useState<"home" | "board">("home");
   const [pending, setPending] = useState<Pending | null>(null);
@@ -44,11 +42,6 @@ export function ReferencePanel() {
   // chaque rendu si ce rappel changeait d'identité.
   const goBoard = useCallback(() => setMode("board"), []);
   const project = useProjectActions(persistence, goBoard);
-
-  const onDetach = async () => {
-    await persistence.handoff();
-    nr.reference?.detach();
-  };
 
   useBoardShortcuts(boardRef, { onSave: project.save, onSaveAs: project.saveAs, onOpenProject: project.openProject });
   useReferencePush(boardRef);
@@ -79,7 +72,7 @@ export function ReferencePanel() {
   // directement le board de session (pas de landing) pour un usage flottant instantané.
   if (pinned) {
     return (
-      <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--color-bg)]">
+      <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[var(--color-bg)]">
         <BoardContextMenu
           board={boardRef}
           onSave={persistence.available ? project.save : undefined}
@@ -87,8 +80,7 @@ export function ReferencePanel() {
           onOpenProject={persistence.available ? project.openProject : undefined}
           onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
           onProject={() => setPickDlg(true)}
-          onDetach={nr.reference ? () => void onDetach() : undefined}
-          onSettings={() => setSettingsDlg(true)}
+          onSettings={() => openSettings()}
         >
           <ReferenceBoard ref={boardRef} />
           <Inspector />
@@ -96,7 +88,6 @@ export function ReferencePanel() {
         </BoardContextMenu>
         <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
         <MediaPicker open={pickDlg} onOpenChange={setPickDlg} board={boardRef} />
-        <BoardSettings open={settingsDlg} onOpenChange={setSettingsDlg} />
         <CropOverlay />
       </div>
     );
@@ -104,26 +95,25 @@ export function ReferencePanel() {
 
   if (mode === "home") {
     return (
-      <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
         <ReferenceHome
           hasSession={items.length > 0}
           onResume={() => setMode("board")}
           onOpen={onOpenScene}
           onNew={() => startNew({})}
           onNewFiles={(files) => startNew({ files })}
-          onSettings={() => setSettingsDlg(true)}
+          onSettings={() => openSettings()}
           onOpenProject={persistence.available ? project.openProject : undefined}
           onOpenRecent={persistence.available ? project.openRecent : undefined}
           recents={persistence.recentProjects}
         />
         <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
-        <BoardSettings open={settingsDlg} onOpenChange={setSettingsDlg} />
       </div>
     );
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
       <Toolbar
         board={boardRef}
         onHome={() => setMode("home")}
@@ -131,8 +121,7 @@ export function ReferencePanel() {
         onSaveAs={persistence.available ? project.saveAs : undefined}
         onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
         onProject={() => setPickDlg(true)}
-        onDetach={nr.reference ? () => void onDetach() : undefined}
-        onSettings={() => setSettingsDlg(true)}
+        onSettings={() => openSettings()}
         onExport={persistence.available ? () => setExportDlg(true) : undefined}
       />
       <BoardContextMenu
@@ -142,8 +131,7 @@ export function ReferencePanel() {
         onSaveAs={persistence.available ? project.saveAs : undefined}
         onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
         onProject={() => setPickDlg(true)}
-        onDetach={nr.reference ? () => void onDetach() : undefined}
-        onSettings={() => setSettingsDlg(true)}
+        onSettings={() => openSettings()}
       >
         <ReferenceBoard ref={boardRef} />
         <Inspector />
@@ -152,7 +140,6 @@ export function ReferencePanel() {
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />
       <MediaPicker open={pickDlg} onOpenChange={setPickDlg} board={boardRef} />
-      <BoardSettings open={settingsDlg} onOpenChange={setSettingsDlg} />
       <CropOverlay />
     </div>
   );

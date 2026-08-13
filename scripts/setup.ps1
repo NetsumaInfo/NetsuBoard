@@ -40,12 +40,12 @@ function Dl([string]$state, [long]$done, [long]$total, [string]$name) {
 # stored as UTF-8 bytes in base64 and decoded at run time -- the same trick the previous script used
 # for Japanese.
 $L = @{
-  fr = @{ ffmpeg='Telechargement de ffmpeg...'; shaders='Installation des shaders...'; ytdlp='Telechargement de yt-dlp...'; config='Ecriture de la configuration...'; done='Installation terminee'; ffmpegMissing='ffmpeg est introuvable apres extraction'; shadersMissing='shaders introuvables' }
-  en = @{ ffmpeg='Downloading ffmpeg...'; shaders='Installing shaders...'; ytdlp='Downloading yt-dlp...'; config='Writing configuration...'; done='Installation complete'; ffmpegMissing='ffmpeg was not found after extraction'; shadersMissing='shaders not found' }
-  es = @{ ffmpeg='Descargando ffmpeg...'; shaders='Instalando shaders...'; ytdlp='Descargando yt-dlp...'; config='Guardando la configuracion...'; done='Instalacion completada'; ffmpegMissing='No se encontro ffmpeg despues de extraerlo'; shadersMissing='shaders no encontrados' }
-  de = @{ ffmpeg='ffmpeg wird heruntergeladen...'; shaders='Shader werden installiert...'; ytdlp='yt-dlp wird heruntergeladen...'; config='Konfiguration wird geschrieben...'; done='Installation abgeschlossen'; ffmpegMissing='ffmpeg wurde nach dem Entpacken nicht gefunden'; shadersMissing='Shader nicht gefunden' }
-  ja = @{ ffmpeg='ffmpeg download...'; shaders='shader install...'; ytdlp='yt-dlp download...'; config='config write...'; done='done'; ffmpegMissing='ffmpeg not found after extraction'; shadersMissing='shaders not found' }
-  zh = @{ ffmpeg='ffmpeg download...'; shaders='shader install...'; ytdlp='yt-dlp download...'; config='config write...'; done='done'; ffmpegMissing='ffmpeg not found after extraction'; shadersMissing='shaders not found' }
+  fr = @{ ffmpeg='Telechargement de ffmpeg...'; shaders='Installation des shaders...'; ytdlp='Telechargement de yt-dlp...'; config='Ecriture de la configuration...'; done='Installation terminee'; ffmpegMissing='ffmpeg est introuvable apres extraction'; shadersMissing='shaders introuvables'; ytdlpMissing='yt-dlp est introuvable apres telechargement' }
+  en = @{ ffmpeg='Downloading ffmpeg...'; shaders='Installing shaders...'; ytdlp='Downloading yt-dlp...'; config='Writing configuration...'; done='Installation complete'; ffmpegMissing='ffmpeg was not found after extraction'; shadersMissing='shaders not found'; ytdlpMissing='yt-dlp was not found after download' }
+  es = @{ ffmpeg='Descargando ffmpeg...'; shaders='Instalando shaders...'; ytdlp='Descargando yt-dlp...'; config='Guardando la configuracion...'; done='Instalacion completada'; ffmpegMissing='No se encontro ffmpeg despues de extraerlo'; shadersMissing='shaders no encontrados'; ytdlpMissing='No se encontro yt-dlp despues de descargarlo' }
+  de = @{ ffmpeg='ffmpeg wird heruntergeladen...'; shaders='Shader werden installiert...'; ytdlp='yt-dlp wird heruntergeladen...'; config='Konfiguration wird geschrieben...'; done='Installation abgeschlossen'; ffmpegMissing='ffmpeg wurde nach dem Entpacken nicht gefunden'; shadersMissing='Shader nicht gefunden'; ytdlpMissing='yt-dlp wurde nach dem Download nicht gefunden' }
+  ja = @{ ffmpeg='ffmpeg download...'; shaders='shader install...'; ytdlp='yt-dlp download...'; config='config write...'; done='done'; ffmpegMissing='ffmpeg not found after extraction'; shadersMissing='shaders not found'; ytdlpMissing='yt-dlp not found after download' }
+  zh = @{ ffmpeg='ffmpeg download...'; shaders='shader install...'; ytdlp='yt-dlp download...'; config='config write...'; done='done'; ffmpegMissing='ffmpeg not found after extraction'; shadersMissing='shaders not found'; ytdlpMissing='yt-dlp not found after download' }
 }
 $T = if ($L.ContainsKey($Lang)) { $L[$Lang] } else { $L['fr'] }
 
@@ -255,9 +255,12 @@ Progress 85
 
 # -- 3. yt-dlp (online media behind a link) -------------------------------------------------------
 # The standalone executable carries its own interpreter: no Python environment, no pip, no venv.
-# Best effort -- a board works perfectly on local files, so a failure here must not block the setup.
+# MANDATORY, like ffmpeg and the shaders: online links are half of what lands on a reference board.
+# When this was best effort, a skipped download produced an install that looked complete and failed
+# months later on a bare `spawn yt-dlp.exe ENOENT`, with nothing in the setup log to explain it.
 Stage 'ytdlp' $T.ytdlp
-try { Download $YtDlpUrl $ytDlp } catch { Info "yt-dlp skipped: $($_.Exception.Message)" }
+try { Download $YtDlpUrl $ytDlp } catch { Fail "$($T.ytdlpMissing): $($_.Exception.Message)" }
+if (-not (Test-Path $ytDlp)) { Fail $T.ytdlpMissing }
 Progress 95
 
 # -- 4. Configuration ------------------------------------------------------------------------------
@@ -269,10 +272,13 @@ $cfg = [ordered]@{
   # comparison instead of launching ffmpeg on every single boot.
   ffmpegVersion       = $ffCurrent
   shaderDir           = $shaderDir
-  setupRuntimeVersion = 4
+  # yt-dlp is mandatory and its download already failed the script if absent: writing the path
+  # unconditionally keeps nr.config.json honest -- a config without it now means an incomplete
+  # install, which core/setup.js sends back through the installer.
+  ytDlp               = $ytDlp
+  setupRuntimeVersion = 5
   setupCompletedAt    = (Get-Date).ToString('o')
 }
-if (Test-Path $ytDlp) { $cfg.ytDlp = $ytDlp }
 $cfgPath = Join-Path $Home_ 'nr.config.json'
 # UTF-8 WITHOUT BOM: Set-Content -Encoding UTF8 under PowerShell 5.1 adds one, JSON.parse throws on
 # that leading character, and the core would silently ignore the config -- the app would then ask for

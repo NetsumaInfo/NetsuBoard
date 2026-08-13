@@ -1245,7 +1245,7 @@ export interface DiscordState {
   error?: string | null;
   preview?: DiscordActivity | null;                         // rendu réel calculé par le core, toggle ignoré
   // Nom + vignette que Discord affichera vraiment (info publique de l'app, résolue par le core).
-  // `imageUrl` = l'asset `nr_logo` s'il est publié, sinon l'icône de l'app — le repli de Discord.
+  // `imageUrl` = l'asset `nb_logo` s'il est publié, sinon l'icône de l'app — le repli de Discord.
   app?: { name: string; imageUrl: string | null } | null;
 }
 
@@ -2654,6 +2654,18 @@ export interface NrApi {
   pathsForFiles(files: File[]): Promise<string[]>;
   saveFile(defaultName?: string): Promise<string | null>;
   mediaUrl(filePath: string): string;
+  // URL d'un fichier local pour les GRILLES d'aperçus (vignettes + proxys de lecture).
+  //
+  // `mediaUrl` sort du serveur HTTP du core, qui porte AUSSI /rpc et le flux SSE. Chromium n'ouvre
+  // que 6 connexions HTTP/1.1 par origine : une prise par /events, quelques-unes par les RPC en vol,
+  // et il reste ~4 créneaux pour des dizaines de <video>. C'est ce qui laisse la moitié d'une grille
+  // figée sur sa vignette même quand TOUS les proxys sont déjà encodés — le fichier existe, il
+  // attend juste un créneau de connexion.
+  //
+  // Sous Tauri on passe donc par le protocole ASSET (`convertFileSrc`) : la requête est interceptée
+  // dans le processus par la coquille Rust, sans socket ni pool de connexions. Hors Tauri (panneau
+  // CEP, navigateur) il n'existe pas → repli sur `mediaUrl`.
+  assetUrl(filePath: string): string;
   // Flux d'une vidéo YouTube relayé par le core (yt-dlp résout, le core relaie) : source d'un
   // `<video>` ordinaire, donc AUCUN habillage YouTube — cf. core/ytstream.js.
   ytStreamUrl(videoId: string): string;
@@ -3209,6 +3221,7 @@ const mock: NrApi = {
   pathsForFiles: async (files) => files.map(() => ""),
   saveFile: async () => null,
   mediaUrl: (p) => "nrmedia://media?p=" + encodeURIComponent(p),
+  assetUrl: (p) => "nrmedia://media?p=" + encodeURIComponent(p),
   ytStreamUrl: (id) => "nrmedia://ytstream?id=" + encodeURIComponent(id),
   openExternal: async (url) => { try { window.open(url, "_blank", "noopener"); } catch { /* noop */ } return true; },
   openPath: async () => false,

@@ -12,7 +12,7 @@
     "about": "À propos"
   },
   "about": {
-    "tagline": "Hub de dérush local, relié à DaVinci Resolve, Premiere Pro et After Effects.",
+    "tagline": "Board de référence infinie : images, vidéos, réseaux sociaux, notes et dessin.",
     "socialTitle": "Réseaux sociaux",
     "social": {
       "discord": "Rejoindre le serveur"
@@ -200,7 +200,7 @@
     },
     "custom": {
       "title": "Mes thèmes",
-      "subtitle": "Enregistre l'apparence courante : palette, couleurs et fond.",
+      "subtitle": "Enregistre l'apparence courante : palette et couleurs.",
       "create": "Nouveau thème",
       "save": "Enregistrer",
       "delete": "Supprimer ce thème",
@@ -285,7 +285,7 @@
   },
   "console": {
     "title": "Console",
-    "subtitle": "Ce que l'app, le service et l'IA ont écrit.",
+    "subtitle": "Ce que l'app et le service ont écrit.",
     "copy": "Copier",
     "errors": "Erreurs",
     "export": "Exporter",

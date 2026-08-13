@@ -1,9 +1,9 @@
-// Panneau Paramètres du board (accessible depuis l'accueil et la barre d'outils) : fond du board
-// (points/uni + couleur, déplacés depuis la barre d'outils), enregistrement auto (activer +
-// intervalle), et la liste de référence des raccourcis clavier.
+// Page « Board » des Paramètres : fond du board (points/uni + couleur), défauts des notes et des
+// cadres, réglages médias (pose, embarquement, séquence, upscale), navigation, enregistrement auto,
+// et les raccourcis clavier (modifiables + gestes inhérents).
 //
-// NON-MODAL (panneau flottant, sans voile) : le board reste visible et interactif → les réglages
-// (couleur/mode de fond) se voient EN DIRECT pendant qu'on les change. Fermeture : croix ou Échap.
+// Le cadre qui l'accueille (`AppSettings`) est NON-MODAL, sans voile : le board reste visible et
+// interactif → les réglages (couleur/mode de fond) se voient EN DIRECT pendant qu'on les change.
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,9 +61,9 @@ const FRAME_FILLS: { labelKey: string; v: "none" | "tint" | "solid" }[] = [
   { labelKey: "settings.fillSolid", v: "solid" },
 ];
 
-// Onglets du panneau (les 13 sections en liste plate rendaient le panneau interminable).
-type SettingsTab = "look" | "media" | "behavior" | "keys";
-const TABS: { id: SettingsTab; labelKey: string }[] = [
+// Onglets de la page « Board » (les 13 sections en liste plate rendaient le panneau interminable).
+export type BoardSettingsTab = "look" | "media" | "behavior" | "keys";
+export const BOARD_SETTINGS_TABS: { id: BoardSettingsTab; labelKey: string }[] = [
   { id: "look", labelKey: "settings.tabLook" },
   { id: "media", labelKey: "settings.tabMedia" },
   { id: "behavior", labelKey: "settings.tabBehavior" },
@@ -107,7 +107,16 @@ function Seg({ active, onClick, children }: { active: boolean; onClick: () => vo
   );
 }
 
-export function BoardSettings({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+/**
+ * Sections « Board » des Paramètres. CONTENU SEUL : le cadre (titre, nav, fermeture) appartient à
+ * `AppSettings`, qui héberge aussi la Console et « À propos ».
+ * `onCapturingChange` remonte l'attente d'une frappe (réaffectation d'un raccourci) : tant qu'elle
+ * dure, Échap annule la capture et ne doit PAS fermer le panneau.
+ */
+export function BoardSettings({ tab, onCapturingChange }: {
+  tab: BoardSettingsTab;
+  onCapturingChange?: (capturing: boolean) => void;
+}) {
   const { t } = useTranslation("reference");
   // Raccourcis INHÉRENTS (non rebindables : gestes souris/molette, event navigateur, directionnels).
   const FIXED_SHORTCUTS: { keys: string[]; desc: string }[] = [
@@ -146,7 +155,6 @@ export function BoardSettings({ open, onOpenChange }: { open: boolean; onOpenCha
       autoDownloadProviders: DOWNLOADABLE_EMBED_PROVIDERS.filter((p) =>
         (p === provider ? !downloadProviders.has(p) : downloadProviders.has(p))),
     });
-  const [tab, setTab] = useState<SettingsTab>("look");
 
   // Réaffectation d'un raccourci d'OUTIL de dessin : `capturing` = l'outil en attente d'une lettre.
   // La prochaine frappe l'affecte (échange si déjà prise) ; Échap annule. Écouteur en phase de
@@ -177,38 +185,12 @@ export function BoardSettings({ open, onOpenChange }: { open: boolean; onOpenCha
     return () => window.removeEventListener("keydown", onKey, true);
   }, [capturing, prefs.drawKeys, setPrefs]);
 
-  // Échap ferme (sans voler les autres raccourcis du board quand fermé). Pendant la capture d'un
-  // raccourci — outil OU commande — Échap annule la capture (géré ailleurs) et ne ferme PAS le panneau.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !capturing && !cmdCapturing) { e.stopPropagation(); onOpenChange(false); } };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [open, onOpenChange, capturing, cmdCapturing]);
-
-  if (!open) return null;
+  // L'interlock Échap vit dans le cadre (`AppSettings`) : ici on se contente de dire quand une
+  // capture est en cours — outil de dessin OU raccourci-commande.
+  useEffect(() => { onCapturingChange?.(!!capturing || cmdCapturing); }, [capturing, cmdCapturing, onCapturingChange]);
 
   return (
-    <div
-      role="dialog"
-      aria-label={t("actions.settings")}
-      className="absolute right-3 top-14 z-50 flex max-h-[calc(100%-4.5rem)] w-96 flex-col overflow-y-auto rounded-xl border border-border bg-card/95 shadow-2xl backdrop-blur"
-    >
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">{t("actions.settings")}</h2>
-        <button type="button" aria-label={t("common:action.close")} onClick={() => onOpenChange(false)} className="inline-flex items-center justify-center size-6 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-          <X className="size-4" />
-        </button>
-      </div>
-
-      {/* Onglets : regroupent les sections (la liste plate était interminable) */}
-      <div className="flex items-center gap-1.5 border-b border-border px-4 py-2">
-        {TABS.map((tb) => (
-          <Seg key={tb.id} active={tab === tb.id} onClick={() => setTab(tb.id)}>{t(tb.labelKey)}</Seg>
-        ))}
-      </div>
-
-      <div className="flex flex-col gap-5 p-4">
+    <div className="flex flex-col gap-5">
         {tab === "look" && (<>
         {/* Fond du board */}
         <section className="flex flex-col gap-2">
@@ -613,7 +595,6 @@ export function BoardSettings({ open, onOpenChange }: { open: boolean; onOpenCha
           </ul>
         </section>
         </>)}
-      </div>
     </div>
   );
 }

@@ -15,7 +15,6 @@
     "zoomOut": "縮小",
     "fitAll": "全体表示",
     "newScene": "新規シーン",
-    "detach": "切り離す",
     "attach": "元に戻す",
     "pin": "ピン留め",
     "unpin": "ピン留め解除",
@@ -43,6 +42,7 @@
     "saveAs": "名前を付けて保存…"
   },
   "settings": {
+    "navBoard": "ボード",
     "tabLook": "外観",
     "tabMedia": "メディア",
     "tabBehavior": "動作",

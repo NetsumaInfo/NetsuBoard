@@ -8,7 +8,7 @@ import {
   ImagePlus, Video, Globe, Type, Frame, Film, Pencil, Clapperboard, ZoomIn, ZoomOut, Maximize,
   FilePlus2, Save, SaveAll, FileSymlink, FolderOpen, ClipboardPaste, BoxSelect, Play, Pause, Grid2x2, Square,
   Copy, FlipHorizontal, FlipVertical, Crop, BringToFront, SendToBack, Trash2,
-  PictureInPicture2, Minimize2, Home, Pin, Layers, Download, AppWindow, Undo2, Redo2, Settings2,
+  Minimize2, Home, Pin, Layers, Download, AppWindow, Undo2, Redo2, Settings2,
   FolderSearch,
 } from "lucide-react";
 import { convertToEmbed, downloadMediaFromEmbed, relocateMissingMedia } from "./boardMediaActions";
@@ -31,7 +31,6 @@ export function BoardContextMenu({
   onOpen,
   onProject,
   onHome,
-  onDetach,
   onAttach,
   onSettings,
   pinned,
@@ -45,7 +44,6 @@ export function BoardContextMenu({
   onOpen?: () => void;
   onProject?: () => void;
   onHome?: () => void;
-  onDetach?: () => void;
   onAttach?: () => void;
   onSettings?: () => void;
   pinned?: boolean;
@@ -236,10 +234,9 @@ export function BoardContextMenu({
           {onOpenProject && <ContextMenuItem onClick={onOpenProject}><FileSymlink /> {t("boardMenu.openProject")}</ContextMenuItem>}
           {onOpen && <ContextMenuItem onClick={onOpen}><FolderOpen /> {t("boardMenu.openScene")}</ContextMenuItem>}
 
-          {(onHome || onDetach || onAttach || onTogglePin || onSettings) && <ContextMenuSeparator />}
+          {(onHome || onAttach || onTogglePin || onSettings) && <ContextMenuSeparator />}
           {onSettings && <ContextMenuItem onClick={onSettings}><Settings2 /> {t("actions.settings")}</ContextMenuItem>}
           {onHome && <ContextMenuItem onClick={onHome}><Home /> {t("boardMenu.backHome")}</ContextMenuItem>}
-          {onDetach && <ContextMenuItem onClick={onDetach}><PictureInPicture2 /> {t("actions.detach")}</ContextMenuItem>}
           {onTogglePin && (
             <ContextMenuCheckboxItem checked={!!pinned} onCheckedChange={onTogglePin}>
               <Pin /> {t("boardMenu.alwaysOnTop")}
