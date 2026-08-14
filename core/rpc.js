@@ -865,6 +865,10 @@ function createRpc() {
     "reference:scanFolder": ([dir, opts]) => scanFolder(dir, opts || {}),
     // Export du board (PNG/JPG en base64, SVG en texte) vers un chemin choisi par l'utilisateur.
     "reference:writeFile": ([filePath, data, encoding]) => writeExportFile(filePath, data, encoding),
+    // Un cadre d'un média rendu en PNG base64, lu SUR LE DISQUE : c'est la seule source de pixels
+    // relisible par le renderer (le protocole d'asset de la coquille teinte le canvas). Sert
+    // l'extraction de palette, qui sans ça ne trouvait « aucune couleur exploitable ».
+    "reference:sampleFrame": ([filePath, opts]) => ffmpeg.sampleFrame(filePath, opts || {}),
 
     // --- Fond d'écran de l'interface (Paramètres › Interface › Thème) ---
     // L'import copie la source dans la bibliothèque et cuit la variante de base ; les marches de flou
