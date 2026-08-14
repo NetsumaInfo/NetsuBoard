@@ -2,22 +2,27 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 rem NetsuBoard development launcher.
-rem Double-click for the interactive menu, or use: run.bat --launch|--switch|--pull|--push|--status
+rem Double-click for the interactive menu, or use:
+rem   run.bat --launch|--convex|--switch|--pull|--push|--status
 
 set "ROOT=%~dp0"
 set "LOCK_STAMP=%ROOT%node_modules\.netsuboard-package-lock.hash"
+set "ENV_FILE=%ROOT%.env.local"
+rem Sibling checkout of NetsuRush, used ONLY to recognise its Convex deployment and refuse it.
+set "SIBLING_ENV=%ROOT%..\NetsuRush\.env.local"
 
 cd /d "%ROOT%" || goto :fatal_root
 title NetsuBoard - Development launcher
 
 if /i "%~1"=="--launch" goto :launch
+if /i "%~1"=="--convex" goto :convex_cli
 if /i "%~1"=="--switch" goto :switch_cli
 if /i "%~1"=="--pull" goto :pull_cli
 if /i "%~1"=="--push" goto :push_cli
 if /i "%~1"=="--status" goto :status_cli
 if not "%~1"=="" (
   echo [ERROR] Unknown option: %~1
-  echo Use: run.bat [--launch^|--switch^|--pull^|--push^|--status]
+  echo Use: run.bat [--launch^|--convex^|--switch^|--pull^|--push^|--status]
   exit /b 2
 )
 
@@ -30,25 +35,32 @@ echo ============================================================
 echo   NetsuBoard - Dev launcher
 echo ============================================================
 call :print_git_summary
+call :print_convex_summary
 echo.
 echo   [1] Start NetsuBoard
-echo   [2] Switch branch
-echo   [3] Refresh branch list ^(fetch^)
-echo   [4] Update current branch ^(safe pull^)
-echo   [5] Send commits to GitHub ^(push^)
-echo   [6] Show Git status
+echo   [2] Convex backend ^(create or start^)
+echo   [3] Switch branch
+echo   [4] Refresh branch list ^(fetch^)
+echo   [5] Update current branch ^(safe pull^)
+echo   [6] Send commits to GitHub ^(push^)
+echo   [7] Show Git status
 echo   [0] Exit
 echo.
 set "MENU_CHOICE="
 set /p "MENU_CHOICE=Choose a number: "
 if "%MENU_CHOICE%"=="1" goto :launch
-if "%MENU_CHOICE%"=="2" goto :menu_switch
-if "%MENU_CHOICE%"=="3" goto :menu_fetch
-if "%MENU_CHOICE%"=="4" goto :menu_pull
-if "%MENU_CHOICE%"=="5" goto :menu_push
-if "%MENU_CHOICE%"=="6" goto :menu_status
+if "%MENU_CHOICE%"=="2" goto :menu_convex
+if "%MENU_CHOICE%"=="3" goto :menu_switch
+if "%MENU_CHOICE%"=="4" goto :menu_fetch
+if "%MENU_CHOICE%"=="5" goto :menu_pull
+if "%MENU_CHOICE%"=="6" goto :menu_push
+if "%MENU_CHOICE%"=="7" goto :menu_status
 if "%MENU_CHOICE%"=="0" exit /b 0
 goto :menu
+
+:menu_convex
+call :convex_setup
+goto :menu_pause
 
 :menu_switch
 call :switch_branch
@@ -74,6 +86,12 @@ goto :menu_pause
 echo.
 pause
 goto :menu
+
+:convex_cli
+call :require_command npx npx
+if errorlevel 1 goto :failed
+call :convex_setup
+exit /b %ERRORLEVEL%
 
 :switch_cli
 call :require_command git Git
@@ -110,6 +128,26 @@ call :require_command cargo Rust
 if errorlevel 1 goto :failed
 call :sync_dependencies
 if errorlevel 1 goto :failed
+
+rem Convex is OPTIONAL: with no deployment the app opens straight on the board, with no sign-in and
+rem with bug reports falling back to the direct webhook. A WRONG deployment, on the other hand, is
+rem never acceptable - it is the whole reason for the guard.
+call :convex_guard
+if defined CONVEX_FOREIGN (
+  call :print_foreign_deployment
+  goto :failed
+)
+if defined CONVEX_READY (
+  call :find_convex_window
+  if defined CONVEX_RUNNING (
+    echo [INFO] Convex watcher already running.
+  ) else (
+    echo [INFO] Starting the Convex watcher ^(!CONVEX_DEPLOYMENT_VALUE!^)...
+    start "NetsuBoard - Convex" cmd /k npx convex dev
+  )
+) else (
+  echo [INFO] No Convex deployment: starting with no sign-in and no relay. Menu entry [2] sets it up.
+)
 
 rem No core port check here. The Tauri shell sweeps 8760-8779 for a FREE port at every spawn
 rem (`pick_core_port`, src-tauri/src/lib.rs) and hands it to the renderer, so an occupied port is
@@ -154,6 +192,152 @@ if defined LISTENER_PID (
 
 echo [INFO] Starting Tauri ^(app + core^)...
 start "NetsuBoard - Tauri (app + core)" cmd /k npm run tauri dev
+exit /b 0
+
+rem ---------------------------------------------------------------------------
+rem Convex
+rem
+rem This project was copied out of NetsuRush WITH its `.env.local`, which is git-ignored and
+rem therefore invisible in `git status`. Running `npx convex dev` in that state pushed NetsuBoard's
+rem schema onto NetsuRush's deployment and dropped the indexes of every table it does not declare.
+rem Hence the guard below: the launcher refuses to touch a deployment that is not this project's.
+rem ---------------------------------------------------------------------------
+
+:convex_setup
+call :require_command npx npx
+if errorlevel 1 exit /b 1
+call :convex_guard
+if defined CONVEX_FOREIGN (
+  call :print_foreign_deployment
+  exit /b 1
+)
+if defined CONVEX_READY goto :convex_start_window
+
+echo.
+echo [INFO] No Convex deployment yet.
+echo        "npx convex dev" runs in THIS window so you can answer its questions.
+echo        Choose "create a new project" and name it netsuboard - never reuse netsurush.
+echo        It keeps running and pushes convex\ on every change. Ctrl+C stops it.
+echo.
+set "CONFIRM_CONVEX="
+set /p "CONFIRM_CONVEX=Start the Convex setup now? (y/N): "
+if /i not "!CONFIRM_CONVEX!"=="y" exit /b 0
+call npx convex dev
+call :convex_env_checklist
+exit /b 0
+
+:convex_start_window
+call :find_convex_window
+if defined CONVEX_RUNNING (
+  echo [INFO] Convex watcher already running ^(!CONVEX_DEPLOYMENT_VALUE!^).
+  exit /b 0
+)
+echo [INFO] Starting the Convex watcher ^(!CONVEX_DEPLOYMENT_VALUE!^)...
+start "NetsuBoard - Convex" cmd /k npx convex dev
+exit /b 0
+
+:convex_env_checklist
+echo.
+echo Still to do ONCE on the deployment - these are secrets, so type them yourself:
+echo   npx convex env set SITE_URL "https://^<deployment^>.convex.site"
+echo   npx convex env set BETTER_AUTH_SECRET "^<32+ random bytes, base64^>"
+echo   npx convex env set DISCORD_CLIENT_ID "^<client id^>"
+echo   npx convex env set DISCORD_CLIENT_SECRET "^<client secret^>"
+echo   npx convex env set OPEN_BETA "true"
+echo   npx convex env set BUG_WEBHOOK "^<Discord webhook URL^>"
+echo.
+echo Discord redirect to declare: https://^<deployment^>.convex.site/api/auth/callback/discord
+echo Full walkthrough: docs\convex-setup.md
+exit /b 0
+
+:convex_guard
+set "CONVEX_READY="
+set "CONVEX_FOREIGN="
+set "CONVEX_DEPLOYMENT_VALUE="
+set "CONVEX_RAW_LINE="
+call :read_env_file "%ENV_FILE%"
+set "CONVEX_DEPLOYMENT_VALUE=!ENV_DEPLOYMENT!"
+set "CONVEX_RAW_LINE=!ENV_RAW_DEPLOYMENT!"
+if not defined CONVEX_DEPLOYMENT_VALUE exit /b 0
+rem `npx convex dev` writes the deployment with a trailing comment naming team and project. When
+rem that comment says netsurush, this file is the copied one, not ours.
+echo(!CONVEX_RAW_LINE!|findstr /i "netsurush" >nul && set "CONVEX_FOREIGN=1"
+rem Same deployment as the sibling checkout: same conclusion, with or without a comment.
+if exist "%SIBLING_ENV%" (
+  call :read_env_file "%SIBLING_ENV%"
+  if /i "!ENV_DEPLOYMENT!"=="!CONVEX_DEPLOYMENT_VALUE!" set "CONVEX_FOREIGN=1"
+)
+if defined CONVEX_FOREIGN exit /b 0
+set "CONVEX_READY=1"
+exit /b 0
+
+:print_convex_summary
+call :convex_guard
+if defined CONVEX_FOREIGN (
+  echo   Convex: WRONG DEPLOYMENT in .env.local - fix it before option 1 or 2
+  exit /b 0
+)
+if defined CONVEX_READY (
+  echo   Convex: !CONVEX_DEPLOYMENT_VALUE!
+) else (
+  echo   Convex: not configured ^(optional - the app runs without it^)
+)
+exit /b 0
+
+:print_foreign_deployment
+echo.
+echo [ERROR] .env.local points at a Convex deployment that is NOT NetsuBoard's:
+echo           !CONVEX_RAW_LINE!
+echo.
+echo Pushing to it would replace that project's schema with NetsuBoard's and DROP the indexes of
+echo every table this repository does not declare. This file arrived with the NetsuRush copy.
+echo.
+echo Fix: blank CONVEX_DEPLOYMENT, VITE_CONVEX_URL and VITE_CONVEX_SITE_URL in .env.local, then
+echo use menu entry [2] to create the netsuboard project.
+exit /b 0
+
+:find_convex_window
+set "CONVEX_RUNNING="
+tasklist /fi "WINDOWTITLE eq NetsuBoard - Convex*" 2>nul | findstr /i "cmd.exe" >nul && set "CONVEX_RUNNING=1"
+exit /b 0
+
+:read_env_file
+rem %1 = path to a .env file. Sets ENV_DEPLOYMENT / ENV_URL / ENV_SITE / ENV_RAW_DEPLOYMENT.
+set "ENV_DEPLOYMENT="
+set "ENV_URL="
+set "ENV_SITE="
+set "ENV_RAW_DEPLOYMENT="
+if not exist "%~1" exit /b 0
+for /f "usebackq eol=# tokens=1,* delims==" %%A in ("%~1") do (
+  if /i "%%A"=="CONVEX_DEPLOYMENT" (
+    set "ENV_RAW_DEPLOYMENT=%%B"
+    call :strip_env_value ENV_DEPLOYMENT "%%B"
+  )
+  if /i "%%A"=="VITE_CONVEX_URL" call :strip_env_value ENV_URL "%%B"
+  if /i "%%A"=="VITE_CONVEX_SITE_URL" call :strip_env_value ENV_SITE "%%B"
+)
+exit /b 0
+
+:strip_env_value
+rem %1 = target variable, %2 = raw value. Cuts the trailing "# comment" and the surrounding spaces.
+set "ENV_RAW=%~2"
+if not defined ENV_RAW (
+  set "%~1="
+  exit /b 0
+)
+for /f "tokens=1 delims=#" %%V in ("!ENV_RAW!") do set "ENV_RAW=%%V"
+:strip_env_lead
+if not defined ENV_RAW goto :strip_env_done
+if not "!ENV_RAW:~0,1!"==" " goto :strip_env_trail
+set "ENV_RAW=!ENV_RAW:~1!"
+goto :strip_env_lead
+:strip_env_trail
+if not defined ENV_RAW goto :strip_env_done
+if not "!ENV_RAW:~-1!"==" " goto :strip_env_done
+set "ENV_RAW=!ENV_RAW:~0,-1!"
+goto :strip_env_trail
+:strip_env_done
+set "%~1=!ENV_RAW!"
 exit /b 0
 
 :switch_branch

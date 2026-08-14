@@ -14,26 +14,33 @@ function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
   return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 }
 
+// `anchor` (free positioning, e.g. at the cursor) and `container` (portal into another node than
+// <body>, e.g. a dialog's content so the menu counts as inside it) are both optional: without them
+// the menu anchors on its trigger and portals to the root, as before.
 function DropdownMenuContent({
   align = "start",
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
+  anchor,
+  container,
   className,
   ...props
 }: MenuPrimitive.Popup.Props &
   Pick<
     MenuPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+    "align" | "alignOffset" | "side" | "sideOffset" | "anchor"
+  > &
+  Pick<MenuPrimitive.Portal.Props, "container">) {
   return (
-    <MenuPrimitive.Portal>
+    <MenuPrimitive.Portal container={container}>
       <MenuPrimitive.Positioner
         className="isolate z-50 outline-none"
         align={align}
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        anchor={anchor}
       >
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"

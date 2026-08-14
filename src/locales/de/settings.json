@@ -9,6 +9,8 @@
     "adobe": "Adobe",
     "storage": "Speicher",
     "system": "System",
+    "updates": "Updates",
+    "report": "Melden",
     "about": "Über"
   },
   "about": {
@@ -16,6 +18,11 @@
     "socialTitle": "Soziale Netzwerke",
     "social": {
       "discord": "Server beitreten"
+    },
+    "supportTitle": "Unterstützen",
+    "support": {
+      "github": "GitHub-Sponsor werden",
+      "coffee": "Einen Kaffee spendieren"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard wird unter GNU AGPL v3.0-only verbreitet · Ohne Gewährleistung.",
     "licenseLink": "Vollständiger Lizenztext",
@@ -231,7 +238,8 @@
     "restart": "Neu starten und installieren",
     "history": "Neues nach Version",
     "whatsNew": "Neu in Version {{version}}",
-    "gotIt": "Los geht's"
+    "gotIt": "Los geht's",
+    "reportSubject": "Update auf v{{version}} fehlgeschlagen"
   },
   "compatibility": {
     "title": "Kompatibilität dieses PCs",
@@ -299,8 +307,16 @@
   },
   "bugReport": {
     "title": "Problem melden",
+    "subtitle": "Beschreibe, was passiert ist. Protokoll und Systemschnappschuss werden automatisch angehängt.",
     "type": "Was ist los?",
     "module": "Wo?",
+    "modules": {
+      "board": "Das Board",
+      "updates": "Updates",
+      "console": "Konsole",
+      "settings": "Einstellungen",
+      "setup": "Installation"
+    },
     "detail": "Sag es in wenigen Worten",
     "detailPlaceholder": "z. B. der Senden-Knopf tut nichts",
     "severity": "Wie schlimm?",
@@ -365,7 +381,8 @@
       "more": "Alles zeigen",
       "less": "Einklappen",
       "manual": "Schreib es selbst",
-      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11"
+      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
+      "attached": "Der Schnappschuss deiner Maschine wird automatisch angehängt – vollständig einsehbar in der Konsole."
     },
     "sending": "Senden…",
     "send": "Senden",
@@ -378,7 +395,7 @@
       "detail": "Sag in wenigen Worten, worum es geht.",
       "tooLarge": "Eine Datei ist größer als {{size}} MB."
     },
-    "noWebhook": "Senden deaktiviert: kein Webhook konfiguriert. Tragen Sie <c1>bugWebhook</c1> in nr.config.json ein (oder die Umgebungsvariable <c2>NR_BUG_WEBHOOK</c2>).",
+    "noWebhook": "Senden deaktiviert: kein Kanal konfiguriert. Setze <c1>bugWebhook</c1> in nr.config.json oder deploye das Convex-Relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Sag uns mehr",
     "descriptionOtherPlaceholder": "Deine Frage oder was du uns sagen möchtest…",
     "files": {

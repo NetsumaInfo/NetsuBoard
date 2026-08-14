@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { countLevels, getConsoleSnapshot, serializeConsole } from "@/lib/appConsole";
 import { bugRelay } from "@/lib/bugRelay";
+import { loadedDiscordProfile } from "@/components/settings/useDiscordProfile";
 import { buildReportText, redact, reportFileName } from "@/components/settings/console/bugReportShared";
 import { useApp } from "@/store";
 import { hostConnected } from "@/store/hostStatus";
@@ -27,6 +28,12 @@ interface Props {
   category?: string;
   severity?: string;
   className?: string;
+}
+
+function reporterIdentity(): BugReportRequest["contact"] {
+  const profile = loadedDiscordProfile();
+  if (!profile?.username) return null;
+  return { discordId: profile.id, discordName: profile.username, text: null };
 }
 
 async function readContext(): Promise<BugContext | null> {
@@ -64,8 +71,10 @@ export function ErrorReportButton({
       module,
       moduleLabel,
       issueText: redact(`${subject}\n\n${error}`),
-      // Aucun compte dans NetsuBoard : le rapport ne porte donc pas de contact.
-      contact: null,
+      // Profil DÉJÀ chargé cette session, sans hook ni appel réseau : ce bouton part aussi depuis des
+      // écrans (installation, mise à jour) qui ne sont pas sous le provider Convex. `null` = auteur
+      // anonyme, jamais une attente — un rapport ne doit pas dépendre d'une session.
+      contact: reporterIdentity(),
       locale: i18n.language,
       activeHost: app.activeHost,
       hostConnected: hostConnected(app),

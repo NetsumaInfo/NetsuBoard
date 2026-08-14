@@ -27,6 +27,7 @@
     "opener:default",
     "opener:allow-open-path",
     "opener:allow-open-url",
+    "deep-link:default",
     "updater:default",
     "process:allow-exit",
     "process:allow-restart"

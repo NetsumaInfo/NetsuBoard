@@ -9,6 +9,8 @@
     "adobe": "Adobe",
     "storage": "存储",
     "system": "系统",
+    "updates": "更新",
+    "report": "反馈",
     "about": "关于"
   },
   "about": {
@@ -16,6 +18,11 @@
     "socialTitle": "社交网络",
     "social": {
       "discord": "加入服务器"
+    },
+    "supportTitle": "支持",
+    "support": {
+      "github": "成为 GitHub 赞助者",
+      "coffee": "请我喝杯咖啡"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard 根据 GNU AGPL v3.0-only 分发 · 不提供担保。",
     "licenseLink": "完整许可证文本",
@@ -231,7 +238,8 @@
     "restart": "重启并安装",
     "history": "各版本新内容",
     "whatsNew": "版本 {{version}} 的新内容",
-    "gotIt": "开始使用"
+    "gotIt": "开始使用",
+    "reportSubject": "更新到 v{{version}} 失败"
   },
   "compatibility": {
     "title": "此电脑的兼容性",
@@ -299,8 +307,16 @@
   },
   "bugReport": {
     "title": "反馈问题",
+    "subtitle": "描述发生了什么。日志和机器信息会自动附加。",
     "type": "出了什么事？",
     "module": "在哪里？",
+    "modules": {
+      "board": "画板",
+      "updates": "更新",
+      "console": "控制台",
+      "settings": "设置",
+      "setup": "安装"
+    },
     "detail": "用几个字说说",
     "detailPlaceholder": "例如：点发送没反应",
     "severity": "有多严重？",
@@ -365,7 +381,8 @@
       "more": "全部展开",
       "less": "收起",
       "manual": "自己填写",
-      "manualPlaceholder": "RTX 3060、Ryzen 5600X、32 GB、Windows 11"
+      "manualPlaceholder": "RTX 3060、Ryzen 5600X、32 GB、Windows 11",
+      "attached": "机器信息会自动附加 — 完整内容可在控制台查看。"
     },
     "sending": "发送中…",
     "send": "发送",
@@ -378,7 +395,7 @@
       "detail": "用几个字说说是什么事。",
       "tooLarge": "有文件超过 {{size}} MB。"
     },
-    "noWebhook": "发送已停用：未配置 Webhook。请在 nr.config.json 中填写 <c1>bugWebhook</c1>（或设置环境变量 <c2>NR_BUG_WEBHOOK</c2>）。",
+    "noWebhook": "发送已停用：未配置任何通道。请在 nr.config.json 中设置 <c1>bugWebhook</c1>，或部署 Convex 中继（<c2>VITE_CONVEX_SITE_URL</c2>）。",
     "descriptionOther": "详细说说",
     "descriptionOtherPlaceholder": "你的问题，或者想告诉我们的事…",
     "files": {

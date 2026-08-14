@@ -9,6 +9,8 @@
     "adobe": "Adobe",
     "storage": "ストレージ",
     "system": "システム",
+    "updates": "アップデート",
+    "report": "報告",
     "about": "情報"
   },
   "about": {
@@ -16,6 +18,11 @@
     "socialTitle": "ソーシャル",
     "social": {
       "discord": "サーバーに参加"
+    },
+    "supportTitle": "支援",
+    "support": {
+      "github": "GitHub でスポンサーになる",
+      "coffee": "コーヒーをおごる"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard は GNU AGPL v3.0-only の下で配布されます · 無保証。",
     "licenseLink": "ライセンス全文",
@@ -231,7 +238,8 @@
     "restart": "再起動してインストール",
     "history": "バージョン別の新機能",
     "whatsNew": "バージョン {{version}} の新機能",
-    "gotIt": "始める"
+    "gotIt": "始める",
+    "reportSubject": "v{{version}} への更新に失敗しました"
   },
   "compatibility": {
     "title": "この PC の互換性",
@@ -299,8 +307,16 @@
   },
   "bugReport": {
     "title": "問題を知らせる",
+    "subtitle": "何が起きたかを書いてください。ログとマシン情報は自動的に添付されます。",
     "type": "どうなりましたか？",
     "module": "どこで？",
+    "modules": {
+      "board": "ボード",
+      "updates": "アップデート",
+      "console": "コンソール",
+      "settings": "設定",
+      "setup": "インストール"
+    },
     "detail": "ひとことで教えてください",
     "detailPlaceholder": "例：送信ボタンが反応しない",
     "severity": "どれくらい困る？",
@@ -365,7 +381,8 @@
       "more": "すべて見る",
       "less": "たたむ",
       "manual": "自分で書く",
-      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11"
+      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
+      "attached": "マシン情報は自動的に添付されます。全文はコンソールで確認できます。"
     },
     "sending": "送信中…",
     "send": "送る",
@@ -378,7 +395,7 @@
       "detail": "ひとことで内容を書いてください。",
       "tooLarge": "ファイルが {{size}} MB を超えています。"
     },
-    "noWebhook": "送信は無効です：Webhook が設定されていません。nr.config.json に <c1>bugWebhook</c1> を設定するか、環境変数 <c2>NR_BUG_WEBHOOK</c2> を指定してください。",
+    "noWebhook": "送信は無効です。チャネルが未設定です。nr.config.json に <c1>bugWebhook</c1> を設定するか、Convex リレー（<c2>VITE_CONVEX_SITE_URL</c2>）をデプロイしてください。",
     "descriptionOther": "くわしく教えてください",
     "descriptionOtherPlaceholder": "質問や、伝えたいことを書いてください…",
     "files": {

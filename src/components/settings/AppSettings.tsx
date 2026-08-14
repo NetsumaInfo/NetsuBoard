@@ -9,11 +9,13 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Info, LayoutDashboard, Palette, Terminal, X } from "lucide-react";
+import { Download, Info, LayoutDashboard, LifeBuoy, Palette, Terminal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { markConsoleSeen, subscribeErrorCount } from "@/lib/appConsole";
 import { BoardSettings, BOARD_SETTINGS_TABS, type BoardSettingsTab } from "@/components/reference/BoardSettings";
 import { ConsolePanel } from "./console/ConsolePanel";
+import { UpdateSettings } from "./UpdateSettings";
+import { BugReportForm } from "./console/BugReportForm";
 import { InterfacePanel } from "./InterfacePanel";
 import { AboutPanel } from "./AboutPanel";
 import { useSettingsUi, type SettingsSection } from "./useSettingsUi";
@@ -25,6 +27,10 @@ const SECTIONS: { id: SettingsSection; icon: typeof Palette; labelKey: string }[
   { id: "board", icon: LayoutDashboard, labelKey: "reference:settings.navBoard" },
   { id: "interface", icon: Palette, labelKey: "settings:nav.interface" },
   { id: "console", icon: Terminal, labelKey: "settings:tab.system.console" },
+  // « Signaler » vit juste après la Console : c'est là qu'on arrive après avoir lu ce qui a cassé,
+  // et le formulaire joint précisément ce journal.
+  { id: "report", icon: LifeBuoy, labelKey: "settings:nav.report" },
+  { id: "updates", icon: Download, labelKey: "settings:nav.updates" },
   { id: "about", icon: Info, labelKey: "settings:nav.about" },
 ];
 
@@ -138,6 +144,8 @@ export function AppSettings() {
               {section === "board" && <BoardSettings tab={boardTab} onCapturingChange={setCapturing} />}
               {section === "interface" && <InterfacePanel />}
               {section === "console" && <ConsolePanel />}
+              {section === "report" && <BugReportForm />}
+              {section === "updates" && <UpdateSettings />}
               {section === "about" && <AboutPanel />}
             </div>
           </div>

@@ -329,7 +329,9 @@ async function submitBugReport(request) {
   const relay = direct ? '' : relayUrl(r.relay);
   if (!direct && !relay) return { ok: false, message: t('webhookMissing') };
 
-  const reportId = 'NR-' + Date.now().toString(36).toUpperCase();
+  // Préfixe NB- : NetsuRush poste des NR- dans le même salon Discord, et deux applications qui
+  // partagent une numérotation rendent un rapport intraçable.
+  const reportId = 'NB-' + Date.now().toString(36).toUpperCase();
   try {
     // Le contexte est recollecté ICI et non repris de la requête : un renderer ne doit pas pouvoir
     // décrire une machine qui n'est pas la sienne, et le formulaire peut être resté ouvert des heures.

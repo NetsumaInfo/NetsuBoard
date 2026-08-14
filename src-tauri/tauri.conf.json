@@ -32,12 +32,17 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzMTE1M0FERDQ3QTUyMzgKUldRNFVuclVyVk1SNDMzR1k1dCtET2p2eWxIRGFyV0M1MHZ4dnZ3bHhidko4NHEzdTJ4ZHFYdWsK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlBQzA2NjJBMEE3RjlFREIKUldUYm5uOEtLbWJBbWt6SVYrVEowblIvQ3lQamJHQ0pLZ2VIT1hoUldEdEp3NXZDUjI5YTl6clcK",
       "endpoints": [
         "https://github.com/NetsumaInfo/NetsuBoard/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"
+      }
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["netsuboard"]
       }
     }
   },

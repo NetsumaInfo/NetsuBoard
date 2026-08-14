@@ -29,7 +29,6 @@ const { serveApp } = require("./appstatic");
 const { serveYoutube } = require("./ytstream");
 const { createRpc } = require("./rpc");
 const { killSidecars } = require("./sidecars");
-const { killRoto } = require("./roto");
 const { ffBin, NR_HOME } = require("./config");
 const { getCapabilities } = require("./export/capabilities");
 
@@ -159,19 +158,11 @@ async function shutdown(code = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
   try { rpc.stopWatch?.(); } catch {}
-  try { rpc.stopAgent?.(); } catch {}
-  try { rpc.stopDiscord?.(); } catch {} // retire la Rich Presence : sinon elle reste affichée sur le profil
   try { rpc.stopCache?.(); } catch {}
-  try { rpc.stopWatchdog?.(); } catch {}
-  try { rpc.stopArchiveQueue?.(); } catch {}
-  try { rpc.stopPrewarm?.(); } catch {}
   // Referme les projets .netsu ouverts : sans ce repli du journal WAL, un `-wal` reste à côté de
   // chaque fichier et la prochaine ouverture repart d'un journal à rejouer.
   try { rpc.closeProjects?.(); } catch (e) { console.error("netsu: fermeture des projets impossible", e); }
-  // Vide les édits de découpe encore en tampon AVANT de tuer quoi que ce soit (écriture disque courte).
-  try { rpc.flushCutEdits?.(); } catch (e) { console.error("cut-edits: vidage final impossible", e); }
   try { killSidecars(); } catch {} // tue les daemons python avant de supprimer leurs fichiers de travail
-  try { killRoto(); } catch {}
   await sessionCache.cleanup();
   await new Promise((resolve) => {
     try { server.close(resolve); } catch { resolve(); }

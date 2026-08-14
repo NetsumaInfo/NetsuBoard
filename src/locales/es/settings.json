@@ -9,6 +9,8 @@
     "adobe": "Adobe",
     "storage": "Almacenamiento",
     "system": "Sistema",
+    "updates": "Actualizaciones",
+    "report": "Informar",
     "about": "Acerca de"
   },
   "about": {
@@ -16,6 +18,11 @@
     "socialTitle": "Redes sociales",
     "social": {
       "discord": "Unirse al servidor"
+    },
+    "supportTitle": "Apoyar",
+    "support": {
+      "github": "Hazte sponsor en GitHub",
+      "coffee": "Invítame un café"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard se distribuye bajo GNU AGPL v3.0-only · Sin garantía.",
     "licenseLink": "Texto completo de la licencia",
@@ -231,7 +238,8 @@
     "restart": "Reiniciar e instalar",
     "history": "Novedades por versión",
     "whatsNew": "Novedades de la versión {{version}}",
-    "gotIt": "Entendido"
+    "gotIt": "Entendido",
+    "reportSubject": "Error al actualizar a la v{{version}}"
   },
   "compatibility": {
     "title": "Compatibilidad de este PC",
@@ -299,8 +307,16 @@
   },
   "bugReport": {
     "title": "Informar de un problema",
+    "subtitle": "Describe lo que ha pasado. El registro y la instantánea del equipo se adjuntan automáticamente.",
     "type": "¿Qué pasa?",
     "module": "¿Dónde?",
+    "modules": {
+      "board": "El tablero",
+      "updates": "Actualizaciones",
+      "console": "Consola",
+      "settings": "Ajustes",
+      "setup": "Instalación"
+    },
     "detail": "Dilo en pocas palabras",
     "detailPlaceholder": "ej.: el botón Enviar no hace nada",
     "severity": "¿Es grave?",
@@ -365,7 +381,8 @@
       "more": "Ver todo",
       "less": "Contraer",
       "manual": "Escríbelo tú",
-      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11"
+      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
+      "attached": "La instantánea de tu equipo se adjunta automáticamente: puedes leerla entera en la Consola."
     },
     "sending": "Enviando…",
     "send": "Enviar",
@@ -378,7 +395,7 @@
       "detail": "Di en pocas palabras de qué se trata.",
       "tooLarge": "Un archivo supera los {{size}} MB."
     },
-    "noWebhook": "Envío desactivado: no hay ningún webhook configurado. Indica <c1>bugWebhook</c1> en nr.config.json (o la variable de entorno <c2>NR_BUG_WEBHOOK</c2>).",
+    "noWebhook": "Envío desactivado: ningún canal configurado. Define <c1>bugWebhook</c1> en nr.config.json, o despliega el relé Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Cuéntanos más",
     "descriptionOtherPlaceholder": "Tu pregunta, o lo que nos quieras decir…",
     "files": {

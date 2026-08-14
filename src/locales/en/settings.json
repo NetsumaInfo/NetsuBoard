@@ -9,6 +9,8 @@
     "adobe": "Adobe",
     "storage": "Storage",
     "system": "System",
+    "updates": "Updates",
+    "report": "Report",
     "about": "About"
   },
   "about": {
@@ -16,6 +18,11 @@
     "socialTitle": "Social",
     "social": {
       "discord": "Join the server"
+    },
+    "supportTitle": "Support",
+    "support": {
+      "github": "Become a GitHub sponsor",
+      "coffee": "Buy me a coffee"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard is distributed under GNU AGPL v3.0-only · No warranty.",
     "licenseLink": "Full license text",
@@ -231,7 +238,8 @@
     "restart": "Restart and install",
     "history": "What's new by version",
     "whatsNew": "What's new in version {{version}}",
-    "gotIt": "Let's go"
+    "gotIt": "Let's go",
+    "reportSubject": "Update to v{{version}} failed"
   },
   "compatibility": {
     "title": "This PC's compatibility",
@@ -299,8 +307,16 @@
   },
   "bugReport": {
     "title": "Report a problem",
+    "subtitle": "Describe what happened. The log and the machine snapshot are attached automatically.",
     "type": "What is happening?",
     "module": "Where?",
+    "modules": {
+      "board": "The board",
+      "updates": "Updates",
+      "console": "Console",
+      "settings": "Settings",
+      "setup": "Setup"
+    },
     "detail": "Say it in a few words",
     "detailPlaceholder": "e.g. the Send button does nothing",
     "severity": "How bad?",
@@ -365,7 +381,8 @@
       "more": "See all",
       "less": "Collapse",
       "manual": "Type it yourself",
-      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11"
+      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
+      "attached": "Your machine snapshot is attached automatically — read it in full in the Console."
     },
     "sending": "Sending…",
     "send": "Send",
@@ -378,7 +395,7 @@
       "detail": "Say in a few words what it is about.",
       "tooLarge": "A file is over {{size}} MB."
     },
-    "noWebhook": "Sending is disabled: no webhook configured. Set <c1>bugWebhook</c1> in nr.config.json (or the <c2>NR_BUG_WEBHOOK</c2> environment variable).",
+    "noWebhook": "Sending is off: no channel configured. Set <c1>bugWebhook</c1> in nr.config.json, or deploy the Convex relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Tell us more",
     "descriptionOtherPlaceholder": "Your question, or whatever you want to tell us…",
     "files": {

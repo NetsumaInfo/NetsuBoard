@@ -16,7 +16,7 @@ export function GateFrame({ children, contentClassName = "max-w-sm" }: { childre
           className="relative flex h-9 shrink-0 items-center gap-2 border-b border-border bg-card px-3 select-none"
         >
           <BrandIcon className="size-6" />
-          <span className="text-xs font-semibold tracking-tight">NetsuRush</span>
+          <span className="text-xs font-semibold tracking-tight">NetsuBoard</span>
           <BetaBadge />
           <WindowControls />
         </header>

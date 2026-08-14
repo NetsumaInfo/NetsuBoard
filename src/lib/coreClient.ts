@@ -4,7 +4,7 @@
 // Dialogs / openExternal passent par les plugins Tauri (chargés à la demande, seulement sous Tauri).
 
 import { convertFileSrc } from "@tauri-apps/api/core";
-import type { NrApi, RefApi, WallpaperApi, ScriptApi, CollectionsApi, LibraryApi, ChatApi, NotebookApi, OutboxApi, PowerApi, SnapshotApi, CacheApi } from "./bridge";
+import type { NrApi, RefApi, PowerApi } from "./bridge";
 import i18n from "@/i18n";
 import { logError } from "@/lib/appLog";
 import { readPreviewSettings } from "@/lib/previewSettings";
@@ -281,8 +281,6 @@ function on(channel: string, cb: (p: unknown) => void): () => void {
 
 // ---- Plugins Tauri (chargés paresseusement, no-op hors Tauri) ----
 const VIDEO_EXT = ["mp4", "mov", "mkv", "avi", "m4v", "mxf", "webm", "wmv", "flv", "ts", "m2ts", "mpg", "mpeg"];
-const AUDIO_EXT = ["wav", "mp3", "aac", "m4a", "flac", "ogg", "opus", "aif", "aiff", "wma"];
-const MEDIA_EXT = [...VIDEO_EXT, ...AUDIO_EXT];
 const IMAGE_EXT = ["jpg", "jpeg", "png", "tif", "tiff", "bmp", "webp", "gif", "dpx", "exr"];
 
 async function dlgOpen(opts: Record<string, unknown>): Promise<string | string[] | null> {
@@ -416,13 +414,6 @@ function abToB64(ab: ArrayBuffer): string {
 // qu'aucun travail n'est perdu en quittant → un dialogue « enregistrer ? » serait une fausse alerte.
 const REF_LABEL = "reference";
 
-const wallpaper: WallpaperApi = {
-  import: (srcPath, opts) => call("wallpaper:import", [srcPath, opts || {}]),
-  list: () => call("wallpaper:list"),
-  variant: (id, opts) => call("wallpaper:variant", [id, opts]),
-  remove: (id) => call("wallpaper:remove", [id]),
-};
-
 const reference: RefApi = {
   listScenes: () => call("reference:listScenes"),
   storagePath: () => call("reference:storagePath"),
@@ -514,73 +505,6 @@ const reference: RefApi = {
   onPush: (cb) => on("reference:push", cb),
 };
 
-const script: ScriptApi = {
-  recordings: (dir) => call("script:recordings", [dir]),
-  mediaPool: () => call("script:mediaPool"),
-  importMedia: (paths) => call("script:importMedia", [paths]),
-  listDocs: (resolveProject) => call("script:listDocs", [resolveProject ?? null]),
-  loadDoc: (id) => call("script:loadDoc", [id]),
-  saveDoc: (doc) => call("script:saveDoc", [doc]),
-  deleteDoc: (id) => call("script:deleteDoc", [id]),
-  listVersions: (docId) => call("script:listVersions", [docId]),
-  saveVersion: (docId, label, doc) => call("script:saveVersion", [docId, label, doc]),
-  getVersion: (id) => call("script:getVersion", [id]),
-  deleteVersion: (id) => call("script:deleteVersion", [id]),
-  buildTimeline: (opts) => call("script:buildTimeline", [opts]),
-};
-
-const collections: CollectionsApi = {
-  list: () => call("collections:list"),
-  load: (id) => call("collections:load", [id]),
-  save: (c) => call("collections:save", [c]),
-  delete: (id) => call("collections:delete", [id]),
-  addShots: (id, shots) => call("collections:addShots", [id, shots]),
-  removeShot: (id, shotId) => call("collections:removeShot", [id, shotId]),
-  updateShot: (id, shotId, patch) => call("collections:updateShot", [id, shotId, patch]),
-  saveIcon: (bytes, ext) => call("collections:saveIcon", [{ __b64: abToB64(bytes) }, ext]),
-  listFolders: () => call("collections:listFolders"),
-  saveFolder: (f) => call("collections:saveFolder", [f]),
-  deleteFolder: (id) => call("collections:deleteFolder", [id]),
-  move: (id, folderId) => call("collections:move", [id, folderId]),
-  allTags: () => call("collections:allTags"),
-  archive: (id, opts) => call("collections:archive", [id, opts]),
-  relocateArchive: (id, opts) => call("collections:relocateArchive", [id, opts]),
-  queueState: () => call("collections:queueState"),
-  queueEnqueue: (id, req) => call("collections:queueEnqueue", [id, req]),
-  queueCancel: (entryId) => call("collections:queueCancel", [entryId]),
-  onQueue: (cb) => on("collections:queue", cb as (p: unknown) => void),
-  offline: (id) => call("collections:offline", [id]),
-  relinkPath: (id, oldPath, newPath) => call("collections:relinkPath", [id, oldPath, newPath]),
-  relinkDir: (id, dir) => call("collections:relinkDir", [id, dir]),
-};
-
-const library: LibraryApi = {
-  list: () => call("library:list"),
-  addPaths: (paths) => call("library:addPaths", [paths]),
-  addDir: (dir) => call("library:addDir", [dir]),
-  remove: (id) => call("library:remove", [id]),
-  removeMany: (ids) => call("library:removeMany", [ids]),
-  restore: (undo) => call("library:restore", [undo]),
-  move: (id, folderId) => call("library:move", [id, folderId]),
-  listFolders: () => call("library:listFolders"),
-  saveFolder: (f) => call("library:saveFolder", [f]),
-  deleteFolder: (id, withItems) => call("library:deleteFolder", [id, withItems]),
-  offline: () => call("library:offline"),
-  relinkPath: (oldPath, newPath) => call("library:relinkPath", [oldPath, newPath]),
-  relinkDir: (dir) => call("library:relinkDir", [dir]),
-};
-
-const outbox: OutboxApi = {
-  list: () => call("outbox:list"),
-  enqueue: (entry) => call("outbox:enqueue", [entry]),
-  remove: (id) => call("outbox:remove", [id]),
-  clear: (which) => call("outbox:clear", [which]),
-  settings: () => call("outbox:settings"),
-  setSettings: (patch) => call("outbox:setSettings", [patch]),
-  flush: (host) => call("outbox:flush", [host]),
-  onChanged: (cb) => on("outbox:changed", cb as (p: unknown) => void),
-};
-
 const power: PowerApi = {
   state: () => call("power:state"),
   reconcile: () => call("power:reconcile"),
@@ -591,184 +515,10 @@ const power: PowerApi = {
   onProgress: (cb) => on("power:progress", cb as (p: unknown) => void),
 };
 
-const snapshot: SnapshotApi = {
-  state: () => call("snapshot:state"),
-  clear: () => call("snapshot:clear"),
-  peek: (kind: string, arg?: string) => call("snapshot:peek", [kind, arg]),
-  build: (opts) => call("snapshot:build", [opts ?? {}]),
-  onChanged: (cb) => on("snapshot:changed", cb as (p: unknown) => void),
-  onProgress: (cb) => on("snapshot:progress", cb as (p: unknown) => void),
-};
-
-const cache: CacheApi = {
-  overview: () => call("cache:overview"),
-  tree: () => call("cache:tree"),
-  clear: (opts) => call("cache:clear", [opts]),
-  purgePreviewRanges: (ranges) => call("cache:purgePreviewRanges", [ranges]),
-  missing: () => call("cache:missing"),
-  vacuum: () => call("cache:vacuum"),
-  settings: () => call("cache:settings"),
-  setSettings: (patch) => call("cache:setSettings", [patch]),
-  check: () => call("cache:check"),
-  sessionEvent: (opts) => call("cache:sessionEvent", [opts]),
-  setDir: (opts) => call("cache:setDir", [opts]),
-  reindex: () => call("cache:reindex"),
-  onProgress: (cb) => on("cache:progress", cb as (p: unknown) => void),
-  onWarn: (cb) => on("cache:warn", cb as (p: unknown) => void),
-  onChanged: (cb) => on("cache:changed", cb as (p: unknown) => void),
-};
-
-const notebook: NotebookApi = {
-  list: () => call("notebook:list"),
-  saveNotebook: (nb) => call("notebook:saveNotebook", [nb]),
-  deleteNotebook: (id) => call("notebook:deleteNotebook", [id]),
-  forScript: (scriptId, title) => call("notebook:forScript", [scriptId, title ?? null]),
-  load: (id) => call("notebook:load", [id]),
-  loadPage: (id) => call("notebook:loadPage", [id]),
-  savePage: (page) => call("notebook:savePage", [page]),
-  deletePage: (id) => call("notebook:deletePage", [id]),
-  duplicatePage: (id) => call("notebook:duplicatePage", [id]),
-  trashList: (nbId) => call("notebook:trashList", [nbId]),
-  restorePage: (id) => call("notebook:restorePage", [id]),
-  purgePage: (id) => call("notebook:purgePage", [id]),
-  emptyTrash: (nbId) => call("notebook:emptyTrash", [nbId]),
-  search: (nbId, query) => call("notebook:search", [nbId, query]),
-  saveDatabase: (db) => call("notebook:saveDatabase", [db]),
-  deleteDatabase: (id) => call("notebook:deleteDatabase", [id]),
-  backlinks: (notebookId, pageId) => call("notebook:backlinks", [notebookId, pageId]),
-  saveAsset: async (bytes, ext, notebookId) => {
-    const r: { ok: boolean; path?: string; error?: string } = await call("notebook:saveAsset", [{ __b64: abToB64(bytes) }, ext, notebookId]);
-    return r.ok && r.path ? { ...r, url: `${BASE}/media?p=${encodeURIComponent(r.path)}${tkParam}` } : r;
-  },
-  readAsset: (path) => call("notebook:readAsset", [path]),
-  // Le core range les médias en tokens relatifs : il lui faut NOTRE gabarit d'URL pour les rendre
-  // (base + jeton), lui seul ne connaît ni le port retenu ni le jeton de la session.
-  openProject: (filePath) => call("notebook:openProject", [filePath, { prefix: `${BASE}/media?p=`, suffix: tkParam }]),
-  saveProjectAs: (opts) => call("notebook:saveProjectAs", [{ ...opts, url: { prefix: `${BASE}/media?p=`, suffix: tkParam } }]),
-  closeProject: (filePath) => call("notebook:closeProject", [filePath]),
-  projectOf: (notebookId) => call("notebook:projectOf", [notebookId]),
-  linkMeta: (url) => call("notebook:linkMeta", [url]),
-  writeExport: (filePath, text) => call("notebook:writeExport", [filePath, text]),
-  exportFile: (opts) => call("notebook:exportFile", [opts]),
-  // Le core réécrit les tokens d'assets en URLs /media : on lui passe notre gabarit (base + token).
-  importFile: ({ bytes, ...rest }) =>
-    call("notebook:importFile", [{ ...rest, bytes: { __b64: abToB64(bytes) }, mediaPrefix: `${BASE}/media?p=`, mediaSuffix: tkParam }]),
-  push: (payload) => { void call("notebook:push", [payload]); },
-  onPush: (cb) => on("notebook:push", cb),
-  // Fenêtre détachée du Carnet — même mécano que le board Référence (label dédié, hash #notebook).
-  detach: () => {
-    void (async () => {
-      if (!isTauri) return;
-      const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
-      const existing = await WebviewWindow.getByLabel("notebook");
-      if (existing) {
-        await existing.setFocus().catch(() => {});
-        return;
-      }
-      const win = new WebviewWindow("notebook", {
-        url: "index.html#notebook",
-        title: i18n.t("common:window.notebook"),
-        decorations: false,
-        width: 860,
-        height: 640,
-        minWidth: 420,
-        minHeight: 360,
-        dragDropEnabled: false, // DnD HTML5 (fichiers/blocs) géré par la WebView, pas par l'OS
-      });
-      win.once("tauri://error", (e) => console.error("[notebook] échec ouverture fenêtre détachée", e));
-    })();
-  },
-  attach: () => {
-    void (async () => {
-      if (!isTauri) return;
-      const { getCurrentWindow, Window } = await import("@tauri-apps/api/window");
-      try {
-        const main = await Window.getByLabel("main");
-        await main?.setFocus();
-      } catch { /* focus best-effort */ }
-      await getCurrentWindow().close();
-    })();
-  },
-};
-
-const chat: ChatApi = {
-  agents: () => call("chat:agents"),
-  configure: (cfg) => call("chat:configure", [cfg]),
-  send: (opts) => call("chat:send", [opts]),
-  cancel: (runId) => call("chat:cancel", [runId]),
-  respondApproval: (callId, approved) => call("chat:approval:respond", [callId, approved]),
-  tools: () => call("chat:tools"),
-  onEvent: (cb) => on("chat:event", cb as (p: unknown) => void),
-  onApproval: (cb) => on("chat:approval", cb as (p: unknown) => void),
-  history: {
-    list: () => call("chat:history:list"),
-    load: (id) => call("chat:history:load", [id]),
-    save: (conv) => call("chat:history:save", [conv]),
-    delete: (id) => call("chat:history:delete", [id]),
-  },
-};
-
 export function makeCoreClient(): NrApi {
   const client: NrApi = {
-    // WebView2 n'a pas d'équivalent à app.getGPUFeatureStatus (Electron) → on renvoie l'info
-    // dispo côté renderer (présence WebGPU) sans appeler le core (évite un canal 404).
-    gpuStatus: () =>
-      Promise.resolve({
-        features: { webgpu: typeof navigator !== "undefined" && "gpu" in navigator ? "enabled" : "unavailable" },
-      }),
-    optimizeDiagnose: () => call("optimize:diagnose"),
-    optimizeRenderJobs: () => call("optimize:renderJobs"),
-    optimizeStopRender: () => call("optimize:stopRender"),
-    optimizeClearRenderQueue: () => call("optimize:clearRenderQueue"),
-    optimizeClearFinishedJobs: () => call("optimize:clearFinishedJobs"),
-    optimizeDeleteRenderJob: (id) => call("optimize:deleteRenderJob", [id]),
-    optimizeReloadProject: () => call("optimize:reloadProject"),
-    optimizeOpenPage: (page) => call("optimize:openPage", [page]),
-    optimizeFreeGpu: () => call("optimize:freeGpu"),
-    optimizeFreeCpu: () => call("optimize:freeCpu"),
-    optimizeFreeRam: () => call("optimize:freeRam"),
-    optimizeListProcesses: () => call("optimize:listProcesses"),
-    optimizeKillProcess: (pid) => call("optimize:killProcess", [pid]),
-    optimizeDeadProcesses: () => call("optimize:deadProcesses"),
-    optimizeCleanDead: () => call("optimize:cleanDead"),
-    optimizeNoiseProcesses: () => call("optimize:noiseProcesses"),
-    optimizeKillNoise: (pids) => call("optimize:killNoise", [pids]),
-    optimizeWatchdog: () => call("optimize:watchdog"),
-    optimizeSetWatchdog: (prefs) => call("optimize:setWatchdog", [prefs]),
-    optimizeDismissWatchdog: () => call("optimize:dismissWatchdog"),
-    onOptimizeWatchdog: (cb) => on("optimize:watchdog", cb as (p: unknown) => void),
-    optimizeResources: (root) => call("optimize:resources", [root]),
-    optimizeSessionHealth: () => call("optimize:sessionHealth"),
-    optimizePrefs: () => call("optimize:prefs"),
-    optimizeApplyPrefs: (changes) => call("optimize:applyPrefs", [changes]),
-    optimizePrefsBackups: () => call("optimize:prefsBackups"),
-    optimizeRestorePrefs: (name) => call("optimize:restorePrefs", [name]),
-    optimizeSnapshot: () => call("optimize:snapshot"),
-    optimizeListSnapshots: () => call("optimize:listSnapshots"),
-    optimizeScanCache: (root) => call("optimize:scanCache", [root]),
-    optimizeCleanCache: (paths) => call("optimize:cleanCache", [paths]),
-    boostDiagnose: (app) => call("boost:diagnose", [app]),
-    boostProcs: () => call("boost:procs"),
-    boostScanCache: (app, dir) => call("boost:scanCache", [app, dir]),
-    boostCleanCache: (app, targets, opts) => call("boost:cleanCache", [app, targets, opts ?? {}]),
-    boostPurge: (app, target) => call("boost:purge", [app, target]),
-    boostHygiene: (app, op) => call("boost:hygiene", [app, op]),
-    boostDeletePreviews: (app) => call("boost:deletePreviews", [app]),
-    boostPrefs: (app) => call("boost:prefs", [app]),
-    boostApplyPrefs: (app, changes) => call("boost:applyPrefs", [app, changes]),
-    boostProxyAudit: (app) => call("boost:proxyAudit", [app]),
-    boostAttachProxies: (app, pairs) => call("boost:attachProxies", [app, pairs]),
-    boostSetEnableProxies: (app, on) => call("boost:setEnableProxies", [app, on]),
-    onBoostProgress: (cb) => on("boost:progress", cb as (p: unknown) => void),
     configGet: () => call("config:get"),
-    prefsGet: () => call("prefs:get"),
-    prefsSet: (patch) => call("prefs:set", [patch]),
-    onPrefsChanged: (cb) => on("prefs:changed", cb as (p: unknown) => void),
     configSetLang: (lang) => call("config:setLang", [lang]),
-    discordState: () => call("discord:state"),
-    discordSetPrefs: (patch) => call("discord:setPrefs", [patch]),
-    discordSetContext: (ctx) => call("discord:setContext", [ctx]),
-    onDiscordChanged: (cb) => on("discord:changed", cb as (p: unknown) => void),
     setupStatus: () => call("setup:status"),
     setupRun: (options) => call("setup:run", [options]),
     compatibilityStatus: (opts) => call("compat:status", [opts ?? {}]),
@@ -780,32 +530,13 @@ export function makeCoreClient(): NrApi {
     bugStatus: () => call("bug:status"),
     bugContext: () => call("bug:context"),
     status: () => call("resolve:status"),
-    listMediaPool: () => call("resolve:listMediaPool"),
     importToMediaPool: (paths) => call("resolve:import", [paths]),
-    importToBin: (paths, bin) => call("resolve:importToBin", [paths, bin]),
-    buildTimeline: (opts) => call("resolve:buildTimeline", [opts]),
-    listTimelines: () => call("resolve:listTimelines"),
-    timelineTree: () => call("resolve:timelineTree"),
-    timelineThumbs: (opts) => call("resolve:timelineThumbs", [opts ?? {}]),
-    onTimelineThumb: (cb) => on("resolve:timelineThumb", cb as (p: unknown) => void),
-    cutTimeline: (opts) => call("resolve:cutTimeline", [opts]),
-    onTimelineCutProgress: (cb) => on("timelinecut:progress", cb as (p: unknown) => void),
-    analyzeTimelineCut: (opts) => call("resolve:analyzeTimelineCut", [opts]),
-    buildCutTimeline: (opts) => call("resolve:buildCutTimeline", [opts]),
-    readTimelineCuts: (opts) => call("resolve:readTimelineCuts", [opts ?? {}]),
-    onResolveChanged: (cb) => on("resolve:changed", cb as (p: unknown) => void),
     refreshNow: () => { void call("resolve:refreshNow").catch(() => {}); },
-    probe: (p) => call("ffmpeg:probe", [p]),
     playInfo: (p) => call("player:info", [p]),
     streamUrl: (p, t, mode) => `${BASE}/stream?p=${encodeURIComponent(p)}&t=${t || 0}&mode=${mode}${tkParam}`,
     audioTracks: (p) => call("ffmpeg:audioTracks", [p]),
     detectScenes: (p, threshold, model, options) => call("ffmpeg:detectScenes", [p, threshold, model, options]),
     cachedScenes: (p, model, threshold, options) => call("ffmpeg:cachedScenes", [p, model, threshold, options]),
-    detectConcurrency: () => call("ffmpeg:detectConcurrency"),
-    getCutEdits: (p, model, optionsKey) => call("cut:getEdits", [p, model, optionsKey]),
-    saveCutEdits: (p, model, edits, optionsKey) => call("cut:saveEdits", [p, model, edits, optionsKey]),
-    clearCutEdits: (p, model, optionsKey) => call("cut:clearEdits", [p, model, optionsKey]),
-    onScenesProgress: (cb) => on("scenes:progress", cb as (p: unknown) => void),
     // En remote (panneau CEP) → codec que le moteur SAIT lire : H.264 si dispo, sinon WebM/VP8
     // (garanti dans tout Chromium, même un CEF sans codecs propriétaires). Sondé une fois.
     proxy: (opts) => {
@@ -815,132 +546,28 @@ export function makeCoreClient(): NrApi {
       return call("ffmpeg:proxy", [{ ...request, ...(codec ? { codec } : {}) }]);
     },
     proxyCancel: (token) => { call("ffmpeg:proxyCancel", [token]).catch(() => {}); },
-    proxyCancelMany: (tokens) => { call("ffmpeg:proxyCancelMany", [tokens]).catch(() => {}); },
-    proxyCancelAll: () => { call("ffmpeg:proxyCancelAll").catch(() => {}); },
     thumbnail: (p, t, priority) => call("ffmpeg:thumbnail", [{ path: p, time: t, priority, settings: readPreviewSettings().thumbnail }]),
-    compareRenderFrames: (opts) => call("ffmpeg:compareFrames", [opts]),
     thumbsBatch: (p, items) => call("ffmpeg:thumbsBatch", [{ path: p, items, settings: readPreviewSettings().thumbnail }]),
     thumbsResolve: (items) => call("ffmpeg:thumbsResolve", [{ items, settings: readPreviewSettings().thumbnail }]),
-    exportClip: (opts) => call("ffmpeg:export", [opts]),
-    exportClips: (opts) => call("export:clips", [opts]),
     exportCapabilities: (opts) => call("export:capabilities", [opts ?? {}]),
-    exportPreviewName: (opts) => call("export:previewName", [opts]),
-    onExportProgress: (cb) => on("export:progress", cb as (p: unknown) => void),
-    aeExport: (opts) => call("ae:export", [opts]),
-    onAeProgress: (cb) => on("ae:progress", cb as (p: unknown) => void),
-    transferSources: (opts) => call("transfer:sources", [opts]),
-    transferRead: (opts) => call("transfer:read", [opts]),
-    transferRun: (opts) => call("transfer:run", [opts]),
-    onTransferProgress: (cb) => on("transfer:progress", cb as (p: unknown) => void),
     adobeStatus: () => call("adobe:status"),
     adobeSnapshot: (app) => call("adobe:snapshot", [app]),
     adobeLaunch: (app) => call("adobe:launch", [app]),
     adobeScan: (app) => call("adobe:cmd", [app, { cmd: "scan" }]),
-    adobeBuildTimeline: (opts) => call("adobe:buildTimeline", [opts]),
     adobeImport: (app, paths) => call("adobe:import", [{ app, paths }]),
     adobeInstallPanel: () => call("adobe:installPanel"),
     adobeSetPanelAutoUpdate: (on) => call("adobe:setPanelAutoUpdate", [on]),
-    onAdobePanelUpdated: (cb) => on("adobe:panelUpdated", cb as (p: unknown) => void),
-    adobeDiagnose: () => call("adobe:diagnose"),
-    onAdobeUpdate: (cb) => on("adobe:update", cb as (p: unknown) => void),
-    transcribe: (opts) => call("voice:transcribe", [opts]),
-    detectSilences: (opts) => call("voice:detectSilences", [opts]),
-    detectFillers: (opts) => call("voice:detectFillers", [opts]),
-    exportSubtitles: (opts) => call("voice:exportSubtitles", [opts]),
-    exportCut: (opts) => call("voice:exportCut", [opts]),
-    waveform: (opts) => call("voice:waveform", [opts]),
-    searchTranscripts: (opts) => call("voice:searchTranscripts", [opts]),
-    onVoiceProgress: (cb) => on("voice:progress", cb as (p: unknown) => void),
     upscaleRun: (opts) => call("upscale:run", [opts]),
     upscaleShaderRun: (opts) => call("upscale:shaderRun", [opts]),
     upscaleTestFrame: (opts) => call("upscale:testFrame", [opts]),
     onUpscaleProgress: (cb) => on("upscale:progress", cb as (p: unknown) => void),
-    processInterpolate: (opts) => call("process:interpolate", [opts]),
-    processDepth: (opts) => call("process:depth", [opts]),
-    processRemoveBg: (opts) => call("process:removeBg", [opts]),
-    processTestFrame: (opts) => call("process:testFrame", [opts]),
-    onProcessProgress: (cb) => on("process:progress", cb as (p: unknown) => void),
     modelsList: () => call("models:list"),
-    modelsDownload: (id, replace) => call("models:download", [id, replace === true]),
-    modelsImport: (id, source) => call("models:import", [id, source]),
-    modelsCancel: (id) => call("models:cancel", [id]),
-    modelsDelete: (id) => call("models:delete", [id]),
-    modelsDiskUsage: () => call("models:diskUsage"),
-    modelsGpu: () => call("models:gpu"),
     onModelsProgress: (cb) => on("models:progress", cb as (p: unknown) => void),
-    pipelineRun: (opts) => call("pipeline:run", [opts]),
-    onPipelineProgress: (cb) => on("pipeline:progress", cb as (p: unknown) => void),
-    rotoOpen: (opts) => call("roto:open", [opts]),
-    rotoAddPoint: (opts) => call("roto:addPoint", [opts]),
-    rotoClearPoints: (opts) => call("roto:clearPoints", [opts]),
-    rotoUndoPoint: () => call("roto:undoPoint"),
-    rotoPreviewPoint: (opts) => call("roto:previewPoint", [opts]),
-    rotoMask: (opts) => call("roto:mask", [opts]),
-    rotoSetPost: (opts) => call("roto:setPost", [opts]),
-    rotoSetView: (opts) => call("roto:setView", [opts]),
-    rotoSetObjects: (opts) => call("roto:setObjects", [opts]),
-    rotoRemovePoint: (opts) => call("roto:removePoint", [opts]),
-    rotoMovePoint: (opts) => call("roto:movePoint", [opts]),
-    rotoClearTracking: () => call("roto:clearTracking"),
-    rotoDedupe: (opts) => call("roto:dedupe", [opts || {}]),
-    rotoPropagate: (opts) => call("roto:propagate", [opts || {}]),
-    rotoCancel: () => call("roto:cancel"),
-    rotoRefine: (opts) => call("roto:refine", [opts]),
-    rotoSetRefined: (opts) => call("roto:setRefined", [opts]),
-    rotoExport: (opts) => call("roto:export", [opts]),
-    rotoObjectRemove: (opts) => call("roto:objectRemove", [opts]),
-    onRotoProgress: (cb) => on("roto:progress", cb as (p: unknown) => void),
-    dictateTranscribe: (opts) => call("dictate:transcribe", [opts]),
-    dictateCppStatus: () => call("dictate:cppStatus"),
-    indexClip: (p, force, frames, model, options) => call("search:index", [p, force, frames, model, options]),
-    indexConcurrency: () => call("search:concurrency"),
-    warmSearchIndex: () => call("search:warm"),
-    runSearch: (opts) => call("search:run", [opts]),
-    dedup: (opts) => call("search:dedup", [opts]),
-    cluster: (opts) => call("search:cluster", [opts]),
-    search: (text, topK) => call("search:query", [text, topK]),
-    searchStatus: (o) => call("search:status", [o]),
-    searchModelState: () => call("search:modelState"),
-    searchSetModel: (id) => call("search:setModel", [id]),
-    projects: () => call("projects:list"),
-    forgetProject: (name) => call("projects:forget", [name]),
-    projectPaths: (names) => call("projects:paths", [names]),
-    scanProjects: () => call("projects:scan"),
-    onProjectScan: (cb) => on("projects:scan", cb as (p: unknown) => void),
-    searchIndexed: () => call("search:indexed"),
-    cancelIndexJobs: () => call("search:cancelIndex"),
-    searchShots: (p) => call("search:shots", [p]),
-    faceIndex: (p, force, model, options) => call("face:index", [p, force, model, options]),
-    faceSearch: (opts) => call("face:search", [opts]),
-    faceDetect: (p) => call("face:detect", [p]),
-    faceStatus: (o) => call("face:status", [o]),
-    faceEngines: () => call("face:engines"),
-    faceIndexed: () => call("face:indexed"),
-    faceGallery: (o) => call("face:gallery", [o]),
-    charList: (o) => call("char:list", [o]),
-    charCreate: (o) => call("char:create", [o]),
-    charUpdate: (o) => call("char:update", [o]),
-    charDelete: (id) => call("char:delete", [id]),
-    charAddSample: (o) => call("char:addSample", [o]),
-    charRemoveSample: (id) => call("char:removeSample", [id]),
-    charSamples: (id) => call("char:samples", [id]),
-    charIdentify: (o) => call("char:identify", [o]),
-    charSearch: (o) => call("char:search", [o]),
-    charShots: (o) => call("char:shots", [o]),
-    charLabelIndex: (o) => call("char:labelIndex", [o]),
-    charMerge: (o) => call("char:merge", [o]),
-    charDuplicates: (o) => call("char:duplicates", [o]),
-    onSearchProgress: (cb) => on("search:progress", cb as (p: unknown) => void),
-    startDrag: () => {},
     chooseDir: () => dlgOpen({ directory: true }) as Promise<string | null>,
     chooseFiles: () =>
       isRemote
         ? requestParentFiles(true, VIDEO_EXT)
         : (dlgOpen({ multiple: true, filters: [{ name: i18n.t("common:fileType.video"), extensions: VIDEO_EXT }] }) as Promise<string[] | null>),
-    chooseMediaFiles: () =>
-      isRemote
-        ? requestParentFiles(true, MEDIA_EXT)
-        : (dlgOpen({ multiple: true, filters: [{ name: i18n.t("common:fileType.media"), extensions: MEDIA_EXT }] }) as Promise<string[] | null>),
     chooseImages: () =>
       isRemote
         ? requestParentFiles(true, IMAGE_EXT)
@@ -982,16 +609,7 @@ export function makeCoreClient(): NrApi {
       })();
     },
     reference,
-    wallpaper,
-    script,
-    notebook,
-    collections,
-    library,
-    chat,
-    outbox,
     power,
-    snapshot,
-    cache,
   };
   return client;
 }

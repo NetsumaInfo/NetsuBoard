@@ -505,14 +505,21 @@ pub fn run() {
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default();
 
-    // single-instance (desktop) : ramène au premier plan l'instance déjà ouverte plutôt que d'en
-    // lancer une seconde, qui se battrait avec la première pour le port du core et le dossier de
-    // travail. Il n'y a PLUS de deep-link à router : NetsuBoard n'a ni compte ni retour OAuth.
+    // single-instance EN PREMIER (desktop) : ramène au premier plan l'instance déjà ouverte plutôt
+    // que d'en lancer une seconde, qui se battrait avec la première pour le port du core et le
+    // dossier de travail — et route le deep-link `netsuboard://` vers elle.
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.set_focus();
+            }
+            // Retour OAuth à chaud : Windows relance l'exe avec l'URL en argv → on la ré-émet vers
+            // le renderer (deepLink.ts écoute `nb-deep-link`), car le plugin deep-link ne déclenche
+            // pas onOpenUrl pour l'instance secondaire.
+            if let Some(url) = argv.iter().find(|a| a.starts_with("netsuboard://")) {
+                use tauri::Emitter;
+                let _ = app.emit("nb-deep-link", url.clone());
             }
         }));
     }
@@ -520,6 +527,7 @@ pub fn run() {
     builder = builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .manage(CoreProcess(Mutex::new(None)))
@@ -591,6 +599,14 @@ pub fn run() {
 
             let player_state = app.state::<state::AppState>();
             player::bootstrap::initialize_embedded_player(app, &player_state);
+
+            // Enregistre le scheme `netsuboard://` au runtime — requis pour le DEV Windows/Linux
+            // (en prod l'installeur NSIS le pose). Best-effort.
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
+            }
 
             #[cfg(target_os = "windows")]
             if let Some(w) = app.get_webview_window("main") {

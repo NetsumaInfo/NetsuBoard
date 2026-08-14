@@ -9,6 +9,8 @@
     "adobe": "Adobe",
     "storage": "Stockage",
     "system": "Système",
+    "updates": "Mises à jour",
+    "report": "Signaler",
     "about": "À propos"
   },
   "about": {
@@ -16,6 +18,11 @@
     "socialTitle": "Réseaux sociaux",
     "social": {
       "discord": "Rejoindre le serveur"
+    },
+    "supportTitle": "Soutenir",
+    "support": {
+      "github": "Devenir sponsor GitHub",
+      "coffee": "Offrir un café"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard est distribué sous GNU AGPL v3.0-only · Sans garantie.",
     "licenseLink": "Texte intégral de la licence",
@@ -231,7 +238,8 @@
     "restart": "Redémarrer et installer",
     "history": "Nouveautés par version",
     "whatsNew": "Nouveautés de la version {{version}}",
-    "gotIt": "C'est parti"
+    "gotIt": "C'est parti",
+    "reportSubject": "Échec de la mise à jour vers la v{{version}}"
   },
   "compatibility": {
     "title": "Compatibilité de ce PC",
@@ -299,8 +307,16 @@
   },
   "bugReport": {
     "title": "Signaler un souci",
+    "subtitle": "Décris ce qui s'est passé. Le journal et l'instantané machine sont joints automatiquement.",
     "type": "Il se passe quoi ?",
     "module": "Où ça ?",
+    "modules": {
+      "board": "Le board",
+      "updates": "Mises à jour",
+      "console": "Console",
+      "settings": "Paramètres",
+      "setup": "Installation"
+    },
     "detail": "Dis-le en quelques mots",
     "detailPlaceholder": "ex : le bouton Envoyer ne fait rien",
     "severity": "C'est grave ?",
@@ -365,7 +381,8 @@
       "more": "Tout voir",
       "less": "Réduire",
       "manual": "Écris-le toi-même",
-      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 Go, Windows 11"
+      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 Go, Windows 11",
+      "attached": "L'instantané de ta machine est joint automatiquement — il se lit en entier dans la Console."
     },
     "sending": "Envoi…",
     "send": "Envoyer",
@@ -378,7 +395,7 @@
       "detail": "Dis en quelques mots de quoi il s'agit.",
       "tooLarge": "Un fichier dépasse {{size}} Mo."
     },
-    "noWebhook": "Envoi désactivé : aucun webhook configuré. Renseignez <c1>bugWebhook</c1> dans nr.config.json (ou la variable d'environnement <c2>NR_BUG_WEBHOOK</c2>).",
+    "noWebhook": "Envoi désactivé : aucun canal configuré. Renseigne <c1>bugWebhook</c1> dans nr.config.json, ou déploie le relais Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Explique ta demande",
     "descriptionOtherPlaceholder": "Ta question, ou ce que tu veux nous dire…",
     "files": {
