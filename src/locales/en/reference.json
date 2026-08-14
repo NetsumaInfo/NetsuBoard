@@ -510,6 +510,7 @@
     "openOnYouTube": "Open on YouTube"
   },
   "embed": {
+    "frozen": "Playback frozen",
     "level": {
       "link": "Links only",
       "preview": "Clips",
