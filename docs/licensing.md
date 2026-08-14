@@ -19,12 +19,14 @@ AGPL-3.0-only covers the original code in this repository. It does **not** chang
 
 ## Native player runtime (mpv, FFmpeg)
 
-The native video player relies on **libmpv** and the **FFmpeg** libraries shipped with it. Those binaries are **not versioned in this repository**: they are distributed separately as a release asset and provisioned by [`scripts/fetch-mpv.ps1`](../scripts/fetch-mpv.ps1) into `vendor/mpv/`.
+**The installer ships none of these binaries.** The native player is inherited from NetsuRush and no line of `src/` or `core/` calls it, so `scripts/build.ps1` stages an empty `resources/windows/` and `src-tauri/src/player/bootstrap.rs` logs that playback is unavailable. The paragraphs below apply the day the player is wired up again.
+
+The native video player relies on **libmpv** and the **FFmpeg** libraries shipped with it. Those binaries are **not versioned in this repository**: they would be distributed separately as a release asset and provisioned by [`scripts/fetch-mpv.ps1`](../scripts/fetch-mpv.ps1) into `vendor/mpv/`.
 
 - **mpv** — GPL-2.0-or-later, with parts under LGPL-2.1-or-later.
 - **FFmpeg** — LGPL-2.1-or-later, and GPL-2.0-or-later when built with `--enable-gpl`.
 
-Those licences are **distinct from NetsuBoard's AGPL-3.0-only** and are not absorbed by it. Any redistribution of those binaries — in particular the `.exe` installer, which embeds them — must ship their licence texts and make the **corresponding source** available, or state precisely where to obtain it. The release package therefore contains those licence texts plus the exact mpv and FFmpeg revisions used for the build.
+Those licences are **distinct from NetsuBoard's AGPL-3.0-only** and are not absorbed by it. Any redistribution of those binaries — in particular an `.exe` installer that embedded them — must ship their licence texts and make the **corresponding source** available, or state precisely where to obtain it. A bare set of DLLs is therefore not enough to package: the release asset must carry those licence texts plus the exact mpv and FFmpeg revisions used for the build.
 
 ## Mirrored ffmpeg CLI
 

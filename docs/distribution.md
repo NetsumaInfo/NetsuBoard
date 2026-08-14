@@ -2,7 +2,7 @@
 
 ## Packaging — standalone Windows installer
 
-`npm run package` (= `scripts/build.ps1`) produces an NSIS installer under `src-tauri/target/release/bundle/nsis/`. Chain: check the core and the locales → build the renderer → fetch a portable `node.exe` and the mpv runtime → stage `core/`, `scripts/`, the shaders and `dist/` into `src-tauri/resources/` → `tauri build`.
+`npm run package` (= `scripts/build.ps1`) produces an NSIS installer under `src-tauri/target/release/bundle/nsis/`. Chain: check the core and the locales → build the renderer → fetch a portable `node.exe` → stage `core/`, `scripts/`, the shaders and `dist/` into `src-tauri/resources/` → `tauri build`.
 
 **Mandatory rule for every runtime dependency.** Adding a Node package, a binary, a DLL, a script or an asset must, **in the same change**, update: (1) the relevant manifest, (2) the staging in `scripts/build.ps1`, (3) the idempotent install/repair path in `scripts/setup.ps1`, (4) the post-install check that actually runs the dependency inside the packaged runtime (`core/setup.js`), and (5) `test/packaging.test.cjs`. A successful check in dev never proves the installer is complete: before publishing, build the installer, audit `src-tauri/resources/`, and validate the runtime from a clean or repaired install.
 

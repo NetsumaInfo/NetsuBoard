@@ -47,29 +47,26 @@ Write-Host '== 2/5 Renderer (tsc + vite build) =='
 npm run build
 if ($LASTEXITCODE -ne 0) { throw 'build renderer echoue' }
 
-Write-Host '== 3/5 node.exe (sidecar core) + runtime mpv (lecteur natif) =='
+Write-Host '== 3/5 node.exe (sidecar core) =='
 & (Join-Path $PSScriptRoot 'fetch-node.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'fetch-node echoue' }
-# Runtime du lecteur natif : les DLL ne sont pas versionnees (mpv GPL, ffmpeg LGPL/GPL). Elles
-# vivent dans vendor\mpv, que fetch-mpv.ps1 provisionne. Le stage vers resources\windows a lieu
-# plus bas, avec les autres ressources.
-& (Join-Path $PSScriptRoot 'fetch-mpv.ps1')
-if ($LASTEXITCODE -ne 0) { throw 'fetch-mpv echoue' }
+# PAS de runtime mpv. Le lecteur natif est du code herite de NetsuRush : aucune ligne de src\ ou de
+# core\ n'appelle nativePlayer ni les commandes player_*. Embarquer libmpv (GPL-2.0-or-later) et les
+# DLL ffmpeg qui l'accompagnent obligerait l'installeur a redistribuer leurs textes de licence et
+# les sources correspondantes (docs\licensing.md) pour un chemin que rien n'emprunte.
+# src-tauri\src\player\bootstrap.rs traite leur absence : il journalise et l'app demarre sans.
+# Reintroduire le lecteur = republier l'asset mpv COMPLET (DLL + licences + revisions de source),
+# le referencer dans fetch-mpv.ps1, et remettre l'appel ici avec le stage vers resources\windows.
 
 Write-Host '== 4/5 Stage des ressources (core/scripts/shaders) =='
 $required = @(
   'core\server.js',
   'scripts\setup.ps1',
-  'scripts\uninstall-cleanup.ps1',
+  'scripts\uninstall-cleanup.ps1'
   # vendor\shaders n'est PAS exige : l'etape 4 telecharge les shaders (fetch-shaders.ps1) quand la
   # copie locale manque. L'exiger ici rendait ce repli inatteignable et cassait le build d'un clone
   # neuf, ou vendor/ est absent (gitignore).
-  # Lecteur natif (commandes player_* -> src/lib/nativePlayer.ts) : libmpv et ses DLL soeurs sont
-  # cherchees dans <install>\resources\windows par src-tauri/src/player/mpv_ffi.rs. Elles ne sont
-  # PAS versionnees (licences GPL/LGPL distinctes de celle du projet) : fetch-mpv.ps1 vient de les
-  # poser dans vendor\mpv, d'ou l'etape de stage plus bas les recopie.
-  'vendor\mpv\libmpv-2.dll',
-  'vendor\mpv\libplacebo-360.dll'
+  # Aucune DLL mpv exigee : voir l'etape 3.
 )
 foreach ($relative in $required) {
   if (-not (Test-Path (Join-Path $root $relative))) {
@@ -96,7 +93,7 @@ $uninstallText = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot 'uninsta
 [System.IO.File]::WriteAllText((Join-Path $stageScripts 'uninstall-cleanup.ps1'), $uninstallText, [System.Text.UTF8Encoding]::new($true))
 
 # Aucun stage vendor/ML : OmniShotCut, NOVA-VAD, les poids Real-ESRGAN et sam2 appartenaient aux
-# modules IA, qui n existent plus ici. Seuls les shaders et le runtime mpv sont stages plus bas.
+# modules IA, qui n existent plus ici. Seuls les shaders sont stages plus bas.
 
 # dist/ (renderer builde) -> resources/dist : sert la vue remote du panneau CEP en production
 # (core/appstatic.js expose /app quand NR_RESOURCE_DIR/dist/index.html existe).
@@ -116,11 +113,10 @@ if (Test-Path $localShaders) {
   catch { throw "fetch-shaders echoue : $_" }
 }
 
-# Runtime du lecteur natif -> resources\windows (chemin exact ou mpv_ffi.rs charge libmpv-2.dll).
-# Source = vendor\mpv, garanti present par fetch-mpv.ps1 a l'etape 3.
+# resources\windows : le dossier ou mpv_ffi.rs cherche libmpv-2.dll. Il est VIDE ici (voir etape 3),
+# et purge a chaque build pour qu'un ancien stage ne reintroduise pas les DLL en douce.
 if (Test-Path $stageWindows) { Remove-Item -Recurse -Force $stageWindows }
 New-Item -ItemType Directory -Force -Path $stageWindows | Out-Null
-Copy-Item -Force (Join-Path $root 'vendor\mpv\*.dll') $stageWindows
 
 Write-Host '== 5/5 tauri build (NSIS) =='
 # Supprime seulement l'artefact de la version courante : ainsi un ancien setup ne peut jamais
