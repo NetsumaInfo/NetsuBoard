@@ -12,9 +12,14 @@
   NOTE: ce fichier est ASCII pur a dessein. Il est lance DIRECTEMENT par Windows PowerShell 5.1
   (sans BOM => lecture cp1252) ; tout caractere accentue ou tiret long casserait le parse.
 #>
-$ErrorActionPreference$rootSet-Location $root
+$ErrorActionPreference = 'Stop'
+$root = Split-Path $PSScriptRoot -Parent
+Set-Location $root
 
-$buildMutextry { $hasBuildLock = $buildMutex.WaitOne(0) }
+# Mutex name distinct from NetsuRush's: the two checkouts build side by side and must never
+# serialise against each other.
+$buildMutex = New-Object System.Threading.Mutex($false, 'Local\NetsuBoardBuild')
+try { $hasBuildLock = $buildMutex.WaitOne(0) }
 catch [System.Threading.AbandonedMutexException] { $hasBuildLock = $true }
 if (-not $hasBuildLock) {
   $buildMutex.Dispose()
