@@ -12,7 +12,13 @@ The pair carries **no password**. Adding one later means setting `TAURI_SIGNING_
 
 The public key is stored in `src-tauri/tauri.conf.json`. Unlike the private key, it can be shared.
 
-Before packaging, set `TAURI_SIGNING_PRIVATE_KEY` to the contents of the private key. If a future key is password-protected, also set `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+Before packaging, set `TAURI_SIGNING_PRIVATE_KEY` to the contents of the private key **and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to an empty string**. The second one is not optional even though the pair carries no password: without it the CLI prints `Decrypting updater signing key, expect a prompt for password` and waits on stdin, so a build launched from a script or from CI hangs forever after the installer is written — the `.exe` is there, the `.sig` never comes. Set it to the real password the day the key gets one.
+
+```powershell
+$env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content .tauri\netsuboard-updater.key -Raw).Trim()
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ''
+npm run package
+```
 
 ## GitHub artefacts
 
