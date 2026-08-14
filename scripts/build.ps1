@@ -77,6 +77,17 @@ foreach ($d in @($stageCore, $stageScripts)) {
   if (Test-Path $d) { Remove-Item -Recurse -Force $d }
   New-Item -ItemType Directory -Force -Path $d | Out-Null
 }
+# tauri.conf.json embarque resources\**\* EN ENTIER : tout dossier oublie la part dans l'installeur.
+# Un stage NetsuRush laissait ainsi python\ et adobe-cep\ dans le paquet, alors que NetsuBoard
+# n'embarque aucun sidecar Python et ne pilote aucune application de montage. Le stage est donc une
+# liste FERMEE : ce qui n'y figure pas est supprime avant le bundle.
+$staged = @('bin', 'core', 'dist', 'scripts', 'shaders', 'windows')
+Get-ChildItem -Path $res -Directory -ErrorAction SilentlyContinue |
+  Where-Object { $staged -notcontains $_.Name } |
+  ForEach-Object {
+    Write-Host "  purge d'un reste de stage : $($_.Name)"
+    Remove-Item -Recurse -Force $_.FullName
+  }
 # core/ : code CommonJS uniquement (exclut nr.config.json local + caches eventuels).
 Copy-Item -Recurse -Force (Join-Path $root 'core\*') $stageCore
 Get-ChildItem -Path $stageCore -Recurse -Filter 'nr.config.json' | Remove-Item -Force -ErrorAction SilentlyContinue
