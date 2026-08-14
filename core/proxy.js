@@ -277,13 +277,25 @@ async function proxySegment({ input, start, end, priority, height, token, codec,
   // Sans moteur matériel, limite immédiatement la file : trois libx264/libvpx ultrafast en parallèle
   // restent réactifs sans saturer tous les cœurs. Un moteur matériel remontera ensuite par HEAL_STREAK.
   if (resolved.vendor === 'cpu') proxyMax = Math.min(proxyMax, PROXY_MAX_LO);
+  // clé versionnée (codec+encodeur+params+hauteur) : changer de GPU régénère un fichier propre.
+  const makeOut = (enc) => {
+    const key = crypto.createHash('md5').update(`${input}|${start}|${end}|${vc}-${enc.encoder}-${preset}-${audio ? 'audio' : 'mute'}-v4-${h}`).digest('hex');
+    return path.join(getProxyDir(), `${key}.${enc.extension}`);
+  };
+  // Cache hit answered BEFORE entering the encode queue: a remounted board video whose proxy is
+  // already on disk must not wait behind cold encodes — that read is the common case on pan/zoom,
+  // and queueing it showed a black tile for seconds while unrelated encodes finished.
+  {
+    const out = makeOut(resolved);
+    if (await fileReady(out)) {
+      cacheIndex().touch(out);
+      const duration = Math.min(Math.max(0.6, end - start), 4);
+      await writeProxyMeta(out, input, start, duration, resolved.container, end);
+      return { ok: true, path: out, __hardware: resolved.vendor !== 'cpu' };
+    }
+  }
   return proxyGate(async () => {
     try {
-      // clé versionnée (codec+encodeur+params+hauteur) : changer de GPU régénère un fichier propre.
-      const makeOut = (enc) => {
-        const key = crypto.createHash('md5').update(`${input}|${start}|${end}|${vc}-${enc.encoder}-${preset}-${audio ? 'audio' : 'mute'}-v4-${h}`).digest('hex');
-        return path.join(getProxyDir(), `${key}.${enc.extension}`);
-      };
       let activeEncoder = resolved;
       let out = makeOut(activeEncoder);
       if (!(await fileReady(out))) {
