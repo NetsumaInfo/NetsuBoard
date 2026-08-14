@@ -40,11 +40,11 @@ Vite must be listening on `http://localhost:1430` before Tauri starts. The Rust 
 
 NetsuBoard and [NetsuRush](https://github.com/NetsumaInfo/NetsuRush) are designed to run side by side: different Vite port (1430 vs 1420), different core port range, and a different working directory (`%LOCALAPPDATA%\NetsuBoard`). Do not align any of the three.
 
-### No account, no backend needed
+### The account is optional — nothing to configure to run the app
 
-NetsuBoard has **no sign-in and no backend**. There is nothing to configure: no Convex deployment, no OAuth application, no environment variable required to run the app. `src/components/auth/` holds a single layout wrapper reused by the setup screen. CI has no secrets and builds green.
+With no `.env.local`, NetsuBoard boots straight to the board: no sign-in screen, no network call, and CI stays secret-free. The Convex + Better Auth + Discord chain in `convex/` and `src/components/auth/` only wakes up when `VITE_CONVEX_URL` is set; it exists to name a tester on a bug report, not to unlock the product. Provisioning: [`docs/convex-setup.md`](docs/convex-setup.md).
 
-If you are tempted to add authentication, read `docs/distribution.md` first — the deep link the old flow depended on is no longer registered by the Rust shell.
+Two rules if you touch it: keep every import of `convex/react` and `better-auth` **dynamic** (they cost ~140 KB of entry-chunk parsing), and never share a scheme, a storage prefix or a deployment with NetsuRush.
 
 ## The unfinished split
 

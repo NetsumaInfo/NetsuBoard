@@ -2,13 +2,15 @@
 
 NetsuBoard is a standalone Windows desktop app (Tauri shell + Node "core" service): an infinite reference board — images, local videos, YouTube, embeds, notes, drawing — with a GPU shader upscaler. It drives no editing application and embeds no Python.
 
-## The unfinished split — read first
+## The split from NetsuRush — read first
 
-NetsuBoard was copied out of NetsuRush and **not trimmed**. The tree still carries the Resolve bridge, the Adobe/CEP bridges, timeline transfer, voice, roto, the model catalogue and the Python sidecar plumbing whose `python/` directory is gone. `App.tsx` renders one page, `ReferencePanel`, and reaches none of it.
+NetsuBoard was copied out of NetsuRush. Timeline transfer, After Effects export, NetsuBoost, voice, dictation, roto, the chat agent, collections, the media library, script, notebook, search, wallpaper, the outbox, the optimiser and Discord presence are **gone** from `core/`, `src/` and the RPC table. `App.tsx` renders one page, `ReferencePanel`.
 
-- Do **not** extend, document or cite inherited modules as if they were NetsuBoard.
+What is still inherited and **live**: the Resolve bridge cut down to `resolve:status` / `resolve:import`, the Adobe CEP bridge (status, snapshot, launch, media import, panel install), host power (close/reopen an editing app to free RAM/GPU), the project snapshot that feeds it, the model manager, first-run setup, cache admin and export capabilities.
+
+- Do **not** re-import a retired module from NetsuRush; the RPC table is the contract of what this product does.
 - Inherited docs live in `docs/legacy-netsurush/` and describe NetsuRush, not this product.
-- 23 of the 82 Node suites and all 13 `test/test_*.py` fail for that reason. The quarantine list is in `.github/workflows/ci.yml`; a failure inside it is not yours.
+- 19 of the 61 Node suites are still quarantined in `.github/workflows/ci.yml`; a failure inside that list is not yours.
 - Known name/path collisions still in code (tmp caches, log directory) are listed at the end of `docs/invariants.md`. They are defects, not design.
 
 ## Language
@@ -33,7 +35,7 @@ NetsuBoard was copied out of NetsuRush and **not trimmed**. The tree still carri
 | Rust shell check | `cargo check --locked` (in `src-tauri/`) |
 | Core alone, headless | `npm run core` |
 
-- 8 of the 82 Node suites also have an `npm run test:*` shortcut; the rest run with `node --test`.
+- 6 of the 61 Node suites also have an `npm run test:*` shortcut; the rest run with `node --test`.
 - `.github/workflows/ci.yml` is the source of truth for what must pass.
 - There is no ESLint and no formatter config: `tsc` is the lint.
 
@@ -55,6 +57,7 @@ NetsuBoard was copied out of NetsuRush and **not trimmed**. The tree still carri
 | Rules that break correctness if violated | `docs/invariants.md` |
 | Per-module notes (board, `.netsu`, upscale) | `docs/modules.md` |
 | Packaging, first-run setup, updates, bug relay | `docs/distribution.md` |
+| Convex, Discord sign-in and relay provisioning | `docs/convex-setup.md` |
 | Code structure and cleanliness rules | `docs/code-style.md` |
 | GPU and encoder matrix | `docs/windows-compatibility.md` |
 | Release process and signing key | `docs/releasing.md` |

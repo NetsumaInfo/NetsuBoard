@@ -88,9 +88,6 @@ export const createShellSlice: StateCreator<AppState, [], [], ShellSlice> = (set
   setActiveHost: (activeHost) => {
     try { localStorage.setItem("nr.activeHost", activeHost); } catch { /* noop */ }
     set({ activeHost });
-    // Recharge la source de rushs si on est déjà dans le navigateur (sinon au prochain entrée).
-    const s = get();
-    if (s.derushView === "browser") void s.loadClips();
   },
 
   settingsPage: "interface",

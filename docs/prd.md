@@ -99,8 +99,9 @@ Détail et justification dans `docs/invariants.md`. Les trois qui priment :
   timeline appartiennent à NetsuRush.
 - **Tout backend de partage ou de collaboration.** Un projet est un fichier ; le partage est un
   fichier.
-- **Tout compte obligatoire.** Le gate de connexion hérité reste inerte sans `VITE_CONVEX_URL`, et le
-  deep link dont il dépendait n'est plus enregistré par la coquille.
+- **Tout compte obligatoire.** La connexion Discord existe, mais elle est facultative et traversable :
+  sans `VITE_CONVEX_URL`, hors ligne avec un login de moins de 7 jours, ou après un « Passer », le
+  board s'ouvre. Elle sert à nommer un testeur sur un rapport de bug, jamais à déverrouiller l'app.
 - **macOS et Linux.**
 
 ## 7. Risques

@@ -38,30 +38,15 @@ export const NAMESPACES = [
   "common",
   "shell",
   "setup",
-  
+  "auth",
   "language",
   "derush",
-  "collections",
   "adobe",
-  "chat",
   "dictate",
-  
-  
-  "search",
-  "voice",
   "reference",
-  "upscale",
-  
-  "notebook",
-  
-  
-  
+  "upscale",
   "export",
-  
   "settings",
-  
-  
-  
   "models",
 ] as const;
 

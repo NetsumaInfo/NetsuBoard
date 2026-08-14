@@ -47,17 +47,17 @@ jobs:
       - name: Tests Node (hors quarantaine)
         run: |
           node --test $(ls test/*.test.cjs | grep -vxF -e test/adobe-jsx-es3.test.cjs \
-            -e test/adobe-timeline-live.test.cjs -e test/ae-options-logic.test.cjs \
+            -e test/adobe-timeline-live.test.cjs \
             -e test/cache-lifecycle.test.cjs -e test/dictation-microphone.test.cjs \
             -e test/export-black-pause.test.cjs -e test/model-catalog.test.cjs \
             -e test/netsulab-interpolate.test.cjs -e test/netsulab-upscale.test.cjs \
             -e test/packaging.test.cjs -e test/preview-generation.test.cjs \
-            -e test/rush-grid-resize-perf.test.cjs -e test/setup-selection.test.cjs \
+            -e test/setup-selection.test.cjs \
             -e test/shared-prefs.test.cjs -e test/timeline-insertion.test.cjs \
             -e test/timeline-list-safety.test.cjs -e test/timeline-live-cache.test.cjs \
             -e test/timeline-live-player.test.cjs -e test/transfer-encoding.test.cjs \
             -e test/transfer-place-jsx.test.cjs -e test/transfer-ppro-units.test.cjs \
-            -e test/transfer-xml-to-script.test.cjs -e test/wallpaper.test.cjs)
+            )
 
   quarantine:
     name: Tests Node en quarantaine (informatif)

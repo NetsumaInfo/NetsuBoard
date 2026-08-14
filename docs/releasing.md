@@ -4,11 +4,11 @@ The NetsuBoard updater reads `latest.json` from the latest release of the `Netsu
 
 ## Signing key
 
-The local private key is `.tauri/netsurush-updater.key` — **still the NetsuRush key pair**, inherited with the repository copy. The folder is git-ignored.
+The local private key is `.tauri/netsuboard-updater.key` — a key pair **generated for NetsuBoard**, distinct from NetsuRush's. The folder is git-ignored. The inherited `netsurush-updater.key` is still on disk and is **not** used by this application; do not point the build at it.
 
-> **Decide this before the first NetsuBoard release.** Either keep this pair, which means the two applications share an update-signing identity, or generate a NetsuBoard pair (`npm run tauri signer generate`) and put the new public key in `src-tauri/tauri.conf.json`. Changing the key later is not possible without breaking every existing install: an installed app only accepts updates signed by the public key it shipped with.
+The pair carries **no password**. Adding one later means setting `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` everywhere the installer is built.
 
-**Back the private key up outside the development machine before any release**: losing it means existing installs can never accept a future update.
+**Back the private key up outside the development machine before any release**: losing it means existing installs can never accept a future update. Changing the key after a release is not possible without breaking every existing install — an installed app only accepts updates signed by the public key it shipped with.
 
 The public key is stored in `src-tauri/tauri.conf.json`. Unlike the private key, it can be shared.
 
@@ -24,4 +24,4 @@ Before packaging, set `TAURI_SIGNING_PRIVATE_KEY` to the contents of the private
 
 The `platforms.windows-x86_64.signature` field of `latest.json` holds the signature **contents**, not a link to the `.sig` file.
 
-> `src/data/releases.json` still carries the **NetsuRush** changelog (ids `netsurush-0.3.x`, entries about Resolve/Premiere transfers). It is displayed in the app. Replace it with NetsuBoard's own history before publishing — do not append a NetsuBoard entry to a NetsuRush list.
+`src/data/releases.json` carries NetsuBoard's own history, starting at `netsuboard-0.1.0`. Notes are authored in **fr and en only** — they are content, not interface copy, so `check:i18n` does not police them. The **first** entry is what `UpdateBootstrap` shows once after an update, so it must describe the version being installed.

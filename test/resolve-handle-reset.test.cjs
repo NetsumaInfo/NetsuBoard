@@ -81,11 +81,8 @@ test('les canaux Resolve de rpc.js sont tous bracketés', () => {
   const fs = require('node:fs');
   const src = fs.readFileSync(require.resolve('../core/rpc.js'), 'utf8');
   const CHANNELS = [
-    'resolve:status', 'resolve:listMediaPool', 'resolve:import', 'resolve:importToBin',
-    'resolve:buildTimeline', 'resolve:listTimelines', 'resolve:timelineTree', 'resolve:timelineThumbs',
-    'resolve:readTimelineCuts', 'resolve:cutTimeline',
-    'transfer:sources', 'transfer:read', 'transfer:run',
-    'script:mediaPool', 'script:importMedia', 'script:buildTimeline',
+    'resolve:status', 'resolve:import',
+    'power:reconcile', 'power:close', 'power:reopen', 'power:restart',
   ];
   for (const ch of CHANNELS) {
     const line = src.split('\n').find((l) => l.includes(`"${ch}":`));
