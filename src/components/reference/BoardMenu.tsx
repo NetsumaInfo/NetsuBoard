@@ -5,12 +5,14 @@
 import { useState, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  ImagePlus, Video, Globe, Type, Frame, Film, Pencil, Clapperboard, ZoomIn, ZoomOut, Maximize,
+  ImagePlus, Video, Globe, Type, Frame, Film, Pencil, ZoomIn, ZoomOut, Maximize,
   FilePlus2, Save, SaveAll, FileSymlink, FolderOpen, ClipboardPaste, BoxSelect, Play, Pause, Grid2x2, Square,
   Copy, FlipHorizontal, FlipVertical, Crop, BringToFront, SendToBack, Trash2,
   Minimize2, Home, Pin, Layers, Download, AppWindow, Undo2, Redo2, Settings2,
   FolderSearch, ClipboardCopy, Scissors, RotateCcw, Wand2, Ruler, Palette, ImageDown,
+  Link2, Unlink2,
 } from "lucide-react";
+import { enclosingFrame } from "./boardFrames";
 import { convertToEmbed, downloadMediaFromEmbed, relocateMissingMedia } from "./boardMediaActions";
 import { shifted } from "./drawGeometry";
 import { uid } from "./referenceShared";
@@ -33,7 +35,6 @@ export function BoardContextMenu({
   onSaveAs,
   onOpenProject,
   onOpen,
-  onProject,
   onHome,
   onAttach,
   onSettings,
@@ -46,7 +47,6 @@ export function BoardContextMenu({
   onSaveAs?: () => void;
   onOpenProject?: () => void;
   onOpen?: () => void;
-  onProject?: () => void;
   onHome?: () => void;
   onAttach?: () => void;
   onSettings?: () => void;
@@ -56,6 +56,12 @@ export function BoardContextMenu({
   const { t } = useTranslation("reference");
   const item = useBoard((s) => s.items.find((i) => i.id === s.selectedId && s.selectedIds.length === 1) ?? null);
   const hasItems = useBoard((s) => s.items.some((i) => i.kind !== "draw"));
+  // Cadre qui contient l'item visé : un cadre emmène et fait de la place à son contenu, il faut donc
+  // une sortie explicite. Le sélecteur ne rend qu'un id → aucun re-render tant que le cadre ne change pas.
+  const frameId = useBoard((s) => {
+    const it = s.items.find((i) => i.id === s.selectedId && s.selectedIds.length === 1);
+    return it ? enclosingFrame(it, s.items)?.id ?? null : null;
+  });
   // Groupable en séquence : ≥2 items image sélectionnés.
   const groupable = useBoard(
     (s) => s.selectedIds.filter((id) => s.items.find((i) => i.id === id)?.kind === "image").length >= 2,
@@ -161,6 +167,15 @@ export function BoardContextMenu({
               <ContextMenuItem onClick={() => store().sendToBack(item.id)}>
                 <SendToBack /> {t("actions.sendToBack")}
               </ContextMenuItem>
+              {/* Même bascule que le bouton de lien posé sur l'item. */}
+              {frameId && (
+                <ContextMenuItem
+                  onClick={() => store().patchItem(item.id, { detached: item.detached ? undefined : true })}
+                >
+                  {item.detached ? <Link2 /> : <Unlink2 />}
+                  {t(item.detached ? "actions.linkFrame" : "actions.unlinkFrame")}
+                </ContextMenuItem>
+              )}
               {(() => {
                 const linkUrl =
                   item.kind === "youtube" ? `https://www.youtube.com/watch?v=${item.ref}`
@@ -263,9 +278,6 @@ export function BoardContextMenu({
               <ContextMenuItem onClick={() => board.current?.addFrame()}>
                 <Frame /> {t("boardMenu.frame")}
               </ContextMenuItem>
-              {onProject && (
-                <ContextMenuItem onClick={onProject}><Clapperboard /> {t("boardMenu.fromProject")}</ContextMenuItem>
-              )}
             </ContextMenuSubContent>
           </ContextMenuSub>
           <ContextMenuItem onClick={() => board.current?.pasteClipboard()}>

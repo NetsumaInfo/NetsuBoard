@@ -7,7 +7,6 @@ import { Toolbar } from "./Toolbar";
 import { BoardContextMenu } from "./BoardMenu";
 import { SceneDialog } from "./SceneDialog";
 import { ExportDialog } from "./ExportDialog";
-import { MediaPicker } from "./MediaPicker";
 import { Inspector } from "./Inspector";
 import { SequencePlayer } from "./SequencePlayer";
 import { CropOverlay } from "./CropOverlay";
@@ -30,7 +29,6 @@ export function ReferencePanel() {
   const persistence = useScenePersistence();
   const [sceneDlg, setSceneDlg] = useState(false);
   const [exportDlg, setExportDlg] = useState(false);
-  const [pickDlg, setPickDlg] = useState(false);
   // Landing : toujours l'accueil au montage de l'onglet (le board en session reste dans le store).
   const [mode, setMode] = useState<"home" | "board">("home");
   const [pending, setPending] = useState<Pending | null>(null);
@@ -79,7 +77,6 @@ export function ReferencePanel() {
           onSaveAs={persistence.available ? project.saveAs : undefined}
           onOpenProject={persistence.available ? project.openProject : undefined}
           onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
-          onProject={() => setPickDlg(true)}
           onSettings={() => openSettings()}
         >
           <ReferenceBoard ref={boardRef} />
@@ -87,7 +84,6 @@ export function ReferencePanel() {
           <SequencePlayer />
         </BoardContextMenu>
         <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
-        <MediaPicker open={pickDlg} onOpenChange={setPickDlg} board={boardRef} />
         <CropOverlay />
       </div>
     );
@@ -120,7 +116,6 @@ export function ReferencePanel() {
         onSave={persistence.available ? project.save : undefined}
         onSaveAs={persistence.available ? project.saveAs : undefined}
         onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
-        onProject={() => setPickDlg(true)}
         onSettings={() => openSettings()}
         onExport={persistence.available ? () => setExportDlg(true) : undefined}
       />
@@ -130,7 +125,6 @@ export function ReferencePanel() {
         onSave={persistence.available ? project.save : undefined}
         onSaveAs={persistence.available ? project.saveAs : undefined}
         onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
-        onProject={() => setPickDlg(true)}
         onSettings={() => openSettings()}
       >
         <ReferenceBoard ref={boardRef} />
@@ -139,7 +133,6 @@ export function ReferencePanel() {
       </BoardContextMenu>
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />
-      <MediaPicker open={pickDlg} onOpenChange={setPickDlg} board={boardRef} />
       <CropOverlay />
     </div>
   );

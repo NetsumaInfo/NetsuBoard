@@ -23,8 +23,6 @@ import { DrawLayer } from "./DrawLayer";
 import { DrawToolbar } from "./DrawToolbar";
 import {
   type BoardView,
-  type NrMediaDrag,
-  NR_MEDIA_DND,
   ZOOM_MIN,
   ZOOM_MAX,
   screenToBoard,
@@ -586,18 +584,6 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       onDrop={(e) => {
         e.preventDefault();
         setOver(false);
-        // Drop interne (carte du MediaPicker) → posé EXACTEMENT au curseur, en coords board.
-        const raw = e.dataTransfer.getData(NR_MEDIA_DND);
-        if (raw) {
-          try {
-            const m = JSON.parse(raw) as NrMediaDrag;
-            const r = rect();
-            const at = screenToBoard(useBoard.getState().view, e.clientX - (r?.left ?? 0), e.clientY - (r?.top ?? 0));
-            if (m.in != null && m.out != null) void ingest.addCut(m.file, m.in, m.out, m.title, at);
-            else void ingest.addPath(m.file, m.title, at);
-          } catch { /* payload illisible */ }
-          return;
-        }
         const dropped = Array.from(e.dataTransfer.files);
         // Un DOSSIER lâché s'importe en groupe (un cadre par dossier). On garde l'entrée ET l'objet
         // `File` que le drop place à côté : c'est LUI qui porte le chemin disque du dossier, donc la
