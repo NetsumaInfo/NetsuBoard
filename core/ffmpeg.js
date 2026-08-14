@@ -44,14 +44,15 @@ async function probeCached(kind, filePath, compute) {
 async function probeMediaRaw(filePath) {
   const metaRaw = await run('ffprobe', [
     '-v', 'error', '-select_streams', 'v:0',
-    '-show_entries', 'format=duration:stream=width,height',
+    '-show_entries', 'format=duration:stream=width,height,pix_fmt',
     '-of', 'json', filePath,
   ]);
   const meta = JSON.parse(metaRaw.toString());
   const duration = parseFloat(meta?.format?.duration) || 0;
   const st = meta?.streams?.[0] || {};
-  // fast: durée + dimensions only (no full keyframe scan — trop lent sur longs fichiers)
-  return { duration, width: st.width || 0, height: st.height || 0 };
+  // fast: durée + dimensions only (no full keyframe scan — trop lent sur longs fichiers). `pix` dit
+  // si la source porte un canal alpha, ce que l'upscale doit savoir pour le préserver.
+  return { duration, width: st.width || 0, height: st.height || 0, pix: st.pix_fmt || '' };
 }
 const probeMedia = (p) => probeCached('meta', p, () => probeMediaRaw(p));
 

@@ -201,6 +201,23 @@ function debandOpts(level, grain) {
 // dans la chaîne de filtre. Les chemins entrée/sortie restent en argv absolus (pas d'échappement).
 // `upscaler` = noyau de redimensionnement (la chroma pour un shader custom, OU le scaler entier pour
 // l'option « réel »). sigmoid = anti-ringing/halos sur agrandissement. deband = anti-aplats.
+// Pixel formats carrying an alpha channel. libplacebo THROWS ALPHA AWAY whatever `format=` asks for
+// (ffmpeg 7.1 has no alpha option on the filter), so a transparent source must be detected before the
+// graph is built — see `alphaGraph`.
+function hasAlpha(pix) {
+  const p = String(pix || '').toLowerCase();
+  return p === 'pal8' || /^(?:rgba|bgra|argb|abgr)/.test(p) || /^ya\d/.test(p) || /^yuva/.test(p) || /^gbrap/.test(p);
+}
+
+// Graphe alpha-safe : le shader ne voit que la couleur, le canal alpha est agrandi à part (lanczos)
+// puis recollé. Sans ça une image transparente ressort opaque — le shader GLSL travaille sur des plans
+// de luma/chroma, l'alpha n'y survit pas. `[out]` est l'étiquette de sortie à mapper.
+function alphaGraph(placebo, ow, oh, tail) {
+  return `[0:v]format=rgba,split=2[c][a];[c]${placebo}[cu];`
+    + `[a]alphaextract,scale=${ow}:${oh}:flags=lanczos[au];`
+    + `[cu][au]alphamerge${tail || ',format=rgba'}[out]`;
+}
+
 function placeboFilter({ sh, ow, oh, sharp, sigmoid, deband, grain, dither, pix }) {
   const up = sharp === 'soft' ? 'spline36' : 'ewa_lanczossharp';
   let placebo = `libplacebo=w=${ow}:h=${oh}:upscaler=${up}`;
@@ -359,16 +376,33 @@ async function runShaderUpscale(event, opts) {
 }
 
 // Une image PNG écrite par ffmpeg (frame source telle quelle, ou passée par le filtre Turbo).
-function writeFrame(bin, input, time, out, filter) {
+// `complex` = graphe -filter_complex terminé par [out] (chemin alpha) ; sinon `filter` en -vf.
+//
+// `-ss` N'EST PAS POSÉ À 0. Sur un demuxer image2 (une image fixe dure 0,04 s), un seek d'entrée à 0
+// consomme l'unique frame : ffmpeg sort « No filtered frames for output stream », n'écrit AUCUN
+// fichier et rend pourtant le code 0. L'appelant croyait alors à une réussite et le board affichait
+// un média absent (icône d'image cassée). D'où aussi le contrôle du fichier écrit ci-dessous : un
+// ffmpeg satisfait qui n'a rien produit est une erreur, pas un succès.
+function frameArgs(input, time, out, filter, complex) {
   const args = ['-y', '-hide_banner', '-loglevel', 'error'];
-  if (filter) args.push('-init_hw_device', 'vulkan');
-  args.push('-ss', String(Math.max(0, time)), '-i', input);
-  if (filter) args.push('-vf', filter);
+  if (filter || complex) args.push('-init_hw_device', 'vulkan');
+  if (time > 0) args.push('-ss', String(time));
+  args.push('-i', input);
+  if (complex) args.push('-filter_complex', complex, '-map', '[out]');
+  else if (filter) args.push('-vf', filter);
   args.push('-frames:v', '1', '-update', '1', '-f', 'image2', out);
+  return args;
+}
+
+function writeFrame(bin, input, time, out, filter, complex) {
+  const args = frameArgs(input, time, out, filter, complex);
   return new Promise((resolve) => {
     execFile(bin, args, { cwd: SHADER_DIR, timeout: FRAME_TIMEOUT_MS }, (err, _out, stderr) => {
-      if (!err) return resolve({ ok: true });
-      resolve({ ok: false, error: String(stderr || err).trim().split(/\r?\n/).pop() });
+      if (err) return resolve({ ok: false, error: String(stderr || err).trim().split(/\r?\n/).pop() });
+      let size = 0;
+      try { size = fs.statSync(out).size; } catch (_) { /* rien écrit */ }
+      if (!size) return resolve({ ok: false, error: `ffmpeg n'a écrit aucune image (${path.basename(out)})` });
+      resolve({ ok: true });
     });
   });
 }
@@ -402,10 +436,13 @@ async function runShaderFrame(opts) {
   const out = path.join(UPSCALE_TEST_DIR, `turbo_${id}.png`);
   // yuv444p en sortie de filtre : l'encodeur PNG convertit ensuite en RGB sans sous-échantillonner.
   const filter = placeboFilter({ sh, ow, oh, sharp, sigmoid, deband, grain, dither, pix: 'yuv444p' });
+  const alpha = hasAlpha(dims.pix);
 
   const src = await writeFrame(bin, input, time, orig, null);
   if (!src.ok) return { ok: false, error: src.error };
-  const up = await writeFrame(bin, input, time, out, filter);
+  const up = alpha
+    ? await writeFrame(bin, input, time, out, null, alphaGraph(filter, ow, oh))
+    : await writeFrame(bin, input, time, out, filter);
   if (!up.ok) return { ok: false, error: up.error };
   return { ok: true, orig, out, width: ow, height: oh };
 }
@@ -443,8 +480,11 @@ async function runShaderImage(opts) {
   const oh = even(dims.height * s);
   await fsp.mkdir(path.dirname(out), { recursive: true });
   // yuv444p en sortie de filtre : l'encodeur PNG convertit ensuite en RGB sans sous-échantillonner.
+  // Source transparente → graphe alpha (le shader seul rendrait l'image opaque).
   const filter = placeboFilter({ sh, ow, oh, sharp, sigmoid, deband, grain, dither, pix: 'yuv444p' });
-  const r = await writeFrame(bin, input, 0, out, filter);
+  const r = hasAlpha(dims.pix)
+    ? await writeFrame(bin, input, 0, out, null, alphaGraph(filter, ow, oh))
+    : await writeFrame(bin, input, 0, out, filter);
   if (!r.ok) return { ok: false, error: r.error };
   return { ok: true, output: out, width: ow, height: oh };
 }
@@ -482,9 +522,16 @@ async function runShaderGif(opts) {
   const oh = even(dims.height * s);
   await fsp.mkdir(path.dirname(out), { recursive: true });
   const placebo = placeboFilter({ sh, ow, oh, sharp, sigmoid, deband, grain, dither, pix: 'yuv444p' });
+  // Un GIF est presque toujours transparent (pal8 avec couleur réservée) : l'alpha repasse à côté du
+  // shader, et la palette lui garde une entrée (`reserve_transparent`) que `alpha_threshold` remplit.
+  const alpha = hasAlpha(dims.pix);
+  const shaded = alpha
+    ? `${alphaGraph(placebo, ow, oh, '')};[out]split[a][b]`
+    : `[0:v]${placebo}[up];[up]split[a][b]`;
   const args = ['-y', '-hide_banner', '-loglevel', 'error', '-progress', 'pipe:1', '-nostats',
     '-init_hw_device', 'vulkan', '-i', input,
-    '-filter_complex', `[0:v]${placebo}[up];[up]split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
+    '-filter_complex', `${shaded};[a]palettegen=stats_mode=diff${alpha ? ':reserve_transparent=1' : ''}[p];`
+      + `[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle${alpha ? ':alpha_threshold=128' : ''}`,
     '-loop', '0', out]; // -loop 0 = boucle infinie, ce qu'est un GIF de référence sur un board
   const frames = await clipFrames(input);
   const r = await runOne(null, bin, args, path.basename(out), 0, 1, frames);
@@ -492,4 +539,6 @@ async function runShaderGif(opts) {
   return { ok: true, output: out, width: ow, height: oh };
 }
 
-module.exports = { runShaderUpscale, runShaderFrame, runShaderImage, runShaderGif, SHADERS, modelForShader };
+module.exports = { runShaderUpscale, runShaderFrame, runShaderImage, runShaderGif, SHADERS, modelForShader,
+  // exportés pour les tests : deux règles sans GPU ni ffmpeg (pas de `-ss 0`, alpha préservé).
+  frameArgs, hasAlpha, alphaGraph };
