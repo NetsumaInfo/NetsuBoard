@@ -69,7 +69,7 @@ function playAllowed(item: BoardItem) {
   return !suspended && (item.playMode ?? "loop") !== "off";
 }
 
-export function YoutubeItem({ item, interactive }: { item: BoardItem; interactive?: boolean }) {
+export function YoutubeItem({ item, interactive, onReady }: { item: BoardItem; interactive?: boolean; onReady?: () => void }) {
   const { t } = useTranslation("reference");
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayer | null>(null);
@@ -121,6 +121,9 @@ export function YoutubeItem({ item, interactive }: { item: BoardItem; interactiv
         height: "100%",
         playerVars: {
           autoplay: 1, mute: 1, controls: 0, modestbranding: 1, rel: 0, playsinline: 1, fs: 0,
+          // Sous-titres et fiches JAMAIS imposés : sans `cc_load_policy: 0`, YouTube rallume les
+          // sous-titres d'après le compte ou la langue du système et les grave sur la carte.
+          cc_load_policy: 0, iv_load_policy: 3,
           // enablejsapi + origin : sinon postMessage de l'IFrame API échoue (« target origin
           // does not match ») dans la WebView2 (origine http://127.0.0.1:1420).
           enablejsapi: 1,
@@ -133,6 +136,7 @@ export function YoutubeItem({ item, interactive }: { item: BoardItem; interactiv
             if (playAllowed(item)) e.target.playVideo();
             const d = e.target.getDuration();
             if (d && Math.abs(d - (item.dur ?? 0)) > 0.5) patchItem(item.id, { dur: d }, false);
+            onReady?.();
           },
           onStateChange: (e: { data: number; target: YTPlayer }) => {
             // Filet de sécurité : le poll reboucle normalement avant ENDED (cf. LOOP_TAIL_S).
@@ -142,7 +146,9 @@ export function YoutubeItem({ item, interactive }: { item: BoardItem; interactiv
               if (playAllowed(item)) e.target.playVideo();
             }
           },
-          onError: (e: { data: number }) => setErr(e.data),
+          // Une erreur est un état FINI : elle lève aussi le voile de chargement, sinon la
+          // superposition « non intégrable » et ses deux boutons resteraient derrière un spinner.
+          onError: (e: { data: number }) => { setErr(e.data); onReady?.(); },
         },
       });
       // Boucle sur [in, out], borne de fin toujours ramenée en deçà du terme de la vidéo.

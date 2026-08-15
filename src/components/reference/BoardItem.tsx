@@ -53,11 +53,12 @@ const HANDLE_POS: Record<ResizeHandle, string> = {
 // source (flux YouTube relayé par le core) : pas de proxy dans ce cas, et une erreur de lecture
 // remonte à l'appelant au lieu de déclencher la récupération de média. `onNatSize` reports the
 // decoded dimensions — the only place a relayed stream states its true ratio.
-function VideoContent({ item, streamSrc, onStreamError, onNatSize }: {
+function VideoContent({ item, streamSrc, onStreamError, onNatSize, onReady }: {
   item: Item;
   streamSrc?: string;
   onStreamError?: () => void;
   onNatSize?: (w: number, h: number) => void;
+  onReady?: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const patchItem = useBoard((s) => s.patchItem);
@@ -167,6 +168,20 @@ function VideoContent({ item, streamSrc, onStreamError, onNatSize }: {
   useEffect(seekIn, [trimIn, useProxy]);
 
   const src = streamSrc ?? (useProxy ? proxUrl : item.src);
+
+  // Sous-titres JAMAIS imposés : ni une piste incrustée dans le conteneur, ni celle que la WebView
+  // allume d'elle-même d'après la langue du système. Une planche de références montre des images,
+  // pas du texte gravé par-dessus. Une piste in-band peut arriver APRÈS les métadonnées, d'où
+  // l'écoute de `addtrack` en plus du passage initial.
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const mute = () => { for (const tr of Array.from(v.textTracks)) tr.mode = "disabled"; };
+    mute();
+    v.textTracks.addEventListener("addtrack", mute);
+    return () => v.textTracks.removeEventListener("addtrack", mute);
+  }, [src]);
+
   // Affiche native : la frame fixe déjà résolue reste peinte jusqu'à la première frame décodée —
   // pas de flash noir au montage ni au retour du mode timbre-poste (cf. boardVideoLod).
   const poster = !streamSrc && localRef ? knownThumb(item.ref, posterTime(item)) ?? undefined : undefined;
@@ -193,6 +208,9 @@ function VideoContent({ item, streamSrc, onStreamError, onNatSize }: {
         if (!useProxy && e.currentTarget.videoWidth && e.currentTarget.videoHeight) {
           onNatSize?.(e.currentTarget.videoWidth, e.currentTarget.videoHeight);
         }
+        // Prêt = la source rend une IMAGE. Des métadonnées sans dimension partent en repli juste
+        // au-dessus : les annoncer prêtes retirerait le voile de chargement sur un carré noir.
+        if (e.currentTarget.videoWidth) onReady?.();
         if (!useProxy && d && isFinite(d) && Math.abs(d - (item.dur ?? 0)) > 0.5) patchItem(item.id, { dur: d }, false);
         seekIn();
       }}
@@ -674,15 +692,31 @@ function ImageContent({ item }: { item: Item }) {
   return item.crop ? <div className="relative h-full w-full overflow-hidden">{media}</div> : media;
 }
 
+// Voile de préparation d'une carte YouTube. `pointer-events-none` : il couvre le lecteur sans lui
+// voler le glissé du board ni les boutons de l'écran d'erreur qu'il peut recouvrir un instant.
+function YoutubeLoading() {
+  const { t } = useTranslation("reference");
+  return (
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-muted/40 text-muted-foreground">
+      <Loader2 className="size-8 animate-spin" strokeWidth={1.5} />
+      <span className="text-xs font-medium">{t("youtube.preparing")}</span>
+    </div>
+  );
+}
+
 // YouTube joué comme une vidéo ordinaire : le flux est relayé par le core (yt-dlp le résout), donc
 // plus d'iframe — ni gros bouton lecture au rebouclage, ni écran de fin, et le trim/ping-pong sont
 // ceux d'une vidéo locale. Repli sur le lecteur intégré si le relais échoue (vidéo privée, restreinte,
 // yt-dlp absent) : son habillage vaut mieux qu'un carré noir.
 function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean; onFallback: (on: boolean) => void }) {
   const [embedded, setEmbedded] = useState(false);
+  // Une carte YouTube ne devient une image qu'au bout d'une chaîne LENTE : yt-dlp résout d'abord
+  // l'URL du flux (des secondes, pas des millisecondes), et un repli iframe remonte ensuite son
+  // propre lecteur. Sans voile, tout ce temps est un rectangle noir qui ne dit rien.
+  const [ready, setReady] = useState(false);
   const patchItem = useBoard((s) => s.patchItem);
   // Nouvelle vidéo sur le même item → on retente le flux direct.
-  useEffect(() => { setEmbedded(false); onFallback(false); }, [item.ref, onFallback]);
+  useEffect(() => { setEmbedded(false); setReady(false); onFallback(false); }, [item.ref, onFallback]);
 
   // A YouTube card is posed before anything is known of the video — 16:9, or 9:16 when the link says
   // `/shorts/`. The relayed stream is where the TRUE ratio finally shows up (a Short shared as a
@@ -705,14 +739,22 @@ function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean;
     if (Object.keys(patch).length) patchItem(item.id, patch, false);
   }, [item.id, patchItem]);
 
-  if (embedded) return <YoutubeItem item={item} interactive={live} />;
   return (
-    <VideoContent
-      item={item}
-      streamSrc={nr.ytStreamUrl(item.ref)}
-      onStreamError={() => { setEmbedded(true); onFallback(true); }}
-      onNatSize={fitNatSize}
-    />
+    <div className="relative h-full w-full">
+      {embedded ? (
+        <YoutubeItem item={item} interactive={live} onReady={() => setReady(true)} />
+      ) : (
+        <VideoContent
+          item={item}
+          streamSrc={nr.ytStreamUrl(item.ref)}
+          // Le repli remonte un lecteur neuf : le voile revient jusqu'à ce que CELUI-LÀ soit prêt.
+          onStreamError={() => { setEmbedded(true); setReady(false); onFallback(true); }}
+          onNatSize={fitNatSize}
+          onReady={() => setReady(true)}
+        />
+      )}
+      {!ready && <YoutubeLoading />}
+    </div>
   );
 }
 
