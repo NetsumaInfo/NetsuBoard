@@ -5,7 +5,7 @@
   things, and NONE of them is a Python environment or a neural network:
     1. ffmpeg + ffprobe -- decoding, thumbnails, frame extraction, and the libplacebo filter that
        IS the upscale engine;
-    2. the GLSL shaders (ArtCNN, Anime4K) -- a few hundred kilobytes of text;
+    2. the GLSL shaders (ArtCNN) -- a few hundred kilobytes of text;
     3. yt-dlp.exe -- standalone, so links to online media resolve without a Python runtime.
 
   Then it writes nr.config.json (absolute paths), read by core/config.js.
@@ -238,17 +238,31 @@ if (-not (Test-Path $ffProbe)) { Fail $T.ffmpegMissing }
 Progress 60
 
 # -- 2. GLSL shaders (the upscale engine) ---------------------------------------------------------
-# Bundled with the installer when present (offline install), downloaded otherwise. These are text
-# files: the whole set weighs less than a megabyte.
+# ALWAYS bundled with the installer: build.ps1 stages them into <resources>\shaders, so this step is
+# a copy, not a download. Two source layouts, because $Resource is not the same thing on both sides:
+# in an installed app it IS the resources folder (<install>\resources\shaders), while in a dev
+# checkout it is the repository root and the shaders live in vendor\shaders. Looking only at the
+# second one made every packaged install fall through to the network fallback below.
 Stage 'shaders' $T.shaders
 New-Item -ItemType Directory -Force -Path $shaderDir | Out-Null
-$vendorShaders = if ($Resource) { Join-Path $Resource 'vendor\shaders' } else { '' }
-if ($vendorShaders -and (Test-Path $vendorShaders)) {
-  Copy-Item (Join-Path $vendorShaders '*.glsl') $shaderDir -Force -ErrorAction SilentlyContinue
+$shaderSources = @()
+if ($Resource) {
+  $shaderSources += (Join-Path $Resource 'shaders')          # app installée (stage de build.ps1)
+  $shaderSources += (Join-Path $Resource 'vendor\shaders')   # dépôt de développement
+}
+foreach ($source in $shaderSources) {
+  if (Test-Path $source) {
+    Copy-Item (Join-Path $source '*.glsl') $shaderDir -Force -ErrorAction SilentlyContinue
+    if (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyContinue) { break }
+  }
 }
 if (-not (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyContinue)) {
-  $fetch = Join-Path $PSScriptRoot 'fetch-shaders.ps1'
-  if (Test-Path $fetch) { & $fetch -Dest $shaderDir 2>&1 | ForEach-Object { Info ([string]$_) } }
+  # Repli réseau, atteignable seulement depuis un dépôt de dev sans vendor\shaders. $PSScriptRoot est
+  # VIDE ici : core/setup.js exécute ce fichier comme un scriptblock, pas comme un script — il n'a
+  # donc pas de chemin. Le chemin réel arrive par NR_SETUP_SCRIPT.
+  $scriptDir = if ($env:NR_SETUP_SCRIPT) { Split-Path -Parent $env:NR_SETUP_SCRIPT } else { $PSScriptRoot }
+  $fetch = if ($scriptDir) { Join-Path $scriptDir 'fetch-shaders.ps1' } else { '' }
+  if ($fetch -and (Test-Path $fetch)) { & $fetch -Dest $shaderDir 2>&1 | ForEach-Object { Info ([string]$_) } }
 }
 if (-not (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyContinue)) { Fail $T.shadersMissing }
 Progress 85
