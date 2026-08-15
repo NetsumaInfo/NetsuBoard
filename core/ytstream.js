@@ -142,7 +142,7 @@ async function resolveWithFallback(id) {
   if (!needsCookies(first.error)) return first;
 
   const walled = authWall.get(id);
-  if (walled && Date.now() - walled < AUTH_WALL_TTL_MS) return { ok: false, error: AUTH_MESSAGE, authWall: true };
+  if (walled && Date.now() - walled < AUTH_WALL_TTL_MS) return { ok: false, error: authAdvice([]), authWall: true };
 
   // Une session, pas un navigateur précis : un fichier cookies.txt d'abord (exporté une fois, lisible
   // même navigateur ouvert), puis les navigateurs installés. Aucun n'est OBLIGATOIRE — sans session
@@ -159,14 +159,33 @@ async function resolveWithFallback(id) {
     tried.push(`${attempt.label} : ${firstLine(retry.error)}`);
   }
   authWall.set(id, Date.now());
-  return { ok: false, error: tried.length ? `${AUTH_MESSAGE} Tentatives — ${tried.join(" · ")}` : AUTH_MESSAGE, authWall: true };
+  return { ok: false, error: authAdvice(tried), authWall: true };
 }
 
-// Ce que l'utilisateur peut RÉELLEMENT faire, mesuré sur le terrain : aucun client InnerTube ne
-// franchit ce mur, aucune nouvelle tentative non plus. Seule une session connectée l'ouvre.
-const AUTH_MESSAGE = "YouTube réserve cette vidéo aux comptes connectés — le board bascule sur le lecteur YouTube. "
-  + "Pour la lire dans le lecteur de l'app : ferme Chrome (il verrouille ses cookies tant qu'il tourne) ou "
-  + "renseigne « cookiesFile » (cookies.txt exporté) dans nr.config.json.";
+// Deux échecs très différents se ressemblent dans le journal, et la conduite à tenir n'est pas la
+// même : un navigateur VERROUILLÉ (Chrome/Edge ouverts gardent la main sur leur base de cookies,
+// yt-dlp#7271) n'est pas un navigateur SANS SESSION. Dire lequel des deux s'est produit évite d'aller
+// fermer un navigateur qui, de toute façon, n'avait pas de compte connecté.
+const LOCKED = /could not copy .*cookie database/i;
+
+function authAdvice(tried) {
+  const head = "YouTube réserve cette vidéo aux comptes connectés — le board bascule sur son lecteur pour celle-ci. ";
+  if (!tried.length) {
+    return `${head}Aucune source de session configurée : connecte-toi à YouTube dans Firefox, ou renseigne « cookiesFile » `
+      + "(cookies.txt exporté) dans nr.config.json.";
+  }
+  const locked = tried.filter((line) => LOCKED.test(line)).map((line) => line.split(" : ")[0]);
+  const noSession = tried.filter((line) => !LOCKED.test(line)).map((line) => line.split(" : ")[0]);
+  const parts = [];
+  if (locked.length) {
+    const many = locked.length > 1;
+    parts.push(`${locked.join(" et ")} ${many ? "gardent leurs" : "garde ses"} cookies verrouillés tant `
+      + `${many ? "qu'ils tournent (les fermer entièrement" : "qu'il tourne (le fermer entièrement"} les libère)`);
+  }
+  if (noSession.length) parts.push(`${noSession.join(", ")} : lisible${noSession.length > 1 ? "s" : ""} mais sans session YouTube`);
+  return `${head}${parts.join(" ; ")}. Le plus simple : se connecter à YouTube une fois dans Firefox, ou exporter un cookies.txt `
+    + "et le désigner par « cookiesFile » dans nr.config.json.";
+}
 
 // Première ligne utile d'une erreur yt-dlp : elle en répète souvent deux ou trois identiques, ce qui
 // noyait le message dans sa propre redite.
