@@ -1,6 +1,5 @@
 {
   "title": "NetsuBoard konfigurieren",
-  "desc": "Die Grundlage installiert sich selbst. Der Rest ist optional.",
   "scan": {
     "running": "Installation und GPU werden geprüft…"
   },

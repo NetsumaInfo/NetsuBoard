@@ -1,6 +1,5 @@
 {
   "title": "Configure NetsuBoard",
-  "desc": "The foundation installs itself. The rest is optional.",
   "scan": {
     "running": "Scanning the installation and GPU…"
   },

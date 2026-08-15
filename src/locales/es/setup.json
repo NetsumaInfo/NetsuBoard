@@ -1,6 +1,5 @@
 {
   "title": "Configurar NetsuBoard",
-  "desc": "La base se instala sola. El resto es opcional.",
   "scan": {
     "running": "Analizando la instalación y la GPU…"
   },

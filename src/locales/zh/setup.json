@@ -1,6 +1,5 @@
 {
   "title": "配置 NetsuBoard",
-  "desc": "基础环境自动安装，其余可选。",
   "scan": {
     "running": "正在检查安装和 GPU…"
   },

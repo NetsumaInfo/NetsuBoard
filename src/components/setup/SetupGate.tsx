@@ -235,8 +235,9 @@ export function SetupGate({ children }: { children: ReactNode }) {
     <GateFrame contentClassName="max-w-4xl">
       <Card className="w-full max-w-3xl gap-6 p-7">
         <header>
+          {/* Pas de sous-titre : il annonçait un « reste optionnel » qui n'existe plus, et l'écran
+              n'a plus rien à expliquer — il installe, c'est tout. */}
           <h1 className="text-xl font-semibold tracking-tight">{t("setup:title")}</h1>
-          <p className="mt-1 max-w-xl text-sm text-muted-foreground">{t("setup:desc")}</p>
         </header>
 
         {phase === "language" && (
