@@ -92,7 +92,7 @@ export interface BoardPrefs {
   upQuick: boolean;
   upEngine: "ia" | "turbo"; // moteur : IA (Real-ESRGAN/CUGAN, qualité max) ou Turbo (shader GPU, quasi temps réel)
   upModel: UpscaleModel;   // modèle IA par défaut (anime doux, réel rapide, réel max…)
-  upShader: ShaderModel;   // shader Turbo par défaut (ArtCNN, Anime4K, réel net…)
+  upShader: ShaderModel;   // shader Turbo par défaut (ArtCNN C4F32/C4F16, neutre ou DS/DN)
   upScale: 1 | 2 | 4;      // facteur par défaut (1× = restauration à la définition d'origine)
   upDenoise: number;       // débruitage par défaut (0..1) — n'agit que sur les modèles IA qui le gèrent
   drawKeys: DrawKeys;      // raccourcis clavier des outils de dessin (personnalisables) — outil → lettre
@@ -120,6 +120,25 @@ export interface BoardPrefs {
 // Dispositions proposées par le sélecteur de rangement (sous-ensemble d'ArrangeMode : les
 // alignements et répartitions restent des boutons directs, ils ne « rangent » pas une planche).
 export type ArrangeLayout = "block" | "pack" | "grid" | "row" | "col";
+
+// Shaders retirés du sélecteur → équivalent ArtCNN le plus proche. Le core résout encore ces ids
+// (cf. core/shaderUpscale.js), mais un réglage enregistré sur une entrée absente de la liste
+// afficherait un sélecteur VIDE : la préférence doit atterrir sur un choix que l'écran propose.
+const SHADER_REPLACEMENT: Record<string, ShaderModel> = {
+  anime4k: "artcnn_c4f32",
+  anime4k_aa_hq: "artcnn_c4f32",
+  anime4k_bb_hq: "artcnn_c4f32_dn",
+  artcnn_quality: "artcnn_c4f32_ds",
+  artcnn_r16f96: "artcnn_c4f32",
+  artcnn_r8f64: "artcnn_c4f16",
+  rtx_vsr: "artcnn_c4f32",
+  lanczos: "artcnn_c4f32",
+};
+function migrateShader(stored: unknown): ShaderModel {
+  if (typeof stored !== "string") return PREFS_DEFAULT.upShader;
+  return SHADER_REPLACEMENT[stored] ?? (stored as ShaderModel);
+}
+
 const PREFS_DEFAULT: BoardPrefs = {
   favFonts: [],
   defaultFont: HANDWRITING_FONT,
@@ -178,8 +197,7 @@ export function readPrefs(): BoardPrefs {
       // le choix de l'utilisateur qui prime.
       arrangeUniform: v.arrangeDefaultsVersion === 1 ? v.arrangeUniform ?? PREFS_DEFAULT.arrangeUniform : PREFS_DEFAULT.arrangeUniform,
       arrangeDefaultsVersion: 1,
-      upShader: v.upShader === "anime4k" ? "anime4k_aa_hq"
-        : v.upShader === "artcnn_quality" ? "artcnn_c4f32" : v.upShader ?? PREFS_DEFAULT.upShader,
+      upShader: migrateShader(v.upShader),
       favFonts: Array.isArray(v.favFonts) ? v.favFonts : [],
       autoDownloadProviders: Array.isArray(v.autoDownloadProviders)
         ? v.autoDownloadProviders : PREFS_DEFAULT.autoDownloadProviders,

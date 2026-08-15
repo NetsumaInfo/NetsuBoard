@@ -47,14 +47,14 @@
     "highlights": {
       "fr": [
         "Un board de référence infini : images, vidéos locales, liens YouTube, intégrations, notes et dessin sur une même surface.",
-        "Upscaling par shaders GPU (ArtCNN, Anime4K) via ffmpeg et libplacebo, sans modèle à télécharger.",
+        "Upscaling par shaders GPU (ArtCNN) via ffmpeg et libplacebo, sans modèle à télécharger.",
         "Lecture vidéo adaptée à la taille affichée, mise en pause de ce qui sort de l'écran, et zoom continu qui reste fluide sur les grands boards.",
         "Application autonome et hors ligne : aucun compte, aucune donnée envoyée, tout reste sur le disque.",
         "Interface en six langues, thèmes personnalisables, et mises à jour signées vérifiées avant installation."
       ],
       "en": [
         "An infinite reference board: images, local videos, YouTube links, embeds, notes and drawing on a single surface.",
-        "GPU shader upscaling (ArtCNN, Anime4K) through ffmpeg and libplacebo, with no model to download.",
+        "GPU shader upscaling (ArtCNN) through ffmpeg and libplacebo, with no model to download.",
         "Video playback matched to the on-screen size, off-screen items paused, and continuous zoom that stays smooth on large boards.",
         "Standalone and offline: no account, nothing sent anywhere, everything stays on disk.",
         "Interface in six languages, customisable themes, and signed updates verified before installation."

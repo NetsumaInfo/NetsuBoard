@@ -15,10 +15,14 @@ const { t } = require('./i18n');
 const { resolveProcessEncoding } = require('./processEncoding');
 
 // Shaders Turbo : id (renderer) → fichier .glsl custom (custom_shader_path) OU scaler libplacebo
-// intégré (`upscaler`, pas de fichier). Anime = CNN GLSL (ArtCNN/Anime4K) ; réel = lanczossharp.
-// Suffixes ArtCNN : `_DS` = doubleur qui débruite ET accentue, `_DN` = doubleur qui débruite et
-// adoucit. Ce sont des poids distincts, pas un post-filtre : ils ne se combinent pas avec la variante
-// neutre du même réseau.
+// intégré (`upscaler`, pas de fichier). UN SEUL réseau est livré, ArtCNN, en deux tailles :
+// C4F32 (qualité) et C4F16 (rapide). Suffixes : `_DS` = doubleur qui débruite ET accentue, `_DN` =
+// doubleur qui débruite et adoucit. Ce sont des poids distincts, pas un post-filtre : ils ne se
+// combinent pas avec la variante neutre du même réseau.
+//
+// Anime4K a été retiré du produit. Les ids ci-dessous restent RÉSOLUS parce qu'ils ont pu être
+// enregistrés dans un board existant : les faire disparaître d'ici casserait la lecture de ce board
+// au lieu de simplement changer son shader. Ils pointent vers l'ArtCNN le plus proche.
 const SHADERS = {
   artcnn_c4f32:    { file: 'ArtCNN_C4F32.glsl', upscaler: null },
   artcnn_c4f32_ds: { file: 'ArtCNN_C4F32_DS.glsl', upscaler: null },
@@ -26,11 +30,12 @@ const SHADERS = {
   artcnn_c4f16:    { file: 'ArtCNN_C4F16.glsl', upscaler: null },
   artcnn_c4f16_ds: { file: 'ArtCNN_C4F16_DS.glsl', upscaler: null },
   artcnn_c4f16_dn: { file: 'ArtCNN_C4F16_DN.glsl', upscaler: null },
+  // Valeurs persistées historiques, hors sélecteur.
   artcnn_quality:  { file: 'ArtCNN_C4F32_DS.glsl', upscaler: null },
-  anime4k:        { file: 'Anime4K_ModeA.glsl', upscaler: null },
-  anime4k_aa_hq:  { file: 'Anime4K_ModeAA_HQ.glsl', upscaler: null },
-  anime4k_bb_hq:  { file: 'Anime4K_ModeBB_HQ.glsl', upscaler: null },
-  lanczos:        { file: null, upscaler: 'ewa_lanczossharp' },
+  anime4k:         { file: 'ArtCNN_C4F32.glsl', upscaler: null },
+  anime4k_aa_hq:   { file: 'ArtCNN_C4F32.glsl', upscaler: null },
+  anime4k_bb_hq:   { file: 'ArtCNN_C4F32_DN.glsl', upscaler: null },
+  lanczos:         { file: null, upscaler: 'ewa_lanczossharp' },
 };
 
 // Ces deux choix restent dans le même sélecteur « Shader », mais l'architecture R n'existe

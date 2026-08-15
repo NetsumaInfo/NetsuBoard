@@ -170,19 +170,16 @@ type UpEngine = "ia" | "turbo";
 // soit la technique derrière (shader GLSL libplacebo, poids ArtCNN R en ONNX, ou le CLI NVIDIA
 // RTX VSR). `label` = nom exact du modèle ; `hint` = infobulle, la plus courte possible — c'est un
 // choix, pas une notice. Suffixes ArtCNN : DS = débruite + accentue, DN = débruite + adoucit.
+// UN SEUL réseau, ArtCNN, en deux tailles. Anime4K est parti : sur les sources qui comptent ici il
+// perdait contre C4F32, et deux familles à départager pour un gain nul est un choix de trop. Les
+// deux ArtCNN R sont partis avec, faute de runtime ONNX dans cette application.
 export const SHADER_MODELS: { id: ShaderModel; label: string; hint: string }[] = [
-  { id: "artcnn_r16f96", label: "ArtCNN R16F96", hint: "Anime — qualité max." },
-  { id: "artcnn_r8f64", label: "ArtCNN R8F64", hint: "Anime — qualité, plus rapide." },
   { id: "artcnn_c4f32", label: "ArtCNN C4F32", hint: "Anime — équilibré." },
   { id: "artcnn_c4f32_ds", label: "ArtCNN C4F32 DS", hint: "Anime — débruite, accentue." },
   { id: "artcnn_c4f32_dn", label: "ArtCNN C4F32 DN", hint: "Anime — débruite, adoucit." },
   { id: "artcnn_c4f16", label: "ArtCNN C4F16", hint: "Anime — le plus rapide." },
   { id: "artcnn_c4f16_ds", label: "ArtCNN C4F16 DS", hint: "Rapide — débruite, accentue." },
   { id: "artcnn_c4f16_dn", label: "ArtCNN C4F16 DN", hint: "Rapide — débruite, adoucit." },
-  { id: "anime4k_aa_hq", label: "Anime4K mode A+A HQ", hint: "Anime — perceptuel max." },
-  { id: "anime4k_bb_hq", label: "Anime4K mode B+B HQ", hint: "Anime — restauration douce." },
-  { id: "rtx_vsr", label: "NVIDIA RTX VSR", hint: "Réel et anime — 2× fixe, NVIDIA." },
-  { id: "lanczos", label: "Lanczos-sharp", hint: "Réel — sans IA, instantané." },
 ];
 
 // RTX VSR n'agrandit qu'en ×2 (contrainte du SDK) et n'accepte pas les sources ≥ 1440p.
@@ -237,17 +234,11 @@ export function modelCaps(id: string): UpModelCaps | null {
 export const shaderRuntimeModel = (shader: ShaderModel): UpscaleModel | null =>
   shader === "artcnn_r16f96" || shader === "artcnn_r8f64" ? shader : null;
 
-// Liste UNIFIÉE « Modèle » du board = modèles IA (Real-ESRGAN/CUGAN) + shaders Turbo (libplacebo),
-// listés par leur VRAI nom (pas de catégorie « moteur/IA/turbo » exposée). Le moteur est déduit de
-// l'id choisi (`boardUpEngine`). Les shaders sont vidéo-only → la popup image ne montre que les IA.
+// Liste « Modèle » du board, listée par le VRAI nom du shader (pas de catégorie « moteur » exposée).
+// Elle est exactement SHADER_MODELS : tout ce qui demandait un runtime à installer — les poids ONNX
+// d'ArtCNN R, le CLI RTX VSR — a quitté le catalogue, donc il n'y a plus rien à filtrer ici.
 export type BoardUpChoice = { value: string; label: string; hint: string; engine: "ia" | "turbo" };
-// NetsuBoard ne propose QUE des shaders GLSL, et pas tous : sont écartés `artcnn_r16f96` et
-// `artcnn_r8f64` (poids ONNX exécutés par un sidecar, donc un runtime ML à installer) ainsi que
-// `rtx_vsr` (CLI + bibliothèques NVIDIA non redistribuables, téléchargement séparé). Ne restent que
-// les shaders livrés avec l'application — quelques kilo-octets de GLSL, rien à provisionner.
-const SIDECAR_SHADERS = new Set<string>(["artcnn_r16f96", "artcnn_r8f64", "rtx_vsr"]);
 export const BOARD_UP_CHOICES: BoardUpChoice[] = SHADER_MODELS
-  .filter((m) => !SIDECAR_SHADERS.has(m.id))
   .map((m): BoardUpChoice => ({ value: m.id, label: m.label, hint: m.hint, engine: "turbo" }));
 // Un seul moteur : la fonction reste pour ne pas disperser la connaissance, mais elle n'a plus qu'une
 // réponse possible.
