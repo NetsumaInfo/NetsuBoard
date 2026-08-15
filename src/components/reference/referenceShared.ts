@@ -490,6 +490,7 @@ export {
   DOWNLOADABLE_EMBED_PROVIDERS,
   isVideoUrl,
   isImageUrl,
+  sourceName,
 } from "./embeds";
 export type { EmbedProvider } from "./embeds";
 
@@ -532,6 +533,15 @@ export function probeNat(kind: ItemKind, src: string): Promise<{ w: number; h: n
 // passer par le remux ffmpeg à la volée (/stream copy), sinon le <video> ne charge rien.
 const NATIVE_VIDEO = new Set(["mp4", "m4v", "mov", "webm"]);
 
+/**
+ * Ce conteneur se lit-il tel quel dans le webview ? SOURCE UNIQUE du test : l'affichage s'en sert
+ * pour router vers le remux du core, l'ingestion pour savoir si un fichier fraîchement déposé peut
+ * être montré depuis son blob local, avant même que son chemin disque soit connu.
+ */
+export function playsNatively(nameOrPath: string): boolean {
+  return NATIVE_VIDEO.has(nameOrPath.split(".").pop()?.toLowerCase() || "");
+}
+
 // Localisateur durable → URL d'affichage. Chemin disque → core HTTP (/media Range-aware, ou /stream
 // remux pour les conteneurs non lus) ; URL http(s)/data/blob → telle quelle ; youtube → YoutubeItem.
 export function displaySrc(kind: ItemKind, ref: string): string {
@@ -544,10 +554,7 @@ export function displaySrc(kind: ItemKind, ref: string): string {
   if (isRemoteRef(ref)) return ref;
   // Vidéo locale : mp4/mov/webm lisibles tels quels ; mkv & co passent par /stream copy, un remux
   // ffmpeg en direct — celui-là ne peut pas sortir du serveur HTTP, il n'existe pas comme fichier.
-  if (kind === "video") {
-    const ext = ref.split(".").pop()?.toLowerCase() || "";
-    if (!NATIVE_VIDEO.has(ext)) return nr.streamUrl(ref, 0, "copy");
-  }
+  if (kind === "video" && !playsNatively(ref)) return nr.streamUrl(ref, 0, "copy");
   // Tout le reste est un FICHIER sur le disque → protocole asset de la coquille. Le serveur HTTP du
   // core partage son origine avec /rpc et le flux d'événements, et un webview n'ouvre que 6
   // connexions par origine : un board qui monte des dizaines de médias les mettait tous en file

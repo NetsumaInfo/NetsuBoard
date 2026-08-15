@@ -18,6 +18,8 @@ import {
   EMBED_PLAYER_PROVIDERS,
   isVideoUrl,
   isImageUrl,
+  sourceName,
+  playsNatively,
   fitSize,
   probeImage,
   probeVideo,
@@ -32,7 +34,15 @@ import { boundsOf, computeArrange } from "./boardArrange";
 // a YouTube card is a player, not a reference image the user sizes to taste.
 const YT_MAX = 480;
 
-// Hôte d'un lien → titre court d'un média extrait (ex. "x.com", "tiktok.com").
+// Ce que l'interface MONTRE d'un lien : le nom de la plateforme quand elle est reconnue, sinon rien
+// de plus que « média ». L'hôte de l'URL n'apparaît jamais — il ne dit rien à personne (« 127.0.0.1 »,
+// « i.redd.it », un CDN signé) et transforme une carte de chargement en fuite de tuyauterie.
+function sourceTitle(url: string): string {
+  return sourceName(url) ?? i18n.t("reference:item.mediaFallback");
+}
+
+// Hôte d'un lien, réservé aux INDICES passés au core (nom de fichier d'un média téléchargé). Jamais
+// affiché : côté écran c'est `sourceTitle` qui parle.
 function hostTitle(url: string): string {
   try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return i18n.t("reference:item.mediaFallback"); }
 }
@@ -59,6 +69,14 @@ function gridLayout(
     x: x0 + (i % cols) * (w + gap),
     y: y0 + Math.floor(i / cols) * (h + gap),
   }));
+}
+
+// Ratio MESURÉ → géométrie de l'item, centrée sur `c`. null quand la mesure a échoué (source
+// illisible) : l'item garde sa taille provisoire plutôt que de s'effondrer sur un ratio inventé.
+function fitSizeOf(nat: { w: number; h: number }, box: number, c: { x: number; y: number }): Partial<BoardItem> | null {
+  if (!nat.w || !nat.h) return null;
+  const { w, h } = fitSize(nat.w, nat.h, box);
+  return { natW: nat.w, natH: nat.h, w, h, x: c.x - w / 2, y: c.y - h / 2 };
 }
 
 // Exécute `run` sur toute la liste avec au plus `limit` tâches en vol. Vraie file d'attente, pas des
@@ -232,36 +250,79 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     [place, addPath],
   );
 
-  // Item depuis un objet File (navigateur, presse-papier, ou drop sans chemin résoluble).
+  // UN fichier déposé, collé ou choisi. Posé AVANT la moindre attente : le placeholder paraît sous le
+  // curseur dans la frame du dépôt et la barre d'outils annonce l'import, puis ratio natif et source
+  // durable arrivent par patch. L'ancienne voie attendait la résolution du chemin disque PUIS le
+  // téléchargement et le décodage COMPLETS de l'image avant de poser quoi que ce soit : plusieurs
+  // centaines de millisecondes sans le moindre signe à l'écran, exactement là où l'utilisateur vient
+  // de lâcher son fichier.
   const addFile = useCallback(
     async (file: File, at?: { x: number; y: number }) => {
-      const [path] = await nr.pathsForFiles([file]);
-      if (path) return addPath(path, file.name, at);
-      const kind: ItemKind | null = file.type.startsWith("image/")
-        ? "image"
-        : file.type.startsWith("video/")
-          ? "video"
-          : null;
+      const kind = entryKind(file.name, file.type);
       if (!kind) return;
-      // Image OU vidéo collée/déposée sans chemin → l'écrire en asset disque (durable, survit au reload).
-      if (nr.reference?.saveAsset) {
+      const box = useBoard.getState().prefs.mediaMaxSize;
+      const c = at ?? centerPoint();
+      // Un objectURL n'est qu'un HANDLE sur le fichier : zéro octet lu ici, et la source reste locale
+      // au webview — ni serveur HTTP du core, ni protocole asset, ni round-trip de résolution de
+      // chemin entre le dépôt et le premier pixel.
+      const blob = URL.createObjectURL(file);
+      // Sauf pour un conteneur que le webview ne lit pas (mkv, avi…) : celui-là n'est visible qu'à
+      // travers le remux `/stream copy` du core, donc seulement une fois son chemin disque connu.
+      const direct = kind === "image" || playsNatively(file.name);
+      const id = addItem({
+        kind,
+        ref: blob,
+        src: direct ? blob : "",
+        x: c.x - box / 2,
+        y: c.y - box / 2,
+        w: box,
+        h: kind === "video" ? Math.round((box * 9) / 16) : box,
+        rotation: 0,
+        loading: true,
+        title: file.name,
+      });
+      useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.importing", { name: file.name }) });
+
+      // Chemin disque et ratio natif ne dépendent PAS l'un de l'autre (sauf conteneur non lu) : les
+      // deux attentes se recouvrent au lieu de s'additionner.
+      const pending = nr.pathsForFiles([file]);
+      const src = direct ? blob : displaySrc(kind, (await pending)[0] || "");
+      const [nat, [path]] = await Promise.all([
+        src ? probeNat(kind, src) : Promise.resolve({ w: 0, h: 0 }),
+        pending,
+      ]);
+      const size = fitSizeOf(nat, box, c);
+      // Le sondage a chargé ET décodé la source : le média se peint dans la frame où le loader tombe.
+      useBoard.getState().patchItem(id, {
+        loading: undefined,
+        src,
+        // Chemin disque connu → c'est LUI le localisateur durable. La source d'affichage, elle, reste
+        // le blob déjà décodé : la rebasculer sur le protocole asset retéléchargerait et redécoderait
+        // le même fichier pour rien (`src` est de toute façon recalculé depuis `ref` au rechargement).
+        ...(path ? { ref: path } : null),
+        ...size,
+      }, false);
+
+      // Sans chemin (presse-papier, navigateur, coquille sans le pont) : copie en asset disque, en
+      // arrière-plan — l'item est déjà à l'écran et le blob le tient jusqu'à ce que l'écriture aboutisse.
+      if (!path && nr.reference?.saveAsset) {
         try {
-          const ext = extFromMime(file.type, kind);
-          const res = await nr.reference.saveAsset(await file.arrayBuffer(), ext);
+          const res = await nr.reference.saveAsset(await file.arrayBuffer(), extFromMime(file.type, kind));
           if (res.ok && res.path) {
-            const src = displaySrc(kind, res.path);
-            const nat = await probeNat(kind, src);
-            return place(kind, res.path, src, nat, file.name, at);
+            const durable = displaySrc(kind, res.path);
+            // Conteneur non lu par le webview : l'asset est sa PREMIÈRE source affichable, donc aussi
+            // la première mesurable — le blob, lui, n'aurait rien rendu.
+            const late = (direct || size) ? null : fitSizeOf(await probeNat(kind, durable), box, c);
+            useBoard.getState().patchItem(id, { ref: res.path, ...(direct ? null : { src: durable }), ...late }, false);
+            if (!direct) URL.revokeObjectURL(blob);
           }
         } catch {
-          /* repli objectURL ci-dessous */
+          /* écriture refusée : le blob tient la session, la source d'origine reste sur disque */
         }
       }
-      const url = URL.createObjectURL(file);
-      const nat = await probeNat(kind, url);
-      place(kind, url, url, nat, file.name, at);
+      useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: 1 }) });
     },
-    [addPath, place],
+    [addItem, centerPoint],
   );
 
   // Un LOT posé en BLOC : jamais une pile au même point. Les médias sont rangés (et regroupés dans
@@ -638,7 +699,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         const src = displaySrc(it.kind, it.path);
         const nat = await probeNat(it.kind, src);
         const off = i * 28; // décalage en escalier (plusieurs médias d'un même post ne se superposent pas)
-        place(it.kind, it.path, src, nat, hostTitle(sourceUrl), { x: c.x + off, y: c.y + off }, { sourceUrl });
+        place(it.kind, it.path, src, nat, sourceTitle(sourceUrl), { x: c.x + off, y: c.y + off }, { sourceUrl });
       }
     },
     [place, centerPoint],
@@ -720,41 +781,57 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         return true;
       }
 
-      // À partir d'ici : téléchargement → on pose un PLACEHOLDER (carré + loader) à l'emplacement
-      // cible, remplacé par le vrai média à l'arrivée (retiré en `finally` quoi qu'il arrive).
+      // À partir d'ici : téléchargement. Deux signaux, parce qu'ils ne disent pas la même chose —
+      // le PLACEHOLDER (carré + loader) montre à quel endroit du board le média va atterrir, la
+      // notice de la barre d'outils dit d'où il vient et reste lisible même si l'utilisateur pan
+      // ailleurs entre-temps. Le placeholder est retiré en `finally`, quoi qu'il arrive.
       const at = centerPoint();
-      const loadingId = addLoading(at, hostTitle(text));
+      // Plateforme reconnue → on la nomme ; sinon on reste vague plutôt que d'exhiber un hôte.
+      const source = sourceName(text);
+      const loadingId = addLoading(at, sourceTitle(text));
+      useBoard.getState().setNotice({
+        kind: "ok",
+        sticky: true,
+        text: source ? i18n.t("reference:ingest.fetchingFrom", { source }) : i18n.t("reference:ingest.fetching"),
+      });
+      let ok = false;
       try {
-        // 3a. Giphy → URL CDN directe du GIF (la page bloque le scraping) → download image animée.
-        const gif = giphyGifUrl(text);
-        if (gif) return await addRemoteMedia(gif, "image", at, text);
+        ok = await (async (): Promise<boolean> => {
+          // 3a. Giphy → URL CDN directe du GIF (la page bloque le scraping) → download image animée.
+          const gif = giphyGifUrl(text);
+          if (gif) return await addRemoteMedia(gif, "image", at, text);
 
-        // 3b. Fichier média direct (.mp4/.gif/.png…, ou ?format=jpg) → download des octets.
-        if (isVideoUrl(text)) return await addRemoteMedia(text, "video", at);
-        if (isImageUrl(text)) return await addRemoteMedia(text, "image", at);
+          // 3b. Fichier média direct (.mp4/.gif/.png…, ou ?format=jpg) → download des octets.
+          if (isVideoUrl(text)) return await addRemoteMedia(text, "video", at);
+          if (isImageUrl(text)) return await addRemoteMedia(text, "image", at);
 
-        // 4. Réseau social reconnu → extraction (qualité pleine, multi-images), repli OpenGraph.
-        //    Instagram's OpenGraph result is only a poster, so failed video extraction falls back to
-        //    the official embed below. Generic links still try OpenGraph first, then extraction.
-        const ok = e
-          ? (await extractAndPlace(text, at))
-            || (e.provider !== "instagram" && await resolvePageAndPlace(text, at))
-          : prefs.autoDownloadOnline
-            ? (await resolvePageAndPlace(text, at)) || (await extractAndPlace(text, at))
-            : await resolvePageAndPlace(text, at);
-        if (ok) return true;
+          // 4. Réseau social reconnu → extraction (qualité pleine, multi-images), repli OpenGraph.
+          //    Instagram's OpenGraph result is only a poster, so failed video extraction falls back to
+          //    the official embed below. Generic links still try OpenGraph first, then extraction.
+          const found = e
+            ? (await extractAndPlace(text, at))
+              || (e.provider !== "instagram" && await resolvePageAndPlace(text, at))
+            : prefs.autoDownloadOnline
+              ? (await resolvePageAndPlace(text, at)) || (await extractAndPlace(text, at))
+              : await resolvePageAndPlace(text, at);
+          if (found) return true;
 
-        // 5. Échec → repli carte embed ancrée (social, ou générique si autorisé).
-        const fb = e ?? (opts?.allowGenericEmbed ? parseVideoEmbed(text, true) : null);
-        if (fb) {
-          place("embed", fb.pageUrl, fb.embedUrl, fb.size ?? { w: 480, h: 270 }, fb.provider, at);
-          return true;
-        }
+          // 5. Échec → repli carte embed ancrée (social, ou générique si autorisé).
+          const fb = e ?? (opts?.allowGenericEmbed ? parseVideoEmbed(text, true) : null);
+          if (fb) {
+            place("embed", fb.pageUrl, fb.embedUrl, fb.size ?? { w: 480, h: 270 }, fb.provider, at);
+            return true;
+          }
 
-        // 6. Dernier recours : download CDN (image hotlink sans extension propre).
-        return await addRemoteMedia(text, undefined, at);
+          // 6. Dernier recours : download CDN (image hotlink sans extension propre).
+          return await addRemoteMedia(text, undefined, at);
+        })();
+        return ok;
       } finally {
         removeItem(loadingId);
+        // Échec : la notice s'efface SANS rien annoncer. Chaque appelant a déjà son message d'échec
+        // (dialogue d'ajout de lien, collage clavier) — en poser un second les ferait se chasser.
+        useBoard.getState().setNotice(ok ? { kind: "ok", text: i18n.t("reference:ingest.linkDone") } : null);
       }
     },
     [place, addRemoteMedia, extractAndPlace, resolvePageAndPlace, addLoading, removeItem, centerPoint],
