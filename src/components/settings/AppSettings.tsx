@@ -7,10 +7,11 @@
 // donc la couleur et le mode de fond se voient encore changer pendant qu'on les règle. Fermeture :
 // croix, Échap, ou clic sur le voile.
 
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, Info, LayoutDashboard, LifeBuoy, Palette, Terminal, X } from "lucide-react";
+import { Download, Info, LayoutDashboard, LifeBuoy, Palette, Terminal, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spinner";
 import { markConsoleSeen, subscribeErrorCount } from "@/lib/appConsole";
 import { BoardSettings, BOARD_SETTINGS_TABS, type BoardSettingsTab } from "@/components/reference/BoardSettings";
 import { ConsolePanel } from "./console/ConsolePanel";
@@ -20,10 +21,17 @@ import { InterfacePanel } from "./InterfacePanel";
 import { AboutPanel } from "./AboutPanel";
 import { useSettingsUi, type SettingsSection } from "./useSettingsUi";
 
+// Chargé PARESSEUSEMENT : la page Compte tire `convex/react` et le client Better Auth. En import
+// statique, ils entreraient dans le chunk d'entrée d'une app qui doit s'ouvrir sans backend.
+const AccountPanel = lazy(() => import("./AccountPanel").then((m) => ({ default: m.AccountPanel })));
+
 // Board = LayoutDashboard (la surface qu'on règle), Interface = Palette (thème et langue, comme dans
 // NetsuRush). La palette sur « Board » disait « couleurs » alors que la page couvre aussi les médias,
 // la navigation et les raccourcis — et laissait l'apparence de l'app sans icône propre.
 const SECTIONS: { id: SettingsSection; icon: typeof Palette; labelKey: string }[] = [
+  // « Compte » en tête, comme dans NetsuRush : c'est la seule porte vers la connexion Discord une
+  // fois le gate passé, et l'écran de connexion promet précisément de la trouver ici.
+  { id: "account", icon: UserRound, labelKey: "settings:nav.account" },
   { id: "board", icon: LayoutDashboard, labelKey: "reference:settings.navBoard" },
   { id: "interface", icon: Palette, labelKey: "settings:nav.interface" },
   { id: "console", icon: Terminal, labelKey: "settings:tab.system.console" },
@@ -141,6 +149,11 @@ export function AppSettings() {
             )}
 
             <div className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto", section === "board" ? "p-4" : "p-5")}>
+              {section === "account" && (
+                <Suspense fallback={<div className="grid flex-1 place-items-center"><Spinner className="size-5 text-muted-foreground" /></div>}>
+                  <AccountPanel />
+                </Suspense>
+              )}
               {section === "board" && <BoardSettings tab={boardTab} onCapturingChange={setCapturing} />}
               {section === "interface" && <InterfacePanel />}
               {section === "console" && <ConsolePanel />}

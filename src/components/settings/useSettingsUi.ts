@@ -6,7 +6,7 @@
 
 import { create } from "zustand";
 
-export type SettingsSection = "board" | "interface" | "console" | "report" | "updates" | "about";
+export type SettingsSection = "account" | "board" | "interface" | "console" | "report" | "updates" | "about";
 
 type SettingsUi = {
   open: boolean;
