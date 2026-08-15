@@ -808,6 +808,10 @@ export interface NrApi {
   // Chemins disque d'objets File lâchés depuis l'Explorateur (Chromium masque `File.path`). Index
   // aligné sur `files` ; chaîne vide quand le chemin est irrésoluble (navigateur, WebView2 ancien).
   pathsForFiles(files: File[]): Promise<string[]>;
+  // Attache le pont ci-dessus SANS rien à résoudre. Il coûte trois imports dynamiques et un `invoke`,
+  // payés jusqu'ici par le premier dépôt : à l'écran, cette latence-là est du temps mort avant que le
+  // média n'apparaisse. Appelé au montage du board, le premier dépôt part sur un pont déjà chaud.
+  warmFilePaths(): void;
   saveFile(defaultName?: string): Promise<string | null>;
   mediaUrl(filePath: string): string;
   // URL d'un fichier local pour les GRILLES d'aperçus (vignettes + proxys de lecture).
@@ -940,6 +944,7 @@ const mock: NrApi = {
   chooseImages: async () => null,
   chooseAnyFile: async () => null,
   pathsForFiles: async (files) => files.map(() => ""),
+  warmFilePaths: () => {},
   saveFile: async () => null,
   mediaUrl: (p) => "nrmedia://media?p=" + encodeURIComponent(p),
   assetUrl: (p) => "nrmedia://media?p=" + encodeURIComponent(p),

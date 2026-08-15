@@ -577,6 +577,7 @@ export function makeCoreClient(): NrApi {
         ? requestParentFiles(false, []).then((a) => (a && a[0]) || null)
         : (dlgOpen({ multiple: false }) as Promise<string | null>),
     pathsForFiles: (files) => resolveFilePaths(files),
+    warmFilePaths: () => { void ensurePathBridge(); },
     saveFile: (defaultName) => dlgSave(defaultName),
     mediaUrl: (p) => `${BASE}/media?p=${encodeURIComponent(p)}${tkParam}`,
     assetUrl: (p) => assetSrc(p) ?? `${BASE}/media?p=${encodeURIComponent(p)}${tkParam}`,

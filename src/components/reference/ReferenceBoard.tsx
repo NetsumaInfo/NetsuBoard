@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { nr } from "@/lib/bridge";
 import { useBoard } from "./useReferenceBoard";
 import { useBoardIngest } from "./useBoardIngest";
 import { useBoardCulling } from "./useBoardCulling";
@@ -239,6 +240,11 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   }, [items, placeFrame]);
 
   // Espace maintenu → le glissé gauche sur le fond pane au lieu de sélectionner (façon mood-board).
+  // Pont de résolution des chemins d'objets `File` : attaché au montage, jamais au premier dépôt.
+  // Son attache (imports dynamiques + `invoke`) s'ajoutait sinon au temps d'attente entre le lâcher
+  // du fichier et son apparition — la seule fraction de l'import que l'utilisateur regarde.
+  useEffect(() => { nr.warmFilePaths(); }, []);
+
   useEffect(() => {
     const kd = (e: KeyboardEvent) => { if (e.code === "Space") space.current = true; };
     const ku = (e: KeyboardEvent) => { if (e.code === "Space") space.current = false; };
