@@ -520,7 +520,7 @@ export function makeCoreClient(): NrApi {
     configGet: () => call("config:get"),
     configSetLang: (lang) => call("config:setLang", [lang]),
     setupStatus: () => call("setup:status"),
-    setupRun: (options) => call("setup:run", [options]),
+    setupRun: () => call("setup:run"),
     compatibilityStatus: (opts) => call("compat:status", [opts ?? {}]),
     onSetupProgress: (cb) => on("setup:progress", cb as (p: unknown) => void),
     consoleLogs: () => call("console:logs").then((logs) => ({ ok: true, logs: logs || [] })),
@@ -561,8 +561,6 @@ export function makeCoreClient(): NrApi {
     upscaleShaderRun: (opts) => call("upscale:shaderRun", [opts]),
     upscaleTestFrame: (opts) => call("upscale:testFrame", [opts]),
     onUpscaleProgress: (cb) => on("upscale:progress", cb as (p: unknown) => void),
-    modelsList: () => call("models:list"),
-    onModelsProgress: (cb) => on("models:progress", cb as (p: unknown) => void),
     chooseDir: () => dlgOpen({ directory: true }) as Promise<string | null>,
     chooseFiles: () =>
       isRemote

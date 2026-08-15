@@ -9,7 +9,6 @@ const os = require('node:os');
 const path = require('node:path');
 
 const { panelContentHash, panelVersion, panelSyncAction } = require('../core/adobePanel');
-const { sanitizeSetupOptions } = require('../core/setup');
 
 function makePanel(files) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nr-panel-'));
@@ -49,11 +48,6 @@ test('panel hash reflects an added file and stays null on an empty folder', () =
 test('panel version comes from the manifest bundle version', () => {
   assert.equal(panelVersion(makePanel({ 'CSXS/manifest.xml': MANIFEST })), '0.2.0');
   assert.equal(panelVersion(makePanel({})), null);
-});
-
-test('setup keeps the Adobe extension choice as a boolean', () => {
-  assert.equal(sanitizeSetupOptions({ modules: [], models: [], adobePanel: true }).adobePanel, true);
-  assert.equal(sanitizeSetupOptions({ modules: [], models: [] }).adobePanel, false);
 });
 
 // La pose automatique est la seule écriture que NetsuRush fait dans le dossier Adobe sans qu'on la

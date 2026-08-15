@@ -411,7 +411,7 @@
     "preview": "预览",
     "validate": "确定",
     "working": "处理中…",
-    "noModel": "未安装放大模型。"
+    "noEngine": "无法放大：此 GPU 不支持 Vulkan。"
   },
   "scene": {
     "title": "参考场景",

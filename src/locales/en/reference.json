@@ -411,7 +411,7 @@
     "preview": "Preview",
     "validate": "Apply",
     "working": "Working…",
-    "noModel": "No upscale model installed."
+    "noEngine": "Upscaling unavailable: this GPU has no Vulkan support."
   },
   "scene": {
     "title": "Reference scenes",

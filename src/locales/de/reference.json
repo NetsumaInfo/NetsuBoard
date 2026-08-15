@@ -411,7 +411,7 @@
     "preview": "Vorschau",
     "validate": "Übernehmen",
     "working": "Läuft…",
-    "noModel": "Kein Upscale-Modell installiert."
+    "noEngine": "Upscale nicht verfügbar: Diese GPU unterstützt kein Vulkan."
   },
   "scene": {
     "title": "Referenzszenen",

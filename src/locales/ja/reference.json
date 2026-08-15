@@ -411,7 +411,7 @@
     "preview": "プレビュー",
     "validate": "決定",
     "working": "処理中…",
-    "noModel": "アップスケールモデルが未インストールです。"
+    "noEngine": "アップスケールは利用できません：この GPU は Vulkan に非対応です。"
   },
   "scene": {
     "title": "リファレンスシーン",

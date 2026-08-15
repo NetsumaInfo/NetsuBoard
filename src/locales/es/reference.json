@@ -411,7 +411,7 @@
     "preview": "Vista previa",
     "validate": "Aplicar",
     "working": "En curso…",
-    "noModel": "Ningún modelo de escalado instalado."
+    "noEngine": "Mejora no disponible: esta GPU no admite Vulkan."
   },
   "scene": {
     "title": "Escenas de referencia",

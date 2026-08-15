@@ -17,7 +17,6 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { UpscaleCompare } from "@/components/upscale/UpscaleCompare";
 import type { FrameCompare } from "@/components/upscale/useUpscale";
 import { UP_SCALES } from "@/components/upscale/upscaleShared";
-import { ModelsCta } from "@/components/upscale/ModelPicker";
 import { displaySrc, type BoardItem } from "./referenceShared";
 import { MiniSelect } from "./inspectorControls";
 import { useBoard } from "./useReferenceBoard";
@@ -196,7 +195,10 @@ export function UpscaleItemDialog({
                   <TooltipContent>{modelHint}</TooltipContent>
                 </Tooltip>
               ) : (
-                <ModelsCta label={t("upscale.noModel")} disabled={working} />
+                // Aucun choix disponible = pas de GPU Vulkan sur ce poste. Il n'y a RIEN à
+                // télécharger pour y remédier (les shaders sont livrés avec l'app), donc on le dit
+                // au lieu de renvoyer vers une page de modèles qui n'existe pas.
+                <p className="text-xs text-muted-foreground">{t("upscale.noEngine")}</p>
               )}
             </div>
           </div>

@@ -222,21 +222,6 @@ export interface UpscaleFrameResult {
 // Modes du hub : upscale (existant) + 3 nouveaux moteurs ; sortie = fichier importé au Media Pool.
 export type ProcMode = "upscale" | "interpolate" | "depth" | "removebg";
 
-// ---- Gestionnaire de modèles app-wide --------------------------------------
-// Statut d'installation d'un modèle (id aligné sur src/lib/modelRegistry.ts + core/models.js).
-export interface ModelStatus {
-  id: string;
-  installed: boolean;
-  available?: boolean;
-  sizeBytes?: number;
-  partial?: boolean;
-  downloading?: boolean;
-  progress?: number | null;
-}
-export interface ModelListResult { ok: boolean; models: ModelStatus[]; error?: string; }
-// Progression de téléchargement (SSE models:progress). done/total en octets si connus.
-export interface ModelProgress { id: string; pct: number | null; done?: number; total?: number; stage?: string; error?: string; }
-
 // ---- Pipeline ordonné (chaîne de transforms) -------------------------------
 // Ops chaînables (vidéo→vidéo). Depth/matte sont DÉRIVÉS → hors chaîne.
 export type PipelineOpKind = "upscale" | "interpolate";
@@ -333,7 +318,6 @@ export interface SetupStatus {
   mlBackend?: string;
   onnxBackend?: string;
   installedModules?: string[];
-  installedModels?: string[];
   runtime?: { ok?: boolean; actual?: string; gpu?: boolean; omnishotcut?: boolean; siglip?: boolean; error?: string | null } | true;
   home: string;      // dossier de données écrivable (NR_HOME)
   items: SetupItem[];
@@ -393,11 +377,8 @@ export interface SetupRunResult {
   needsRestart?: boolean;   // redémarrer l'app pour recharger les chemins (config figée au boot)
   verified?: boolean;
 }
-export interface SetupRunOptions {
-  modules: string[];
-  models: string[];
-  adobePanel?: boolean;   // poser l'extension CEP Premiere/After Effects (et la garder à jour)
-}
+// `setup:run` ne prend AUCUNE option : le socle est le même pour tout le monde, il n'y a ni module
+// ni modèle à choisir. L'extension CEP se pose par `adobe:installPanel`, pas par le provisionnement.
 
 export interface PlayInfo {
   duration: number;
@@ -750,7 +731,7 @@ export interface NrApi {
   configSetLang(lang: string): Promise<{ ok: boolean; error?: string }>;
   // Provisionnement sélectif (socle + packs des pages + modèles choisis) — app packagée.
   setupStatus(): Promise<SetupStatus>;
-  setupRun(options: SetupRunOptions): Promise<SetupRunResult>;
+  setupRun(): Promise<SetupRunResult>;
   compatibilityStatus(opts?: { force?: boolean }): Promise<CompatibilityStatus>;
   onSetupProgress(cb: (p: SetupProgress) => void): () => void;
   // Console / journal (Paramètres › Console) : historique des logs core+python, vidage, flux temps réel.
@@ -799,8 +780,6 @@ export interface NrApi {
   upscaleTestFrame(opts: UpscaleFrameOpts): Promise<UpscaleFrameResult>;
   onUpscaleProgress(cb: (p: UpscaleProgress) => void): () => void;
   // Gestionnaire de modèles app-wide : liste + statut, téléchargement à la demande, suppression, disque.
-  modelsList(): Promise<ModelListResult>;
-  onModelsProgress(cb: (p: ModelProgress) => void): () => void;
   chooseDir(): Promise<string | null>;
   chooseFiles(): Promise<string[] | null>;
   chooseImages(): Promise<string[] | null>;
@@ -937,8 +916,6 @@ const mock: NrApi = {
   upscaleShaderRun: async () => ({ ok: false, error: i18n.t("common:mock.resolveUnavailable") }),
   upscaleTestFrame: async () => ({ ok: false, error: i18n.t("common:mock.resolveUnavailable") }),
   onUpscaleProgress: () => () => {},
-  modelsList: async () => ({ ok: true, models: [] }),
-  onModelsProgress: () => () => {},
   chooseDir: async () => null,
   chooseFiles: async () => null,
   chooseImages: async () => null,

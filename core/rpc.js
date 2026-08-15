@@ -21,7 +21,6 @@ const timeline = require("./timeline"); // frame-math identique, Resolve via le 
 const sidecars = require("./sidecars");
 const turbo = require("./turbo"); // panier temps réel : shader GLSL libplacebo, RTX VSR ou ArtCNN R ONNX
 const shaderUpscale = require("./shaderUpscale"); // moteur d'upscale unique de NetsuBoard (GPU, sans IA)
-const models = require("./models"); // gestionnaire de modèles app-wide (download à la demande / delete / statut)
 const exportMod = require("./export"); // export fichier piloté par profil (remux/encode, GPU/CPU, merge)
 const audioLang = require("./audioLang"); // normalisation des étiquettes de langue des pistes audio
 const { createReferenceStore, scanFolder, writeExportFile } = require("./reference");
@@ -200,11 +199,12 @@ function createRpc() {
       return r;
     }),
 
-    // --- Provisionnement 1er lancement (app packagée) : venv torch CUDA + ffmpeg + poids ---
+    // --- Provisionnement 1er lancement (app packagée) : ffmpeg + shaders GLSL + yt-dlp ---
+    // Sans option : le socle est le même pour tout le monde, rien ne se choisit.
     "setup:status": () => setup.setupStatus(),
-    "setup:run": ([options]) => {
+    "setup:run": () => {
       sidecars.killSidecars();
-      return setup.runSetup(ev, options || {});
+      return setup.runSetup(ev);
     },
     "compat:status": ([opts]) => compatibility.status(opts || {}),
 
@@ -257,8 +257,6 @@ function createRpc() {
       return turbo.runTurboFrame(sidecars, opts);
     },
 
-  // --- Gestionnaire de modèles app-wide (download à la demande / delete / statut / disque) ---
-  "models:list": () => models.listModels(),
 
     // --- Pont Adobe (panneau CEP Premiere/AE ↔ core) ---
     "adobe:status": () => adobeBridge.status(),

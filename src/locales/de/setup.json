@@ -1,38 +1,9 @@
 {
   "title": "NetsuBoard konfigurieren",
   "desc": "Die Grundlage installiert sich selbst. Der Rest ist optional.",
-  "progressAria": "Konfigurationsschritte",
-  "models": {
-    "title": "Optionale Downloads",
-    "search": "Modelle suchen…",
-    "none": "Keine Downloads",
-    "sceneDetection": "Szenenschnitt",
-    "included": "Enthalten",
-    "empty": "Kein Modell entspricht der Suche.",
-    "selected": "{{count}} ausgewählt",
-    "noExtraSpace": "kein zusätzlicher Speicher",
-    "tier": {
-      "light": "leicht",
-      "balanced": "ausgewogen",
-      "heavy": "groß"
-    }
-  },
-  "packs": {
-    "recommended": "Empfohlenes Paket",
-    "select": "Paket auswählen"
-  },
   "scan": {
     "running": "Installation und GPU werden geprüft…"
   },
-  "review": {
-    "title": "Bereit zur Installation",
-    "downloads": "Optionaler Speicher",
-    "modelCount": "{{count}} Download(s)",
-    "noOptionalModels": "Keine optionalen Downloads",
-    "mandatoryOnly": "Nur Grundlage und Szenenschnitt",
-    "sceneDetection": "Szenenschnitt enthalten"
-  },
-  "detectedBackend": "Ausgewählte Rechen-Engine: {{backend}}",
   "installFailed": "Installation fehlgeschlagen",
   "running": "Voraussetzungen werden installiert…",
   "log": "Installationsprotokoll",
@@ -40,17 +11,9 @@
   "restartHint": "Starte NetsuBoard neu, um die neue Umgebung zu laden.",
   "restartApp": "App neu starten",
   "installing": "Installiere…",
-  "install": "Auswahl installieren",
-  "repair": "Reparieren und prüfen",
-  "skip": "Ohne Installation fortfahren",
   "update": {
     "action": "Aktualisieren",
     "download": "Update herunterladen"
-  },
-  "adobe": {
-    "title": "Adobe-Erweiterung",
-    "detected": "Erkannt: {{apps}}",
-    "hint": "installiert das NetsuBoard-Bedienfeld und hält es automatisch aktuell."
   },
   "issues": {
     "detected_one": "{{count}} Problem bei der Installation erkannt.",
@@ -62,5 +25,9 @@
     "retry": "neuer Versuch…",
     "skipped": "bereits vorhanden",
     "working": "läuft…"
+  },
+  "auto": {
+    "running": "Laufzeitumgebung wird installiert…",
+    "ready": "Laufzeitumgebung installiert."
   }
 }

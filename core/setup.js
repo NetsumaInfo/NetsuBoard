@@ -1,11 +1,12 @@
 // @ts-check
 // core/setup.js
-// Provisionnement du 1er lancement (app packagée). L'installeur NSIS ne pose QUE le code + node.exe +
-// les scripts python ; le runtime adapté au poste, les packs des modules choisis et les éventuels
-// modèles sélectionnés sont installés ici, à la demande, dans NR_HOME (écrivable).
+// Provisionnement du 1er lancement (app packagée). L'installeur NSIS ne pose QUE le code et node.exe ;
+// le runtime (ffmpeg, shaders GLSL, yt-dlp) est provisionné ici, dans NR_HOME (écrivable).
+// Il n'y a RIEN à choisir : le socle est le même pour tout le monde, donc l'écran d'installation le
+// lance sans rien demander.
 //
 //   setupStatus() → ce qui est déjà prêt (environnement / ffmpeg) sans rien installer.
-//   runSetup(ev)  → lance scripts/setup.ps1 puis setup-models.js, diffuse la progression,
+//   runSetup(ev)  → lance scripts/setup.ps1, diffuse la progression,
 //                   écrit nr.config.json (chemins absolus) en fin de course.
 // Après un setup réussi, l'app doit REDÉMARRER : config.js fige PYTHON/ffmpeg au require.
 
@@ -15,7 +16,6 @@ const fs = require('fs');
 const { spawn, spawnSync } = require('child_process');
 const { CONFIG, NR_HOME } = require('./config');
 const { detectHardware } = require('./hardware');
-const { MANIFEST } = require('./models');
 const CONFIG_PATH = path.join(NR_HOME, 'nr.config.json');
 
 // Dossier des ressources bundlées (renseigné par la coquille Tauri en release). En dev, le dépôt.
@@ -45,17 +45,10 @@ const SETUP_LABELS = {
   zh: { video: '视频运行环境', ai: '计算运行环境' },
 };
 
-const SETUP_MODULES = new Set(['derush', 'script', 'notebook', 'search', 'upscale', 'reference', 'transfer', 'voice', 'chat', 'optimisation', 'presets', 'fusion']);
-
-function sanitizeSetupOptions(options) {
-  const input = options && typeof options === 'object' ? options : {};
-  const modules = [...new Set(Array.isArray(input.modules) ? input.modules.map(String) : [])].filter((id) => SETUP_MODULES.has(id));
-  if (!modules.includes('derush')) modules.unshift('derush');
-  const models = [...new Set(Array.isArray(input.models) ? input.models.map(String) : [])].filter((id) => MANIFEST[id] && id !== 'transnetv2');
-  // Extension CEP Premiere/After Effects : posée pendant l'installation quand l'utilisateur la coche
-  // (elle active du même geste la mise à jour automatique, cf. core/adobePanel.js).
-  return { modules, models, adobePanel: !!input.adobePanel };
-}
+// Aucune sélection à assainir : le provisionnement pose le MÊME socle pour tout le monde — ffmpeg,
+// les shaders GLSL et yt-dlp. NetsuBoard n'exécute aucun modèle (l'upscale est du GLSL passé à
+// libplacebo), donc il n'y a ni module ni poids à choisir, et l'extension CEP se synchronise seule
+// au démarrage (core/adobePanel.js) au lieu d'être une case du premier lancement.
 
 function mlEngineName(backend) {
   if (backend === 'cuda') return 'NVIDIA CUDA';
@@ -176,7 +169,7 @@ function readInstalledConfig() {
 // Une configuration qui a déjà franchi le setup complet ne doit pas recharger torch et tous les
 // modules Python à chaque démarrage (et un update de l'app ne doit pas ramener l'utilisateur sur la
 // page de téléchargement). Ce contrôle volontairement superficiel ne sonde que les chemins écrits
-// par setup.ps1/setup-models.js ; si l'un d'eux a disparu, on retombe sur la vérification complète
+// par setup.ps1 ; si l'un d'eux a disparu, on retombe sur la vérification complète
 // et l'écran de réparation.
 function quickSetupReady(config = CONFIG, options = {}) {
   if ((!PACKAGED && !options.ignorePackageGate) || !config || !config.setupCompletedAt) return false;
@@ -251,38 +244,17 @@ function setupScript() {
   return null;
 }
 
-// Pose l'extension CEP Premiere/After Effects choisie à l'écran d'installation. L'installation
-// mémorise l'empreinte du panneau : les versions suivantes de NetsuRush le remettront à jour seules.
-function installAdobePanel(send) {
-  send({ stage: 'adobePanel', label: t('setupAdobePanel') });
-  const result = require('./adobePanel').installPanel();
-  if (!result.ok) send({ stage: 'error', label: `${t('setupAdobePanelFailed')} : ${result.error || ''}`.trim() });
-  return { ok: result.ok, dir: result.dir || null, version: result.version || null, error: result.error || null };
-}
-
-// Le core POSE le panneau tout seul au démarrage quand une app Adobe est présente. Décocher la case
-// à l'installation doit donc COUPER cet automatisme, sinon le panneau reviendrait au lancement
-// suivant et le choix n'aurait servi à rien. Un poste SANS Adobe n'exprime aucun refus : la case y
-// est absente, couper l'automatisme priverait l'utilisateur du panneau s'il installe Premiere plus
-// tard.
-function declineAdobePanel() {
-  const { findAdobeExe } = require('./adobe');
-  if (!['ppro', 'aeft'].some((app) => !!findAdobeExe(app, CONFIG))) return;
-  require('./adobePanel').setPanelAutoUpdate(false);
-}
-
 let running = false;
 
 // Lance le provisionnement. ev = shim Electron (ev.sender.send) → SSE. Idempotent : setup.ps1 saute
 // les étapes déjà faites. Résout { ok, error?, needsRestart? }.
-async function runSetup(ev, options = {}) {
+async function runSetup(ev) {
   if (running) return Promise.resolve({ ok: false, error: t('setupRunning') });
   const script = setupScript();
   if (!script) return Promise.resolve({ ok: false, error: t('setupMissing') });
   if (process.platform !== 'win32') return Promise.resolve({ ok: false, error: t('setupWindows') });
 
   running = true;
-  const selection = sanitizeSetupOptions(options);
   // Seule mesure RÉELLE du matériel : elle conditionne le moteur installé, et c'est le seul moment
   // où l'utilisateur accepte d'attendre. Les démarrages suivants relisent le profil enregistré.
   const hardware = await detectHardware({ force: true });
@@ -299,8 +271,6 @@ async function runSetup(ev, options = {}) {
       NR_SETUP_LANG: language(),
       NR_SETUP_SCRIPT: script,
       NR_SETUP_HARDWARE: JSON.stringify(hardware),
-      NR_SETUP_MODULES: JSON.stringify(selection.modules),
-      NR_SETUP_MODELS: JSON.stringify(selection.models),
     };
     const ps = spawn('powershell', [
       '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command',
@@ -321,7 +291,7 @@ async function runSetup(ev, options = {}) {
       if (mDl) { send({ dl: { state: mDl[1], done: Number(mDl[2]), total: Number(mDl[3]), name: mDl[4].trim() } }); return; }
       if (mErr) { errTail = mErr[1].trim(); send({ stage: 'error', label: errTail }); return; }
       if (mStage) { send({ stage: mStage[1].trim(), label: (mStage[2] || '').trim() }); return; }
-      if (mProg) { send({ pct: Math.round(Math.min(100, parseInt(mProg[1], 10)) * 0.78) }); return; }
+      if (mProg) { send({ pct: Math.min(100, parseInt(mProg[1], 10)) }); return; }
       send({ line });
     };
     let buf = '';
@@ -343,71 +313,25 @@ async function runSetup(ev, options = {}) {
         return;
       }
 
-      const worker = spawn(process.execPath, [path.join(__dirname, 'setup-models.js')], { windowsHide: true, env });
-      let workerTail = '';
-      let workerBuffer = '';
-      const pumpWorker = (chunk) => {
-        workerBuffer += chunk.toString();
-        let nl;
-        while ((nl = workerBuffer.indexOf('\n')) >= 0) {
-          const line = workerBuffer.slice(0, nl).trim();
-          workerBuffer = workerBuffer.slice(nl + 1);
-          if (!line.startsWith('SETUPMODEL:')) { if (line) send({ line }); continue; }
-          try {
-            const progress = JSON.parse(line.slice('SETUPMODEL:'.length));
-            if (progress.stage === 'error') workerTail = progress.error || workerTail;
-            const count = Math.max(1, Number(progress.count) || selection.models.length || 1);
-            const index = Math.max(0, Number(progress.index) || 0);
-            const modelPct = typeof progress.pct === 'number' ? progress.pct : 0;
-            const pct = progress.stage === 'done' && !progress.id
-              ? 100
-              : Math.min(99, 78 + Math.round(((index + modelPct / 100) / count) * 21));
-            // Les modèles rapportent déjà leurs octets : on les relaie sous la forme de setup.ps1.
-            if (progress.id) {
-              const state = progress.stage === 'error' ? 'error'
-                : progress.stage === 'done' ? 'done'
-                  : progress.stage === 'canceled' ? 'skip'
-                    : progress.stage === 'download' ? 'download' : 'work';
-              send({ dl: { state, done: Number(progress.done) || 0, total: Number(progress.total) || 0, name: progress.id } });
-            }
-            send({ pct, stage: 'models', label: progress.id || t('setupDone') });
-          } catch { send({ line }); }
-        }
-      };
-      worker.stdout.on('data', pumpWorker);
-      worker.stderr.on('data', (chunk) => { workerTail = (workerTail + chunk.toString()).slice(-1000); pumpWorker(chunk); });
-      worker.on('error', (error) => {
-        running = false;
-        resolve({ ok: false, error: String(error) });
-      });
-      worker.on('close', (workerCode) => {
-        running = false;
-        if (workerBuffer.trim()) pumpWorker('\n');
-        if (workerCode === 0) {
-          send({ pct: 99, stage: 'verify', label: 'Vérification de l’installation…' });
-          const fresh = readInstalledConfig();
-          const verified = probeRuntime(fresh);
-          if (!ffmpegReady(fresh) || verified !== true && !verified.ok) {
-            resolve({ ok: false, error: verified !== true && verified.error ? verified.error : 'La vérification finale du runtime a échoué' });
-            return;
-          }
-          // Extension Adobe : optionnelle et sans impact sur le runtime → un échec est signalé mais
-          // ne fait jamais échouer l'installation (l'onglet Adobe permet de réessayer).
-          if (!selection.adobePanel) declineAdobePanel();
-          const adobePanel = selection.adobePanel ? installAdobePanel(send) : null;
-          send({ pct: 100, stage: 'done', label: t('setupDone') });
-          resolve({ ok: true, needsRestart: true, verified: true, ...(adobePanel ? { adobePanel } : {}) });
-        } else {
-          resolve({ ok: false, error: workerTail || `model setup failed (code ${workerCode})` });
-        }
-      });
+      // setup.ps1 EST le provisionnement complet : plus aucune étape de poids ne le suit, donc sa
+      // progression va jusqu'à 100 et la vérification s'enchaîne directement.
+      running = false;
+      send({ pct: 99, stage: 'verify', label: 'Vérification de l’installation…' });
+      const fresh = readInstalledConfig();
+      const verified = probeRuntime(fresh);
+      if (!ffmpegReady(fresh) || verified !== true && !verified.ok) {
+        resolve({ ok: false, error: verified !== true && verified.error ? verified.error : 'La vérification finale du runtime a échoué' });
+        return;
+      }
+      send({ pct: 100, stage: 'done', label: t('setupDone') });
+      resolve({ ok: true, needsRestart: true, verified: true });
     });
   });
 }
 
 module.exports = {
-  mlEngineName, videoEngineName, sanitizeSetupOptions, quickSetupReady, probeRuntime, setupStatus, runSetup,
+  mlEngineName, videoEngineName, quickSetupReady, probeRuntime, setupStatus, runSetup,
   // Exportés pour les tests : `test/packaging.test.cjs` vérifie que cette liste ne diverge pas de
-  // $FfmpegAccepted dans scripts/setup.ps1, `test/setup-selection.test.cjs` exerce la comparaison.
+  // $FfmpegAccepted dans scripts/setup.ps1, `test/setup-quick-ready.test.cjs` exerce le contrôle rapide.
   SETUP_RUNTIME_VERSION, FFMPEG_ACCEPTED_VERSIONS, ffmpegVersionAccepted,
 };
