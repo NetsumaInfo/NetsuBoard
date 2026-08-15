@@ -172,11 +172,49 @@ DETECT_ENV.NETSURUSH_FFMPEG = ffBin('ffmpeg');
 DETECT_ENV.NETSURUSH_FFPROBE = ffBin('ffprobe');
 DETECT_ENV.NETSURUSH_SESSION_DIR = SESSION_CACHE_ROOT;
 
-// Extraction de médias sociaux : navigateur source pour les cookies yt-dlp/gallery-dl.
-// Valeurs utiles : "chrome", "edge", "firefox", ou null/false pour désactiver la passe cookies.
-const COOKIES_BROWSER = CONFIG.cookiesBrowser === false || CONFIG.cookiesBrowser === null
-  ? null
-  : (process.env.NR_COOKIES_BROWSER || CONFIG.cookiesBrowser || 'chrome');
+// Navigateurs source des cookies yt-dlp/gallery-dl (extraction sociale, relais YouTube).
+// `cookiesBrowser` accepte un nom, une liste, ou false/null pour couper la passe cookies.
+//
+// PLUSIEURS candidats, pas un seul : un navigateur nommé ne veut pas dire un navigateur LISIBLE.
+// Chrome verrouille sa base de cookies tant qu'il tourne — yt-dlp rend alors « Could not copy Chrome
+// cookie database » (yt-dlp#7271) — et le poste peut n'avoir de session YouTube que dans un autre.
+// On essaie donc dans l'ordre, jusqu'à ce que l'un réponde.
+const COOKIE_BROWSER_PROFILES = {
+  // Firefox EN PREMIER : il est le seul à rester lisible pendant qu'il tourne, donc le seul à ne pas
+  // exiger de fermer le navigateur pour lire une vidéo.
+  firefox: [path.join(process.env.APPDATA || '', 'Mozilla', 'Firefox', 'Profiles')],
+  edge: [path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'Edge', 'User Data')],
+  brave: [path.join(process.env.LOCALAPPDATA || '', 'BraveSoftware', 'Brave-Browser', 'User Data')],
+  vivaldi: [path.join(process.env.LOCALAPPDATA || '', 'Vivaldi', 'User Data')],
+  opera: [path.join(process.env.APPDATA || '', 'Opera Software')],
+  chrome: [path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'User Data')],
+};
+
+/** Navigateurs à tenter, dans l'ordre : celui explicitement configuré d'abord, puis ceux réellement
+ * installés. Sonder l'existence du profil évite de payer un spawn yt-dlp par navigateur absent.
+ * @returns {string[]} */
+function cookieBrowserCandidates() {
+  if (CONFIG.cookiesBrowser === false || CONFIG.cookiesBrowser === null) return [];
+  const configured = process.env.NR_COOKIES_BROWSER || CONFIG.cookiesBrowser;
+  const asked = Array.isArray(configured) ? configured.map(String) : configured ? [String(configured)] : [];
+  const installed = Object.keys(COOKIE_BROWSER_PROFILES).filter((name) => {
+    if (process.platform !== 'win32') return true;   // hors Windows, yt-dlp trouve seul ses chemins
+    return COOKIE_BROWSER_PROFILES[name].some((dir) => { try { return !!dir && fs.existsSync(dir); } catch (_) { return false; } });
+  });
+  return [...new Set([...asked, ...installed])];
+}
+
+/** Fichier cookies.txt (format Netscape) désigné par l'utilisateur, ou null. C'est la voie qui ne
+ * dépend d'AUCUN navigateur installé ni ouvert : exporté une fois, il se lit toujours — là où
+ * Chrome verrouille sa base tant qu'il tourne.
+ * @returns {string|null} */
+function ytCookiesFile() {
+  const p = process.env.NR_COOKIES_FILE || CONFIG.cookiesFile;
+  try { return p && fs.existsSync(p) ? String(p) : null; } catch (_) { return null; }
+}
+
+// Compat : premier candidat. Les appelants qui enchaînent les tentatives lisent la liste.
+const COOKIES_BROWSER = cookieBrowserCandidates()[0] || null;
 
 // Vignettes = minuscules mais COÛTEUSES à régénérer (seek+décode par plan, des centaines par rush)
 // → cache PERSISTANT dans ~/.netsurush (comme la DB des plans). os.tmpdir() était nettoyé par
@@ -276,7 +314,7 @@ const yieldLoop = () => new Promise((r) => setImmediate(r));
 
 module.exports = {
   CONFIG, ffBin, transcribeCli, ML_BACKEND, ONNX_BACKEND, TRANSCRIBE_BACKEND,
-  PYTHON, RESOLVE_PYTHON, DETECT_ENV, COOKIES_BROWSER, ytDlpCommand,
+  PYTHON, RESOLVE_PYTHON, DETECT_ENV, COOKIES_BROWSER, cookieBrowserCandidates, ytCookiesFile, ytDlpCommand,
   VOICE_DIR, DATA_DIR, UPSCALE_TEST_DIR, ROTO_DIR, SEQ_DIR, SESSION_CACHE_ROOT,
   SHADER_DIR, RTX_DIR, RTX_EXE, RTX_DLLS, rtxBin, NR_HOME, CONFIG_PATH, WALLPAPER_DIR,
   // Dossiers relocalisables : TOUJOURS via les getters (une const destructurée au require figerait la

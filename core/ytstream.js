@@ -20,7 +20,7 @@ const https = require("node:https");
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
-const { DETECT_ENV, ytDlpCommand, COOKIES_BROWSER } = require("./config");
+const { DETECT_ENV, ytDlpCommand, cookieBrowserCandidates, ytCookiesFile } = require("./config");
 
 // Board muet → un flux VIDÉO SEUL suffit et évite le merge ffmpeg. Repli progressif (piste audio
 // incluse) pour les vidéos sans DASH mp4.
@@ -82,7 +82,7 @@ function needsCookies(error) {
   return BOT_CHECK.test(String(error || ""));
 }
 
-function runYtdlp(id, cookiesBrowser) {
+function runYtdlp(id, cookiesBrowser, cookiesFile) {
   return new Promise((resolve) => {
     const args = [
       `https://www.youtube.com/watch?v=${id}`,
@@ -91,7 +91,8 @@ function runYtdlp(id, cookiesBrowser) {
       "--socket-timeout", "20",
       "-g",
     ];
-    if (cookiesBrowser) args.push("--cookies-from-browser", cookiesBrowser);
+    if (cookiesFile) args.push("--cookies", cookiesFile);
+    else if (cookiesBrowser) args.push("--cookies-from-browser", cookiesBrowser);
     const ytdlp = ytDlpCommand();
     const child = spawn(ytdlp.bin, [...ytdlp.args, ...args], { env: DETECT_ENV });
     let out = "", err = "";
@@ -127,20 +128,51 @@ function runYtdlp(id, cookiesBrowser) {
 // Passe publique, puis passe cookies UNIQUEMENT sur un refus de type contrôle anti-bot. Un échec
 // ordinaire (vidéo privée, supprimée, géobloquée) ne déclenche pas la lecture du trousseau : elle
 // n'y changerait rien et coûterait une seconde tentative à chaque lecture cassée.
+// Refus « il faut être connecté » déjà constaté pour cette vidéo. La chaîne de repli coûte un
+// lancement de yt-dlp PAR candidat (quelques secondes chacun) ; sans cette mémoire, chaque remontage
+// de l'item la repayait entièrement pour retomber sur le même mur. L'entrée expire : une session
+// ouverte entre-temps doit pouvoir servir.
+/** @type {Map<string, number>} */
+const authWall = new Map();
+const AUTH_WALL_TTL_MS = 10 * 60 * 1000;
+
 async function resolveWithFallback(id) {
-  const first = await runYtdlp(id, null);
-  if (first.ok || first.missingTool || !COOKIES_BROWSER) return first;
+  const first = await runYtdlp(id, null, null);
+  if (first.ok || first.missingTool) return first;
   if (!needsCookies(first.error)) return first;
-  const retry = await runYtdlp(id, COOKIES_BROWSER);
-  if (retry.ok) return retry;
-  // Les deux ont échoué : c'est le message du contrôle anti-bot qui explique la situation, pas
-  // l'erreur de lecture de cookies. On dit ce qui manque plutôt que de recracher la trace yt-dlp.
-  return {
-    ok: false,
-    error: `YouTube demande une session connectée pour cette vidéo, et les cookies de ${COOKIES_BROWSER} n'ont pas suffi `
-      + `(navigateur fermé, autre profil, ou aucun compte connecté). Règle « cookiesBrowser » dans nr.config.json `
-      + `pour désigner le navigateur où tu es connecté. Détail : ${(retry.error || first.error || "").slice(0, 300)}`,
-  };
+
+  const walled = authWall.get(id);
+  if (walled && Date.now() - walled < AUTH_WALL_TTL_MS) return { ok: false, error: AUTH_MESSAGE, authWall: true };
+
+  // Une session, pas un navigateur précis : un fichier cookies.txt d'abord (exporté une fois, lisible
+  // même navigateur ouvert), puis les navigateurs installés. Aucun n'est OBLIGATOIRE — sans session
+  // utilisable, le board bascule sur le lecteur intégré et la vidéo reste lisible.
+  const cookiesFile = ytCookiesFile();
+  const attempts = [
+    ...(cookiesFile ? [{ label: "cookies.txt", run: () => runYtdlp(id, null, cookiesFile) }] : []),
+    ...cookieBrowserCandidates().map((browser) => ({ label: browser, run: () => runYtdlp(id, browser, null) })),
+  ];
+  const tried = [];
+  for (const attempt of attempts) {
+    const retry = await attempt.run();
+    if (retry.ok) return retry;
+    tried.push(`${attempt.label} : ${firstLine(retry.error)}`);
+  }
+  authWall.set(id, Date.now());
+  return { ok: false, error: tried.length ? `${AUTH_MESSAGE} Tentatives — ${tried.join(" · ")}` : AUTH_MESSAGE, authWall: true };
+}
+
+// Ce que l'utilisateur peut RÉELLEMENT faire, mesuré sur le terrain : aucun client InnerTube ne
+// franchit ce mur, aucune nouvelle tentative non plus. Seule une session connectée l'ouvre.
+const AUTH_MESSAGE = "YouTube réserve cette vidéo aux comptes connectés — le board bascule sur le lecteur YouTube. "
+  + "Pour la lire dans le lecteur de l'app : ferme Chrome (il verrouille ses cookies tant qu'il tourne) ou "
+  + "renseigne « cookiesFile » (cookies.txt exporté) dans nr.config.json.";
+
+// Première ligne utile d'une erreur yt-dlp : elle en répète souvent deux ou trois identiques, ce qui
+// noyait le message dans sa propre redite.
+function firstLine(error) {
+  const line = String(error || "").split(/\r?\n/).map((s) => s.trim()).find(Boolean) || "échec";
+  return line.replace(/^ERROR:\s*/i, "").slice(0, 160);
 }
 
 // Résout (et mémorise) l'URL du flux. `force` ignore le cache : c'est ce que fait le relais quand
