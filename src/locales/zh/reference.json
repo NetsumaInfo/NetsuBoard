@@ -475,7 +475,8 @@
   "youtube": {
     "notEmbeddable": "视频无法嵌入",
     "blocked": "YouTube 禁止嵌入播放该视频。",
-    "openOnYouTube": "在 YouTube 打开"
+    "openOnYouTube": "在 YouTube 打开",
+    "preparing": "正在准备视频…"
   },
   "embed": {
     "frozen": "播放已冻结",
@@ -599,7 +600,45 @@
     "formatHint": "以 {{format}} 复制",
     "layoutRow": "横排",
     "layoutCol": "竖排",
-    "layoutGrid": "方阵"
+    "layoutGrid": "方阵",
+    "studio": {
+      "open": "调色板生成器",
+      "edit": "在生成器中打开",
+      "close": "关闭生成器",
+      "title": "调色板生成器",
+      "pickScreen": "屏幕取色器",
+      "brightness": "明度",
+      "tones": "色调",
+      "fromSelection": "取自所选",
+      "fromBoard": "取自整个面板",
+      "noSelection": "请在面板上选择图片",
+      "noMedia": "面板上没有图片",
+      "reset": "重置",
+      "pick": "拾色器",
+      "notation": "表示法",
+      "value": "颜色值",
+      "place": "放到面板",
+      "apply": "应用",
+      "placed": "已放置 {{count}} 色调色板",
+      "applied": "调色板已更新（{{count}} 色）",
+      "addSwatch": "添加颜色",
+      "removeSwatch": "移除颜色",
+      "lock": "锁定颜色",
+      "unlock": "解锁颜色",
+      "moveLeft": "左移",
+      "moveRight": "右移",
+      "rule": {
+        "custom": "自定义",
+        "analogous": "类似色",
+        "complementary": "互补色",
+        "split": "分裂互补",
+        "triadic": "三角配色",
+        "square": "正方形",
+        "compound": "复合",
+        "shades": "明暗渐变",
+        "monochromatic": "单色"
+      }
+    }
   },
   "exportImage": {
     "menu": "导出为图片…",
@@ -623,7 +662,11 @@
     "folderDoneTruncated": "已导入 {{count}} 个媒体（文件夹被截断）",
     "progress": "正在导入 {{done}}/{{total}}…",
     "reading": "正在读取 {{count}} 个文件…",
+    "importing": "正在导入 {{name}}…",
     "done": "已导入 {{count}} 个媒体",
-    "folderTruncated": "文件夹过大：已导入前 {{count}} 个媒体"
+    "folderTruncated": "文件夹过大：已导入前 {{count}} 个媒体",
+    "fetching": "正在获取媒体…",
+    "linkDone": "已导入媒体",
+    "fetchingFrom": "正在从 {{source}} 获取…"
   }
 }

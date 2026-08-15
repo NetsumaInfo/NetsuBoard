@@ -16,6 +16,7 @@ import { Inspector } from "./Inspector";
 import { SequencePlayer } from "./SequencePlayer";
 import { CropOverlay } from "./CropOverlay";
 import { ReferenceBoard, type BoardHandle } from "./ReferenceBoard";
+import { PaletteStudio } from "./PaletteStudio";
 import { useScenePersistence } from "./useScenePersistence";
 import { useBoardShortcuts } from "./useBoardShortcuts";
 import { useProjectActions } from "./useProjectActions";
@@ -103,6 +104,9 @@ export function ReferenceWindow() {
         <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
         <AppSettings />
         <CropOverlay />
+        {/* The detached window carries the inspector, so it carries its "open in the generator"
+            button too — without the panel mounted here that button would do nothing. */}
+        <PaletteStudio />
       </div>
     </TooltipProvider>
   );

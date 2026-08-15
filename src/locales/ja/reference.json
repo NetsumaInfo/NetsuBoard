@@ -475,7 +475,8 @@
   "youtube": {
     "notEmbeddable": "埋め込み不可の動画",
     "blocked": "YouTube がこの動画の埋め込み再生をブロックしています。",
-    "openOnYouTube": "YouTube で開く"
+    "openOnYouTube": "YouTube で開く",
+    "preparing": "動画を準備中…"
   },
   "embed": {
     "frozen": "再生を停止中",
@@ -599,7 +600,45 @@
     "formatHint": "{{format}} でコピー",
     "layoutRow": "横一列",
     "layoutCol": "縦一列",
-    "layoutGrid": "格子"
+    "layoutGrid": "格子",
+    "studio": {
+      "open": "パレットジェネレーター",
+      "edit": "ジェネレーターで開く",
+      "close": "ジェネレーターを閉じる",
+      "title": "パレットジェネレーター",
+      "pickScreen": "画面スポイト",
+      "brightness": "明度",
+      "tones": "トーン",
+      "fromSelection": "選択範囲から",
+      "fromBoard": "ボード全体から",
+      "noSelection": "ボード上で画像を選択してください",
+      "noMedia": "ボードに画像がありません",
+      "reset": "リセット",
+      "pick": "カラーピッカー",
+      "notation": "表記",
+      "value": "カラー値",
+      "place": "ボードに配置",
+      "apply": "適用",
+      "placed": "{{count}} 色のパレットを配置しました",
+      "applied": "パレットを更新しました（{{count}} 色）",
+      "addSwatch": "色を追加",
+      "removeSwatch": "色を削除",
+      "lock": "色をロック",
+      "unlock": "色のロックを解除",
+      "moveLeft": "左へ移動",
+      "moveRight": "右へ移動",
+      "rule": {
+        "custom": "カスタム",
+        "analogous": "類似色",
+        "complementary": "補色",
+        "split": "分裂補色",
+        "triadic": "トライアド",
+        "square": "スクエア",
+        "compound": "コンパウンド",
+        "shades": "シェード",
+        "monochromatic": "モノクロマティック"
+      }
+    }
   },
   "exportImage": {
     "menu": "画像として書き出し…",
@@ -623,7 +662,11 @@
     "folderDoneTruncated": "{{count}} 件を読み込みました（フォルダーは途中まで）",
     "progress": "読み込み中 {{done}}/{{total}}…",
     "reading": "{{count}} 件のファイルを読み込み中…",
+    "importing": "{{name}} をインポート中…",
     "done": "{{count}} 件のメディアを読み込みました",
-    "folderTruncated": "フォルダーが大きすぎます：先頭 {{count}} 件を読み込みました"
+    "folderTruncated": "フォルダーが大きすぎます：先頭 {{count}} 件を読み込みました",
+    "fetching": "メディアを取得中…",
+    "linkDone": "メディアをインポートしました",
+    "fetchingFrom": "{{source}} から取得中…"
   }
 }

@@ -475,7 +475,8 @@
   "youtube": {
     "notEmbeddable": "Video nicht einbettbar",
     "blocked": "YouTube sperrt die eingebettete Wiedergabe dieses Videos.",
-    "openOnYouTube": "Auf YouTube öffnen"
+    "openOnYouTube": "Auf YouTube öffnen",
+    "preparing": "Video wird vorbereitet…"
   },
   "embed": {
     "frozen": "Wiedergabe angehalten",
@@ -599,7 +600,45 @@
     "formatHint": "Als {{format}} kopieren",
     "layoutRow": "Reihe",
     "layoutCol": "Spalte",
-    "layoutGrid": "Raster"
+    "layoutGrid": "Raster",
+    "studio": {
+      "open": "Paletten-Generator",
+      "edit": "Im Generator öffnen",
+      "close": "Generator schließen",
+      "title": "Paletten-Generator",
+      "pickScreen": "Bildschirm-Pipette",
+      "brightness": "Helligkeit",
+      "tones": "Töne",
+      "fromSelection": "Aus der Auswahl",
+      "fromBoard": "Vom ganzen Board",
+      "noSelection": "Wähle Bilder auf dem Board aus",
+      "noMedia": "Kein Bild auf dem Board",
+      "reset": "Zurücksetzen",
+      "pick": "Farbwähler",
+      "notation": "Notation",
+      "value": "Farbwert",
+      "place": "Aufs Board legen",
+      "apply": "Anwenden",
+      "placed": "Palette mit {{count}} Farben abgelegt",
+      "applied": "Palette aktualisiert ({{count}} Farben)",
+      "addSwatch": "Farbe hinzufügen",
+      "removeSwatch": "Farbe entfernen",
+      "lock": "Farbe sperren",
+      "unlock": "Farbe entsperren",
+      "moveLeft": "Nach links schieben",
+      "moveRight": "Nach rechts schieben",
+      "rule": {
+        "custom": "Benutzerdefiniert",
+        "analogous": "Analog",
+        "complementary": "Komplementär",
+        "split": "Geteilt-komplementär",
+        "triadic": "Triade",
+        "square": "Quadrat",
+        "compound": "Kombiniert",
+        "shades": "Schattierungen",
+        "monochromatic": "Monochrom"
+      }
+    }
   },
   "exportImage": {
     "menu": "Als Bild exportieren…",
@@ -623,7 +662,11 @@
     "folderDoneTruncated": "{{count}} Medien importiert (Ordner gekürzt)",
     "progress": "Import {{done}}/{{total}}…",
     "reading": "{{count}} Dateien werden gelesen…",
+    "importing": "{{name}} wird importiert…",
     "done": "{{count}} Medien importiert",
-    "folderTruncated": "Ordner zu groß: die ersten {{count}} Medien wurden importiert"
+    "folderTruncated": "Ordner zu groß: die ersten {{count}} Medien wurden importiert",
+    "fetching": "Medium wird geladen…",
+    "linkDone": "Medium importiert",
+    "fetchingFrom": "Wird von {{source}} geladen…"
   }
 }

@@ -12,6 +12,7 @@ import { SequencePlayer } from "./SequencePlayer";
 import { CropOverlay } from "./CropOverlay";
 import { ReferenceHome } from "./ReferenceHome";
 import { ReferenceBoard, type BoardHandle } from "./ReferenceBoard";
+import { PaletteStudio } from "./PaletteStudio";
 import { useBoard } from "./useReferenceBoard";
 import { useScenePersistence } from "./useScenePersistence";
 import { useBoardShortcuts } from "./useBoardShortcuts";
@@ -85,6 +86,7 @@ export function ReferencePanel() {
         </BoardContextMenu>
         <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
         <CropOverlay />
+        <PaletteStudio />
       </div>
     );
   }
@@ -134,6 +136,10 @@ export function ReferencePanel() {
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />
       <CropOverlay />
+      {/* Mounted here, beside the board rather than inside the toolbar or the inspector: those
+          two re-render and unmount with the selection, and picking images on the board is part
+          of using this panel. */}
+      <PaletteStudio />
     </div>
   );
 }

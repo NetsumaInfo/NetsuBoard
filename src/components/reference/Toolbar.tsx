@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import {
   ImagePlus, Type, Frame, Pencil, ZoomIn, ZoomOut, Maximize, FilePlus2,
   Save, SaveAll, FileCheck2, FolderOpen, Share2, PictureInPicture2, Minimize2, Pin, PinOff, Play, Pause,
-  Settings2, Home, Undo2, Redo2, RotateCw, Magnet, Package, ImageDown,
+  Settings2, Home, Undo2, Redo2, RotateCw, Magnet, Package, ImageDown, SwatchBook,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -84,6 +84,7 @@ export function Toolbar({
   const canRedo = useBoard((s) => s.future.length > 0);
   const [recovering, setRecovering] = useState(false);
   const [imgExport, setImgExport] = useState(false);
+  const setStudio = useBoard((s) => s.setStudio);
   const recoverableCount = recoverableOnlineItems(items).length;
   const hasItems = items.some((i) => i.kind !== "draw");
   const snap = useBoard((s) => s.prefs.snap);
@@ -135,6 +136,9 @@ export function Toolbar({
         active={drawMode}
         onClick={() => setDrawMode(!drawMode)}
       />
+      {/* Palette generator: build a palette on a color wheel (harmonies, locks, board seed).
+          Its open state lives in the store — the panel outlives this toolbar's renders. */}
+      <IconBtn icon={SwatchBook} label={t("palette.studio.open")} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />
 
       <Separator orientation="vertical" className="mx-1 h-5" />
 

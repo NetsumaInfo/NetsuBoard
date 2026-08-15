@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FlipHorizontal, FlipVertical, Trash2, BringToFront, SendToBack, Crop, Download, AppWindow, Wand2, Undo2, Film, Palette, Hash, RefreshCw, Columns3, Rows3, Grid2x2, Link2, Unlink2 } from "lucide-react";
+import { FlipHorizontal, FlipVertical, Trash2, BringToFront, SendToBack, Crop, Download, AppWindow, Wand2, Undo2, Film, Palette, Hash, RefreshCw, Columns3, Rows3, Grid2x2, Link2, Unlink2, SwatchBook } from "lucide-react";
 import { nr } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -50,6 +50,7 @@ export function Inspector() {
   const addSequenceFrom = useBoard((s) => s.addSequenceFrom);
   const prefs = useBoard((s) => s.prefs);
   const [upOpen, setUpOpen] = useState(false);
+  const setStudio = useBoard((s) => s.setStudio);
 
   if (count >= 2) {
     return (
@@ -188,6 +189,10 @@ export function Inspector() {
             </div>
             <IconAction label={t("palette.regenerate")} onClick={() => void regeneratePalette(item.id)}>
               <RefreshCw />
+            </IconAction>
+            {/* Rework THIS block in the generator (wheel, harmonies, locks) and write back into it. */}
+            <IconAction label={t("palette.studio.edit")} onClick={() => setStudio({ targetId: item.id })}>
+              <SwatchBook />
             </IconAction>
           </>
         )}

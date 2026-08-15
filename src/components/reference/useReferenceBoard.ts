@@ -85,6 +85,11 @@ export interface BoardState {
   editingId: string | null;    // note texte en cours d'édition
   focusReq: string | null;     // demande de centrage/zoom sur un item (double-clic) → consommée par le board
   croppingId: string | null;   // item en cours de rognage
+  // Générateur de palettes ouvert. Vit ICI et pas dans la barre d'outils ou l'inspecteur : ces
+  // deux-là se démontent quand la sélection change, et le panneau doit justement SURVIVRE à un
+  // clic sur le board — on y sélectionne les images dont on veut extraire les couleurs.
+  // `targetId` = bloc palette réécrit à la validation ; null = poser un nouveau bloc.
+  studio: { targetId: string | null } | null;
   frozen: boolean;             // tout figé (aucune lecture vidéo/YouTube)
   navigating: boolean;         // gel transitoire pendant pan/zoom/transformation (distinct de frozen)
   navigationHolds: number;     // compteur : plusieurs gestes peuvent brièvement se chevaucher
@@ -142,6 +147,7 @@ export interface BoardState {
   setEditing: (id: string | null) => void;
   requestFocus: (id: string | null) => void;
   setCropping: (id: string | null) => void;
+  setStudio: (studio: { targetId: string | null } | null) => void;
   toggleFrozen: () => void;
   beginNavigation: () => void;
   endNavigation: () => void;
@@ -252,6 +258,7 @@ export const useBoard = create<BoardState>((set, get) => ({
   editingId: null,
   focusReq: null,
   croppingId: null,
+  studio: null,
   seqFrames: {},
   frozen: false,
   navigating: false,
@@ -628,6 +635,7 @@ export const useBoard = create<BoardState>((set, get) => ({
   // Demande de centrage/zoom sur un item (double-clic) ; le board la consomme puis remet à null.
   requestFocus: (id) => set({ focusReq: id }),
   setCropping: (id) => { resetCoalesce(); set({ croppingId: id }); },
+  setStudio: (studio) => set({ studio }),
   toggleFrozen: () => set((s) => ({ frozen: !s.frozen })),
   beginNavigation: () => set((s) => ({ navigationHolds: s.navigationHolds + 1, navigating: true })),
   endNavigation: () => set((s) => {
@@ -770,6 +778,7 @@ export const useBoard = create<BoardState>((set, get) => ({
       selectedIds: [],
       editingId: null,
       croppingId: null,
+      studio: null,
       drawMode: false,
       drawBack: false,
       drawSel: null,
@@ -781,7 +790,7 @@ export const useBoard = create<BoardState>((set, get) => ({
 
   newScene: (name = i18n.t("reference:scene.untitled")) => {
     resetHistoryCtl();
-    set({ sceneId: null, sceneName: name, filePath: null, fileReadonly: false, items: [], view: INITIAL_VIEW, selectedId: null, selectedIds: [], editingId: null, croppingId: null, drawMode: false, drawBack: false, drawSel: null, past: [], future: [], dirty: false });
+    set({ sceneId: null, sceneName: name, filePath: null, fileReadonly: false, items: [], view: INITIAL_VIEW, selectedId: null, selectedIds: [], editingId: null, croppingId: null, studio: null, drawMode: false, drawBack: false, drawSel: null, past: [], future: [], dirty: false });
   },
 
   clearDirty: () => set({ dirty: false }),

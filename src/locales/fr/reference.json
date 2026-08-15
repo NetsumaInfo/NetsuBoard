@@ -475,7 +475,8 @@
   "youtube": {
     "notEmbeddable": "Vidéo non intégrable",
     "blocked": "YouTube bloque la lecture intégrée de cette vidéo.",
-    "openOnYouTube": "Ouvrir sur YouTube"
+    "openOnYouTube": "Ouvrir sur YouTube",
+    "preparing": "Préparation de la vidéo…"
   },
   "embed": {
     "frozen": "Lecture figée",
@@ -599,7 +600,45 @@
     "formatHint": "Copier en {{format}}",
     "layoutRow": "En bande",
     "layoutCol": "En colonne",
-    "layoutGrid": "En carré"
+    "layoutGrid": "En carré",
+    "studio": {
+      "open": "Générateur de palettes",
+      "edit": "Ouvrir dans le générateur",
+      "close": "Fermer le générateur",
+      "title": "Générateur de palettes",
+      "pickScreen": "Pipette écran",
+      "brightness": "Luminosité",
+      "tones": "Tons",
+      "fromSelection": "Depuis la sélection",
+      "fromBoard": "Depuis tout le board",
+      "noSelection": "Sélectionne des images sur le board",
+      "noMedia": "Aucune image sur le board",
+      "reset": "Réinitialiser",
+      "pick": "Sélecteur de couleur",
+      "notation": "Notation",
+      "value": "Valeur de la couleur",
+      "place": "Poser sur le board",
+      "apply": "Appliquer",
+      "placed": "Palette de {{count}} couleurs posée",
+      "applied": "Palette mise à jour ({{count}} couleurs)",
+      "addSwatch": "Ajouter une couleur",
+      "removeSwatch": "Retirer la couleur",
+      "lock": "Verrouiller la couleur",
+      "unlock": "Déverrouiller la couleur",
+      "moveLeft": "Décaler à gauche",
+      "moveRight": "Décaler à droite",
+      "rule": {
+        "custom": "Personnalisé",
+        "analogous": "Analogue",
+        "complementary": "Complémentaire",
+        "split": "Compl. divisé",
+        "triadic": "Triade",
+        "square": "Carré",
+        "compound": "Composé",
+        "shades": "Nuances",
+        "monochromatic": "Monochrome"
+      }
+    }
   },
   "exportImage": {
     "menu": "Exporter en image…",
@@ -623,7 +662,11 @@
     "folderDoneTruncated": "{{count}} médias importés (dossier tronqué)",
     "progress": "Import {{done}}/{{total}}…",
     "reading": "Lecture de {{count}} fichiers…",
+    "importing": "Import de {{name}}…",
     "done": "{{count}} médias importés",
-    "folderTruncated": "Dossier trop grand : {{count}} premiers médias importés"
+    "folderTruncated": "Dossier trop grand : {{count}} premiers médias importés",
+    "fetching": "Récupération du média…",
+    "linkDone": "Média importé",
+    "fetchingFrom": "Récupération depuis {{source}}…"
   }
 }

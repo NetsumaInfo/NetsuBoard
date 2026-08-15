@@ -475,7 +475,8 @@
   "youtube": {
     "notEmbeddable": "Video can't be embedded",
     "blocked": "YouTube blocks embedded playback for this video.",
-    "openOnYouTube": "Open on YouTube"
+    "openOnYouTube": "Open on YouTube",
+    "preparing": "Preparing the video…"
   },
   "embed": {
     "frozen": "Playback frozen",
@@ -599,7 +600,45 @@
     "formatHint": "Copy as {{format}}",
     "layoutRow": "Row",
     "layoutCol": "Column",
-    "layoutGrid": "Square"
+    "layoutGrid": "Square",
+    "studio": {
+      "open": "Palette generator",
+      "edit": "Open in the generator",
+      "close": "Close the generator",
+      "title": "Palette generator",
+      "pickScreen": "Screen eyedropper",
+      "brightness": "Brightness",
+      "tones": "Tones",
+      "fromSelection": "From the selection",
+      "fromBoard": "From the whole board",
+      "noSelection": "Select images on the board",
+      "noMedia": "No image on the board",
+      "reset": "Reset",
+      "pick": "Color picker",
+      "notation": "Notation",
+      "value": "Color value",
+      "place": "Place on the board",
+      "apply": "Apply",
+      "placed": "Palette of {{count}} colors placed",
+      "applied": "Palette updated ({{count}} colors)",
+      "addSwatch": "Add a color",
+      "removeSwatch": "Remove color",
+      "lock": "Lock color",
+      "unlock": "Unlock color",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "rule": {
+        "custom": "Custom",
+        "analogous": "Analogous",
+        "complementary": "Complementary",
+        "split": "Split complementary",
+        "triadic": "Triadic",
+        "square": "Square",
+        "compound": "Compound",
+        "shades": "Shades",
+        "monochromatic": "Monochrome"
+      }
+    }
   },
   "exportImage": {
     "menu": "Export as image…",
@@ -623,7 +662,11 @@
     "folderDoneTruncated": "{{count}} media imported (folder truncated)",
     "progress": "Importing {{done}}/{{total}}…",
     "reading": "Reading {{count}} files…",
+    "importing": "Importing {{name}}…",
     "done": "{{count}} media imported",
-    "folderTruncated": "Folder too large: first {{count}} media imported"
+    "folderTruncated": "Folder too large: first {{count}} media imported",
+    "fetching": "Fetching the media…",
+    "linkDone": "Media imported",
+    "fetchingFrom": "Fetching from {{source}}…"
   }
 }
