@@ -48,13 +48,11 @@ Two rules if you touch it: keep every import of `convex/react` and `better-auth`
 
 ## The unfinished split
 
-NetsuBoard was split out of NetsuRush and **the split is not finished**. The working tree still contains a large amount of inherited code the app never reaches: the Resolve bridge, the Adobe/CEP bridges, timeline transfer, voice, roto, the model catalogue and the Python sidecar plumbing whose `python/` tree no longer exists.
+NetsuBoard was split out of NetsuRush and **the split is not finished**. The working tree still contains a large amount of inherited code the app never reaches: the Resolve and Adobe/CEP bridges, the timeline modules, the optimiser, the model catalogue and the venv plumbing of a Python sidecar that no longer exists.
 
 Consequences you will hit:
 
-- `node --test test/*.test.cjs` is **red**: 23 of the 82 suites fail (152 assertions). They are named one by one in the `core` job of `.github/workflows/ci.yml`; the blocking job runs everything else and is green. Do not treat a failure inside that list as your fault — run the suites covering what you touched, and say in the PR which ones you ran and what they returned.
-- `test/test_*.py` cannot run at all: they import from a `python/` directory that is gone.
-- Documentation in `docs/legacy-netsurush/` describes that inherited code. It is kept for reference and is **not** a description of NetsuBoard.
+- `node --test test/*.test.cjs` is **red**: **19 of the 61 suites** fail. They are named one by one in the `core` job of `.github/workflows/ci.yml`; the blocking job runs everything else and is green. Do not treat a failure inside that list as your fault — run the suites covering what you touched, and say in the PR which ones you ran and what they returned.
 
 Do not extend inherited modules. If a change forces you into one, say so in the issue first.
 

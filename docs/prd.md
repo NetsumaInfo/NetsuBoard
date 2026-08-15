@@ -19,10 +19,15 @@ capture collée.
 NetsuBoard est **issu de [NetsuRush](https://github.com/NetsumaInfo/NetsuRush)**, hub de
 post-production dont il reprend le board, le format `.netsu` et le moteur d'upscale par shaders. La
 séparation n'est pas terminée : l'arbre porte encore des modules NetsuRush que l'application
-n'atteint jamais (cf. `docs/legacy-netsurush/README.md`). Ce PRD décrit le produit, pas l'arbre.
+n'atteint jamais. Ce PRD décrit le produit, pas l'arbre.
 
-Les deux applications s'installent et tournent **côte à côte** : dossier de travail, ports et
-serveur de développement distincts. Aucune de ces séparations n'est cosmétique.
+Les deux applications restent parentes — même mainteneur, et NetsuBoard télécharge son runtime
+ffmpeg depuis un *release asset* du dépôt NetsuRush. **Le board est une seule fonctionnalité
+présente dans deux dépôts** : quand il évolue d'un côté, le mainteneur reporte le changement de
+l'autre côté à la main ; aucun code, sous-module ou job de synchronisation n'est partagé, donc rien
+ne se propage tout seul. Pour le reste elles s'installent et tournent **côte à côte** : dépôt,
+déploiement Convex, dossier de travail, ports et serveur de développement distincts. Aucune de ces
+séparations n'est cosmétique.
 
 ## 2. Contraintes et faits techniques
 
@@ -108,7 +113,7 @@ Détail et justification dans `docs/invariants.md`. Les trois qui priment :
 
 | Risque | Impact | Réponse |
 |---|---|---|
-| Séparation NetsuRush inachevée | code mort, suite de tests rouge, confusion des contributeurs | purge par lots, documentée ; `docs/legacy-netsurush/` isole les notes héritées |
+| Séparation NetsuRush inachevée | code mort, suite de tests rouge, confusion des contributeurs | purge par lots, documentée ; le périmètre réel du produit est la table RPC |
 | Collisions entre les deux applications | caches et ports partagés, une app en écrase une autre | `NR_HOME` et ports déjà séparés ; les violations restantes sont listées dans `docs/invariants.md` |
 | YouTube casse la résolution de flux | les éléments en ligne deviennent morts | `yt-dlp` mis à jour, repli sur le lecteur embarqué, relais qui renouvelle l'URL sur 403 |
 | ffmpeg sans `libplacebo` ou Vulkan absent | upscale indisponible | version épinglée, build `master` interdite, sonde avant de proposer un shader |

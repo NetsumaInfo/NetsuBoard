@@ -31,9 +31,6 @@ const { HOST_IMAGES } = require('./hostImages');
  * @property {number|null} [tlEndFrame]   fin timeline en frames (occupation exacte du plan)
  * @property {string} [nodeId] identité native du TrackItem
  * @property {{start?:string,end?:string,in?:string,out?:string}} [ticks]
- * @property {import('./transfer/types').TransferVideoProperties} [video]
- * @property {import('./transfer/types').TransferAudioProperties} [audio]
- * @property {import('./transfer/types').TransferTiming} [timing]
  * @property {boolean} [reverse]
  * @property {boolean} [freeze]
  * @property {number} [speed]

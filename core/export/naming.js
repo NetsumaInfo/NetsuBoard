@@ -131,8 +131,7 @@ function uniqueOutput(dir, stem, ext, opts) {
   const join = (name) => (dir ? `${dir}${sep}${name}` : name);
   let name = `${stem}.${ext}`;
   let i = 2;
-  // Même suffixe « (n) » que la préparation média AE (core/ae/codecs.js#uniquePath) : deux
-  // conventions de dédoublonnage dans la même application se lisent comme un bug.
+  // Suffixe « (n) » : une seule convention de dédoublonnage dans toute l'application.
   while (opts.taken.has(join(name).toLowerCase()) || opts.exists(join(name))) name = `${stem} (${i++}).${ext}`;
   const full = join(name);
   opts.taken.add(full.toLowerCase());

@@ -9,7 +9,7 @@ NetsuBoard was copied out of NetsuRush. Timeline transfer, After Effects export,
 What is still inherited and **live**: the Resolve bridge cut down to `resolve:status` / `resolve:import`, the Adobe CEP bridge (status, snapshot, launch, media import, panel install), host power (close/reopen an editing app to free RAM/GPU), the project snapshot that feeds it, the model manager, first-run setup, cache admin and export capabilities.
 
 - Do **not** re-import a retired module from NetsuRush; the RPC table is the contract of what this product does.
-- Inherited docs live in `docs/legacy-netsurush/` and describe NetsuRush, not this product.
+- The two products stay related: NetsuBoard is [NetsuRush](https://github.com/NetsumaInfo/NetsuRush)'s reference board shipped as its own, far lighter application, under the same maintainer, and it downloads its ffmpeg runtime from a NetsuRush release asset (`docs/distribution.md`). **The board is one feature in two repositories**: when it is changed on one side — a fix, an optimisation, a removed page — the maintainer mirrors the change on the other side by hand. There is no shared code, submodule or sync job, so nothing propagates on its own; when you touch the board, say in the PR what the other repository needs. Everything else is separate: repository, Convex deployment, ports, home and caches.
 - 19 of the 61 Node suites are still quarantined in `.github/workflows/ci.yml`; a failure inside that list is not yours.
 - Known name/path collisions still in code (tmp caches, log directory) are listed at the end of `docs/invariants.md`. They are defects, not design.
 
@@ -61,7 +61,6 @@ What is still inherited and **live**: the Resolve bridge cut down to `resolve:st
 | Code structure and cleanliness rules | `docs/code-style.md` |
 | GPU and encoder matrix | `docs/windows-compatibility.md` |
 | Release process and signing key | `docs/releasing.md` |
-| Inherited NetsuRush notes (not this product) | `docs/legacy-netsurush/README.md` |
 | Security policy | `SECURITY.md` |
 | Licensing (AGPL-3.0-only, third-party notices) | `LICENSE`, `LICENSES/`, `docs/licensing.md` |
 

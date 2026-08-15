@@ -68,7 +68,7 @@ Opening `http://localhost:1430` in a normal browser renders the interface agains
 npm run package
 ```
 
-`scripts/build.ps1` type-checks, builds the renderer, fetches a portable `node.exe`, stages `core/`, the shaders and `dist/` into `src-tauri/resources/`, then runs `tauri build`. The result is an NSIS installer under `src-tauri/target/release/bundle/nsis/`, installed per user with no administrator rights.
+`scripts/build.ps1` type-checks, builds the renderer, fetches a portable `node.exe`, then stages into `src-tauri/resources/` a **closed list** of folders — `bin`, `core`, `dist`, `scripts`, `shaders`, `windows` — and purges anything else it finds there before running `tauri build`. Tauri bundles `resources/**/*` whole, so a folder left behind would ship inside the installer. No Python sidecar and no mpv runtime are staged. The result is an NSIS installer under `src-tauri/target/release/bundle/nsis/`, installed per user with no administrator rights.
 
 ## First run
 
@@ -76,7 +76,9 @@ The installed app provisions its runtime on first launch (`scripts/setup.ps1`): 
 
 ## Project status
 
-NetsuBoard was split out of [NetsuRush](https://github.com/NetsumaInfo/NetsuRush), a larger post-production hub, and keeps its board, its `.netsu` format and its shader upscaler. **The split is not finished**: the working tree still carries a large amount of inherited NetsuRush code (Resolve bridge, Adobe bridges, Python sidecar plumbing, voice and roto modules) that the app never reaches. It is not documented here, it is not part of the product, and a share of the inherited test suite fails because the `python/` tree it exercised is gone. See [AGENTS.md](AGENTS.md) for the current state.
+NetsuBoard is the reference board of [NetsuRush](https://github.com/NetsumaInfo/NetsuRush), a larger post-production hub, shipped as its own far lighter application, and it keeps that board, the `.netsu` format and the shader upscaler. The two repositories are separate — separate code, releases and configuration — and the only runtime tie is the ffmpeg archive, hosted as a NetsuRush release asset. The board being one feature in two products, a change made to it on one side is carried over to the other **by hand**; nothing synchronises on its own.
+
+**The split is not finished**: the working tree still carries a large amount of inherited NetsuRush code the app never reaches — the Resolve and Adobe bridges, the timeline modules, the optimiser, the venv plumbing of a Python sidecar that no longer exists. It is not documented here and it is not part of the product. Some of the inherited Node suites fail for the same reason; they are quarantined by name in [`.github/workflows/ci.yml`](.github/workflows/ci.yml), and the blocking job runs everything else. See [AGENTS.md](AGENTS.md) for the current state.
 
 ## Contributing
 

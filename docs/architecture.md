@@ -29,7 +29,7 @@ src/                  React renderer
 - **`NR_HOME`** = `%LOCALAPPDATA%\NetsuBoard` (`~/.netsuboard` elsewhere), overridable with the `NR_HOME` environment variable. It holds `nr.config.json`, the provisioned runtime, wallpapers and logs. It is deliberately **distinct** from NetsuRush's home: the two applications are installed side by side.
 - Opening the Vite URL in a plain browser renders the UI against `bridge.ts`'s no-op mock, so the layout is inspectable without the core.
 
-> **Inherited code.** `core/` also contains the untrimmed NetsuRush modules (Resolve bridge, Adobe bridges, transfer, voice, roto, model catalogue, agent). `rpc.js` still registers their channels, and `server.js` still imports some of them, but the board reaches none of it. See `docs/legacy-netsurush/README.md`. Do not extend those modules.
+> **Inherited code.** `core/` also contains the untrimmed NetsuRush modules (Resolve bridge, Adobe bridges, timeline modules, optimiser, model catalogue). `rpc.js` still registers their channels, and `server.js` still imports some of them, but the board reaches none of it. Do not extend those modules.
 
 ## IPC contract — three places, always
 
