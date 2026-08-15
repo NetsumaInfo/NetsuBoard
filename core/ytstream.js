@@ -20,7 +20,7 @@ const https = require("node:https");
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
-const { DETECT_ENV, ytDlpCommand } = require("./config");
+const { DETECT_ENV, ytDlpCommand, COOKIES_BROWSER } = require("./config");
 
 // Board muet → un flux VIDÉO SEUL suffit et évite le merge ffmpeg. Repli progressif (piste audio
 // incluse) pour les vidéos sans DASH mp4.
@@ -67,7 +67,22 @@ function validId(id) {
   return typeof id === "string" && /^[A-Za-z0-9_-]{5,20}$/.test(id);
 }
 
-function runYtdlp(id) {
+// YouTube refuse une part croissante de vidéos à un client sans session (« Sign in to confirm you're
+// not a bot »). Le contrôle ne porte pas sur la vidéo mais sur l'appelant : la même URL passe avec
+// les cookies d'un navigateur où l'utilisateur est connecté. On ne les envoie JAMAIS d'emblée — le
+// public marche sans, et lire le trousseau d'un navigateur pour chaque lecture serait indéfendable —
+// mais uniquement en seconde passe, quand l'échec porte cette signature. Même stratégie que
+// core/extract.js, même réglage `cookiesBrowser` de nr.config.json.
+const BOT_CHECK = /sign in to confirm|not a bot|confirm your age|login required|use --cookies|429|too many requests/i;
+
+/** Cet échec vaut-il une seconde tentative AVEC cookies ? Exporté : c'est la règle qui décide de
+ * lire ou non le trousseau d'un navigateur, elle ne doit pas dériver en silence.
+ * @param {string} error @returns {boolean} */
+function needsCookies(error) {
+  return BOT_CHECK.test(String(error || ""));
+}
+
+function runYtdlp(id, cookiesBrowser) {
   return new Promise((resolve) => {
     const args = [
       `https://www.youtube.com/watch?v=${id}`,
@@ -76,6 +91,7 @@ function runYtdlp(id) {
       "--socket-timeout", "20",
       "-g",
     ];
+    if (cookiesBrowser) args.push("--cookies-from-browser", cookiesBrowser);
     const ytdlp = ytDlpCommand();
     const child = spawn(ytdlp.bin, [...ytdlp.args, ...args], { env: DETECT_ENV });
     let out = "", err = "";
@@ -108,6 +124,25 @@ function runYtdlp(id) {
   });
 }
 
+// Passe publique, puis passe cookies UNIQUEMENT sur un refus de type contrôle anti-bot. Un échec
+// ordinaire (vidéo privée, supprimée, géobloquée) ne déclenche pas la lecture du trousseau : elle
+// n'y changerait rien et coûterait une seconde tentative à chaque lecture cassée.
+async function resolveWithFallback(id) {
+  const first = await runYtdlp(id, null);
+  if (first.ok || first.missingTool || !COOKIES_BROWSER) return first;
+  if (!needsCookies(first.error)) return first;
+  const retry = await runYtdlp(id, COOKIES_BROWSER);
+  if (retry.ok) return retry;
+  // Les deux ont échoué : c'est le message du contrôle anti-bot qui explique la situation, pas
+  // l'erreur de lecture de cookies. On dit ce qui manque plutôt que de recracher la trace yt-dlp.
+  return {
+    ok: false,
+    error: `YouTube demande une session connectée pour cette vidéo, et les cookies de ${COOKIES_BROWSER} n'ont pas suffi `
+      + `(navigateur fermé, autre profil, ou aucun compte connecté). Règle « cookiesBrowser » dans nr.config.json `
+      + `pour désigner le navigateur où tu es connecté. Détail : ${(retry.error || first.error || "").slice(0, 300)}`,
+  };
+}
+
 // Résout (et mémorise) l'URL du flux. `force` ignore le cache : c'est ce que fait le relais quand
 // googlevideo a refusé une URL périmée. Les appels concurrents sur le même id partagent un spawn.
 async function resolveStream(id, force = false) {
@@ -117,7 +152,7 @@ async function resolveStream(id, force = false) {
   if (force) cache.delete(id);
   const pending = inflight.get(id);
   if (pending) return pending;
-  const job = runYtdlp(id).then((r) => {
+  const job = resolveWithFallback(id).then((r) => {
     if (r.ok && r.url) cache.set(id, { url: r.url, at: Date.now() });
     inflight.delete(id);
     return r;
@@ -247,4 +282,4 @@ async function serveYoutube(req, res, id) {
   }
 }
 
-module.exports = { serveYoutube, resolveStream };
+module.exports = { serveYoutube, resolveStream, needsCookies };
