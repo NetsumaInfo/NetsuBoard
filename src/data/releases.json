@@ -13,7 +13,10 @@
         "Mises à jour dans l'application : vérification, installation signée, et les notes de version affichées une fois après l'update.",
         "Signalement de bug intégré : description, journal, pièces jointes et instantané machine (GPU, encodeurs, ffmpeg) envoyés en un clic.",
         "Board plus fluide : zoom continu sans à-coups, vignettes adaptées au niveau de zoom, et vidéos jouées à leur taille écran puis mises en pause hors champ.",
+        "Générateur de palettes : roue chromatique, les neuf harmonies classiques, verrouillage par teinte, tons et luminosité, et une graine tirée des images du board.",
         "Cadres liables, zoom du texte et menu contextuel copier/coller sur toute la surface du board.",
+        "Page Compte dans les réglages : connexion, déconnexion et avatar Discord, y compris après avoir passé l'écran de connexion.",
+        "Lecture YouTube fiable jusqu'au bout : le relais borne chaque requête amont, qu'une URL signée refusait au-delà des premiers segments.",
         "L'upscale par shaders préserve la transparence : un PNG à fond alpha ressort alpha.",
         "Application allégée : tous les modules hérités de NetsuRush (Resolve, Adobe, timeline, voix, roto) ont été retirés du produit."
       ],
@@ -22,7 +25,10 @@
         "In-app updates: check, signed install, and the release notes shown once after updating.",
         "Built-in bug reporting: description, log, attachments and a machine snapshot (GPU, encoders, ffmpeg) sent in one click.",
         "Smoother board: continuous zoom without stutter, thumbnails matched to the zoom level, and videos played at their on-screen size then paused off-screen.",
+        "Palette studio: a colour wheel, the nine classic harmonies, per-swatch lock, tones and brightness, and a seed taken from the board's own images.",
         "Linkable frames, text zoom, and a copy/paste context menu across the whole board surface.",
+        "An Account page in the settings: sign in, sign out and the Discord avatar, even after skipping the login screen.",
+        "YouTube playback that survives past the first segments: the relay now bounds every upstream request, which a signed URL used to refuse.",
         "Shader upscaling keeps transparency: a PNG with an alpha background comes out with alpha.",
         "Slimmer application: every module inherited from NetsuRush (Resolve, Adobe, timeline, voice, roto) has been removed from the product."
       ]
