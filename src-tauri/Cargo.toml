@@ -1,6 +1,6 @@
 [package]
 name = "app"
-version = "0.4.1"
+version = "0.4.2"
 description = "NetsuBoard — mood board standalone : canvas infini (images, vidéos, embeds), upscale par shaders GPU"
 authors = ["Haim Faraj"]
 license = "AGPL-3.0-only"

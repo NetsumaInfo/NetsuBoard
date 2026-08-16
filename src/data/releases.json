@@ -1,5 +1,32 @@
 [
   {
+    "id": "netsuboard-0.4.2",
+    "version": "0.4.2",
+    "date": "2026-08-16",
+    "title": {
+      "fr": "Bascule de format sans à-coup, liens sociaux réparés",
+      "en": "A smooth switch of format, social links fixed"
+    },
+    "highlights": {
+      "fr": [
+        "La fenêtre change de format en glissant, autour de l'endroit où vous l'avez posée : plus de saut au centre de l'écran à chaque épinglage, et le board garde son recadrage et sa palette ouverts pendant la bascule.",
+        "Les liens de posts (X, TikTok, Reddit, Instagram…) téléchargent de nouveau la vraie vidéo : l'extracteur passe par le yt-dlp autonome installé par l'application, sans aucun environnement Python.",
+        "Mise à jour automatique au lancement, à activer dans Réglages ▸ Mises à jour : l'application installe la version trouvée au démarrage et redémarre seule. Désactivée par défaut.",
+        "Une couleur copiée depuis une palette arrive sans le `#` : les champs hexadécimaux des logiciels de dessin s'arrêtent à six caractères et rejetaient le collage.",
+        "Deux raccourcis dans la barre de titre : le code source sur GitHub, et le soutien au projet.",
+        "L'épinglage de la fenêtre est réappliqué au démarrage : l'interface ne s'affiche plus en mode épinglé sur une fenêtre qui ne l'est pas."
+      ],
+      "en": [
+        "The window slides between formats, anchored where you put it: no more jump to the centre of the screen on every pin, and the board keeps its crop and palette open across the switch.",
+        "Post links (X, TikTok, Reddit, Instagram…) download the real video again: the extractor goes through the standalone yt-dlp the application installs, with no Python environment at all.",
+        "Automatic update at launch, to be turned on in Settings ▸ Updates: the application installs the version found at startup and restarts on its own. Off by default.",
+        "A colour copied from a palette comes without the `#`: hex fields in drawing applications stop at six characters and rejected the paste.",
+        "Two shortcuts in the title bar: the source code on GitHub, and supporting the project.",
+        "Window pinning is reapplied at startup: the interface no longer shows its pinned format on a window that is not pinned."
+      ]
+    }
+  },
+  {
     "id": "netsuboard-0.4.1",
     "version": "0.4.1",
     "date": "2026-08-16",
