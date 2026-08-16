@@ -1,5 +1,32 @@
 [
   {
+    "id": "netsuboard-0.4.1",
+    "version": "0.4.1",
+    "date": "2026-08-16",
+    "title": {
+      "fr": "La planche épinglée reste utilisable",
+      "en": "The pinned board stays usable"
+    },
+    "highlights": {
+      "fr": [
+        "Fenêtre épinglée : la barre d'outils garde poser, dessiner, cadrer et annuler au lieu de disparaître ; un réglage la retire pour retrouver la planche nue.",
+        "La taille de la fenêtre est retenue séparément pour le mode épinglé et le mode normal : la bascule restitue la dernière taille de chaque mode.",
+        "Nouveau réglage pour la barre de l'item sélectionné quand vous cliquez dans une autre application : la garder, la masquer, ou lâcher la sélection.",
+        "Images et vidéos prennent leur vrai format dès qu'elles s'affichent : un visuel vertical n'est plus rogné dans une boîte carrée, même quand la mesure faite à l'import a échoué.",
+        "Le cadre de la zone de pose ne teinte plus un média envoyé à l'arrière-plan.",
+        "Collage plus direct : l'aperçu apparaît sans attendre la résolution du chemin sur le disque."
+      ],
+      "en": [
+        "Pinned window: the toolbar keeps place, draw, frame and undo instead of vanishing; a setting removes it to get the bare board back.",
+        "Window size is remembered per mode, pinned and normal: switching restores the last size of each.",
+        "New setting for the selected item's bar when you click into another application: keep it, hide it, or drop the selection.",
+        "Images and videos take their true shape as soon as they paint: a portrait visual is no longer cropped inside a square box, even when the probe run at import failed.",
+        "The placing frame no longer tints a medium sent to the background.",
+        "More direct pasting: the preview shows up without waiting for the on-disk path to resolve."
+      ]
+    }
+  },
+  {
     "id": "netsuboard-0.4.0",
     "version": "0.4.0",
     "date": "2026-08-14",
