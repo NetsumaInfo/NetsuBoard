@@ -1,5 +1,36 @@
 [
   {
+    "id": "netsuboard-0.4.3",
+    "version": "0.4.3",
+    "date": "2026-08-16",
+    "title": {
+      "fr": "Présence Discord, palettes de plan, aperçus qui montrent quelque chose",
+      "en": "Discord presence, shot palettes, previews that show something"
+    },
+    "highlights": {
+      "fr": [
+        "Rich Presence Discord : votre profil peut afficher le board ouvert et le nombre de références. À activer dans Réglages ▸ Compte, chaque ligne au choix, le nom du board masqué par défaut. Aucune connexion à un compte n'est nécessaire, et Discord fermé ne change rien.",
+        "La palette d'une vidéo est extraite sur toute la portée lue, huit cadres au lieu d'un seul : un plan qui entre dans la nuit ne rend plus la couleur de sa première image.",
+        "L'aperçu d'upscale part du milieu du plan et non de la première image, qui est presque toujours un noir ou un fondu — il y avait de quoi juger le flou d'ouverture plutôt que le travail du shader.",
+        "Le comparateur avant/après zoome là où pointe le curseur, se déplace sans sortir du cadre, revient au double-clic, et sa fenêtre est plus grande. Maj enfoncée compare sans dézoomer.",
+        "Poser un début ou une fin sur une vidéo YouTube ne fige plus le lecteur : l'aperçu suit le curseur, et la lecture saute dans la portée dès qu'elle est posée au lieu d'attendre plusieurs minutes.",
+        "La tête de lecture du curseur de découpe coïncide avec les bornes sur toute la course, et un clip non rogné atteint bien la fin de la piste.",
+        "Un trait parfaitement droit ou tracé sur un média tourné s'attache maintenant au média : il restait libre et flottait au-dessus.",
+        "Épinglé puis dépinglé, on retrouve son board et non l'accueil ; et un lien qui a échoué ne revient plus pré-rempli à la réouverture."
+      ],
+      "en": [
+        "Discord Rich Presence: your profile can show the open board and how many references it holds. Turn it on in Settings ▸ Account, each line optional, the board name hidden by default. No account sign-in is involved, and a closed Discord changes nothing.",
+        "A video's palette is sampled across the whole range played, eight frames instead of one: a shot that fades into night no longer returns the colour of its first image.",
+        "The upscale preview starts from the middle of the shot rather than the first frame, which is nearly always black or a fade — the blur being judged was the opening, not the shader.",
+        "The before/after comparer zooms where the cursor points, pans without leaving the frame, resets on a double-click, and its window is larger. Hold Shift to compare without zooming out.",
+        "Setting an in or out point on a YouTube video no longer freezes the player: the preview follows the cursor, and playback jumps into the range as soon as it is set instead of waiting minutes.",
+        "The trim slider's playhead lines up with the bounds along the whole track, and an untrimmed clip reaches the end of it.",
+        "A perfectly straight stroke, or one drawn on a rotated medium, now belongs to that medium: it used to stay free and float above it.",
+        "Pinning then unpinning brings back your board instead of the home screen; and a link that failed no longer comes back pre-filled."
+      ]
+    }
+  },
+  {
     "id": "netsuboard-0.4.2",
     "version": "0.4.2",
     "date": "2026-08-16",
