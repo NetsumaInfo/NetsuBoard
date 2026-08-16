@@ -12,6 +12,7 @@ const ts = require('typescript');
 const dir = path.join(__dirname, '..', 'src', 'components', 'reference');
 const ingest = fs.readFileSync(path.join(dir, 'useBoardIngest.ts'), 'utf8');
 const boardItem = fs.readFileSync(path.join(dir, 'BoardItem.tsx'), 'utf8');
+const natFit = fs.readFileSync(path.join(dir, 'boardNatFit.ts'), 'utf8');
 
 // embeds.ts only pulls two regexes out of referenceShared, whose own import graph reaches the Tauri
 // bridge — stub that single module rather than dragging the renderer into a Node test.
@@ -69,12 +70,19 @@ test('ingestion poses a YouTube card at the ratio the link announces', () => {
 });
 
 test('the relayed stream reshapes the card to its true ratio, once and without an undo step', () => {
-  assert.match(boardItem, /onNatSize\?\.\(e\.currentTarget\.videoWidth, e\.currentTarget\.videoHeight\)/);
   // A proxy is a re-encoded excerpt — its dimensions must never be taken for the source's.
   assert.match(boardItem, /if \(!useProxy && e\.currentTarget\.videoWidth && e\.currentTarget\.videoHeight\)/);
-  assert.match(boardItem, /onNatSize=\{fitNatSize\}/);
+  assert.match(boardItem, /fitNatSize\(item\.id, e\.currentTarget\.videoWidth, e\.currentTarget\.videoHeight\)/);
   // Constant area around the item centre, cropped items left alone, measurement not recorded.
-  assert.match(boardItem, /Math\.sqrt\(it\.w \* it\.h \* ratio\)/);
-  assert.match(boardItem, /!it\.crop && it\.w > 0 && it\.h > 0 && Math\.abs\(it\.w \/ it\.h - ratio\) > 0\.01/);
-  assert.match(boardItem, /patchItem\(item\.id, patch, false\)/);
+  assert.match(natFit, /Math\.sqrt\(it\.w \* it\.h \* ratio\)/);
+  assert.match(natFit, /if \(!it \|\| it\.crop\) return;/);
+  assert.match(natFit, /it\.w > 0 && it\.h > 0 && Math\.abs\(it\.w \/ it\.h - ratio\) > 0\.01/);
+  assert.match(natFit, /patchItem\(id, patch, false\)/);
+});
+
+test('a decoded image reshapes its item too, from the full source only', () => {
+  // The ingestion probe can come back empty; the painted element is the ratio of last resort, and a
+  // thumbnail is not it — a LOD stand-in would reshape the item around the wrong dimensions.
+  assert.match(boardItem, /if \(lod\.full && e\.currentTarget\.naturalWidth\) \{/);
+  assert.match(boardItem, /fitNatSize\(item\.id, e\.currentTarget\.naturalWidth, e\.currentTarget\.naturalHeight\)/);
 });
