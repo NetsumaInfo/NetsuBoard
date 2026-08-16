@@ -515,6 +515,41 @@ const power: PowerApi = {
   onProgress: (cb) => on("power:progress", cb as (p: unknown) => void),
 };
 
+// --- Changement de format de la fenêtre (bascule épinglé ↔ normal) -----------------------------
+// La fenêtre passe d'un format à l'autre en interpolant sa géométrie sur quelques frames. Posée
+// d'un coup, la nouvelle taille se lit comme un à-coup ; étalée sur deux dixièmes de seconde, elle
+// se lit comme un changement de format. Rien de tout cela ne touche le board : c'est la coquille.
+type Rect = { x: number; y: number; w: number; h: number };
+let resizeToken = 0;
+const RESIZE_MS = 200;
+const easeOut = (p: number) => 1 - Math.pow(1 - p, 3);
+const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+// « Réduire les animations » (WCAG 2.3.3) : la fenêtre saute directement au format visé.
+const reduceMotion = () =>
+  typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Zone utile de l'écran courant (barre des tâches exclue), en pixels logiques, ou null. */
+async function workArea(currentMonitor: typeof import("@tauri-apps/api/window").currentMonitor): Promise<Rect | null> {
+  try {
+    const mon = await currentMonitor();
+    if (!mon) return null;
+    const p = mon.workArea.position.toLogical(mon.scaleFactor);
+    const s = mon.workArea.size.toLogical(mon.scaleFactor);
+    return { x: p.x, y: p.y, w: s.width, h: s.height };
+  } catch {
+    return null;
+  }
+}
+
+/** Ramène un rectangle dans la zone utile. Sans recentrage, une fenêtre posée près d'un bord
+ *  déborderait en grandissant — et une fenêtre à moitié hors écran ne se rattrape pas à la souris. */
+function clampToArea(rect: Rect, area: Rect | null): Rect {
+  if (!area) return rect;
+  const x = Math.min(Math.max(rect.x, area.x), Math.max(area.x, area.x + area.w - rect.w));
+  const y = Math.min(Math.max(rect.y, area.y), Math.max(area.y, area.y + area.h - rect.h));
+  return { ...rect, x, y };
+}
+
 export function makeCoreClient(): NrApi {
   const client: NrApi = {
     configGet: () => call("config:get"),
@@ -591,20 +626,59 @@ export function makeCoreClient(): NrApi {
       })();
     },
     setWindowSize: (w, h) => {
+      const token = ++resizeToken;
       void (async () => {
         if (!isTauri) return;
-        const [{ getCurrentWindow }, { LogicalSize }] = await Promise.all([
+        const [{ getCurrentWindow, currentMonitor }, { LogicalSize, LogicalPosition }] = await Promise.all([
           import("@tauri-apps/api/window"),
           import("@tauri-apps/api/dpi"),
         ]);
         const win = getCurrentWindow();
         // Une fenêtre maximisée/plein écran/snappée IGNORE setSize (garde l'état → « plein écran »).
         // On retire ces états INCONDITIONNELLEMENT (isMaximized rate l'état sur fenêtre frameless/snap)
-        // AVANT de redimensionner, puis on recentre pour une fenêtre nette et visible.
+        // AVANT de redimensionner.
         try { await win.setFullscreen(false); } catch { /* noop */ }
         try { await win.unmaximize(); } catch { /* noop */ }
-        try { await win.setSize(new LogicalSize(w, h)); } catch { /* noop */ }
-        try { await win.center(); } catch { /* noop */ }
+
+        const scale = await win.scaleFactor().catch(() => 1);
+        let from = { x: 0, y: 0, w, h };
+        try {
+          const pos = (await win.outerPosition()).toLogical(scale);
+          const size = (await win.innerSize()).toLogical(scale);
+          from = { x: pos.x, y: pos.y, w: size.width, h: size.height };
+        } catch { /* géométrie illisible → on pose la taille cible sans interpoler */ }
+
+        // ANCRAGE SUR LE CENTRE COURANT, pas sur celui de l'écran : la fenêtre change de format sans
+        // quitter l'endroit où l'utilisateur l'a posée. Recentrer la faisait traverser le bureau à
+        // chaque bascule, ce qui se lit comme un saut et non comme un changement de format.
+        const target = clampToArea(
+          { x: from.x + (from.w - w) / 2, y: from.y + (from.h - h) / 2, w, h },
+          await workArea(currentMonitor),
+        );
+
+        const apply = async (r: Rect) => {
+          await win.setPosition(new LogicalPosition(Math.round(r.x), Math.round(r.y))).catch(() => {});
+          await win.setSize(new LogicalSize(Math.round(r.w), Math.round(r.h))).catch(() => {});
+        };
+        if (reduceMotion() || (Math.abs(target.w - from.w) < 2 && Math.abs(target.h - from.h) < 2)) {
+          await apply(target);
+          return;
+        }
+        const start = performance.now();
+        for (;;) {
+          await nextFrame();
+          // Une seconde bascule a pris la main : deux boucles écrivant la même fenêtre la font vibrer.
+          if (token !== resizeToken) return;
+          const p = Math.min(1, (performance.now() - start) / RESIZE_MS);
+          const e = easeOut(p);
+          await apply({
+            x: from.x + (target.x - from.x) * e,
+            y: from.y + (target.y - from.y) * e,
+            w: from.w + (target.w - from.w) * e,
+            h: from.h + (target.h - from.h) * e,
+          });
+          if (p >= 1) return;
+        }
       })();
     },
     reference,

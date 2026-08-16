@@ -58,6 +58,7 @@ export function Toolbar({
   onTogglePin,
   draggable,
   compact,
+  className,
 }: {
   board: RefObject<BoardHandle | null>;
   onHome?: () => void;
@@ -72,6 +73,7 @@ export function Toolbar({
   onTogglePin?: () => void;
   draggable?: boolean; // fenêtre détachée sans cadre : la barre sert de zone de déplacement
   compact?: boolean;   // fenêtre épinglée : outils de planche seulement, le document reste au clic droit
+  className?: string;
 }) {
   const { t } = useTranslation("reference");
   const sceneName = useBoard((s) => s.sceneName);
@@ -119,6 +121,7 @@ export function Toolbar({
         "flex shrink-0 items-center gap-1 border-b border-border bg-card/80 px-2 backdrop-blur",
         compact ? "h-9 px-1" : "h-11",
         draggable && "select-none",
+        className,
       )}
       style={draggable ? ({ WebkitAppRegion: "drag" } as React.CSSProperties) : undefined}
     >

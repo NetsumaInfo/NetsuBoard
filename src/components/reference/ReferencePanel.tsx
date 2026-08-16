@@ -69,34 +69,7 @@ export function ReferencePanel() {
     setPending(null);
   }, [mode, pending]);
 
-  // Mode épinglé : pas d'accueil, on rend directement le board de session pour un usage flottant
-  // instantané ; la barre de titre de l'app sert de zone de déplacement. La barre d'outils y est
-  // RÉDUITE (poser, dessiner, cadrer, annuler) — le document reste au clic droit —, et le réglage
-  // `pinnedToolbar` la retire pour retrouver la planche entièrement nue.
-  if (pinned) {
-    return (
-      <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[var(--color-bg)]">
-        {pinnedToolbar && <Toolbar board={boardRef} compact />}
-        <BoardContextMenu
-          board={boardRef}
-          onSave={persistence.available ? project.save : undefined}
-          onSaveAs={persistence.available ? project.saveAs : undefined}
-          onOpenProject={persistence.available ? project.openProject : undefined}
-          onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
-          onSettings={() => openSettings()}
-        >
-          <ReferenceBoard ref={boardRef} />
-          <Inspector />
-          <SequencePlayer />
-        </BoardContextMenu>
-        <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
-        <CropOverlay />
-        <PaletteStudio />
-      </div>
-    );
-  }
-
-  if (mode === "home") {
+  if (!pinned && mode === "home") {
     return (
       <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
         <ReferenceHome
@@ -115,23 +88,41 @@ export function ReferencePanel() {
     );
   }
 
+  // UN SEUL arbre pour les deux formats, épinglé compris. Rendre deux arbres distincts démontait le
+  // recadrage et le générateur de palette à chaque bascule — une popup ouverte disparaissait — et
+  // faisait clignoter la page entière au moment précis où la fenêtre change de taille.
+  //
+  // Épinglé : pas d'accueil, le board de session est rendu directement pour un usage flottant
+  // instantané ; la barre de titre de l'app sert de zone de déplacement. La barre d'outils y est
+  // RÉDUITE (poser, dessiner, cadrer, annuler) — le document reste au clic droit —, et le réglage
+  // `pinnedToolbar` la retire pour retrouver la planche entièrement nue.
+  const onHome = pinned ? undefined : () => setMode("home");
+  const onOpen = persistence.available ? () => setSceneDlg(true) : undefined;
   return (
-    <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
-      <Toolbar
-        board={boardRef}
-        onHome={() => setMode("home")}
-        onSave={persistence.available ? project.save : undefined}
-        onSaveAs={persistence.available ? project.saveAs : undefined}
-        onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
-        onSettings={() => openSettings()}
-        onExport={persistence.available ? () => setExportDlg(true) : undefined}
-      />
+    <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " bg-[var(--color-bg)]" : ""}`}>
+      {(!pinned || pinnedToolbar) && (
+        // `key` : les deux barres n'ont pas le même contenu, la nouvelle apparaît en fondu plutôt
+        // que de remplacer l'ancienne d'un trait pendant que la fenêtre change de format.
+        <Toolbar
+          key={pinned ? "compact" : "full"}
+          board={boardRef}
+          compact={pinned}
+          className="animate-in fade-in duration-200"
+          onHome={onHome}
+          onSave={persistence.available ? project.save : undefined}
+          onSaveAs={persistence.available ? project.saveAs : undefined}
+          onOpen={onOpen}
+          onSettings={() => openSettings()}
+          onExport={!pinned && persistence.available ? () => setExportDlg(true) : undefined}
+        />
+      )}
       <BoardContextMenu
         board={boardRef}
-        onHome={() => setMode("home")}
+        onHome={onHome}
         onSave={persistence.available ? project.save : undefined}
         onSaveAs={persistence.available ? project.saveAs : undefined}
-        onOpen={persistence.available ? () => setSceneDlg(true) : undefined}
+        onOpenProject={pinned && persistence.available ? project.openProject : undefined}
+        onOpen={onOpen}
         onSettings={() => openSettings()}
       >
         <ReferenceBoard ref={boardRef} />
