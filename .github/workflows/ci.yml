@@ -15,6 +15,7 @@ jobs:
   renderer:
     name: Renderer (tsc + build)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,6 +31,9 @@ jobs:
   core:
     name: Core (type-check + tests Node)
     runs-on: ubuntu-latest
+    # A suite that leaks a spawned process holds `node --test` open; without a cap here the job
+    # only ends at GitHub's 6 h limit. Every job is bounded well under the runtime it needs.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,6 +73,10 @@ jobs:
     # non bloquant mais le check reste affiché en ROUGE, ce qui rend illisible la seule information
     # qui compte — un job obligatoire qui casse. Sur l'étape, le job conclut au vert et le détail des
     # suites rouges reste dans le log.
+    #
+    # Same reasoning for the time cap: it is on the STEP, so a suite that hangs is swallowed by
+    # `continue-on-error` and the job still concludes green. The job cap is only a backstop.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -78,6 +86,7 @@ jobs:
       - run: npm ci
       - name: Suite complète
         continue-on-error: true
+        timeout-minutes: 10
         run: node --test test/*.test.cjs
 
   # Pas de job Python : NetsuBoard n'embarque aucun sidecar ML et le dossier `python/` n'existe plus
@@ -90,6 +99,7 @@ jobs:
     # `cargo check` sur les dépendances Tauri est long et dépend d'un cache externe : il ne doit
     # pas bloquer une PR dont il ne juge pas le code. Volontairement informatif.
     continue-on-error: true
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable

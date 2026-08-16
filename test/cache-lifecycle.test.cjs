@@ -94,6 +94,9 @@ test('core shutdown command removes its live session workspace', { timeout: 20_0
     stdio: ['pipe', 'pipe', 'pipe'],
     env: { ...process.env, TEMP: temp, TMP: temp, NR_HOME: home, NR_CORE_PORT: String(port) },
   });
+  // The child outlives a failed assertion below and keeps the test process alive for ever:
+  // `node --test` waits on that process, and the runner only dies on the 6 h CI job cap.
+  t.after(() => { if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL'); });
   let output = '';
   const ready = new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`core startup timeout: ${output}`)), 10_000);
