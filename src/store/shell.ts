@@ -80,6 +80,30 @@ function initialHost(): HostId {
 
 const initialModules = loadModulePreferences();
 
+// Taille de fenêtre retenue POUR CHAQUE mode (épinglé / normal) : la bascule restitue la dernière
+// taille de l'autre mode. Fenêtre sans décorations → la taille CSS du document EST la taille logique
+// écrite par `setWindowSize`, aucun aller-retour avec la coquille n'est nécessaire pour la lire.
+const WIN_SIZE_KEY = { pinned: "nr.pinnedSize", free: "nr.windowSize" } as const;
+// Sans taille retenue : carré au premier épinglage, format normal modéré au premier dépinglage
+// (assez large pour l'interface complète, sans sauter au plein écran).
+const WIN_SIZE_DEFAULT = { pinned: { w: 560, h: 560 }, free: { w: 800, h: 640 } } as const;
+type WinMode = keyof typeof WIN_SIZE_KEY;
+
+function readWinSize(mode: WinMode): { w: number; h: number } {
+  try {
+    const v = JSON.parse(localStorage.getItem(WIN_SIZE_KEY[mode]) || "");
+    if (v && typeof v.w === "number" && typeof v.h === "number" && v.w > 0 && v.h > 0) return { w: v.w, h: v.h };
+  } catch { /* défaut ci-dessous */ }
+  return WIN_SIZE_DEFAULT[mode];
+}
+
+function rememberWinSize(mode: WinMode): void {
+  if (typeof window === "undefined") return;
+  const w = Math.round(window.innerWidth), h = Math.round(window.innerHeight);
+  if (w < 1 || h < 1) return;
+  try { localStorage.setItem(WIN_SIZE_KEY[mode], JSON.stringify({ w, h })); } catch { /* noop */ }
+}
+
 export const createShellSlice: StateCreator<AppState, [], [], ShellSlice> = (set, get) => ({
   tab: "derush",
   setTab: (tab) => set({ tab }),
@@ -147,9 +171,11 @@ export const createShellSlice: StateCreator<AppState, [], [], ShellSlice> = (set
       const pinned = !s.pinned;
       try { localStorage.setItem("nr.pinned", pinned ? "1" : "0"); } catch { /* noop */ }
       nr.setAlwaysOnTop(pinned);
-      // Épinglé = petit format « coin » (vignettes + clic droit) ; dépinglé = format normal modéré
-      // (assez large pour l'interface complète, sans sauter au plein écran).
-      nr.setWindowSize(pinned ? 460 : 800, pinned ? 760 : 640);
+      // La taille courante appartient au mode QUITTÉ : on la retient avant d'appliquer celle du mode
+      // visé, sinon un redimensionnement fait à la main serait perdu à chaque bascule.
+      rememberWinSize(pinned ? "free" : "pinned");
+      const size = readWinSize(pinned ? "pinned" : "free");
+      nr.setWindowSize(size.w, size.h);
       return { pinned };
     }),
 

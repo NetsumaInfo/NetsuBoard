@@ -14,7 +14,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { UP_SCALES } from "@/components/upscale/upscaleShared";
 import { useBoard } from "./useReferenceBoard";
-import { SOURCE_FPS, type BoardPrefs } from "./boardPrefs";
+import { SOURCE_FPS, type BoardPrefs, type BlurBehavior } from "./boardPrefs";
 import { useBoardUpChoices } from "./useBoardUpChoices";
 import { DOWNLOADABLE_EMBED_PROVIDERS, EMBED_LEVELS, EMBED_QUALITIES, EMBED_MARGINS, type EmbedProvider } from "./referenceShared";
 import { iconForProvider } from "./brandIcons";
@@ -52,6 +52,14 @@ const MEDIA_SIZES: { labelKey: string; v: number }[] = [
   { labelKey: "settings.sizeM", v: 420 },
   { labelKey: "settings.sizeL", v: 640 },
   { labelKey: "settings.sizeXL", v: 900 },
+];
+
+// Sort de la barre de l'item sélectionné quand la fenêtre perd le focus (clic dans une autre
+// application). Défaut « garder » : la board sert de référence À CÔTÉ de l'outil de travail.
+const BLUR_BEHAVIORS: { labelKey: string; v: BlurBehavior }[] = [
+  { labelKey: "settings.blurKeep", v: "keep" },
+  { labelKey: "settings.blurHide", v: "hide" },
+  { labelKey: "settings.blurDeselect", v: "deselect" },
 ];
 
 // Remplissage par défaut des nouveaux cadres (mêmes 3 modes que l'inspecteur de cadre).
@@ -371,6 +379,21 @@ export function BoardSettings({ tab, onCapturingChange }: {
 
         <Separator />
 
+        {/* Barre de l'item sélectionné quand l'application passe en arrière-plan */}
+        <section className="flex flex-col gap-2">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.blurBehavior")}</h3>
+          <p className="text-[11px] text-muted-foreground">{t("settings.blurBehaviorHint")}</p>
+          <div className="flex items-center gap-1.5">
+            {BLUR_BEHAVIORS.map((b) => (
+              <Seg key={b.v} active={prefs.blurBehavior === b.v} onClick={() => setPrefs({ blurBehavior: b.v })}>
+                {t(b.labelKey)}
+              </Seg>
+            ))}
+          </div>
+        </section>
+
+        <Separator />
+
         {/* Comportement */}
         <section className="flex items-center justify-between gap-3">
           <h3 className="text-xs font-semibold text-foreground">{t("settings.fitOnOpen")}</h3>
@@ -387,6 +410,19 @@ export function BoardSettings({ tab, onCapturingChange }: {
           <Seg active={placeFrame} onClick={() => setPlaceFrame(!placeFrame)}>
             {placeFrame ? t("settings.enabled") : t("settings.disabled")}
           </Seg>
+        </section>
+
+        <Separator />
+
+        {/* Fenêtre épinglée : barre d'outils réduite, ou planche entièrement nue */}
+        <section className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-xs font-semibold text-foreground">{t("settings.pinnedToolbar")}</h3>
+            <Seg active={prefs.pinnedToolbar} onClick={() => setPrefs({ pinnedToolbar: !prefs.pinnedToolbar })}>
+              {prefs.pinnedToolbar ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+          <p className="text-[11px] text-muted-foreground">{t("settings.pinnedToolbarHint")}</p>
         </section>
 
         <Separator />

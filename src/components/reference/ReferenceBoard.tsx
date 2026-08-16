@@ -642,7 +642,8 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         className="absolute left-0 top-0 z-10 origin-top-left will-change-transform"
         style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})` }}
       >
-        {/* Cadre de la zone de pose : aplat très léger + contour, derrière les items (zIndex 0).
+        {/* Cadre de la zone de pose : aplat très léger + contour, SOUS la couche des items (zIndex 0
+            contre 1) — son aplat ne teinte donc jamais un média, quel que soit son plan.
             Épaisseur ÷ scale → reste ~1,5px à l'écran quel que soit le zoom. */}
         {placeFrame && contentBounds && (
           <div
@@ -658,15 +659,20 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
             }}
           />
         )}
-        {visible.map((it) => (
-          <BoardItem
-            key={it.id}
-            item={it}
-            selected={selected.has(it.id)}
-            primary={it.id === selectedId && selectedIds.length === 1}
-            editing={editingId === it.id}
-          />
-        ))}
+        {/* Couche des items : positionnée + zIndex 1 → CONTEXTE D'EMPILEMENT propre. Le z d'un item
+            ne se compare qu'à celui des autres items ; « arrière-plan » (z négatif) le range derrière
+            ses voisins sans jamais le faire passer sous le cadre de pose. */}
+        <div className="absolute left-0 top-0" style={{ zIndex: 1 }}>
+          {visible.map((it) => (
+            <BoardItem
+              key={it.id}
+              item={it}
+              selected={selected.has(it.id)}
+              primary={it.id === selectedId && selectedIds.length === 1}
+              editing={editingId === it.id}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Guides de l'aimant : lignes fines tracées pendant un geste, dans le repère board. */}

@@ -74,6 +74,14 @@ export interface BoardPrefs {
   pauseMediaWhileNavigating: boolean; // suspendre les médias pendant pan/zoom/déplacement d'item
   dotGap: number;            // espacement de la grille de points (px)
   fitOnOpen: boolean;        // recadrer tous les items à l'ouverture d'une scène
+  // Fenêtre épinglée (format coin) : garder une barre d'outils RÉDUITE (poser, dessiner, cadrer,
+  // annuler) au lieu d'une planche nue. Le reste — enregistrer, ouvrir, partager, réglages — n'y
+  // apparaît jamais, le clic droit le porte déjà.
+  pinnedToolbar: boolean;
+  // What the item bar does when the app loses focus (a click in another application). Default
+  // `keep`: the board is a reference held BESIDE the tool being worked in, so its bar staying put
+  // is what lets the next click land on a control instead of on re-selecting the item.
+  blurBehavior: BlurBehavior;
   // Extraction de séquence (vidéo → frames d'aperçu). Aperçu jetable → volontairement léger.
   seqFps: number;            // cadence d'échantillonnage (images/s) — SOURCE_FPS = celle de la vidéo
   seqHeight: number;         // qualité = hauteur des frames (px)
@@ -121,6 +129,12 @@ export interface BoardPrefs {
 // alignements et répartitions restent des boutons directs, ils ne « rangent » pas une planche).
 export type ArrangeLayout = "block" | "pack" | "grid" | "row" | "col";
 
+// Reaction of the selected item's floating bar to the window losing focus:
+//  - `keep`     : nothing moves (default) ;
+//  - `hide`     : the bar goes away, the selection stays and the bar comes back on refocus ;
+//  - `deselect` : the selection is dropped, as if the board had been clicked in the empty.
+export type BlurBehavior = "keep" | "hide" | "deselect";
+
 // Shaders retirés du sélecteur → équivalent ArtCNN le plus proche. Le core résout encore ces ids
 // (cf. core/shaderUpscale.js), mais un réglage enregistré sur une entrée absente de la liste
 // afficherait un sélecteur VIDE : la préférence doit atterrir sur un choix que l'écran propose.
@@ -156,6 +170,8 @@ const PREFS_DEFAULT: BoardPrefs = {
   pauseMediaWhileNavigating: true,
   dotGap: 24,
   fitOnOpen: false,
+  pinnedToolbar: true,
+  blurBehavior: "keep",
   seqFps: 12,
   seqHeight: 240,
   seqMaxFrames: 200,

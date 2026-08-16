@@ -2,6 +2,10 @@
 // gel), au CENTRE le nom du projet et son état (modifié, notice), à DROITE ce qui touche au
 // DOCUMENT (annuler/rétablir, nouvelle scène, enregistrer, ouvrir, partager) puis la fenêtre
 // (réglages, épingle, détacher). Le partage est un menu : le projet lui-même, ou une image de la scène.
+//
+// `compact` : version épinglée (fenêtre coin, ~460 px). Ne garde que ce qui SERT à travailler la
+// planche — poser, dessiner, cadrer, annuler — et laisse le DOCUMENT (enregistrer, ouvrir, partager,
+// réglages) au clic droit, qui les porte déjà. Sans ça la barre déborderait de la fenêtre.
 
 import { useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,6 +57,7 @@ export function Toolbar({
   pinned,
   onTogglePin,
   draggable,
+  compact,
 }: {
   board: RefObject<BoardHandle | null>;
   onHome?: () => void;
@@ -66,6 +71,7 @@ export function Toolbar({
   pinned?: boolean;
   onTogglePin?: () => void;
   draggable?: boolean; // fenêtre détachée sans cadre : la barre sert de zone de déplacement
+  compact?: boolean;   // fenêtre épinglée : outils de planche seulement, le document reste au clic droit
 }) {
   const { t } = useTranslation("reference");
   const sceneName = useBoard((s) => s.sceneName);
@@ -110,7 +116,8 @@ export function Toolbar({
   return (
     <div
       className={cn(
-        "flex h-11 shrink-0 items-center gap-1 border-b border-border bg-card/80 px-2 backdrop-blur",
+        "flex shrink-0 items-center gap-1 border-b border-border bg-card/80 px-2 backdrop-blur",
+        compact ? "h-9 px-1" : "h-11",
         draggable && "select-none",
       )}
       style={draggable ? ({ WebkitAppRegion: "drag" } as React.CSSProperties) : undefined}
@@ -120,7 +127,7 @@ export function Toolbar({
         className="flex shrink-0 items-center gap-1"
         style={draggable ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined}
       >
-      {onHome && (
+      {onHome && !compact && (
         <>
           <IconBtn icon={Home} label={t("toolbar.home")} onClick={onHome} />
           <Separator orientation="vertical" className="mx-1 h-5" />
@@ -158,7 +165,9 @@ export function Toolbar({
 
       {/* Zone centrale : nom du projet et son état. Centrée dans la place LAISSÉE par les deux
           groupes d'outils plutôt qu'en centre absolu — un centre absolu passerait sous les boutons
-          dès que la fenêtre se resserre. Elle reste draggable (fenêtre détachée) hors des contrôles. */}
+          dès que la fenêtre se resserre. Elle reste draggable (fenêtre détachée) hors des contrôles.
+          Épinglé : la place manque pour un nom de projet, il ne reste que l'espace. */}
+      {compact ? <div className="min-w-0 flex-1" /> : (
       <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs text-muted-foreground">
         {/* Un projet lié à un fichier affiche SON nom et, en infobulle, son chemin complet : savoir
             où il est enregistré est la raison d'être du format. */}
@@ -193,6 +202,7 @@ export function Toolbar({
           </Button>
         )}
       </div>
+      )}
 
       <div
         className="flex shrink-0 items-center gap-1"
@@ -201,6 +211,7 @@ export function Toolbar({
         <IconBtn icon={Undo2} label={t("actions.undo")} onClick={undo} disabled={!canUndo} />
         <IconBtn icon={Redo2} label={t("actions.redo")} onClick={redo} disabled={!canRedo} />
 
+        {!compact && (<>
         <Separator orientation="vertical" className="mx-1 h-5" />
 
         <IconBtn icon={FilePlus2} label={t("actions.newScene")} onClick={() => newScene()} />
@@ -235,6 +246,7 @@ export function Toolbar({
         <Separator orientation="vertical" className="mx-1 h-5" />
 
         {onSettings && <IconBtn icon={Settings2} label={t("actions.settings")} onClick={onSettings} />}
+        </>)}
         {onTogglePin && (
           <IconBtn
             icon={pinned ? Pin : PinOff}

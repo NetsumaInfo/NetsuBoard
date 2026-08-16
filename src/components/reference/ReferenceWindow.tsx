@@ -23,6 +23,7 @@ import { useProjectActions } from "./useProjectActions";
 import { useReferencePush } from "./useReferencePush";
 import { useAutosave } from "./useAutosave";
 import { useUnsavedWarning } from "./useUnsavedWarning";
+import { useDeselectOnBlur } from "./useAppFocus";
 
 // Fenêtre frameless : bande mince = zone de déplacement (sinon la fenêtre sans cadre ne bouge plus).
 // Au survol, la bande révèle deux icônes (épingler, rattacher) ; la bande reste déplaçable, seules
@@ -56,6 +57,7 @@ export function ReferenceWindow() {
   // Autosave SANS restauration (le board initial vient du handoff, pas de l'autosave).
   useAutosave(persistence, { restore: false });
   useUnsavedWarning();
+  useDeselectOnBlur();
 
   return (
     <TooltipProvider delay={600}>

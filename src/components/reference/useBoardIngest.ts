@@ -286,22 +286,33 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       // Chemin disque et ratio natif ne dépendent PAS l'un de l'autre (sauf conteneur non lu) : les
       // deux attentes se recouvrent au lieu de s'additionner.
       const pending = nr.pathsForFiles([file]);
-      const src = direct ? blob : displaySrc(kind, (await pending)[0] || "");
-      const [nat, [path]] = await Promise.all([
-        src ? probeNat(kind, src) : Promise.resolve({ w: 0, h: 0 }),
-        pending,
-      ]);
-      const size = fitSizeOf(nat, box, c);
-      // Le sondage a chargé ET décodé la source : le média se peint dans la frame où le loader tombe.
-      useBoard.getState().patchItem(id, {
-        loading: undefined,
-        src,
+      let path = "";
+      let size: Partial<BoardItem> | null = null;
+      if (direct) {
+        // Le blob suffit à peindre : le loader tombe dès le ratio mesuré, SANS attendre la
+        // résolution du chemin disque — le pont WebView2 peut mettre jusqu'à 4 s (timeout) sur un
+        // File sans chemin (presse-papier, pont pas encore attaché), et le chemin ne sert qu'au
+        // localisateur durable, pas à l'affichage.
+        size = fitSizeOf(await probeNat(kind, blob), box, c);
+        useBoard.getState().patchItem(id, { loading: undefined, ...size }, false);
+        [path] = await pending;
         // Chemin disque connu → c'est LUI le localisateur durable. La source d'affichage, elle, reste
         // le blob déjà décodé : la rebasculer sur le protocole asset retéléchargerait et redécoderait
         // le même fichier pour rien (`src` est de toute façon recalculé depuis `ref` au rechargement).
-        ...(path ? { ref: path } : null),
-        ...size,
-      }, false);
+        if (path) useBoard.getState().patchItem(id, { ref: path }, false);
+      } else {
+        // Conteneur non lu par le webview : sa seule source d'affichage passe par le core, donc par
+        // le chemin disque — ici l'attente est structurelle.
+        [path] = await pending;
+        const src = displaySrc(kind, path || "");
+        size = src ? fitSizeOf(await probeNat(kind, src), box, c) : null;
+        useBoard.getState().patchItem(id, {
+          loading: undefined,
+          src,
+          ...(path ? { ref: path } : null),
+          ...size,
+        }, false);
+      }
 
       // Sans chemin (presse-papier, navigateur, coquille sans le pont) : copie en asset disque, en
       // arrière-plan — l'item est déjà à l'écran et le blob le tient jusqu'à ce que l'écriture aboutisse.

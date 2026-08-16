@@ -20,6 +20,7 @@ import { useProjectActions } from "./useProjectActions";
 import { useReferencePush } from "./useReferencePush";
 import { useAutosave } from "./useAutosave";
 import { useUnsavedWarning } from "./useUnsavedWarning";
+import { useDeselectOnBlur } from "./useAppFocus";
 import { openSettings } from "@/components/settings/useSettingsUi";
 
 // Import en attente : posé par l'accueil (dépôt/parcourir), ingéré une fois le board monté.
@@ -34,8 +35,9 @@ export function ReferencePanel() {
   const [mode, setMode] = useState<"home" | "board">("home");
   const [pending, setPending] = useState<Pending | null>(null);
   const items = useBoard((s) => s.items);
-  // Épinglé (fenêtre principale au-dessus, format coin) → board flottante NUE, comme si détachée.
+  // Épinglé (fenêtre principale au-dessus, format coin) → board flottante, barre d'outils réduite.
   const pinned = useApp((s) => s.pinned);
+  const pinnedToolbar = useBoard((s) => s.prefs.pinnedToolbar);
 
   // Identité stable : les actions de document alimentent l'effet clavier, qui se réabonnerait à
   // chaque rendu si ce rappel changeait d'identité.
@@ -46,6 +48,7 @@ export function ReferencePanel() {
   useReferencePush(boardRef);
   useAutosave(persistence);
   useUnsavedWarning();
+  useDeselectOnBlur();
 
   // Démarrage d'un nouveau board depuis l'accueil : purge le board restauré puis ingère.
   const startNew = (p: Pending) => {
@@ -66,12 +69,14 @@ export function ReferencePanel() {
     setPending(null);
   }, [mode, pending]);
 
-  // Mode épinglé : board NUE (pas de barre d'outils ni d'accueil, comme la fenêtre détachée) — tout
-  // passe par le clic droit ; la barre de titre de l'app sert de zone de déplacement. On rend
-  // directement le board de session (pas de landing) pour un usage flottant instantané.
+  // Mode épinglé : pas d'accueil, on rend directement le board de session pour un usage flottant
+  // instantané ; la barre de titre de l'app sert de zone de déplacement. La barre d'outils y est
+  // RÉDUITE (poser, dessiner, cadrer, annuler) — le document reste au clic droit —, et le réglage
+  // `pinnedToolbar` la retire pour retrouver la planche entièrement nue.
   if (pinned) {
     return (
       <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden bg-[var(--color-bg)]">
+        {pinnedToolbar && <Toolbar board={boardRef} compact />}
         <BoardContextMenu
           board={boardRef}
           onSave={persistence.available ? project.save : undefined}

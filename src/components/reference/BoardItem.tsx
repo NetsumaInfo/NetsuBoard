@@ -3,7 +3,7 @@
 // Gestes via usePointerTransform (capture sur le wrapper). Multi-sélection (Shift) → déplacement de
 // groupe au relâchement. Notes texte éditables (double-clic). Miroir (flipH/flipV) sur le contenu.
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Trash2, FileQuestion, FolderSearch, Loader2, ImageOff, Link2, Unlink2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -21,6 +21,7 @@ import { YoutubeItem } from "./YoutubeItem";
 import { EmbedItem } from "./EmbedItem";
 import { PaletteContent } from "./PaletteItem";
 import { knownThumb, useImageLod, zoomCeil } from "./boardImageLod";
+import { fitNatSize } from "./boardNatFit";
 import { posterTime, stillSized, useVideoStill } from "./boardVideoLod";
 import { useOnScreen } from "./useOnScreen";
 
@@ -51,13 +52,11 @@ const HANDLE_POS: Record<ResizeHandle, string> = {
 
 // Vidéo qui boucle sur [trimIn, trimOut] si défini, sinon boucle entière. `streamSrc` force la
 // source (flux YouTube relayé par le core) : pas de proxy dans ce cas, et une erreur de lecture
-// remonte à l'appelant au lieu de déclencher la récupération de média. `onNatSize` reports the
-// decoded dimensions — the only place a relayed stream states its true ratio.
-function VideoContent({ item, streamSrc, onStreamError, onNatSize, onReady }: {
+// remonte à l'appelant au lieu de déclencher la récupération de média.
+function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   item: Item;
   streamSrc?: string;
   onStreamError?: () => void;
-  onNatSize?: (w: number, h: number) => void;
   onReady?: () => void;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -204,9 +203,11 @@ function VideoContent({ item, streamSrc, onStreamError, onNatSize, onReady }: {
         const d = e.currentTarget.duration;
         // chargé mais noir → récupère (ou, pour un flux relayé, repli sur le lecteur intégré)
         if (!useProxy && !e.currentTarget.videoWidth) { if (onStreamError) onStreamError(); else triggerRecover(item); }
-        // A proxy is a re-encoded excerpt: its dimensions are the proxy's, not the source's.
+        // Decoded dimensions = the true ratio of the source, whatever the ingestion probe managed to
+        // measure: the item is reshaped around them so a video never plays cropped inside a box that
+        // does not match it. A proxy is a re-encoded excerpt — its dimensions are the proxy's.
         if (!useProxy && e.currentTarget.videoWidth && e.currentTarget.videoHeight) {
-          onNatSize?.(e.currentTarget.videoWidth, e.currentTarget.videoHeight);
+          fitNatSize(item.id, e.currentTarget.videoWidth, e.currentTarget.videoHeight);
         }
         // Prêt = la source rend une IMAGE. Des métadonnées sans dimension partent en repli juste
         // au-dessus : les annoncer prêtes retirerait le voile de chargement sur un carré noir.
@@ -672,6 +673,12 @@ function ImageContent({ item }: { item: Item }) {
   const onErr = () => { if (!lod.onError()) triggerRecover(item); };
   const onLd = (e: React.SyntheticEvent<HTMLImageElement>) => {
     if (lod.full && !e.currentTarget.naturalWidth) triggerRecover(item);
+    // Decoded dimensions of the FULL source = the true ratio, whatever the ingestion probe managed
+    // to measure: the item is reshaped around them so an image never shows cropped inside a box that
+    // does not match it. A thumbnail is skipped — only the source itself states the ratio.
+    if (lod.full && e.currentTarget.naturalWidth) {
+      fitNatSize(item.id, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight);
+    }
     if (animated && frozen) paintFrozen();
   };
   const cls = item.crop ? "block select-none" : "block h-full w-full select-none object-cover";
@@ -714,31 +721,12 @@ function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean;
   // l'URL du flux (des secondes, pas des millisecondes), et un repli iframe remonte ensuite son
   // propre lecteur. Sans voile, tout ce temps est un rectangle noir qui ne dit rien.
   const [ready, setReady] = useState(false);
-  const patchItem = useBoard((s) => s.patchItem);
   // Nouvelle vidéo sur le même item → on retente le flux direct.
   useEffect(() => { setEmbedded(false); setReady(false); onFallback(false); }, [item.ref, onFallback]);
 
   // A YouTube card is posed before anything is known of the video — 16:9, or 9:16 when the link says
   // `/shorts/`. The relayed stream is where the TRUE ratio finally shows up (a Short shared as a
-  // plain `watch?v=` link is landscape until here), so the card is reshaped around its own centre at
-  // constant area: a vertical video stops being cropped inside a landscape box. Runs at most once
-  // per ratio — the geometry then matches, and resizing keeps the aspect locked. A cropped item is
-  // left alone: its box deliberately differs from the source ratio.
-  const fitNatSize = useCallback((vw: number, vh: number) => {
-    const it = useBoard.getState().items.find((i) => i.id === item.id);
-    if (!it) return;
-    const patch: Partial<Item> = {};
-    if (it.natW !== vw || it.natH !== vh) { patch.natW = vw; patch.natH = vh; }
-    const ratio = vw / vh;
-    if (!it.crop && it.w > 0 && it.h > 0 && Math.abs(it.w / it.h - ratio) > 0.01) {
-      const w = Math.round(Math.sqrt(it.w * it.h * ratio));
-      const h = Math.round(w / ratio);
-      Object.assign(patch, { w, h, x: it.x + (it.w - w) / 2, y: it.y + (it.h - h) / 2 });
-    }
-    // `record: false` — a measurement is not a user edit, it must not eat an undo step.
-    if (Object.keys(patch).length) patchItem(item.id, patch, false);
-  }, [item.id, patchItem]);
-
+  // plain `watch?v=` link is landscape until here), and `VideoContent` reshapes the card around it.
   return (
     <div className="relative h-full w-full">
       {embedded ? (
@@ -749,7 +737,6 @@ function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean;
           streamSrc={nr.ytStreamUrl(item.ref)}
           // Le repli remonte un lecteur neuf : le voile revient jusqu'à ce que CELUI-LÀ soit prêt.
           onStreamError={() => { setEmbedded(true); setReady(false); onFallback(true); }}
-          onNatSize={fitNatSize}
           onReady={() => setReady(true)}
         />
       )}

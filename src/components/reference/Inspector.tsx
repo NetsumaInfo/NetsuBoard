@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useBoard } from "./useReferenceBoard";
+import { useHideOnBlur } from "./useAppFocus";
 import { IconToggle, IconAction } from "./inspectorControls";
 import { TrimControls, TextControls, FrameControls, ArrangeBar, PlayModeControls, EmbedControls } from "./inspectorPanels";
 import { displaySrc, probeImage, youtubeId, isRemoteRef, paletteSize, type PaletteLayout } from "./referenceShared";
@@ -51,6 +52,10 @@ export function Inspector() {
   const prefs = useBoard((s) => s.prefs);
   const [upOpen, setUpOpen] = useState(false);
   const setStudio = useBoard((s) => s.setStudio);
+  // Réglage « barre quand l'app perd le focus » : la sélection reste, seule la barre s'efface.
+  const hidden = useHideOnBlur();
+
+  if (hidden) return null;
 
   if (count >= 2) {
     return (
