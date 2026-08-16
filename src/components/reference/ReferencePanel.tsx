@@ -61,6 +61,12 @@ export function ReferencePanel() {
     setMode("board");
   };
 
+  // Épinglé, c'est le BOARD qui est à l'écran — l'accueil n'y est jamais rendu. On l'enregistre dans
+  // `mode`, sinon l'état resté sur "home" ressort au dépinglage et renvoie à l'accueil la planche
+  // qu'on vient de manipuler en flottant. Cas courant : l'épinglage est persisté d'un lancement à
+  // l'autre, donc `mode` valait encore "home" alors que le board était affiché depuis le démarrage.
+  useEffect(() => { if (pinned) setMode("board"); }, [pinned]);
+
   // Ingestion différée : le board n'existe qu'en mode "board" → on attend son montage.
   useEffect(() => {
     if (mode !== "board" || !pending || !boardRef.current) return;
