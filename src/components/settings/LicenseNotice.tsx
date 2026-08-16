@@ -1,9 +1,10 @@
 import type { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { nr } from "@/lib/bridge";
+import { GITHUB_REPO } from "@/lib/community";
 
 const LICENSE_URL = "https://www.gnu.org/licenses/agpl-3.0.html";
-const SOURCE_URL = "https://github.com/NetsumaInfo/NetsuBoard";
+const SOURCE_URL = GITHUB_REPO;
 
 function openExternal(event: MouseEvent<HTMLAnchorElement>, url: string) {
   event.preventDefault();

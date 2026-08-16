@@ -62,6 +62,8 @@
     "unpin": "Unpin window",
     "pinAbove": "Pin on top",
     "unpinShort": "Unpin",
+    "github": "Source code on GitHub",
+    "support": "Support NetsuBoard",
     "minimize": "Minimize",
     "restore": "Restore",
     "maximize": "Maximize"

@@ -6,6 +6,9 @@
 // moitiés qui ne se voient pas.
 export const DISCORD_INVITE = "https://discord.gg/Vq7K6mWNX5";
 
+// Public repository. Cited by the AGPL source notice and by the title bar shortcut.
+export const GITHUB_REPO = "https://github.com/NetsumaInfo/NetsuBoard";
+
 // Guichets de dons. Deux, parce qu'ils ne servent pas le même geste : GitHub Sponsors pour un
 // soutien récurrent, Buy Me a Coffee pour un versement unique sans compte GitHub.
 export const GITHUB_SPONSORS = "https://github.com/sponsors/NetsumaInfo";

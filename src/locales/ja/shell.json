@@ -62,6 +62,8 @@
     "unpin": "ウィンドウのピン留めを解除",
     "pinAbove": "最前面にピン留め",
     "unpinShort": "ピン留め解除",
+    "github": "GitHub のソースコード",
+    "support": "NetsuBoard を支援",
     "minimize": "最小化",
     "restore": "元のサイズに戻す",
     "maximize": "最大化"

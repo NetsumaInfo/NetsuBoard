@@ -12,6 +12,10 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 
 const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+/** Title bar button: full bar height, no radius, so neighbouring buttons form one continuous strip. */
+export const TITLEBAR_BTN =
+  "inline-flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-3.5";
+
 async function win() {
   const m = await import("@tauri-apps/api/window");
   return m.getCurrentWindow();
@@ -35,7 +39,7 @@ export function WindowControls() {
 
   if (!isTauri) return null;
 
-  const btn = "inline-flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-3.5";
+  const btn = TITLEBAR_BTN;
   return (
     <div className="ml-auto flex items-center" data-no-drag>
       {/* Mise à jour disponible : même coin, à toutes les étapes (installation, gates, application).

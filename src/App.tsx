@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { nr } from "@/lib/bridge";
+import { useApp } from "@/store";
 import { convexConfigured } from "@/lib/convexEnv";
 import { ReferencePanel } from "@/components/reference/ReferencePanel";
 import { SetupGate } from "@/components/setup/SetupGate";
@@ -8,12 +9,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorBadge } from "@/components/ErrorBadge";
 import { WindowControls } from "@/components/WindowControls";
+import { HeaderLinks } from "@/components/HeaderLinks";
 import { BrandIcon } from "@/components/BrandIcon";
 import { BetaBadge } from "@/components/BetaBadge";
 import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/toast";
 import { AppSettings } from "@/components/settings/AppSettings";
 import { UpdateBootstrap } from "@/components/updates/UpdateBootstrap";
+import { armAutoInstall } from "@/store/updater";
 import { TextContextMenu } from "@/components/common/TextContextMenu";
 
 // Fenêtre détachée du board (hash #reference, 2e WebviewWindow Tauri) : le board nu, sans le cadre.
@@ -55,8 +58,13 @@ function Shell() {
   const { t } = useTranslation();
 
   // Réapplique l'épinglage (always-on-top) au démarrage : l'état réel de la fenêtre Tauri se perd à
-  // chaque lancement alors que la préférence, elle, survit.
-  useEffect(() => { void nr.setAlwaysOnTop?.(false); }, []);
+  // chaque lancement alors que la préférence, elle, survit — et c'est ELLE que la page lit pour
+  // choisir son format, donc une fenêtre non épinglée sous une interface en mode épinglé.
+  useEffect(() => { void nr.setAlwaysOnTop?.(useApp.getState().pinned); }, []);
+
+  // Unattended launch update (opt-in, off by default). Armed HERE and nowhere else: setup and login
+  // are behind us, so the relaunch it may trigger cannot cut a runtime download or a sign-in.
+  useEffect(() => { armAutoInstall(); }, []);
 
   return (
     <TooltipProvider delay={600}>
@@ -65,7 +73,9 @@ function Shell() {
           <BrandIcon className="size-6" />
           <span className="text-xs font-semibold tracking-tight">{t("app.name", "NetsuBoard")}</span>
           <BetaBadge />
-          <div className="ml-auto"><WindowControls /></div>
+          {/* Le conteneur s'ajuste à son contenu : le `ml-auto` interne de WindowControls n'a donc
+              aucune place à manger, et les deux raccourcis restent collés à l'épingle. */}
+          <div className="ml-auto flex items-center"><HeaderLinks /><WindowControls /></div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">

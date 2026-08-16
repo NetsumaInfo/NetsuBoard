@@ -223,6 +223,8 @@
     "subtitle": "Releases are checked on GitHub and their signature is verified before installation.",
     "auto": "Automatic checks",
     "autoHint": "Looks for a new version a few seconds after startup.",
+    "autoInstall": "Automatic update at launch",
+    "autoInstallHint": "Installs the version found at startup and restarts the application, without asking. Off by default.",
     "on": "On",
     "off": "Off",
     "ready": "Ready to check",

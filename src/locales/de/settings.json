@@ -223,6 +223,8 @@
     "subtitle": "Versionen werden auf GitHub geprüft und ihre Signatur wird vor der Installation validiert.",
     "auto": "Automatisch prüfen",
     "autoHint": "Sucht kurz nach dem Start nach einer neuen Version.",
+    "autoInstall": "Automatisches Update beim Start",
+    "autoInstallHint": "Installiert die beim Start gefundene Version ohne Nachfrage und startet die Anwendung neu. Standardmäßig aus.",
     "on": "Aktiv",
     "off": "Inaktiv",
     "ready": "Bereit zur Prüfung",

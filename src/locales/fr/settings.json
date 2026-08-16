@@ -223,6 +223,8 @@
     "subtitle": "Les versions sont vérifiées sur GitHub et leur signature est validée avant installation.",
     "auto": "Vérification automatique",
     "autoHint": "Recherche une nouvelle version quelques secondes après le démarrage.",
+    "autoInstall": "Mise à jour automatique au lancement",
+    "autoInstallHint": "Installe la version trouvée au démarrage et redémarre l'application, sans rien demander. Désactivé par défaut.",
     "on": "Activée",
     "off": "Désactivée",
     "ready": "Prêt à vérifier",

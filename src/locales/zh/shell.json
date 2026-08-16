@@ -62,6 +62,8 @@
     "unpin": "取消固定窗口",
     "pinAbove": "固定在最前",
     "unpinShort": "取消固定",
+    "github": "GitHub 源代码",
+    "support": "支持 NetsuBoard",
     "minimize": "最小化",
     "restore": "还原",
     "maximize": "最大化"
