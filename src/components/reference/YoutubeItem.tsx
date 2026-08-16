@@ -36,6 +36,11 @@ const LOOP_POLL_MS = 100;
 // Après un reseek, getCurrentTime() renvoie encore l'ancienne position pendant quelques frames →
 // sans garde on redéclenche le seek en rafale (saccade + nouveau flash).
 const SEEK_COOLDOWN_MS = 500;
+// Délai après lequel une portée qu'on vient de modifier est considérée comme posée (cf. l'effet qui
+// ramène la lecture dedans), et tolérance en deçà de la borne d'entrée pour ne pas resauter sur un
+// écart de décodage de quelques dixièmes.
+const RANGE_SETTLE_MS = 250;
+const RANGE_SNAP_S = 0.5;
 declare global {
   interface Window {
     YT?: YTNamespace;
@@ -86,10 +91,27 @@ export function YoutubeItem({ item, interactive, onReady }: { item: BoardItem; i
   const playing = !suspended && (item.playMode ?? "loop") !== "off";
   // Portée courante lue par le poll (mise à jour sans recréer le player).
   const loop = useRef<{ in: number; out: number | null }>({ in: 0, out: null });
-  useEffect(() => { loop.current = {
-    in: item.trimIn && item.trimIn > 0 ? item.trimIn : 0,
-    out: item.trimOut != null && item.trimOut > (item.trimIn ?? 0) ? item.trimOut : null,
-  }; }, [item.trimIn, item.trimOut]);
+  useEffect(() => {
+    loop.current = {
+      in: item.trimIn && item.trimIn > 0 ? item.trimIn : 0,
+      out: item.trimOut != null && item.trimOut > (item.trimIn ?? 0) ? item.trimOut : null,
+    };
+    // Portée posée AILLEURS que là où joue la vidéo : on y saute. Le poll ci-dessous ne reboucle
+    // qu'une fois la borne de sortie atteinte — une portée placée vers la fin laissait donc tourner
+    // tout ce qui la précède avant de s'appliquer, plusieurs minutes durant, l'air figé.
+    // Différé : les bornes changent à chaque pixel du curseur, et corriger à chaque événement
+    // relancerait le chargement réseau qu'on vient justement d'éviter pendant le geste.
+    const timer = setTimeout(() => {
+      const p = playerRef.current;
+      const now = p?.getCurrentTime?.();
+      if (now == null) return;
+      const { in: tin, out } = loop.current;
+      if (now >= tin - RANGE_SNAP_S && (out == null || now <= out)) return;
+      lastSeekRef.current = Date.now();
+      p?.seekTo?.(tin, true);
+    }, RANGE_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [item.trimIn, item.trimOut]);
 
   // Playhead + scrub for the inspector. A manual seek also arms the cooldown: without it the loop
   // poll sees a position past the out bound and yanks playback back while the bound is still moving.
@@ -98,9 +120,14 @@ export function YoutubeItem({ item, interactive, onReady }: { item: BoardItem; i
     () =>
       registerPlayer(item.id, {
         time: () => playerRef.current?.getCurrentTime?.() ?? null,
-        seek: (t) => {
+        seek: (t, scrubbing) => {
           lastSeekRef.current = Date.now();
-          playerRef.current?.seekTo?.(t, true);
+          // `allowSeekAhead` à FAUX tant que la borne bouge : le lecteur se contente alors de ce
+          // qu'il a déjà en tampon. À vrai, chaque événement du curseur lui fait demander un nouveau
+          // segment au réseau — poser un in/out vers le milieu ou la fin en lançait des dizaines, et
+          // le lecteur restait figé le temps de toutes les honorer. Le seek final, lui, autorise le
+          // chargement : c'est lui qui doit montrer la vraie image de la borne posée.
+          playerRef.current?.seekTo?.(t, !scrubbing);
         },
       }),
     [item.id],
