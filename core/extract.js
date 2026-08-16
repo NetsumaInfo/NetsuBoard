@@ -1,34 +1,33 @@
 // @ts-check
-// Extraction du VRAI média derrière un lien (réseaux sociaux + ~1800 sites) via yt-dlp (vidéo) et
-// gallery-dl (images), installés dans le venv (.venv). On télécharge le fichier dans le dossier
-// d'assets du board (durable) puis on renvoie le(s) chemin(s) + le type au renderer, qui pose un
-// item vidéo/image NATIF (pas une carte embed). Pour un projet ouvert, la destination est directement
-// son dossier compagnon organisé ; le magasin global ne sert que pour un board sans fichier.
+// Extraction du VRAI média derrière un lien (réseaux sociaux + ~1800 sites).
+//
+// yt-dlp est l'exécutable AUTONOME posé par le setup dans NR_HOME/runtime/bin (cf. config.js,
+// `ytDlpCommand`). NetsuBoard n'installe aucun environnement Python : rien ici ne doit dépendre d'un
+// interpréteur. gallery-dl (images d'un post photo) n'est PAS provisionné — il n'est utilisé que si
+// le poste en fournit un, et son absence n'empêche jamais l'extraction vidéo.
+//
+// On télécharge le fichier dans le dossier d'assets du board (durable) puis on renvoie le(s)
+// chemin(s) + le type au renderer, qui pose un item vidéo/image NATIF (pas une carte embed). Pour un
+// projet ouvert, la destination est directement son dossier compagnon organisé ; le magasin global
+// ne sert que pour un board sans fichier.
 //
 // Stratégie (jusqu'à 2 passes : sans cookies puis avec, le contenu public marche sans login) :
 //   1. yt-dlp → meilleure vidéo mp4 (merge HLS/DASH via ffmpeg) ;
-//   2. si pas de vidéo (post photo), gallery-dl → image(s) pleine résolution.
-// Cookies navigateur (--cookies-from-browser) en 2e passe pour le contenu nécessitant connexion.
+//   2. si pas de vidéo (post photo) et gallery-dl présent → image(s) pleine résolution.
+// La 2e passe utilise un cookies.txt exporté s'il existe, sinon le trousseau d'un navigateur
+// installé : c'est ce qui débloque le contenu réservé aux comptes connectés.
 
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
-const { PYTHON, DETECT_ENV, DATA_DIR, ffBin, COOKIES_BROWSER, ytDlpCommand } = require('./config');
+const {
+  PYTHON, DETECT_ENV, DATA_DIR, ffBin, NR_HOME,
+  cookieBrowserCandidates, ytCookiesFile, ytDlpCommand,
+} = require('./config');
 const { t } = require('./i18n');
 const sidecar = require('./netsu/sidecar');
 const downloadTarget = require('./netsu/downloadTarget');
-
-// Python qui porte yt-dlp/gallery-dl : le venv local en priorité (dev, où `python` du PATH n'est
-// pas forcément le venv), sinon l'interpréteur configuré (packaging / CONFIG.python).
-function resolvePython() {
-  const venv = process.platform === 'win32'
-    ? path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe')
-    : path.join(__dirname, '..', '.venv', 'bin', 'python');
-  try { if (fs.existsSync(venv)) return venv; } catch (_) {}
-  return PYTHON;
-}
-const PY = resolvePython();
 
 const ASSETS_DIR = path.join(DATA_DIR, 'reference', 'assets');
 const VIDEO_EXTS = new Set(['mp4', 'webm', 'mov', 'mkv', 'm4v', 'avi', 'ogv']);
@@ -44,16 +43,36 @@ function ffmpegDir() {
   return path.isAbsolute(f) ? path.dirname(f) : null;
 }
 
-// Lance un process et résout { code, stdout, stderr }. Tué dur après `timeoutMs`.
-function run(args, timeoutMs) {
+/** gallery-dl, s'il existe : exécutable autonome à côté de yt-dlp, sinon module d'un Python local
+ * (venv de développement). Renvoie null quand ni l'un ni l'autre n'est plausible — spawn d'un
+ * `python` inexistant ne dirait rien d'utile.
+ * @returns {{ bin: string, args: string[] } | null} */
+function galleryCommand() {
+  const exe = path.join(NR_HOME, 'runtime', 'bin', process.platform === 'win32' ? 'gallery-dl.exe' : 'gallery-dl');
+  try { if (fs.existsSync(exe)) return { bin: exe, args: [] }; } catch (_) {}
+  const venv = process.platform === 'win32'
+    ? path.join(__dirname, '..', '.venv', 'Scripts', 'python.exe')
+    : path.join(__dirname, '..', '.venv', 'bin', 'python');
+  try { if (fs.existsSync(venv)) return { bin: venv, args: ['-m', 'gallery_dl'] }; } catch (_) {}
+  try { if (PYTHON && path.isAbsolute(PYTHON) && fs.existsSync(PYTHON)) return { bin: PYTHON, args: ['-m', 'gallery_dl'] }; } catch (_) {}
+  return null;
+}
+
+// Lance un process et résout { code, stdout, stderr, missing }. Tué dur après `timeoutMs`.
+// `missing` = l'exécutable lui-même est absent (ENOENT) : ce n'est pas un lien qui échoue.
+function run(bin, args, timeoutMs) {
   return new Promise((resolve) => {
-    const child = spawn(PY, args, { env: DETECT_ENV });
+    const child = spawn(bin, args, { env: DETECT_ENV });
     let out = '', err = '';
     const killer = setTimeout(() => { try { child.kill('SIGKILL'); } catch (_) {} }, timeoutMs);
     child.stdout.on('data', (d) => { out += d.toString(); });
     child.stderr.on('data', (d) => { err += d.toString(); });
-    child.on('error', (e) => { clearTimeout(killer); resolve({ code: -1, stdout: out, stderr: String(e) }); });
-    child.on('close', (code) => { clearTimeout(killer); resolve({ code: code ?? -1, stdout: out, stderr: err }); });
+    child.on('error', (e) => {
+      clearTimeout(killer);
+      const missing = /** @type {NodeJS.ErrnoException} */ (e)?.code === 'ENOENT';
+      resolve({ code: -1, stdout: out, stderr: String(e), missing });
+    });
+    child.on('close', (code) => { clearTimeout(killer); resolve({ code: code ?? -1, stdout: out, stderr: err, missing: false }); });
   });
 }
 
@@ -61,15 +80,27 @@ function extOf(p) { return (p.split('.').pop() || '').toLowerCase(); }
 
 let toolCheckPromise = null;
 
-async function toolAvailable(moduleName) {
-  const { code, stderr } = await run(['-m', moduleName, '--version'], 15000);
-  return { ok: code === 0, error: stderr.trim() };
+async function ytdlpAvailable() {
+  const cmd = ytDlpCommand();
+  const { code, stderr, missing } = await run(cmd.bin, [...cmd.args, '--version'], 20000);
+  return {
+    ok: code === 0,
+    missing,
+    error: missing ? `yt-dlp introuvable (${cmd.bin}) — relance l'installation pour poser l'outil` : stderr.trim(),
+  };
+}
+
+async function galleryAvailable() {
+  const cmd = galleryCommand();
+  if (!cmd) return { ok: false, missing: true, error: '' };
+  const { code, stderr, missing } = await run(cmd.bin, [...cmd.args, '--version'], 20000);
+  return { ok: code === 0, missing, error: stderr.trim() };
 }
 
 async function checkTools() {
   if (!toolCheckPromise) {
     toolCheckPromise = (async () => {
-      const [yt, gl] = await Promise.all([toolAvailable('yt_dlp'), toolAvailable('gallery_dl')]);
+      const [yt, gl] = await Promise.all([ytdlpAvailable(), galleryAvailable()]);
       return { yt, gl };
     })();
   }
@@ -88,8 +119,8 @@ const YTDLP_FORMAT = [
   'b',
 ].join('/');
 
-// yt-dlp : meilleure vidéo mp4 → fichier(s) dans ASSETS_DIR. Renvoie les chemins vidéo écrits.
-async function tryYtdlp(url, cookiesBrowser, outputDir) {
+// yt-dlp : meilleure vidéo mp4 → fichier(s) dans `outputDir`. Renvoie les chemins vidéo écrits.
+async function tryYtdlp(url, cookies, outputDir) {
   const outTpl = path.join(outputDir, 'nr-yt-%(id)s.%(ext)s');
   const args = [
     url,
@@ -106,27 +137,33 @@ async function tryYtdlp(url, cookiesBrowser, outputDir) {
   if (/https?:\/\/(?:www\.)?instagram\.com\//i.test(url)) args.push('--impersonate', 'chrome');
   const ffDir = ffmpegDir();
   if (ffDir) args.push('--ffmpeg-location', ffDir);
-  if (cookiesBrowser) args.push('--cookies-from-browser', cookiesBrowser);
+  if (cookies && cookies.file) args.push('--cookies', cookies.file);
+  else if (cookies && cookies.browser) args.push('--cookies-from-browser', cookies.browser);
 
-  const { code, stdout, stderr } = await run(args, 120000);
+  const cmd = ytDlpCommand();
+  const { code, stdout, stderr, missing } = await run(cmd.bin, [...cmd.args, ...args], 120000);
   const paths = stdout.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
   const items = [];
   for (const p of paths) if (fs.existsSync(p) && VIDEO_EXTS.has(extOf(p))) items.push({ path: p, kind: 'video' });
-  return code === 0 && items.length ? { ok: true, items } : { ok: false, error: stderr.trim() };
+  if (code === 0 && items.length) return { ok: true, items };
+  return { ok: false, missing, error: missing ? `yt-dlp introuvable (${cmd.bin})` : stderr.trim() };
 }
 
 // gallery-dl : images (post photo, carrousel) → un sous-dossier dédié, puis on liste les fichiers.
-async function tryGallery(url, cookiesBrowser, outputDir) {
+async function tryGallery(url, cookies, outputDir) {
+  const cmd = galleryCommand();
+  if (!cmd) return { ok: false, error: '' };
   const sub = path.join(outputDir, `nr-gl-${crypto.randomBytes(5).toString('hex')}`);
   ensureDir(sub);
   const args = [
-    '-m', 'gallery_dl', '-q', '-D', sub,
+    '-q', '-D', sub,
     '--range', '1-20', '--filesize-max', '256M', '--no-mtime',
     url,
   ];
-  if (cookiesBrowser) args.push('--cookies-from-browser', cookiesBrowser);
+  if (cookies && cookies.file) args.push('--cookies', cookies.file);
+  else if (cookies && cookies.browser) args.push('--cookies-from-browser', cookies.browser);
 
-  const { stderr } = await run(args, 120000);
+  const { stderr } = await run(cmd.bin, [...cmd.args, ...args], 120000);
   let files = [];
   try { files = fs.readdirSync(sub); } catch (_) {}
   const items = [];
@@ -137,6 +174,17 @@ async function tryGallery(url, cookiesBrowser, outputDir) {
   }
   if (!items.length) { try { fs.rmSync(sub, { recursive: true, force: true }); } catch (_) {} }
   return items.length ? { ok: true, items } : { ok: false, error: stderr.trim() };
+}
+
+/** Passes de cookies : la publique d'abord (le contenu public n'a rien à prouver), puis UNE passe
+ * authentifiée. Un cookies.txt exporté passe avant le trousseau d'un navigateur — il reste lisible
+ * même navigateur ouvert, là où Chrome verrouille sa base.
+ * @returns {({ file: string|null, browser: string|null }|null)[]} */
+function cookiePasses() {
+  const file = ytCookiesFile();
+  if (file) return [null, { file, browser: null }];
+  const browser = cookieBrowserCandidates()[0];
+  return browser ? [null, { file: null, browser }] : [null];
 }
 
 // Extrait le média derrière `url`. Passe sans cookies d'abord (public), puis avec (contenu connecté).
@@ -150,11 +198,10 @@ async function extractMedia(url, options = {}) {
   ensureDir(imageDir);
   const tools = await checkTools();
   if (!tools.yt.ok && !tools.gl.ok) {
-    return { ok: false, error: t('extractToolsMissing') };
+    return { ok: false, error: tools.yt.error || t('extractToolsMissing') };
   }
-  const browsers = COOKIES_BROWSER ? [null, COOKIES_BROWSER] : [null];
   const errors = [];
-  for (const ck of browsers) {
+  for (const ck of cookiePasses()) {
     if (tools.yt.ok) {
       const v = await tryYtdlp(url, ck, videoDir);
       if (v.ok) return projectPath ? organizeProjectItems(projectPath, v.items, options.title) : v;

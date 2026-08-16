@@ -117,7 +117,7 @@ Détail et justification dans `docs/invariants.md`. Les trois qui priment :
 | Collisions entre les deux applications | caches et ports partagés, une app en écrase une autre | `NR_HOME` et ports déjà séparés ; les violations restantes sont listées dans `docs/invariants.md` |
 | YouTube casse la résolution de flux | les éléments en ligne deviennent morts | `yt-dlp` mis à jour, repli sur le lecteur embarqué, relais qui renouvelle l'URL sur 403 |
 | ffmpeg sans `libplacebo` ou Vulkan absent | upscale indisponible | version épinglée, build `master` interdite, sonde avant de proposer un shader |
-| `gallery-dl` attendu dans un venv absent | extraction d'images de posts sociaux morte | à trancher : route `yt-dlp` seule, ou exécutable autonome ajouté au setup |
+| `gallery-dl` non provisionné | images d'un post photo extraites en résolution de vignette (repli OpenGraph) | la vidéo passe par l'exécutable `yt-dlp` autonome ; `gallery-dl` reste optionnel, détecté seulement s'il est présent |
 | Décodage vidéo saturé par l'interface | l'application nuit au logiciel d'à côté | règles de performance non négociables, gel des fonds pendant le travail |
 
 ## 8. Stack
