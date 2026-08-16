@@ -458,12 +458,13 @@
       "disabled": "Your profile shows nothing.",
       "noAppId": "No Discord application set."
     },
-    "showModule": "Open module",
-    "showProject": "Project name",
-    "showProjectHint": "Can reveal a client's name.",
+    "showBoard": "Board name",
+    "showBoardHint": "Can reveal a client's name.",
+    "showItems": "Item count",
     "showElapsed": "Time elapsed",
+    "itemsLine": "{{count}} item(s)",
     "custom": "Custom text",
-    "customHelp": "Replaces the automatic lines. {module} and {projet} get substituted.",
+    "customHelp": "Replaces the automatic lines. {board} and {items} get substituted.",
     "details": "First line",
     "state": "Second line"
   },

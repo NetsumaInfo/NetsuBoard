@@ -4,7 +4,7 @@ NetsuBoard is a standalone Windows desktop app (Tauri shell + Node "core" servic
 
 ## The split from NetsuRush — read first
 
-NetsuBoard was copied out of NetsuRush. Timeline transfer, After Effects export, NetsuBoost, voice, dictation, roto, the chat agent, collections, the media library, script, notebook, search, wallpaper, the outbox, the optimiser and Discord presence are **gone** from `core/`, `src/` and the RPC table. `App.tsx` renders one page, `ReferencePanel`.
+NetsuBoard was copied out of NetsuRush. Timeline transfer, After Effects export, NetsuBoost, voice, dictation, roto, the chat agent, collections, the media library, script, notebook, search, wallpaper, the outbox and the optimiser are **gone** from `core/`, `src/` and the RPC table. `App.tsx` renders one page, `ReferencePanel`.
 
 What is still inherited and **live**: the Resolve bridge cut down to `resolve:status` / `resolve:import`, the Adobe CEP bridge (status, snapshot, launch, media import, panel install), host power (close/reopen an editing app to free RAM/GPU), the project snapshot that feeds it, first-run setup, cache admin and export capabilities.
 

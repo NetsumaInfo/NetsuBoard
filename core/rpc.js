@@ -38,6 +38,7 @@ const { cacheIndex } = require("./cacheIndex"); // index latéral fichier de cac
 const { createCacheAdmin } = require("./cacheAdmin"); // Paramètres › Stockage : mesure + purge ciblée
 const { createCachePolicy } = require("./cachePolicy"); // auto-purge par type (quota LRU + âge)
 const logbus = require("./logbus"); // journal centralisé (core + sidecars python) → SSE `console:log`
+const { createDiscordRpc } = require("./discordRpc"); // Rich Presence Discord (client IPC maison, named pipe)
 const bugreport = require("./bugreport"); // envoi d'un rapport de bug → webhook Discord (Console)
 const bugContext = require("./bugContext"); // instantané machine joint au rapport (specs auto)
 
@@ -98,6 +99,12 @@ function createRpc() {
     lastTestFrameKey = key;
   }
 
+
+  // Rich Presence Discord. Le renderer pousse le contexte (board ouvert) ; le module tient la
+  // connexion, le throttle de 15 s et l'état persisté. Discord fermé = silence, pas une panne.
+  // Aucune connexion au compte n'entre en jeu : c'est une named pipe LOCALE, pas de l'OAuth.
+  const discordRpc = createDiscordRpc({ CONFIG, broadcast, dataDir: DATA_DIR });
+  discordRpc.boot();
 
   // « Snapshot projet » : photo des lectures Resolve prise à la fermeture, servie offline pour que
   // rushes/timelines restent visibles pendant que l'hôte est fermé (effacée à la réouverture).
@@ -212,6 +219,11 @@ function createRpc() {
     // Le flux temps réel arrive en SSE `console:log` (core + sidecars python).
     "console:logs": () => logbus.snapshot(),
     "console:clear": () => { logbus.clear(); return { ok: true }; },
+    // --- Rich Presence Discord (Paramètres › Compte) ---
+    "discord:state": () => discordRpc.state(),
+    "discord:setPrefs": ([patch]) => discordRpc.setPrefs(patch || {}),
+    "discord:setContext": ([ctx]) => discordRpc.setContext(ctx || {}),
+
     "bug:report": ([request]) => bugreport.submitBugReport(request),
     // Le formulaire a besoin de savoir s'il peut envoyer AVANT que le testeur écrive : sans ça, un
     // rapport se rédige entièrement pour finir sur « aucun webhook ». Porte aussi les plafonds de
@@ -470,6 +482,7 @@ function createRpc() {
 
   return {
     handle, broadcast, channels: Object.keys(H), stopWatch: watch.stop, stopCache: cachePolicy.stop,
+    stopDiscord: discordRpc.stop,
     closeProjects: () => netsu.closeAllProjects(),
   };
 }

@@ -458,12 +458,13 @@
       "disabled": "Ton profil n'affiche rien.",
       "noAppId": "Application Discord non renseignée."
     },
-    "showModule": "Module ouvert",
-    "showProject": "Nom du projet",
-    "showProjectHint": "Peut révéler un nom de client.",
+    "showBoard": "Nom du board",
+    "showBoardHint": "Peut révéler un nom de client.",
+    "showItems": "Nombre d'éléments",
     "showElapsed": "Temps écoulé",
+    "itemsLine": "{{count}} élément(s)",
     "custom": "Textes personnalisés",
-    "customHelp": "Remplacent les lignes automatiques. {module} et {projet} sont substitués.",
+    "customHelp": "Remplacent les lignes automatiques. {board} et {items} sont substitués.",
     "details": "Première ligne",
     "state": "Seconde ligne"
   },

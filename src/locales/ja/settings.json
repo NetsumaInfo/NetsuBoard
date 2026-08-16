@@ -458,12 +458,13 @@
       "disabled": "プロフィールには何も出ません。",
       "noAppId": "Discord アプリケーションが未設定です。"
     },
-    "showModule": "開いているモジュール",
-    "showProject": "プロジェクト名",
-    "showProjectHint": "クライアント名が漏れる場合があります。",
+    "showBoard": "ボード名",
+    "showBoardHint": "クライアント名が漏れる場合があります。",
+    "showItems": "要素数",
     "showElapsed": "経過時間",
+    "itemsLine": "{{count}} 個の要素",
     "custom": "カスタムテキスト",
-    "customHelp": "自動の行を置き換えます。{module} と {projet} が差し替わります。",
+    "customHelp": "自動の行を置き換えます。{board} と {items} が差し替わります。",
     "details": "1 行目",
     "state": "2 行目"
   },

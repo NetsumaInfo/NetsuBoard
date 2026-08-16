@@ -18,6 +18,7 @@ import { ConsolePanel } from "./console/ConsolePanel";
 import { UpdateSettings } from "./UpdateSettings";
 import { BugReportForm } from "./console/BugReportForm";
 import { InterfacePanel } from "./InterfacePanel";
+import { DiscordSettings } from "./DiscordSettings";
 import { AboutPanel } from "./AboutPanel";
 import { useSettingsUi, type SettingsSection } from "./useSettingsUi";
 
@@ -150,9 +151,15 @@ export function AppSettings() {
 
             <div className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto", section === "board" ? "p-4" : "p-5")}>
               {section === "account" && (
-                <Suspense fallback={<div className="grid flex-1 place-items-center"><Spinner className="size-5 text-muted-foreground" /></div>}>
-                  <AccountPanel />
-                </Suspense>
+                <>
+                  <Suspense fallback={<div className="grid flex-1 place-items-center"><Spinner className="size-5 text-muted-foreground" /></div>}>
+                    <AccountPanel />
+                  </Suspense>
+                  {/* HORS du Suspense de la page Compte : la présence ne dépend d'aucun compte ni de
+                      Convex (named pipe locale), elle ne doit donc pas attendre le chunk Better Auth
+                      — ni disparaître sur une installation sans déploiement. */}
+                  <DiscordSettings />
+                </>
               )}
               {section === "board" && <BoardSettings tab={boardTab} onCapturingChange={setCapturing} />}
               {section === "interface" && <InterfacePanel />}

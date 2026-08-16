@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/toast";
 import { AppSettings } from "@/components/settings/AppSettings";
 import { UpdateBootstrap } from "@/components/updates/UpdateBootstrap";
 import { armAutoInstall } from "@/store/updater";
+import { useDiscordPresence } from "@/lib/discordPresence";
 import { TextContextMenu } from "@/components/common/TextContextMenu";
 
 // Fenêtre détachée du board (hash #reference, 2e WebviewWindow Tauri) : le board nu, sans le cadre.
@@ -65,6 +66,10 @@ function Shell() {
   // Unattended launch update (opt-in, off by default). Armed HERE and nowhere else: setup and login
   // are behind us, so the relaunch it may trigger cannot cut a runtime download or a sign-in.
   useEffect(() => { armAutoInstall(); }, []);
+
+  // Rich Presence Discord : pousse le board ouvert au core. Monté ICI seulement — la fenêtre détachée
+  // du board est le même renderer et pousserait un second contexte concurrent.
+  useDiscordPresence();
 
   return (
     <TooltipProvider delay={600}>

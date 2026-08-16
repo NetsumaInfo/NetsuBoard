@@ -458,12 +458,13 @@
       "disabled": "你的个人资料不显示任何内容。",
       "noAppId": "未填写 Discord 应用。"
     },
-    "showModule": "当前模块",
-    "showProject": "项目名称",
-    "showProjectHint": "可能泄露客户名称。",
+    "showBoard": "画板名称",
+    "showBoardHint": "可能泄露客户名称。",
+    "showItems": "元素数量",
     "showElapsed": "已用时间",
+    "itemsLine": "{{count}} 个元素",
     "custom": "自定义文本",
-    "customHelp": "替换自动生成的行。{module} 和 {projet} 会被替换。",
+    "customHelp": "替换自动生成的行。{board} 和 {items} 会被替换。",
     "details": "第一行",
     "state": "第二行"
   },

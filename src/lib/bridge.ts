@@ -192,7 +192,9 @@ export interface UpscaleProgress {
 // Test d'upscale sur UNE frame : compare avant/après sans encoder tout le clip.
 export interface UpscaleFrameOpts {
   input: string;
-  time: number;            // seconde de la frame à tester
+  // Seconde de la frame à tester. Omise ⇒ le core prend le milieu du média : la première frame est
+  // presque toujours un noir, un fondu ou un plan flou, donc illisible comme aperçu.
+  time?: number;
   // Même aiguillage que l'encodage : sans ces deux champs l'aperçu montrerait le rendu du moteur IA
   // pendant que le fichier final sortirait d'un shader Turbo.
   engine?: "ia" | "turbo";
@@ -389,6 +391,39 @@ export interface PlayInfo {
   error?: string;
 }
 
+// ---- Rich Presence Discord (Paramètres › Compte) --------------------------
+// Réglages persistés CÔTÉ CORE (NR_HOME/discord-rpc.json) : une seule source de vérité, le renderer
+// les lit au montage. Les gabarits acceptent {board} et {items} ; vides = lignes automatiques.
+// Rien ici ne dépend de la connexion Discord de l'app : la présence passe par une named pipe locale.
+export interface DiscordPrefs {
+  enabled: boolean;
+  showBoard: boolean;   // nom du board — off par défaut (un nom peut trahir un client)
+  showItems: boolean;   // « 12 références » : combien le board en porte
+  showElapsed: boolean; // « 12:34 écoulées » depuis l'ouverture de l'app
+  detailsTpl: string;
+  stateTpl: string;
+}
+// L'activité telle que Discord la reçoit. Les lignes absentes sont OMISES (une string vide est
+// rejetée), d'où les champs optionnels — l'aperçu doit refléter cette omission.
+export interface DiscordActivity {
+  details?: string;
+  state?: string;
+  timestamps?: { start?: number }; // secondes Unix
+  assets?: { large_image?: string; large_text?: string };
+}
+export interface DiscordState {
+  enabled: boolean;
+  connected: boolean;                                       // handshake abouti avec le client Discord
+  user: { username?: string; global_name?: string } | null; // compte Discord qui affiche la présence
+  appId: boolean;                                           // App ID renseignée (sinon rien n'est possible)
+  prefs: DiscordPrefs;
+  error?: string | null;
+  preview?: DiscordActivity | null;                         // rendu réel calculé par le core, toggle ignoré
+  // Nom + vignette que Discord affichera vraiment (info publique de l'app, résolue par le core).
+  // `imageUrl` = l'asset `nb_logo` s'il est publié, sinon l'icône de l'app — le repli de Discord.
+  app?: { name: string; imageUrl: string | null } | null;
+}
+
 // ---- Board de référence (mood-board) -------------------------------------
 // Les items/vue transitent en `unknown` (frontière IPC) ; le module renderer les re-type.
 export interface RefSceneMeta {
@@ -524,7 +559,9 @@ export interface RefApi {
   writeFile(path: string, data: string, encoding: "base64" | "utf8"): Promise<{ ok: boolean; path?: string; bytes?: number; error?: string }>;
   // Un cadre d'un média (image, GIF, vidéo) rendu par le core en PNG base64, lu SUR LE DISQUE.
   // Seule source de pixels relisible par le renderer : le protocole d'asset teinte le canvas.
-  sampleFrame(path: string, opts?: { at?: number; side?: number }): Promise<{ ok: boolean; png?: string; error?: string }>;
+  // `count` > 1 étale les cadres sur [`at`, `to`] (fin omise = durée du fichier) et les rend tous
+  // dans `pngs` — de quoi décrire une PORTÉE de vidéo et pas seulement son premier instant.
+  sampleFrame(path: string, opts?: { at?: number; to?: number; count?: number; side?: number }): Promise<{ ok: boolean; png?: string; pngs?: string[]; error?: string }>;
   extractMedia(url: string, options?: { projectPath?: string; title?: string }): Promise<{ ok: boolean; items?: { path: string; kind: "image" | "video" }[]; error?: string }>;
   // Décompose une vidéo locale en frames image (assets disque) pour bâtir une séquence d'images.
   // `in/out` = plage de boucle (s), `fps` = cadence d'échantillonnage, `max` = plafond de frames.
@@ -738,6 +775,12 @@ export interface NrApi {
   consoleLogs(): Promise<{ ok: boolean; logs: ConsoleLogEntry[] }>;
   consoleClear(): Promise<{ ok: boolean }>;
   onConsoleLog(cb: (e: ConsoleLogEntry) => void): () => void;
+  // Rich Presence Discord. Le core tient la connexion, le throttle de 15 s et l'état persisté ; le
+  // renderer ne fait que lire, régler, et pousser le board ouvert.
+  discordState(): Promise<DiscordState>;
+  discordSetPrefs(patch: Partial<DiscordPrefs>): Promise<DiscordState>;
+  discordSetContext(ctx: { board?: string | null; items?: string | null }): Promise<DiscordState>;
+  onDiscordChanged(cb: (s: DiscordState) => void): () => void;
   // Rapport de bug → webhook Discord (configuré hors dépôt). `configured` = webhook présent côté core.
   bugReport(request: BugReportRequest): Promise<BugReportResponse>;
   // État du canal d'envoi + plafonds de pièces jointes, lus AVANT que le testeur rédige.
@@ -859,7 +902,46 @@ function readMockStorage(key: string, legacyKey: string): string | null {
   return legacy;
 }
 
+// Réglages Discord du mock : hors app, la vérité du core (NR_HOME/discord-rpc.json) n'existe pas, donc
+// on retombe sur localStorage — juste assez pour que la carte des Paramètres réponde aux clics.
+const MOCK_DISCORD_KEY = "nb-discord-prefs:v1";
+const MOCK_DISCORD_PREFS: DiscordPrefs = {
+  enabled: true,
+  showBoard: false,
+  showItems: true,
+  showElapsed: true,
+  detailsTpl: "",
+  stateTpl: "",
+};
+function mockDiscordState(): DiscordState {
+  let prefs = MOCK_DISCORD_PREFS;
+  try {
+    const raw = readMockStorage(MOCK_DISCORD_KEY, "nr-discord-prefs:v1");
+    if (raw) prefs = { ...MOCK_DISCORD_PREFS, ...JSON.parse(raw) };
+  } catch {
+    /* réglages illisibles : les défauts font l'affaire */
+  }
+  // Le vrai `preview` est calculé par le core (buildActivity) ; hors app on en donne un échantillon
+  // figé, juste pour que la carte d'aperçu ait quelque chose à mettre en forme.
+  const preview = {
+    details: prefs.detailsTpl.trim() || undefined,
+    state: prefs.stateTpl.trim() || undefined,
+    timestamps: prefs.showElapsed ? { start: Math.floor(Date.now() / 1000) } : undefined,
+  };
+  // Le core résout le vrai nom/icône auprès de Discord ; hors app on ne fait pas l'appel réseau.
+  return { enabled: prefs.enabled, connected: false, user: null, appId: false, prefs, error: null, preview, app: null };
+}
+
 const mock: NrApi = {
+  // Rich Presence : hors app il n'y a pas de pipe Discord, seuls les réglages répondent.
+  discordState: async () => mockDiscordState(),
+  discordSetPrefs: async (patch) => {
+    const next = { ...mockDiscordState().prefs, ...patch };
+    if (typeof localStorage !== "undefined") localStorage.setItem(MOCK_DISCORD_KEY, JSON.stringify(next));
+    return mockDiscordState();
+  },
+  discordSetContext: async () => mockDiscordState(),
+  onDiscordChanged: () => () => {},
   // Console / bug-report : inertes hors application (l'UI rend, aucun flux backend).
   consoleLogs: async () => ({ ok: true, logs: [] }),
   consoleClear: async () => ({ ok: true }),

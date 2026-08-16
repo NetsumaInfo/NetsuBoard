@@ -159,6 +159,9 @@ async function shutdown(code = 0) {
   shuttingDown = true;
   try { rpc.stopWatch?.(); } catch {}
   try { rpc.stopCache?.(); } catch {}
+  // Efface la présence AVANT de mourir : une pipe coupée sans SET_ACTIVITY null laisse Discord
+  // afficher « joue à NetsuBoard » quelques secondes de plus.
+  try { rpc.stopDiscord?.(); } catch {}
   // Referme les projets .netsu ouverts : sans ce repli du journal WAL, un `-wal` reste à côté de
   // chaque fichier et la prochaine ouverture repart d'un journal à rejouer.
   try { rpc.closeProjects?.(); } catch (e) { console.error("netsu: fermeture des projets impossible", e); }

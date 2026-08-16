@@ -458,12 +458,13 @@
       "disabled": "El perfil no muestra nada.",
       "noAppId": "Falta la aplicación de Discord."
     },
-    "showModule": "Módulo abierto",
-    "showProject": "Nombre del proyecto",
-    "showProjectHint": "Puede revelar el nombre de un cliente.",
+    "showBoard": "Nombre del tablero",
+    "showBoardHint": "Puede revelar el nombre de un cliente.",
+    "showItems": "Número de elementos",
     "showElapsed": "Tiempo transcurrido",
+    "itemsLine": "{{count}} elemento(s)",
     "custom": "Textos personalizados",
-    "customHelp": "Sustituyen a las líneas automáticas. {module} y {projet} se reemplazan.",
+    "customHelp": "Sustituyen a las líneas automáticas. {board} y {items} se reemplazan.",
     "details": "Primera línea",
     "state": "Segunda línea"
   },

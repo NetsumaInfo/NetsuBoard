@@ -458,12 +458,13 @@
       "disabled": "Dein Profil zeigt nichts an.",
       "noAppId": "Keine Discord-Anwendung angegeben."
     },
-    "showModule": "Offenes Modul",
-    "showProject": "Projektname",
-    "showProjectHint": "Kann einen Kundennamen verraten.",
+    "showBoard": "Board-Name",
+    "showBoardHint": "Kann einen Kundennamen verraten.",
+    "showItems": "Anzahl Elemente",
     "showElapsed": "Vergangene Zeit",
+    "itemsLine": "{{count}} Element(e)",
     "custom": "Eigene Texte",
-    "customHelp": "Ersetzen die automatischen Zeilen. {module} und {projet} werden eingesetzt.",
+    "customHelp": "Ersetzen die automatischen Zeilen. {board} und {items} werden eingesetzt.",
     "details": "Erste Zeile",
     "state": "Zweite Zeile"
   },
