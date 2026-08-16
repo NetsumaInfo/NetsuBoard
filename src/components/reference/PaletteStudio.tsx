@@ -30,7 +30,7 @@ import {
 } from "./harmonies";
 import { HarmonyIcon } from "./harmonyIcons";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { COLOR_FORMATS, COLOR_FORMAT_LABEL, formatColor, parseColor, hexFromRgb, type ColorFormat } from "./colorFormat";
+import { COLOR_FORMATS, COLOR_FORMAT_LABEL, clipboardColor, formatColor, parseColor, hexFromRgb, type ColorFormat } from "./colorFormat";
 import { makePaletteItem, paletteSize, screenToBoard, type BoardItem } from "./referenceShared";
 import i18n from "@/i18n";
 
@@ -336,7 +336,7 @@ export function PaletteStudio() {
   // control on the swatch for that — the strip stays a strip of colors.
   const tapSwatch = (i: number) => {
     if (i !== active) { setActive(i); return; }
-    const hex = hexFromHsv(slots[i]).toUpperCase();
+    const hex = clipboardColor(hexFromHsv(slots[i]).toUpperCase());
     navigator.clipboard.writeText(hex).then(
       () => useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:palette.copied", { hex }) }),
       () => useBoard.getState().setNotice({ kind: "error", text: i18n.t("reference:palette.copyFailed") }),

@@ -150,6 +150,15 @@ export function hexFromRgb({ r, g, b }: { r: number; g: number; b: number }): st
   return `#${[r, g, b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`.toUpperCase();
 }
 
+/**
+ * The string actually written to the clipboard for a formatted color. Hex loses its leading `#`:
+ * most drawing apps cap their hex field at six characters, so the `#` eats a digit and the paste
+ * is rejected. Functional notations are left alone — their parentheses are part of the syntax.
+ */
+export function clipboardColor(value: string): string {
+  return value.startsWith("#") ? value.slice(1) : value;
+}
+
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 /** Couleur `#rrggbb` écrite dans `format`. Une chaîne illisible est rendue telle quelle. */
