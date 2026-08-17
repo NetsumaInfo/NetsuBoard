@@ -101,12 +101,17 @@ function Wheel({ slots, active, onPick, onDrag }: {
       const { h, s } = toHs(ev.clientX, ev.clientY);
       onDrag(i, h, s);
     };
+    // `pointercancel` too: a pen or a finger drag does not always end on `pointerup` — the browser
+    // fires cancel instead when it claims the gesture (palm rejection, the pen leaving range).
+    // Listening for `pointerup` alone leaves the handle glued to the pointer for good.
     const up = () => {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
     };
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
     const { h, s } = toHs(e.clientX, e.clientY);
     onDrag(i, h, s);
   };
@@ -178,9 +183,11 @@ function SvPicker({ color, disabled, onChange }: {
     const up = () => {
       el.removeEventListener("pointermove", mv);
       el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
     };
     el.addEventListener("pointermove", mv);
     el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
   };
 
   return (
@@ -309,9 +316,11 @@ export function PaletteStudio() {
     const up = () => {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
     };
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
   };
 
   const activeSlot = slots[active] as Slot | undefined;
@@ -486,9 +495,11 @@ export function PaletteStudio() {
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
-      {/* Header doubles as the drag handle — the panel must be movable to uncover a reference. */}
+      {/* Header doubles as the drag handle — the panel must be movable to uncover a reference.
+          `touch-none`: the panel scrolls when it grows, and without it a pen or a finger on the
+          header scrolls that content instead of moving the panel. */}
       <div
-        className="flex cursor-grab items-start justify-between gap-3 active:cursor-grabbing"
+        className="flex cursor-grab touch-none items-start justify-between gap-3 active:cursor-grabbing"
         onPointerDown={startPanelDrag}
       >
         <h2 className="min-w-0 truncate font-heading text-sm font-medium">{t("palette.studio.title")}</h2>
@@ -558,13 +569,27 @@ export function PaletteStudio() {
                   aria-label={hex}
                   onClick={() => tapSwatch(i)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") tapSwatch(i); }}
+                  // `@container`: the controls below size themselves against THIS swatch, whose
+                  // width is whatever a twelfth of the strip happens to be — not against the window.
                   className={cn(
-                    "group relative flex min-w-0 flex-1 cursor-pointer flex-col justify-end overflow-hidden rounded-md ring-1 ring-black/10",
+                    "group relative flex min-w-0 flex-1 cursor-pointer flex-col justify-end overflow-hidden rounded-md ring-1 ring-black/10 @container",
                     i === active && "ring-2 ring-primary",
                   )}
                   style={{ background: hex }}
                 >
-                  <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                  {/* Lock and remove, side by side — but two 18 px buttons need 44 px of swatch and a
+                      full strip leaves ~30 px, where they pile up into one unclickable stack. Under
+                      48 px they go one ABOVE the other instead. `hoverless:` keeps them out on the
+                      active swatch for pointers that never hover: on a tablet the hover-only reveal
+                      never fires, so the cross simply does not exist. Tap a swatch, get its controls. */}
+                  <div
+                    className={cn(
+                      "absolute inset-x-0 top-0 flex flex-col items-center gap-0.5 p-0.5 opacity-0 transition-opacity",
+                      "group-hover:opacity-100 focus-within:opacity-100",
+                      "@min-[48px]:flex-row @min-[48px]:justify-between @min-[48px]:gap-0 @min-[48px]:p-1",
+                      i === active && "hoverless:opacity-100",
+                    )}
+                  >
                     <Tooltip>
                       <TooltipTrigger
                         render={
@@ -596,16 +621,20 @@ export function PaletteStudio() {
                       <X className="size-3.5" />
                     </button>
                   </div>
-                  {/* The padlock stays visible when engaged, even without hover. */}
+                  {/* The padlock stays visible when engaged, even without hover — except where the
+                      row above is permanently out, which would show the same padlock twice. */}
                   {slot.locked && (
-                    <Lock className="absolute left-1 top-1 size-3.5 group-hover:opacity-0" style={{ color: ink }} />
+                    <Lock
+                      className={cn("absolute left-1 top-1 size-3.5 group-hover:opacity-0", i === active && "hoverless:opacity-0")}
+                      style={{ color: ink }}
+                    />
                   )}
                   {i === active && (
-                    <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-between px-0.5">
+                    <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center gap-0.5 @min-[48px]:flex-row @min-[48px]:justify-between @min-[48px]:gap-0 @min-[48px]:px-0.5">
                       <button
                         type="button"
                         aria-label={t("palette.studio.moveLeft")}
-                        className="rounded p-0.5 opacity-0 hover:bg-black/15 group-hover:opacity-100 disabled:invisible"
+                        className="rounded p-0.5 opacity-0 hover:bg-black/15 group-hover:opacity-100 hoverless:opacity-100 disabled:invisible"
                         style={{ color: ink }}
                         disabled={i === 0}
                         onClick={(e) => { e.stopPropagation(); move(i, -1); }}
@@ -615,7 +644,7 @@ export function PaletteStudio() {
                       <button
                         type="button"
                         aria-label={t("palette.studio.moveRight")}
-                        className="rounded p-0.5 opacity-0 hover:bg-black/15 group-hover:opacity-100 disabled:invisible"
+                        className="rounded p-0.5 opacity-0 hover:bg-black/15 group-hover:opacity-100 hoverless:opacity-100 disabled:invisible"
                         style={{ color: ink }}
                         disabled={i === slots.length - 1}
                         onClick={(e) => { e.stopPropagation(); move(i, 1); }}

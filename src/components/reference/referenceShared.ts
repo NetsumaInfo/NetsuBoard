@@ -116,6 +116,11 @@ export interface DrawShape {
   c: string;
   w: number;
   p: number[];
+  // Part d'épaisseur retenue POINT PAR POINT (0..1, un par point de `p`), tracé au stylet
+  // uniquement. Y est figée la pression — et l'inclinaison si elle est activée — telle qu'elle a
+  // été captée : changer un réglage plus tard ne doit pas redessiner un trait déjà posé. Absent =
+  // trait d'épaisseur constante, ce que trace une souris et ce que trace une tablette sans capteur.
+  pw?: number[];
   fill?: string;
   text?: string;
   cp?: [number, number];

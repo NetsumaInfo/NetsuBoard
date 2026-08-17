@@ -8,6 +8,9 @@ Rules that break correctness when violated. Each one already fixed a real bug. L
 - **`ref` is persisted, `src` is not.** `ref` is the locator that survives (disk path, remote URL, YouTube id); `src` is the display URL **recomputed on load** by `displaySrc`. An objectURL or blob does not survive a reload — persisting one produces an item that is permanently broken after restart.
 - **During a gesture the geometry lives in LOCAL state**, coalesced in rAF, so only the manipulated item re-renders; commit to the store on `pointerup`. `BoardItem` is `memo`, so panning does not re-render items.
 - **Gestures are native pointer events** (`usePointerTransform.ts`), never a drag library.
+- **Every drag cleans up on `pointercancel`, not only on `pointerup`.** A pen or a finger gesture routinely ends on cancel — the browser fires it when it claims the gesture (palm rejection, the stylus leaving range) — and a handler that listens for `pointerup` alone leaves the drag glued to the pointer for good.
+- **A pen stroke's width factors (`DrawShape.pw`) are baked at draw time**, one per point, and are dropped when nothing varied over the whole stroke. Recomputing them from the current preferences would redraw ink that was already posed; hardware with no sensor reports a flat `0.5` by spec, so a stored array of identical values would also claim a pressure that never existed.
+- **A control revealed only on hover does not exist on a pen or touch machine.** Tailwind v4 wraps `hover:`/`group-hover:` in `@media (hover: hover)`, so the rule is not merely unused there — it is not generated. Anything reachable *only* that way needs the `hoverless:` variant beside it.
 
 ## Local video playback
 

@@ -220,11 +220,11 @@
   },
   "updates": {
     "title": "Updates",
-    "subtitle": "Releases are checked on GitHub and their signature is verified before installation.",
+    "subtitle": "Releases checked on GitHub, signature verified before install.",
     "auto": "Automatic checks",
     "autoHint": "Looks for a new version a few seconds after startup.",
     "autoInstall": "Automatic update at launch",
-    "autoInstallHint": "Installs the version found at startup and restarts the application, without asking. Off by default.",
+    "autoInstallHint": "Installs and restarts at launch, without asking.",
     "on": "On",
     "off": "Off",
     "ready": "Ready to check",
@@ -309,7 +309,7 @@
   },
   "bugReport": {
     "title": "Report a problem",
-    "subtitle": "Describe what happened. The log and the machine snapshot are attached automatically.",
+    "subtitle": "Describe what happened. Log and machine snapshot are attached.",
     "type": "What is happening?",
     "module": "Where?",
     "modules": {
@@ -384,7 +384,7 @@
       "less": "Collapse",
       "manual": "Type it yourself",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Your machine snapshot is attached automatically — read it in full in the Console."
+      "attached": "Machine snapshot attached — read it in full in the Console."
     },
     "sending": "Sending…",
     "send": "Send",
@@ -397,7 +397,7 @@
       "detail": "Say in a few words what it is about.",
       "tooLarge": "A file is over {{size}} MB."
     },
-    "noWebhook": "Sending is off: no channel configured. Set <c1>bugWebhook</c1> in nr.config.json, or deploy the Convex relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
+    "noWebhook": "Sending is off: no channel. Set <c1>bugWebhook</c1> in nr.config.json, or deploy the Convex relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Tell us more",
     "descriptionOtherPlaceholder": "Your question, or whatever you want to tell us…",
     "files": {

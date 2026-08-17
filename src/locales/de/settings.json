@@ -220,11 +220,11 @@
   },
   "updates": {
     "title": "Updates",
-    "subtitle": "Versionen werden auf GitHub geprüft und ihre Signatur wird vor der Installation validiert.",
+    "subtitle": "Auf GitHub geprüft, Signatur vor der Installation validiert.",
     "auto": "Automatisch prüfen",
     "autoHint": "Sucht kurz nach dem Start nach einer neuen Version.",
     "autoInstall": "Automatisches Update beim Start",
-    "autoInstallHint": "Installiert die beim Start gefundene Version ohne Nachfrage und startet die Anwendung neu. Standardmäßig aus.",
+    "autoInstallHint": "Installiert beim Start und startet neu, ohne Nachfrage.",
     "on": "Aktiv",
     "off": "Inaktiv",
     "ready": "Bereit zur Prüfung",
@@ -309,7 +309,7 @@
   },
   "bugReport": {
     "title": "Problem melden",
-    "subtitle": "Beschreibe, was passiert ist. Protokoll und Systemschnappschuss werden automatisch angehängt.",
+    "subtitle": "Beschreibe, was passiert ist. Protokoll und Systeminfos werden angehängt.",
     "type": "Was ist los?",
     "module": "Wo?",
     "modules": {
@@ -384,7 +384,7 @@
       "less": "Einklappen",
       "manual": "Schreib es selbst",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Der Schnappschuss deiner Maschine wird automatisch angehängt – vollständig einsehbar in der Konsole."
+      "attached": "Systeminfos angehängt – vollständig in der Konsole lesbar."
     },
     "sending": "Senden…",
     "send": "Senden",
@@ -397,7 +397,7 @@
       "detail": "Sag in wenigen Worten, worum es geht.",
       "tooLarge": "Eine Datei ist größer als {{size}} MB."
     },
-    "noWebhook": "Senden deaktiviert: kein Kanal konfiguriert. Setze <c1>bugWebhook</c1> in nr.config.json oder deploye das Convex-Relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
+    "noWebhook": "Senden aus: kein Kanal. Setze <c1>bugWebhook</c1> in nr.config.json oder deploye das Convex-Relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Sag uns mehr",
     "descriptionOtherPlaceholder": "Deine Frage oder was du uns sagen möchtest…",
     "files": {

@@ -220,11 +220,11 @@
   },
   "updates": {
     "title": "Actualizaciones",
-    "subtitle": "Las versiones se comprueban en GitHub y se valida su firma antes de instalarlas.",
+    "subtitle": "Comprobadas en GitHub, firma validada antes de instalar.",
     "auto": "Comprobación automática",
     "autoHint": "Busca una nueva versión unos segundos después de iniciar.",
     "autoInstall": "Actualización automática al iniciar",
-    "autoInstallHint": "Instala la versión encontrada al iniciar y reinicia la aplicación, sin preguntar. Desactivado por defecto.",
+    "autoInstallHint": "Instala y reinicia al arrancar, sin preguntar.",
     "on": "Activada",
     "off": "Desactivada",
     "ready": "Listo para comprobar",
@@ -309,7 +309,7 @@
   },
   "bugReport": {
     "title": "Informar de un problema",
-    "subtitle": "Describe lo que ha pasado. El registro y la instantánea del equipo se adjuntan automáticamente.",
+    "subtitle": "Describe qué ha pasado. Registro y datos del equipo se adjuntan.",
     "type": "¿Qué pasa?",
     "module": "¿Dónde?",
     "modules": {
@@ -384,7 +384,7 @@
       "less": "Contraer",
       "manual": "Escríbelo tú",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "La instantánea de tu equipo se adjunta automáticamente: puedes leerla entera en la Consola."
+      "attached": "Datos del equipo adjuntos: se leen enteros en la Consola."
     },
     "sending": "Enviando…",
     "send": "Enviar",
@@ -397,7 +397,7 @@
       "detail": "Di en pocas palabras de qué se trata.",
       "tooLarge": "Un archivo supera los {{size}} MB."
     },
-    "noWebhook": "Envío desactivado: ningún canal configurado. Define <c1>bugWebhook</c1> en nr.config.json, o despliega el relé Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
+    "noWebhook": "Envío desactivado: sin canal. Define <c1>bugWebhook</c1> en nr.config.json, o despliega el relé Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Cuéntanos más",
     "descriptionOtherPlaceholder": "Tu pregunta, o lo que nos quieras decir…",
     "files": {

@@ -220,11 +220,11 @@
   },
   "updates": {
     "title": "Mises à jour",
-    "subtitle": "Les versions sont vérifiées sur GitHub et leur signature est validée avant installation.",
+    "subtitle": "Versions vérifiées sur GitHub, signature validée avant installation.",
     "auto": "Vérification automatique",
     "autoHint": "Recherche une nouvelle version quelques secondes après le démarrage.",
     "autoInstall": "Mise à jour automatique au lancement",
-    "autoInstallHint": "Installe la version trouvée au démarrage et redémarre l'application, sans rien demander. Désactivé par défaut.",
+    "autoInstallHint": "Installe et redémarre au lancement, sans rien demander.",
     "on": "Activée",
     "off": "Désactivée",
     "ready": "Prêt à vérifier",
@@ -309,7 +309,7 @@
   },
   "bugReport": {
     "title": "Signaler un souci",
-    "subtitle": "Décris ce qui s'est passé. Le journal et l'instantané machine sont joints automatiquement.",
+    "subtitle": "Décris ce qui s'est passé. Journal et instantané machine sont joints.",
     "type": "Il se passe quoi ?",
     "module": "Où ça ?",
     "modules": {
@@ -384,7 +384,7 @@
       "less": "Réduire",
       "manual": "Écris-le toi-même",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 Go, Windows 11",
-      "attached": "L'instantané de ta machine est joint automatiquement — il se lit en entier dans la Console."
+      "attached": "Instantané machine joint — lisible en entier dans la Console."
     },
     "sending": "Envoi…",
     "send": "Envoyer",
@@ -397,7 +397,7 @@
       "detail": "Dis en quelques mots de quoi il s'agit.",
       "tooLarge": "Un fichier dépasse {{size}} Mo."
     },
-    "noWebhook": "Envoi désactivé : aucun canal configuré. Renseigne <c1>bugWebhook</c1> dans nr.config.json, ou déploie le relais Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
+    "noWebhook": "Envoi désactivé : aucun canal. Renseigne <c1>bugWebhook</c1> dans nr.config.json, ou déploie le relais Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Explique ta demande",
     "descriptionOtherPlaceholder": "Ta question, ou ce que tu veux nous dire…",
     "files": {

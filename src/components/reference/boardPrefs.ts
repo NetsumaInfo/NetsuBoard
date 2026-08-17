@@ -123,7 +123,29 @@ export interface BoardPrefs {
   // Accrochage automatique des tracés aux médias (flèche entre deux images, trait posé sur une image).
   autoAnchorDraw: boolean;
   paletteSize: number;     // nombre de couleurs extraites par défaut (3–12)
+  // --- Pen tablets. Three machines to serve at once and they do NOT want the same thing: a display
+  // tablet next to a mouse (hover works, the keyboard is there), a tablet with no screen (hover
+  // works, aiming is the hard part), and a touch-first machine (no hover, no keyboard, no wheel).
+  // Hence `auto` on everything a device probe can settle by itself — see tabletInput.probeDevices.
+  penPressure: boolean;    // pen pressure drives the stroke width
+  penMinWidth: number;     // width left at zero pressure, as a share of the nominal width (0.1–1)
+  penTilt: boolean;        // a leaned pen lays down a broader mark
+  penEraserTip: boolean;   // the inverted end of the stylus erases, whatever tool is selected
+  penBarrel: PenBarrel;    // what the side button does
+  palmRejection: boolean;  // ignore a finger while the stylus is in play
+  touchGestures: boolean;  // pinch to zoom, two fingers to navigate
+  penDragPans: AutoToggle; // dragging the empty board with a pen navigates instead of selecting
+  touchUi: AutoToggle;     // keep hover-revealed controls permanently out
+  bigTargets: boolean;     // wider hit areas on the small icon buttons
 }
+
+// Side button of a stylus. `menu` is what the platform already does with it — a barrel press IS a
+// right click as far as the WebView is concerned — so it costs nothing and stays the default;
+// `pan` trades that menu for navigation, which is the gesture a tablet has no other way to reach.
+export type PenBarrel = "menu" | "pan";
+
+// A setting the device probe can answer on its own, overridable both ways.
+export type AutoToggle = "auto" | "on" | "off";
 
 // Dispositions proposées par le sélecteur de rangement (sous-ensemble d'ArrangeMode : les
 // alignements et répartitions restent des boutons directs, ils ne « rangent » pas une planche).
@@ -199,6 +221,16 @@ const PREFS_DEFAULT: BoardPrefs = {
   autoArrangeOnImport: true,
   autoAnchorDraw: true,
   paletteSize: 6,
+  penPressure: true,
+  penMinWidth: 0.35,
+  penTilt: false,
+  penEraserTip: true,
+  penBarrel: "menu",
+  palmRejection: true,
+  touchGestures: true,
+  penDragPans: "auto",
+  touchUi: "auto",
+  bigTargets: false,
 };
 export const PREFS_KEY = "nr-ref-prefs";
 export function readPrefs(): BoardPrefs {

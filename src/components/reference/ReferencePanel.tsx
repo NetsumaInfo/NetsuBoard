@@ -21,6 +21,7 @@ import { useReferencePush } from "./useReferencePush";
 import { useAutosave } from "./useAutosave";
 import { useUnsavedWarning } from "./useUnsavedWarning";
 import { useDeselectOnBlur } from "./useAppFocus";
+import { isTouchFirst, onPenSeen, probeDevices } from "./tabletInput";
 import { openSettings } from "@/components/settings/useSettingsUi";
 
 // Import en attente : posé par l'accueil (dépôt/parcourir), ingéré une fois le board monté.
@@ -38,6 +39,8 @@ export function ReferencePanel() {
   // Épinglé (fenêtre principale au-dessus, format coin) → board flottante, barre d'outils réduite.
   const pinned = useApp((s) => s.pinned);
   const pinnedToolbar = useBoard((s) => s.prefs.pinnedToolbar);
+  const touchUi = useBoard((s) => s.prefs.touchUi);
+  const bigTargets = useBoard((s) => s.prefs.bigTargets);
 
   // Identité stable : les actions de document alimentent l'effet clavier, qui se réabonnerait à
   // chaque rendu si ce rappel changeait d'identité.
@@ -61,11 +64,21 @@ export function ReferencePanel() {
     setMode("board");
   };
 
-  // Épinglé, c'est le BOARD qui est à l'écran — l'accueil n'y est jamais rendu. On l'enregistre dans
-  // `mode`, sinon l'état resté sur "home" ressort au dépinglage et renvoie à l'accueil la planche
-  // qu'on vient de manipuler en flottant. Cas courant : l'épinglage est persisté d'un lancement à
-  // l'autre, donc `mode` valait encore "home" alors que le board était affiché depuis le démarrage.
-  useEffect(() => { if (pinned) setMode("board"); }, [pinned]);
+  // Réglages Stylet portés sur <html> : ils touchent des écrans hors board (accueil, dialogues,
+  // barre de fenêtre), donc c'est la racine du document qui les porte, pas la planche. `auto` =
+  // ce que dit la machine — un stylet déjà vu, ou un tactile sans souris (cf. probeDevices).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.toggleAttribute("data-big-targets", bigTargets);
+    const apply = () => {
+      const d = probeDevices();
+      root.toggleAttribute("data-touch-ui", touchUi === "auto" ? d.penSeen || isTouchFirst(d) : touchUi === "on");
+    };
+    apply();
+    // Le premier contact du stylet est la SEULE façon d'apprendre qu'une tablette est branchée :
+    // aucune media query ne la déclare. `auto` bascule donc en cours de session, pas au montage.
+    return onPenSeen(apply);
+  }, [touchUi, bigTargets]);
 
   // Ingestion différée : le board n'existe qu'en mode "board" → on attend son montage.
   useEffect(() => {
@@ -75,9 +88,11 @@ export function ReferencePanel() {
     setPending(null);
   }, [mode, pending]);
 
-  if (!pinned && mode === "home") {
+  // L'épinglage ne change QUE le format de la fenêtre : il ne navigue pas. À l'accueil on reste à
+  // l'accueil, sur une planche on reste sur la planche — dans les deux sens de la bascule.
+  if (mode === "home") {
     return (
-      <div className="relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
+      <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " bg-[var(--color-bg)]" : ""}`}>
         <ReferenceHome
           hasSession={items.length > 0}
           onResume={() => setMode("board")}
@@ -98,11 +113,10 @@ export function ReferencePanel() {
   // recadrage et le générateur de palette à chaque bascule — une popup ouverte disparaissait — et
   // faisait clignoter la page entière au moment précis où la fenêtre change de taille.
   //
-  // Épinglé : pas d'accueil, le board de session est rendu directement pour un usage flottant
-  // instantané ; la barre de titre de l'app sert de zone de déplacement. La barre d'outils y est
-  // RÉDUITE (poser, dessiner, cadrer, annuler) — le document reste au clic droit —, et le réglage
-  // `pinnedToolbar` la retire pour retrouver la planche entièrement nue.
-  const onHome = pinned ? undefined : () => setMode("home");
+  // Épinglé : la barre de titre de l'app sert de zone de déplacement et la barre d'outils est
+  // RÉDUITE (poser, dessiner, cadrer, annuler) — le document et le retour à l'accueil restent au
+  // clic droit —, et le réglage `pinnedToolbar` la retire pour retrouver la planche entièrement nue.
+  const onHome = () => setMode("home");
   const onOpen = persistence.available ? () => setSceneDlg(true) : undefined;
   return (
     <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " bg-[var(--color-bg)]" : ""}`}>

@@ -66,8 +66,8 @@ export function ReferenceWindow() {
             apparaissent (épingler / rattacher). La bande reste déplaçable, seules les icônes non. */}
         <div className="group flex h-6 shrink-0 items-center px-2" style={DRAG}>
           <div className="flex-1" />
-          <span className="h-1 w-10 rounded-full bg-border transition-opacity group-hover:opacity-0" />
-          <div className="flex flex-1 items-center justify-end gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100" style={NO_DRAG}>
+          <span className="h-1 w-10 rounded-full bg-border transition-opacity group-hover:opacity-0 hoverless:opacity-0" />
+          <div className="flex flex-1 items-center justify-end gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 hoverless:opacity-100" style={NO_DRAG}>
             <Tooltip>
               <TooltipTrigger
                 render={<Button variant="ghost" size="icon-sm" aria-label={pinned ? t("actions.unpin") : t("actions.pin")} aria-pressed={pinned} onClick={togglePin} />}

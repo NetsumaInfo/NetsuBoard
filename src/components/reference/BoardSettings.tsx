@@ -5,7 +5,7 @@
 // Le cadre qui l'accueille (`AppSettings`) est NON-MODAL, sans voile : le board reste visible et
 // interactif → les réglages (couleur/mode de fond) se voient EN DIRECT pendant qu'on les change.
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Grid2x2, Square, X, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,8 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { UP_SCALES } from "@/components/upscale/upscaleShared";
 import { useBoard } from "./useReferenceBoard";
-import { SOURCE_FPS, type BoardPrefs, type BlurBehavior } from "./boardPrefs";
+import { SOURCE_FPS, type AutoToggle, type BoardPrefs, type BlurBehavior } from "./boardPrefs";
+import { FLAT_PRESSURE, probeDevices } from "./tabletInput";
 import { useBoardUpChoices } from "./useBoardUpChoices";
 import { DOWNLOADABLE_EMBED_PROVIDERS, EMBED_LEVELS, EMBED_QUALITIES, EMBED_MARGINS, type EmbedProvider } from "./referenceShared";
 import { iconForProvider } from "./brandIcons";
@@ -70,13 +71,27 @@ const FRAME_FILLS: { labelKey: string; v: "none" | "tint" | "solid" }[] = [
 ];
 
 // Onglets de la page « Board » (les 13 sections en liste plate rendaient le panneau interminable).
-export type BoardSettingsTab = "look" | "media" | "behavior" | "keys";
+export type BoardSettingsTab = "look" | "media" | "behavior" | "pen" | "keys";
 export const BOARD_SETTINGS_TABS: { id: BoardSettingsTab; labelKey: string }[] = [
   { id: "look", labelKey: "settings.tabLook" },
   { id: "media", labelKey: "settings.tabMedia" },
   { id: "behavior", labelKey: "settings.tabBehavior" },
+  { id: "pen", labelKey: "settings.tabPen" },
   { id: "keys", labelKey: "settings.tabKeys" },
 ];
+
+// Réglages « auto / activé / désactivé » : `auto` laisse la sonde matérielle trancher, les deux
+// autres l'écrasent. Trois machines très différentes partagent cet onglet, aucune valeur fixe ne
+// leur convient à toutes.
+const AUTO_MODES: { labelKey: string; v: AutoToggle }[] = [
+  { labelKey: "settings.auto", v: "auto" },
+  { labelKey: "settings.enabled", v: "on" },
+  { labelKey: "settings.disabled", v: "off" },
+];
+
+// Épaisseur restante à pression nulle, en part de l'épaisseur nominale. 100 % = aucun effet de
+// pression sur la largeur (le tracé garde alors la variation d'inclinaison si elle est active).
+const PEN_MIN_WIDTHS = [0.1, 0.25, 0.35, 0.5, 0.7, 1];
 
 // Réglages d'extraction de séquence (vidéo → frames d'aperçu). SOURCE_FPS = cadence de la vidéo.
 const SEQ_FPS = [SOURCE_FPS, 8, 12, 24];
@@ -112,6 +127,69 @@ function Seg({ active, onClick, children }: { active: boolean; onClick: () => vo
     >
       {children}
     </button>
+  );
+}
+
+/**
+ * Ce que la machine déclare, en direct. Sans lui, un utilisateur dont la pression ne fait rien n'a
+ * aucun moyen de savoir si le réglage est coupé, si son pilote n'expose pas de capteur (Windows Ink
+ * désactivé côté Wacom → la spec impose alors 0,5 constant) ou si son matériel n'en a pas.
+ * L'écoute est posée sur la FENÊTRE : survoler le panneau suffit à renseigner la ligne, sans avoir
+ * à tracer quoi que ce soit.
+ */
+function PenProbe() {
+  const { t } = useTranslation("reference");
+  const [live, setLive] = useState<{ pressure: number; tilt: number } | null>(null);
+  const [seen, setSeen] = useState(() => probeDevices().penSeen);
+  const frame = useRef<number | null>(null);
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "pen") return;
+      setSeen(true);
+      // Un stylet émet à plusieurs centaines de hertz : un setState par événement rendrait le
+      // panneau à la même cadence pour un chiffre qui bouge de 0,01.
+      if (frame.current != null) return;
+      frame.current = requestAnimationFrame(() => {
+        frame.current = null;
+        setLive({ pressure: e.pressure, tilt: Math.round(Math.hypot(e.tiltX, e.tiltY)) });
+      });
+    };
+    window.addEventListener("pointermove", onMove, { capture: true, passive: true });
+    window.addEventListener("pointerdown", onMove, { capture: true, passive: true });
+    return () => {
+      if (frame.current != null) cancelAnimationFrame(frame.current);
+      window.removeEventListener("pointermove", onMove, { capture: true });
+      window.removeEventListener("pointerdown", onMove, { capture: true });
+    };
+  }, []);
+
+  const d = probeDevices();
+  const yes = t("settings.penYes"), no = t("settings.penNo");
+  // Une pression FIGÉE sur la valeur de la spec veut dire « pas de capteur », pas « pression nulle ».
+  const pressure = !live ? "—"
+    : Math.abs(live.pressure - FLAT_PRESSURE) < 0.01 ? t("settings.penNoSensor")
+      : `${Math.round(live.pressure * 100)} %`;
+  const rows: [string, string][] = [
+    [t("settings.penProbePen"), seen ? yes : no],
+    [t("settings.penProbePressure"), pressure],
+    [t("settings.penProbeTilt"), live ? `${live.tilt}°` : "—"],
+    [t("settings.penProbeHover"), d.anyHover ? yes : no],
+    [t("settings.penProbeTouch"), String(d.touchPoints)],
+  ];
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="text-xs font-semibold text-foreground">{t("settings.penProbe")}</h3>
+      <p className="-mt-1 text-[11px] leading-snug text-muted-foreground">{t("settings.penProbeHint")}</p>
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-1">
+        {rows.map(([label, value]) => (
+          <div key={label} className="col-span-2 flex items-center justify-between gap-3 sm:col-span-1">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="font-mono text-xs text-foreground">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
@@ -444,6 +522,111 @@ export function BoardSettings({ tab, onCapturingChange }: {
             </div>
           </div>
         </section>
+        </>)}
+
+        {tab === "pen" && (<>
+        {/* Navigation — la partie BLOQUANTE : sans molette ni barre d'espace, une machine tactile
+            n'a aucun autre moyen de se déplacer sur la planche. */}
+        <section className="flex flex-col gap-2.5">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.penNav")}</h3>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-foreground">{t("settings.penGestures")}</span>
+            <Seg active={prefs.touchGestures} onClick={() => setPrefs({ touchGestures: !prefs.touchGestures })}>
+              {prefs.touchGestures ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-foreground">{t("settings.penDragPans")}</span>
+              <div className="flex items-center gap-1.5">
+                {AUTO_MODES.map((m) => (
+                  <Seg key={m.v} active={prefs.penDragPans === m.v} onClick={() => setPrefs({ penDragPans: m.v })}>{t(m.labelKey)}</Seg>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">{t("settings.penDragPansHint")}</p>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-foreground">{t("settings.penBarrel")}</span>
+            <div className="flex items-center gap-1.5">
+              <Seg active={prefs.penBarrel === "menu"} onClick={() => setPrefs({ penBarrel: "menu" })}>{t("settings.penBarrelMenu")}</Seg>
+              <Seg active={prefs.penBarrel === "pan"} onClick={() => setPrefs({ penBarrel: "pan" })}>{t("settings.penBarrelPan")}</Seg>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-foreground">{t("settings.penPalm")}</span>
+              <Seg active={prefs.palmRejection} onClick={() => setPrefs({ palmRejection: !prefs.palmRejection })}>
+                {prefs.palmRejection ? t("settings.enabled") : t("settings.disabled")}
+              </Seg>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">{t("settings.penPalmHint")}</p>
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Tracé : ce qui distingue une tablette d'une souris. */}
+        <section className="flex flex-col gap-2.5">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.penStroke")}</h3>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-foreground">{t("settings.penPressure")}</span>
+            <Seg active={prefs.penPressure} onClick={() => setPrefs({ penPressure: !prefs.penPressure })}>
+              {prefs.penPressure ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+          <div className={cn("flex flex-col gap-1.5", !prefs.penPressure && "pointer-events-none opacity-40")}>
+            <span className="text-xs text-muted-foreground">{t("settings.penMinWidth")}</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {PEN_MIN_WIDTHS.map((v) => (
+                <Seg key={v} active={prefs.penMinWidth === v} onClick={() => setPrefs({ penMinWidth: v })}>{`${Math.round(v * 100)} %`}</Seg>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-foreground">{t("settings.penTilt")}</span>
+            <Seg active={prefs.penTilt} onClick={() => setPrefs({ penTilt: !prefs.penTilt })}>
+              {prefs.penTilt ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-foreground">{t("settings.penEraser")}</span>
+            <Seg active={prefs.penEraserTip} onClick={() => setPrefs({ penEraserTip: !prefs.penEraserTip })}>
+              {prefs.penEraserTip ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+          <p className="text-[11px] leading-snug text-muted-foreground">{t("settings.penStrokeHint")}</p>
+        </section>
+
+        <Separator />
+
+        {/* Interface : une commande qui n'apparaît qu'au survol n'existe pas sur une dalle tactile. */}
+        <section className="flex flex-col gap-2.5">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.penUi")}</h3>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-foreground">{t("settings.penTouchUi")}</span>
+              <div className="flex items-center gap-1.5">
+                {AUTO_MODES.map((m) => (
+                  <Seg key={m.v} active={prefs.touchUi === m.v} onClick={() => setPrefs({ touchUi: m.v })}>{t(m.labelKey)}</Seg>
+                ))}
+              </div>
+            </div>
+            <p className="text-[11px] leading-snug text-muted-foreground">{t("settings.penTouchUiHint")}</p>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-foreground">{t("settings.penBigTargets")}</span>
+            <Seg active={prefs.bigTargets} onClick={() => setPrefs({ bigTargets: !prefs.bigTargets })}>
+              {prefs.bigTargets ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Ce que la machine déclare. Le seul moyen de savoir pourquoi un réglage `auto` a tranché
+            comme il l'a fait — et de dire, quand la pression ne fait rien, si c'est le pilote. */}
+        <PenProbe />
         </>)}
 
         {tab === "media" && (<>

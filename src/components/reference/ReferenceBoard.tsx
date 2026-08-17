@@ -31,6 +31,7 @@ import {
   makeFrameItem,
 } from "./referenceShared";
 import { shapeBBox } from "./drawGeometry";
+import { isPalm, isTouchFirst, kindOf, usesBarrel, watchPen, type PointerKind } from "./tabletInput";
 import { boundsOf, rotatedBBox } from "./boardArrange";
 import { useLive } from "./boardLive";
 import { itemToPngBlob } from "./boardRender";
@@ -118,8 +119,14 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
 
   const [over, setOver] = useState(false);
   const pan = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
-  const gesture = useRef<"pan" | "marquee" | null>(null);
+  const gesture = useRef<"pan" | "marquee" | "pinch" | null>(null);
   const space = useRef(false);
+  // Contacts en cours (doigts/stylet), CLÉS par pointerId. Deux contacts simultanés = pincement :
+  // c'est le seul zoom d'une machine sans molette, et le seul pan d'une machine sans clavier.
+  const contacts = useRef(new Map<number, { x: number; y: number }>());
+  // Repère figé au 2e contact : écart et milieu des deux doigts, plus la vue de départ. Tout se
+  // calcule PAR RAPPORT à lui — un pincement mesuré d'une frame à l'autre dérive.
+  const pinch = useRef<{ d: number; cx: number; cy: number; view: BoardView } | null>(null);
   const marqueeRef = useRef<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const [marquee, setMarquee] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const marqueeDiv = useRef<HTMLDivElement>(null);
@@ -245,6 +252,10 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   // du fichier et son apparition — la seule fraction de l'import que l'utilisateur regarde.
   useEffect(() => { nr.warmFilePaths(); }, []);
 
+  // Guet du stylet : c'est ce qui permet au rejet de paume de savoir qu'un stylet travaille même
+  // quand il survole la barre d'outils plutôt que la planche.
+  useEffect(() => { watchPen(); }, []);
+
   useEffect(() => {
     const kd = (e: KeyboardEvent) => { if (e.code === "Space") space.current = true; };
     const ku = (e: KeyboardEvent) => { if (e.code === "Space") space.current = false; };
@@ -272,8 +283,8 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     else clearTimeout(zoomResumeTimer.current);
     zoomResumeTimer.current = setTimeout(() => {
       zoomResumeTimer.current = null;
-      // Un pan encore en cours garde la main sur liveView : lui committera au pointerup.
-      if (gesture.current !== "pan" && liveView.current) {
+      // Un pan ou un pincement en cours garde la main sur liveView : lui committera au pointerup.
+      if (gesture.current !== "pan" && gesture.current !== "pinch" && liveView.current) {
         const v = liveView.current;
         liveView.current = null;
         setView(v);
@@ -288,11 +299,11 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       zoomResumeTimer.current = null;
       // Démontage en pleine rafale : la vue vivante rejoint quand même le store, sinon le dernier
       // zoom serait perdu au retour sur le board.
-      if (gesture.current !== "pan" && liveView.current) setView(liveView.current);
+      if (gesture.current !== "pan" && gesture.current !== "pinch" && liveView.current) setView(liveView.current);
       liveView.current = null;
       useBoard.getState().endNavigation();
     }
-    if (gesture.current === "pan") useBoard.getState().endNavigation();
+    if (gesture.current === "pan" || gesture.current === "pinch") useBoard.getState().endNavigation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -343,21 +354,82 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     [zoomAt],
   );
 
+  // Le glissé sur le fond navigue-t-il au lieu de sélectionner ? `auto` tranche sur la machine :
+  // une tablette-PC (tactile, aucun pointeur qui survole) n'a ni molette ni barre d'espace, donc
+  // pas d'autre geste pour se déplacer ; une tablette à écran posée à côté d'une souris garde le
+  // lasso, qui reste ce qu'on attend d'un glissé sur le vide.
+  const dragNavigates = useCallback((kind: PointerKind) => {
+    if (kind === "mouse") return false;
+    const mode = useBoard.getState().prefs.penDragPans;
+    if (mode !== "auto") return mode === "on";
+    return kind === "touch" || isTouchFirst();
+  }, []);
+
+  // Démarre le pan à partir de la vue VIVANTE : un zoom peut être en rafale (pas encore commité),
+  // et repartir de la vue du store ferait sauter le board à l'état d'avant la rafale.
+  const beginPan = useCallback((cx: number, cy: number) => {
+    const v = liveView.current ?? useBoard.getState().view;
+    gesture.current = "pan";
+    pan.current = { x: cx, y: cy, tx: v.tx, ty: v.ty };
+    useBoard.getState().beginNavigation();
+    // Curseur en impératif : aucun re-render React pendant le pan.
+    if (containerRef.current) containerRef.current.style.cursor = "grabbing";
+  }, []);
+
+  // Abandonne le geste à un doigt en cours au profit du pincement, SANS rien commiter : le lasso
+  // n'a pas à sélectionner ce qu'il a balayé le temps que le deuxième doigt se pose.
+  const dropMarquee = useCallback(() => {
+    marqueeRef.current = null;
+    setMarquee(null);
+  }, []);
+
+  // Suivi des contacts et rejet de paume en phase de CAPTURE, avant tout le monde. Un doigt posé
+  // sur un média ne remonte jamais jusqu'ici — l'item arrête la propagation pour prendre son geste —
+  // et c'est pourtant le cas le plus courant d'un DEUXIÈME doigt sur une planche bien remplie.
+  const onPointerDownCapture = useCallback((e: React.PointerEvent) => {
+    // Rejet de paume : la main posée sur une dalle qui ne sait pas la distinguer arrive comme un
+    // contact tactile ordinaire. Tant que le stylet travaille, un doigt n'est pas une intention —
+    // et l'arrêter ICI est ce qui empêche aussi un média de partir avec la paume.
+    if (isPalm(e, useBoard.getState().prefs.palmRejection)) { e.stopPropagation(); return; }
+    if (kindOf(e) === "mouse") return;
+    contacts.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    // Pincement : deux contacts, et la planche tient encore le geste. Un média déjà en cours de
+    // déplacement le garde : le lui voler en pleine main serait pire que de ne rien faire.
+    if (contacts.current.size !== 2 || !useBoard.getState().prefs.touchGestures) return;
+    if (gesture.current !== null && gesture.current !== "marquee" && gesture.current !== "pan") return;
+    // Geste sans nom côté planche, mais navigation déjà tenue : c'est un ITEM qui est en cours de
+    // déplacement sous le premier doigt (usePointerTransform tient le sien). Il le garde.
+    if (gesture.current === null && useBoard.getState().navigating) return;
+    const [a, b] = [...contacts.current.values()];
+    const r = rect();
+    dropMarquee();
+    if (gesture.current !== "pan") useBoard.getState().beginNavigation();
+    gesture.current = "pinch";
+    pan.current = null;
+    pinch.current = {
+      d: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)),
+      cx: (a.x + b.x) / 2 - (r?.left ?? 0),
+      cy: (a.y + b.y) / 2 - (r?.top ?? 0),
+      view: liveView.current ?? useBoard.getState().view,
+    };
+    e.stopPropagation(); // le deuxième doigt ne commence pas un geste d'item
+  }, [dropMarquee]);
+
+  const onPointerMoveCapture = useCallback((e: React.PointerEvent) => {
+    if (contacts.current.has(e.pointerId)) contacts.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  }, []);
+
   // Fond : glissé gauche = marquee de sélection ; clic milieu ou Espace+gauche = pan.
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
+      if (gesture.current === "pinch") return;
       if (e.target !== e.currentTarget && e.button === 0) return; // clic sur un item → géré par l'item
-      if (e.button !== 0 && e.button !== 1) return;
+      // Bouton latéral du stylet réglé sur « naviguer » : il arrive comme un clic droit (bouton 2).
+      const barrelPans = usesBarrel(e) && useBoard.getState().prefs.penBarrel === "pan";
+      if (!barrelPans && e.button !== 0 && e.button !== 1) return;
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* capture best-effort */ }
-      // Un zoom peut être en rafale (pas encore commité) : le pan doit partir de la vue VIVANTE,
-      // sinon il saute à la vue d'avant la rafale.
-      const v = liveView.current ?? useBoard.getState().view;
-      if (e.button === 1 || space.current) {
-        gesture.current = "pan";
-        pan.current = { x: e.clientX, y: e.clientY, tx: v.tx, ty: v.ty };
-        useBoard.getState().beginNavigation();
-        // Curseur en impératif : aucun re-render React pendant le pan.
-        if (containerRef.current) containerRef.current.style.cursor = "grabbing";
+      if (e.button === 1 || barrelPans || space.current || dragNavigates(kindOf(e))) {
+        beginPan(e.clientX, e.clientY);
       } else {
         gesture.current = "marquee";
         select(null);
@@ -367,10 +439,29 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         setMarquee(marqueeRef.current); // monte la div ; les moves la déplacent en impératif
       }
     },
-    [select],
+    [select, beginPan, dragNavigates],
   );
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
+      // Pincement : l'écart des doigts donne l'échelle, leur milieu donne la translation. Un seul
+      // calcul pour les deux — le point du board sous le milieu de départ reste sous le milieu
+      // courant, ce qui EST le geste attendu (deux doigts déplacent autant qu'ils zooment).
+      if (gesture.current === "pinch") {
+        const p = pinch.current;
+        if (!p || contacts.current.size < 2) return;
+        const [a, b] = [...contacts.current.values()];
+        const r = rect();
+        const d = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+        const cx = (a.x + b.x) / 2 - (r?.left ?? 0);
+        const cy = (a.y + b.y) / 2 - (r?.top ?? 0);
+        const ns = clampScale(p.view.scale * (d / p.d));
+        const bx = (p.cx - p.view.tx) / p.view.scale;
+        const by = (p.cy - p.view.ty) / p.view.scale;
+        liveView.current = { tx: cx - bx * ns, ty: cy - by * ns, scale: ns };
+        zoomBack.current = null; // vue navigée à la main → le retour du double-clic n'a plus de sens
+        scheduleGesture();
+        return;
+      }
       if (gesture.current === "pan") {
         const p = pan.current;
         if (!p) return;
@@ -385,8 +476,21 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     },
     [scheduleGesture],
   );
+  // Fin d'un contact, en capture pour la même raison que son début. Un doigt levé termine le
+  // pincement : le second qui reste ne redevient PAS un lasso, sinon relâcher un pouce
+  // sélectionnerait la moitié de la planche.
+  const onPointerUpCapture = useCallback((e: React.PointerEvent) => {
+    if (!contacts.current.delete(e.pointerId) || gesture.current !== "pinch") return;
+    if (rafId.current != null) { cancelAnimationFrame(rafId.current); rafId.current = null; }
+    if (liveView.current) { setView(liveView.current); liveView.current = null; }
+    gesture.current = null;
+    pinch.current = null;
+    useBoard.getState().endNavigation();
+  }, [setView]);
+
   const finishPointerGesture = useCallback((e: React.PointerEvent) => {
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    if (gesture.current === "pinch") return;
     const wasPanning = gesture.current === "pan";
     if (rafId.current != null) { cancelAnimationFrame(rafId.current); rafId.current = null; }
     if (gesture.current === "pan" && liveView.current) {
@@ -581,6 +685,10 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     <div
       ref={containerRef}
       onWheel={onWheel}
+      onPointerDownCapture={onPointerDownCapture}
+      onPointerMoveCapture={onPointerMoveCapture}
+      onPointerUpCapture={onPointerUpCapture}
+      onPointerCancelCapture={onPointerUpCapture}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={finishPointerGesture}

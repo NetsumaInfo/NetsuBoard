@@ -85,8 +85,9 @@ function SceneCard({
       >
         <SceneThumb id={scene.id} />
 
-        {/* Overlay actions (visible au survol) */}
-        <div className="absolute inset-0 flex items-start justify-between p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+        {/* Overlay actions (visible au survol — et en permanence là où rien ne survole : sans ça
+            une tablette n'a aucun moyen d'atteindre le favori ni la suppression). */}
+        <div className="absolute inset-0 flex items-start justify-between p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hoverless:opacity-100">
           {/* Favori */}
           <button
             type="button"
@@ -133,9 +134,9 @@ function SceneCard({
           </DropdownMenu>
         </div>
 
-        {/* Badge favori permanent (masqué au hover pour laisser les boutons visibles) */}
+        {/* Badge favori permanent (masqué dès que les boutons sont sortis — sinon deux étoiles) */}
         {isFavorite && (
-          <div className="pointer-events-none absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground opacity-100 transition-opacity group-hover:opacity-0">
+          <div className="pointer-events-none absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground opacity-100 transition-opacity group-hover:opacity-0 hoverless:opacity-0">
             <Star className="size-3.5" fill="currentColor" />
           </div>
         )}
@@ -215,7 +216,7 @@ function ProjectCard({ entry, isFavorite, onOpen, onToggleFavorite, onForget, on
             : <ProjectThumb path={entry.path} />}
         </button>
 
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-1.5 opacity-0 transition-opacity group-hover:opacity-100 hoverless:opacity-100">
           <button
             type="button"
             aria-label={isFavorite ? t("actions.removeFavorite") : t("actions.addFavorite")}
@@ -257,7 +258,7 @@ function ProjectCard({ entry, isFavorite, onOpen, onToggleFavorite, onForget, on
         </div>
 
         {isFavorite && (
-          <div className="pointer-events-none absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground opacity-100 transition-opacity group-hover:opacity-0">
+          <div className="pointer-events-none absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground opacity-100 transition-opacity group-hover:opacity-0 hoverless:opacity-0">
             <Star className="size-3.5" fill="currentColor" />
           </div>
         )}
