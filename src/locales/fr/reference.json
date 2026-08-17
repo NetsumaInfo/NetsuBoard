@@ -53,7 +53,9 @@
     "unsaved": "Non enregistré",
     "saveAs": "Enregistrer sous…",
     "snapOn": "Activer l'aimant",
-    "snapOff": "Désactiver l'aimant"
+    "snapOff": "Désactiver l'aimant",
+    "snap": "Aimant",
+    "freeze": "Figer / lire"
   },
   "settings": {
     "navBoard": "Board",
@@ -110,7 +112,7 @@
     "disabled": "Désactivé",
     "placeFrame": "Cadre de la zone de pose",
     "pinnedToolbar": "Barre d'outils une fois épinglé",
-    "pinnedToolbarHint": "Épinglé, le board garde poser, dessiner et cadrer. Le reste passe par le clic droit.",
+    "pinnedToolbarHint": "Barre réduite quand la fenêtre est épinglée. Le reste passe par le clic droit.",
     "decompose": "Décomposer une vidéo en images",
     "decomposeHint": "Pose une série d'images échantillonnées de la vidéo sur le board.",
     "imagesPerSec": "Images / s",
@@ -142,7 +144,7 @@
     "editShortcut": "Modifier le raccourci {{label}}",
     "pressLetter": "Appuie sur une lettre · Échap annule",
     "keyboardShortcuts": "Raccourcis clavier",
-    "pressCombo": "Appuie sur la combinaison · Échap annule",
+    "pressCombo": "Appuie sur la nouvelle combinaison · Suppr pour délier · Échap pour annuler",
     "gestures": "Gestes",
     "gesturePaste": "Coller (image / lien / YouTube)",
     "gestureMove": "Déplacer la sélection (Maj = ×10)",
@@ -220,7 +222,23 @@
     "penProbeTouch": "Points tactiles",
     "penNoSensor": "aucun capteur",
     "penYes": "Oui",
-    "penNo": "Non"
+    "penNo": "Non",
+    "bgOpacity": "Opacité du fond",
+    "pinnedSide": "Bord",
+    "pinnedButtons": "Barre épinglée",
+    "sideTop": "Haut",
+    "sideBottom": "Bas",
+    "sideLeft": "Gauche",
+    "sideRight": "Droite",
+    "seeThroughScope": "Aussi translucide",
+    "seeThroughShell": "Interface",
+    "seeThroughPlaceFrame": "Cadre de zone de pose",
+    "contentOpacity": "Opacité des contenus",
+    "pinnedAvailable": "Disponibles",
+    "pinnedAllPlaced": "Tout est posé.",
+    "pinnedBarHint": "Glisser pour poser ou déplacer, clic pour retirer.",
+    "pinnedRemove": "Retirer {{label}} de la barre",
+    "barButtons": "Barre d'outils"
   },
   "inspector": {
     "ytPlayer": "Lecteur YouTube",
@@ -359,7 +377,20 @@
     "grayscale": "Niveaux de gris",
     "toFront": "Premier plan",
     "toBack": "Arrière-plan",
-    "extractPalette": "Extraire la palette"
+    "extractPalette": "Extraire la palette",
+    "addText": "Ajouter du texte",
+    "addFrame": "Ajouter un cadre",
+    "toggleDraw": "Mode dessin",
+    "toggleFreeze": "Tout figer / tout lire",
+    "toggleMouseThrough": "Transparent à la souris",
+    "prevFrame": "Image précédente",
+    "nextFrame": "Image suivante",
+    "newScene": "Nouvelle scène",
+    "openSettings": "Paramètres",
+    "togglePin": "Épingler la fenêtre",
+    "paletteStudio": "Générateur de palettes",
+    "crop": "Rogner",
+    "groupSequence": "Grouper en séquence"
   },
   "drawStyle": {
     "thin": "Trait fin",
@@ -595,7 +626,9 @@
     "noProjectFile": "Ce board n'est lié à aucun fichier",
     "relocating": "Recherche des médias dans le dossier… ({{count}})",
     "relocated": "{{count}}/{{total}} média(s) relocalisé(s)",
-    "relocatedNone": "Aucun média reconnu dans ce dossier"
+    "relocatedNone": "Aucun média reconnu dans ce dossier",
+    "itemOpacity": "Opacité du média : {{percent}} %",
+    "contentOpacity": "Opacité des contenus : {{percent}} %"
   },
   "tidy": {
     "title": "Ranger",
@@ -705,5 +738,11 @@
     "fetching": "Récupération du média…",
     "linkDone": "Média importé",
     "fetchingFrom": "Récupération depuis {{source}}…"
+  },
+  "mouseThrough": {
+    "on": "Transparent à la souris",
+    "off": "Reprendre la souris",
+    "warning": "Clics et molette iront à l'application du dessous, et la fenêtre reste au-dessus. Pour reprendre la main : redonne-lui le focus (Alt+Tab).",
+    "dontAskAgain": "Ne plus demander"
   }
 }

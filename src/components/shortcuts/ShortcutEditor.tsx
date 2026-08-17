@@ -21,6 +21,7 @@ export function ShortcutEditor({
   onReset,
   title,
   onCapturingChange,
+  ns = "reference",
 }: {
   defs: readonly ShortcutDef[];
   keys: ShortcutMap;
@@ -30,8 +31,11 @@ export function ShortcutEditor({
   // Remonte l'état « capture en cours » : un parent qui ferme sur Échap doit s'effacer pendant la
   // capture, sinon Échap annulerait la capture ET fermerait le panneau d'un coup.
   onCapturingChange?: (active: boolean) => void;
+  // Namespace des libelles. Les `labelKey` des defs sont RELATIFS a leur module : resolus ailleurs,
+  // ils s'affichent tels quels (« shortcut.delete ») des que le namespace ne les porte pas.
+  ns?: string;
 }) {
-  const { t } = useTranslation(["derush", "reference", "common"]);
+  const { t } = useTranslation([ns, "common"]);
   const [capturing, setCapturing] = useState<string | null>(null);
   const setCaptureState = (next: string | null) => {
     setCapturing(next);
@@ -46,6 +50,12 @@ export function ShortcutEditor({
       e.preventDefault();
       e.stopImmediatePropagation();
       if (e.key === "Escape") { setCaptureState(null); return; }
+      // Suppr / Retour arriere DELIENT l'action : toutes n'ont pas a occuper une touche.
+      if (e.key === "Delete" || e.key === "Backspace") {
+        onChange({ ...keys, [capturing]: "" });
+        setCaptureState(null);
+        return;
+      }
       const combo = comboFromEvent(e);
       if (!isCompleteCombo(combo)) return; // besoin d'une touche principale (pas juste des modificateurs)
       const next = { ...keys, [capturing]: combo };

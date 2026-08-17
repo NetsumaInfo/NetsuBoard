@@ -473,4 +473,4 @@ function writeExportFile(filePath, data, encoding) {
   }
 }
 
-module.exports = { createReferenceStore, scanFolder, writeExportFile };
+module.exports = { createReferenceStore, scanFolder, writeExportFile, downloadBytes: download };

@@ -2,7 +2,18 @@
   "app": {
     "modulePreparing": "Module in the works — coming soon."
   },
-  "nav": { "derush": "NetsuCut", "script": "NetsuDraft", "notebook": "NetsuBook", "search": "NetsuSearch", "upscale": "NetsuLab", "reference": "NetsuBoard", "transfer": "NetsuBridge", "voice": "NetsuTalk", "chat": "NetsuPilot", "optimisation": "NetsuBoost" },
+  "nav": {
+    "derush": "NetsuCut",
+    "script": "NetsuDraft",
+    "notebook": "NetsuBook",
+    "search": "NetsuSearch",
+    "upscale": "NetsuLab",
+    "reference": "NetsuBoard",
+    "transfer": "NetsuBridge",
+    "voice": "NetsuTalk",
+    "chat": "NetsuPilot",
+    "optimisation": "NetsuBoost"
+  },
   "sidebar": {
     "settings": "Settings",
     "hostPicked": "Controlled app"
@@ -21,7 +32,9 @@
     "resolveHint": "The bridge is running, but Resolve isn't responding. Open <b1>Resolve Studio</b1> with a project, then set <b2>Preferences ▸ System ▸ General ▸ External scripting using = Local</b2> and restart Resolve.",
     "adobeHint": "Open {{host}}, then the <b>Window ▸ Extensions ▸ NetsuBoard</b> panel (install it from the Adobe tab)."
   },
-  "menu": { "derush": "Footage", "chat": "Chat",
+  "menu": {
+    "derush": "Footage",
+    "chat": "Chat",
     "edit": "Edit",
     "cut": "Cut",
     "paste": "Paste",
@@ -66,7 +79,8 @@
     "support": "Support NetsuBoard",
     "minimize": "Minimize",
     "restore": "Restore",
-    "maximize": "Maximize"
+    "maximize": "Maximize",
+    "pinnedByMode": "Held above by the transparent-to-mouse mode"
   },
   "errorBadge": {
     "aria": "Errors: {{count}} — open the console",

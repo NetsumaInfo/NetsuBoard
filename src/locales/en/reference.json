@@ -53,7 +53,9 @@
     "unsaved": "Unsaved",
     "saveAs": "Save as…",
     "snapOn": "Enable snapping",
-    "snapOff": "Disable snapping"
+    "snapOff": "Disable snapping",
+    "snap": "Snapping",
+    "freeze": "Freeze / play"
   },
   "settings": {
     "navBoard": "Board",
@@ -110,7 +112,7 @@
     "disabled": "Off",
     "placeFrame": "Content frame",
     "pinnedToolbar": "Toolbar once pinned",
-    "pinnedToolbarHint": "Pinned, the board keeps place, draw and frame. The rest is in the right-click menu.",
+    "pinnedToolbarHint": "Reduced bar while the window is pinned. The rest stays in the right-click menu.",
     "decompose": "Break a video into frames",
     "decomposeHint": "Places a series of frames sampled from the video on the board.",
     "imagesPerSec": "Frames / s",
@@ -142,7 +144,7 @@
     "editShortcut": "Change the {{label}} shortcut",
     "pressLetter": "Press a letter · Esc cancels",
     "keyboardShortcuts": "Keyboard shortcuts",
-    "pressCombo": "Press the combo · Esc cancels",
+    "pressCombo": "Press the new combination · Delete to unbind · Esc to cancel",
     "gestures": "Gestures",
     "gesturePaste": "Paste (image / link / YouTube)",
     "gestureMove": "Move selection (Shift = ×10)",
@@ -220,7 +222,23 @@
     "penProbeTouch": "Touch points",
     "penNoSensor": "no sensor",
     "penYes": "Yes",
-    "penNo": "No"
+    "penNo": "No",
+    "bgOpacity": "Background opacity",
+    "pinnedSide": "Edge",
+    "pinnedButtons": "Pinned bar",
+    "sideTop": "Top",
+    "sideBottom": "Bottom",
+    "sideLeft": "Left",
+    "sideRight": "Right",
+    "seeThroughScope": "Also translucent",
+    "seeThroughShell": "Interface",
+    "seeThroughPlaceFrame": "Placement frame",
+    "contentOpacity": "Content opacity",
+    "pinnedAvailable": "Available",
+    "pinnedAllPlaced": "Everything is placed.",
+    "pinnedBarHint": "Drag to place or move, click to remove.",
+    "pinnedRemove": "Remove {{label}} from the bar",
+    "barButtons": "Toolbar"
   },
   "inspector": {
     "ytPlayer": "YouTube player",
@@ -359,7 +377,20 @@
     "grayscale": "Grayscale",
     "toFront": "Bring to front",
     "toBack": "Send to back",
-    "extractPalette": "Extract palette"
+    "extractPalette": "Extract palette",
+    "addText": "Add text",
+    "addFrame": "Add frame",
+    "toggleDraw": "Draw mode",
+    "toggleFreeze": "Freeze all / play all",
+    "toggleMouseThrough": "Transparent to mouse",
+    "prevFrame": "Previous frame",
+    "nextFrame": "Next frame",
+    "newScene": "New scene",
+    "openSettings": "Settings",
+    "togglePin": "Pin the window",
+    "paletteStudio": "Palette generator",
+    "crop": "Crop",
+    "groupSequence": "Group into a sequence"
   },
   "drawStyle": {
     "thin": "Thin stroke",
@@ -595,7 +626,9 @@
     "noProjectFile": "This board is not linked to a file",
     "relocating": "Searching the folder for media… ({{count}})",
     "relocated": "{{count}}/{{total}} media relocated",
-    "relocatedNone": "No media recognised in this folder"
+    "relocatedNone": "No media recognised in this folder",
+    "itemOpacity": "Media opacity: {{percent}}%",
+    "contentOpacity": "Content opacity: {{percent}}%"
   },
   "tidy": {
     "title": "Tidy",
@@ -705,5 +738,11 @@
     "fetching": "Fetching the media…",
     "linkDone": "Media imported",
     "fetchingFrom": "Fetching from {{source}}…"
+  },
+  "mouseThrough": {
+    "on": "Transparent to mouse",
+    "off": "Take the mouse back",
+    "warning": "Clicks and wheel will go to the application underneath, and the window stays on top. To take control back: give it focus again (Alt+Tab).",
+    "dontAskAgain": "Don't ask again"
   }
 }

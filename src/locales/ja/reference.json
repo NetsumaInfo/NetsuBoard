@@ -53,7 +53,9 @@
     "unsaved": "未保存",
     "saveAs": "名前を付けて保存…",
     "snapOn": "スナップを有効化",
-    "snapOff": "スナップを無効化"
+    "snapOff": "スナップを無効化",
+    "snap": "スナップ",
+    "freeze": "停止 / 再生"
   },
   "settings": {
     "navBoard": "ボード",
@@ -110,7 +112,7 @@
     "disabled": "オフ",
     "placeFrame": "配置エリアの枠",
     "pinnedToolbar": "ピン留め中のツールバー",
-    "pinnedToolbarHint": "ピン留め中は配置・描画・表示のみ。残りは右クリックメニューです。",
+    "pinnedToolbarHint": "固定中は縮小バー。残りは右クリックメニューに。",
     "decompose": "動画を連番画像に分解",
     "decomposeHint": "動画から抜き出した連番画像をボードに置きます。",
     "imagesPerSec": "画像 / 秒",
@@ -142,7 +144,7 @@
     "editShortcut": "{{label}} のショートカットを変更",
     "pressLetter": "キーを1つ押す · Esc で中止",
     "keyboardShortcuts": "キーボードショートカット",
-    "pressCombo": "キーの組み合わせを押す · Esc で中止",
+    "pressCombo": "新しいキーを押す · Delete で解除 · Esc で取消",
     "gestures": "操作",
     "gesturePaste": "貼り付け（画像 / リンク / YouTube）",
     "gestureMove": "選択を移動（Shift = ×10）",
@@ -220,7 +222,23 @@
     "penProbeTouch": "タッチポイント",
     "penNoSensor": "センサーなし",
     "penYes": "あり",
-    "penNo": "なし"
+    "penNo": "なし",
+    "bgOpacity": "背景の不透明度",
+    "pinnedSide": "配置",
+    "pinnedButtons": "固定時のバー",
+    "sideTop": "上",
+    "sideBottom": "下",
+    "sideLeft": "左",
+    "sideRight": "右",
+    "seeThroughScope": "半透明にする対象",
+    "seeThroughShell": "インターフェース",
+    "seeThroughPlaceFrame": "配置枠",
+    "contentOpacity": "コンテンツの不透明度",
+    "pinnedAvailable": "利用可能",
+    "pinnedAllPlaced": "すべて配置済み。",
+    "pinnedBarHint": "ドラッグで配置・移動、クリックで削除。",
+    "pinnedRemove": "{{label}} をバーから削除",
+    "barButtons": "ツールバー"
   },
   "inspector": {
     "ytPlayer": "YouTube プレーヤー",
@@ -359,7 +377,20 @@
     "grayscale": "グレースケール",
     "toFront": "最前面へ",
     "toBack": "最背面へ",
-    "extractPalette": "パレットを抽出"
+    "extractPalette": "パレットを抽出",
+    "addText": "テキストを追加",
+    "addFrame": "フレームを追加",
+    "toggleDraw": "描画モード",
+    "toggleFreeze": "すべて停止 / 再生",
+    "toggleMouseThrough": "マウスを透過",
+    "prevFrame": "前のフレーム",
+    "nextFrame": "次のフレーム",
+    "newScene": "新しいシーン",
+    "openSettings": "設定",
+    "togglePin": "ウィンドウを固定",
+    "paletteStudio": "パレットジェネレーター",
+    "crop": "トリミング",
+    "groupSequence": "シーケンスにまとめる"
   },
   "drawStyle": {
     "thin": "細い線",
@@ -595,7 +626,9 @@
     "noProjectFile": "このボードはファイルに紐づいていません",
     "relocating": "フォルダー内のメディアを検索中…（{{count}}）",
     "relocated": "{{count}}/{{total}} 件のメディアの場所を指定",
-    "relocatedNone": "このフォルダーで認識できるメディアはありません"
+    "relocatedNone": "このフォルダーで認識できるメディアはありません",
+    "itemOpacity": "メディアの不透明度：{{percent}} %",
+    "contentOpacity": "コンテンツの不透明度：{{percent}} %"
   },
   "tidy": {
     "title": "整列",
@@ -705,5 +738,11 @@
     "fetching": "メディアを取得中…",
     "linkDone": "メディアをインポートしました",
     "fetchingFrom": "{{source}} から取得中…"
+  },
+  "mouseThrough": {
+    "on": "マウスを透過",
+    "off": "マウスを戻す",
+    "warning": "クリックとホイールは下のアプリへ届き、ウィンドウは最前面に留まります。戻すにはフォーカスを与えてください（Alt+Tab）。",
+    "dontAskAgain": "次回から表示しない"
   }
 }

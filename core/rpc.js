@@ -318,6 +318,8 @@ function createRpc() {
     // relisible par le renderer (le protocole d'asset de la coquille teinte le canvas). Sert
     // l'extraction de palette, qui sans ça ne trouvait « aucune couleur exploitable ».
     "reference:sampleFrame": ([filePath, opts]) => ffmpeg.sampleFrame(filePath, opts || {}),
+    // Cadence + duree exactes d'un fichier local : ce qu'il faut pour avancer d'UNE image.
+    "reference:playInfo": ([filePath]) => ffmpeg.playInfo(filePath),
 
     // --- Partage « .netsu » : export (board courant → archive) / import (archive → scène) ---
     // L'export encode ses clips un par un : il rend compte item par item, sinon un board fourni

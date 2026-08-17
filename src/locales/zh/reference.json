@@ -53,7 +53,9 @@
     "unsaved": "未保存",
     "saveAs": "另存为…",
     "snapOn": "启用吸附",
-    "snapOff": "关闭吸附"
+    "snapOff": "关闭吸附",
+    "snap": "吸附",
+    "freeze": "冻结 / 播放"
   },
   "settings": {
     "navBoard": "画板",
@@ -110,7 +112,7 @@
     "disabled": "关",
     "placeFrame": "放置区边框",
     "pinnedToolbar": "固定后的工具栏",
-    "pinnedToolbarHint": "固定后只保留放置、绘制和取景。其余在右键菜单里。",
+    "pinnedToolbarHint": "窗口固定时使用精简工具栏，其余在右键菜单。",
     "decompose": "把视频拆成图片",
     "decomposeHint": "把从视频里抽取的一组图片放到画板上。",
     "imagesPerSec": "图片 / 秒",
@@ -142,7 +144,7 @@
     "editShortcut": "修改{{label}}快捷键",
     "pressLetter": "按一个字母 · Esc 取消",
     "keyboardShortcuts": "键盘快捷键",
-    "pressCombo": "按组合键 · Esc 取消",
+    "pressCombo": "按下新的组合键 · Delete 解除绑定 · Esc 取消",
     "gestures": "手势",
     "gesturePaste": "粘贴（图片 / 链接 / YouTube）",
     "gestureMove": "移动所选（Shift = ×10）",
@@ -220,7 +222,23 @@
     "penProbeTouch": "触控点",
     "penNoSensor": "无传感器",
     "penYes": "是",
-    "penNo": "否"
+    "penNo": "否",
+    "bgOpacity": "背景不透明度",
+    "pinnedSide": "位置",
+    "pinnedButtons": "固定时的工具栏",
+    "sideTop": "上",
+    "sideBottom": "下",
+    "sideLeft": "左",
+    "sideRight": "右",
+    "seeThroughScope": "一并半透明",
+    "seeThroughShell": "界面",
+    "seeThroughPlaceFrame": "放置边框",
+    "contentOpacity": "内容不透明度",
+    "pinnedAvailable": "可用",
+    "pinnedAllPlaced": "全部已放置。",
+    "pinnedBarHint": "拖动放置或移动，点击移除。",
+    "pinnedRemove": "从工具栏移除 {{label}}",
+    "barButtons": "工具栏"
   },
   "inspector": {
     "ytPlayer": "YouTube 播放器",
@@ -359,7 +377,20 @@
     "grayscale": "黑白",
     "toFront": "移到最前",
     "toBack": "移到最后",
-    "extractPalette": "提取调色板"
+    "extractPalette": "提取调色板",
+    "addText": "添加文字",
+    "addFrame": "添加边框",
+    "toggleDraw": "绘图模式",
+    "toggleFreeze": "全部冻结 / 播放",
+    "toggleMouseThrough": "鼠标穿透",
+    "prevFrame": "上一帧",
+    "nextFrame": "下一帧",
+    "newScene": "新场景",
+    "openSettings": "设置",
+    "togglePin": "固定窗口",
+    "paletteStudio": "调色板生成器",
+    "crop": "裁剪",
+    "groupSequence": "合并为序列"
   },
   "drawStyle": {
     "thin": "细线",
@@ -595,7 +626,9 @@
     "noProjectFile": "此看板未关联任何文件",
     "relocating": "正在文件夹中查找媒体…（{{count}}）",
     "relocated": "已重新定位 {{count}}/{{total}} 个媒体",
-    "relocatedNone": "此文件夹中未识别到媒体"
+    "relocatedNone": "此文件夹中未识别到媒体",
+    "itemOpacity": "媒体不透明度：{{percent}}%",
+    "contentOpacity": "内容不透明度：{{percent}}%"
   },
   "tidy": {
     "title": "整理",
@@ -705,5 +738,11 @@
     "fetching": "正在获取媒体…",
     "linkDone": "已导入媒体",
     "fetchingFrom": "正在从 {{source}} 获取…"
+  },
+  "mouseThrough": {
+    "on": "鼠标穿透",
+    "off": "收回鼠标",
+    "warning": "点击和滚轮将传给下方应用，窗口保持在最前。要收回：重新让它获得焦点（Alt+Tab）。",
+    "dontAskAgain": "不再询问"
   }
 }

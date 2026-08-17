@@ -2,7 +2,18 @@
   "app": {
     "modulePreparing": "模块正在准备中 — 即将推出。"
   },
-  "nav": { "derush": "NetsuCut", "script": "NetsuDraft", "notebook": "NetsuBook", "search": "NetsuSearch", "upscale": "NetsuLab", "reference": "NetsuBoard", "transfer": "NetsuBridge", "voice": "NetsuTalk", "chat": "NetsuPilot", "optimisation": "NetsuBoost" },
+  "nav": {
+    "derush": "NetsuCut",
+    "script": "NetsuDraft",
+    "notebook": "NetsuBook",
+    "search": "NetsuSearch",
+    "upscale": "NetsuLab",
+    "reference": "NetsuBoard",
+    "transfer": "NetsuBridge",
+    "voice": "NetsuTalk",
+    "chat": "NetsuPilot",
+    "optimisation": "NetsuBoost"
+  },
   "sidebar": {
     "settings": "设置",
     "hostPicked": "控制的软件"
@@ -21,7 +32,9 @@
     "resolveHint": "桥接正常，但 Resolve 无响应。打开 <b1>Resolve Studio</b1> 并载入项目，然后开启 <b2>偏好设置 ▸ 系统 ▸ 常规 ▸ 外部脚本 = 本地</b2> 并重启 Resolve。",
     "adobeHint": "打开 {{host}}，再打开面板 <b>窗口 ▸ 扩展 ▸ NetsuBoard</b>（先在 Adobe 选项卡中安装）。"
   },
-  "menu": { "derush": "素材整理", "chat": "聊天",
+  "menu": {
+    "derush": "素材整理",
+    "chat": "聊天",
     "edit": "编辑",
     "cut": "剪切",
     "paste": "粘贴",
@@ -66,7 +79,8 @@
     "support": "支持 NetsuBoard",
     "minimize": "最小化",
     "restore": "还原",
-    "maximize": "最大化"
+    "maximize": "最大化",
+    "pinnedByMode": "由“鼠标穿透”模式保持在最前"
   },
   "errorBadge": {
     "aria": "{{count}} 个错误 — 打开控制台",

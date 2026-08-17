@@ -2,7 +2,18 @@
   "app": {
     "modulePreparing": "Module en cours de préparation — bientôt disponible."
   },
-  "nav": { "derush": "NetsuCut", "script": "NetsuDraft", "notebook": "NetsuBook", "search": "NetsuSearch", "upscale": "NetsuLab", "reference": "NetsuBoard", "transfer": "NetsuBridge", "voice": "NetsuTalk", "chat": "NetsuPilot", "optimisation": "NetsuBoost" },
+  "nav": {
+    "derush": "NetsuCut",
+    "script": "NetsuDraft",
+    "notebook": "NetsuBook",
+    "search": "NetsuSearch",
+    "upscale": "NetsuLab",
+    "reference": "NetsuBoard",
+    "transfer": "NetsuBridge",
+    "voice": "NetsuTalk",
+    "chat": "NetsuPilot",
+    "optimisation": "NetsuBoost"
+  },
   "sidebar": {
     "settings": "Paramètres",
     "hostPicked": "Logiciel piloté"
@@ -21,7 +32,9 @@
     "resolveHint": "Le pont fonctionne, mais Resolve ne répond pas. Ouvre <b1>Resolve Studio</b1> avec un projet, puis active <b2>Préférences ▸ Système ▸ Général ▸ Scripting externe = Local</b2> et redémarre Resolve.",
     "adobeHint": "Ouvre {{host}}, puis le panneau <b>Fenêtre ▸ Extensions ▸ NetsuBoard</b> (à installer depuis l'onglet Adobe)."
   },
-  "menu": { "derush": "Dérush", "chat": "Chat",
+  "menu": {
+    "derush": "Dérush",
+    "chat": "Chat",
     "edit": "Édition",
     "cut": "Couper",
     "paste": "Coller",
@@ -66,7 +79,8 @@
     "support": "Soutenir NetsuBoard",
     "minimize": "Réduire",
     "restore": "Restaurer",
-    "maximize": "Agrandir"
+    "maximize": "Agrandir",
+    "pinnedByMode": "Maintenue au-dessus par le mode transparent à la souris"
   },
   "errorBadge": {
     "aria": "{{count}} erreur(s) — ouvrir la console",

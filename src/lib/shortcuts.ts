@@ -52,7 +52,8 @@ export function mergeKeys(defaults: ShortcutMap, saved: unknown): ShortcutMap {
   if (!saved || typeof saved !== "object") return { ...defaults };
   const out = { ...defaults };
   for (const [action, combo] of Object.entries(saved as Record<string, unknown>)) {
-    if (action in defaults && typeof combo === "string" && combo) out[action] = combo;
+    // Chaine VIDE gardee : action deliberement deliee, pas un trou a recombler au rechargement.
+    if (action in defaults && typeof combo === "string") out[action] = combo;
   }
   return out;
 }

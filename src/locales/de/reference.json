@@ -53,7 +53,9 @@
     "unsaved": "Nicht gespeichert",
     "saveAs": "Speichern unter…",
     "snapOn": "Magnet aktivieren",
-    "snapOff": "Magnet deaktivieren"
+    "snapOff": "Magnet deaktivieren",
+    "snap": "Magnet",
+    "freeze": "Anhalten / abspielen"
   },
   "settings": {
     "navBoard": "Board",
@@ -110,7 +112,7 @@
     "disabled": "Aus",
     "placeFrame": "Rahmen der Platzierungszone",
     "pinnedToolbar": "Werkzeugleiste im angehefteten Zustand",
-    "pinnedToolbarHint": "Angeheftet bleiben Platzieren, Zeichnen und Einpassen. Der Rest liegt im Rechtsklickmenü.",
+    "pinnedToolbarHint": "Verkleinerte Leiste bei angepinntem Fenster. Der Rest bleibt im Rechtsklickmenü.",
     "decompose": "Video in Bilder zerlegen",
     "decomposeHint": "Legt eine Reihe von Einzelbildern aus dem Video auf das Board.",
     "imagesPerSec": "Bilder / s",
@@ -142,7 +144,7 @@
     "editShortcut": "Kürzel {{label}} ändern",
     "pressLetter": "Buchstabe drücken · Esc bricht ab",
     "keyboardShortcuts": "Tastenkürzel",
-    "pressCombo": "Tastenkombi drücken · Esc bricht ab",
+    "pressCombo": "Neue Tastenkombination drücken · Entf zum Lösen · Esc zum Abbrechen",
     "gestures": "Gesten",
     "gesturePaste": "Einfügen (Bild / Link / YouTube)",
     "gestureMove": "Auswahl bewegen (Umschalt = ×10)",
@@ -220,7 +222,23 @@
     "penProbeTouch": "Berührungspunkte",
     "penNoSensor": "kein Sensor",
     "penYes": "Ja",
-    "penNo": "Nein"
+    "penNo": "Nein",
+    "bgOpacity": "Deckkraft des Hintergrunds",
+    "pinnedSide": "Rand",
+    "pinnedButtons": "Angepinnte Leiste",
+    "sideTop": "Oben",
+    "sideBottom": "Unten",
+    "sideLeft": "Links",
+    "sideRight": "Rechts",
+    "seeThroughScope": "Ebenfalls durchscheinend",
+    "seeThroughShell": "Oberfläche",
+    "seeThroughPlaceFrame": "Platzierungsrahmen",
+    "contentOpacity": "Deckkraft der Inhalte",
+    "pinnedAvailable": "Verfügbar",
+    "pinnedAllPlaced": "Alles ist gesetzt.",
+    "pinnedBarHint": "Ziehen zum Setzen oder Verschieben, Klick zum Entfernen.",
+    "pinnedRemove": "{{label}} aus der Leiste entfernen",
+    "barButtons": "Werkzeugleiste"
   },
   "inspector": {
     "ytPlayer": "YouTube-Player",
@@ -359,7 +377,20 @@
     "grayscale": "Graustufen",
     "toFront": "In den Vordergrund",
     "toBack": "In den Hintergrund",
-    "extractPalette": "Palette extrahieren"
+    "extractPalette": "Palette extrahieren",
+    "addText": "Text hinzufügen",
+    "addFrame": "Rahmen hinzufügen",
+    "toggleDraw": "Zeichenmodus",
+    "toggleFreeze": "Alle anhalten / abspielen",
+    "toggleMouseThrough": "Für die Maus transparent",
+    "prevFrame": "Frame zurück",
+    "nextFrame": "Frame vor",
+    "newScene": "Neue Szene",
+    "openSettings": "Einstellungen",
+    "togglePin": "Fenster anpinnen",
+    "paletteStudio": "Paletten-Generator",
+    "crop": "Zuschneiden",
+    "groupSequence": "Als Sequenz gruppieren"
   },
   "drawStyle": {
     "thin": "Dünner Strich",
@@ -595,7 +626,9 @@
     "noProjectFile": "Dieses Board ist mit keiner Datei verknüpft",
     "relocating": "Medien im Ordner werden gesucht… ({{count}})",
     "relocated": "{{count}}/{{total}} Medien neu verknüpft",
-    "relocatedNone": "Keine Medien in diesem Ordner erkannt"
+    "relocatedNone": "Keine Medien in diesem Ordner erkannt",
+    "itemOpacity": "Deckkraft des Mediums: {{percent}} %",
+    "contentOpacity": "Deckkraft der Inhalte: {{percent}} %"
   },
   "tidy": {
     "title": "Ordnen",
@@ -705,5 +738,11 @@
     "fetching": "Medium wird geladen…",
     "linkDone": "Medium importiert",
     "fetchingFrom": "Wird von {{source}} geladen…"
+  },
+  "mouseThrough": {
+    "on": "Für die Maus transparent",
+    "off": "Maus zurückholen",
+    "warning": "Klicks und Scrollen gehen an die Anwendung darunter, das Fenster bleibt im Vordergrund. Zurückholen: dem Fenster wieder den Fokus geben (Alt+Tab).",
+    "dontAskAgain": "Nicht mehr fragen"
   }
 }

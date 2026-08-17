@@ -53,7 +53,9 @@
     "unsaved": "Sin guardar",
     "saveAs": "Guardar como…",
     "snapOn": "Activar el imán",
-    "snapOff": "Desactivar el imán"
+    "snapOff": "Desactivar el imán",
+    "snap": "Imán",
+    "freeze": "Congelar / reproducir"
   },
   "settings": {
     "navBoard": "Tablero",
@@ -110,7 +112,7 @@
     "disabled": "Desactivado",
     "placeFrame": "Marco de la zona de colocación",
     "pinnedToolbar": "Barra de herramientas al fijar",
-    "pinnedToolbarHint": "Fijado, el tablero conserva colocar, dibujar y encuadrar. El resto, en el menú contextual.",
+    "pinnedToolbarHint": "Barra reducida con la ventana fijada. El resto queda en el menú contextual.",
     "decompose": "Descomponer un vídeo en imágenes",
     "decomposeHint": "Coloca una serie de imágenes muestreadas del vídeo en el tablero.",
     "imagesPerSec": "Imágenes / s",
@@ -142,7 +144,7 @@
     "editShortcut": "Modificar el atajo {{label}}",
     "pressLetter": "Pulsa una letra · Esc cancela",
     "keyboardShortcuts": "Atajos de teclado",
-    "pressCombo": "Pulsa la combinación · Esc cancela",
+    "pressCombo": "Pulsa la nueva combinación · Supr para desvincular · Esc para cancelar",
     "gestures": "Gestos",
     "gesturePaste": "Pegar (imagen / enlace / YouTube)",
     "gestureMove": "Mover la selección (Mayús = ×10)",
@@ -220,7 +222,23 @@
     "penProbeTouch": "Puntos táctiles",
     "penNoSensor": "sin sensor",
     "penYes": "Sí",
-    "penNo": "No"
+    "penNo": "No",
+    "bgOpacity": "Opacidad del fondo",
+    "pinnedSide": "Borde",
+    "pinnedButtons": "Barra fijada",
+    "sideTop": "Arriba",
+    "sideBottom": "Abajo",
+    "sideLeft": "Izquierda",
+    "sideRight": "Derecha",
+    "seeThroughScope": "También translúcido",
+    "seeThroughShell": "Interfaz",
+    "seeThroughPlaceFrame": "Marco de colocación",
+    "contentOpacity": "Opacidad del contenido",
+    "pinnedAvailable": "Disponibles",
+    "pinnedAllPlaced": "Todo está colocado.",
+    "pinnedBarHint": "Arrastra para colocar o mover, clic para quitar.",
+    "pinnedRemove": "Quitar {{label}} de la barra",
+    "barButtons": "Barra de herramientas"
   },
   "inspector": {
     "ytPlayer": "Reproductor de YouTube",
@@ -359,7 +377,20 @@
     "grayscale": "Escala de grises",
     "toFront": "Traer al frente",
     "toBack": "Enviar al fondo",
-    "extractPalette": "Extraer la paleta"
+    "extractPalette": "Extraer la paleta",
+    "addText": "Añadir texto",
+    "addFrame": "Añadir marco",
+    "toggleDraw": "Modo dibujo",
+    "toggleFreeze": "Congelar todo / reproducir todo",
+    "toggleMouseThrough": "Transparente al ratón",
+    "prevFrame": "Fotograma anterior",
+    "nextFrame": "Fotograma siguiente",
+    "newScene": "Nueva escena",
+    "openSettings": "Ajustes",
+    "togglePin": "Fijar la ventana",
+    "paletteStudio": "Generador de paletas",
+    "crop": "Recortar",
+    "groupSequence": "Agrupar en secuencia"
   },
   "drawStyle": {
     "thin": "Trazo fino",
@@ -595,7 +626,9 @@
     "noProjectFile": "Este tablero no está vinculado a ningún archivo",
     "relocating": "Buscando archivos multimedia en la carpeta… ({{count}})",
     "relocated": "{{count}}/{{total}} archivos multimedia relocalizados",
-    "relocatedNone": "Ningún archivo multimedia reconocido en esta carpeta"
+    "relocatedNone": "Ningún archivo multimedia reconocido en esta carpeta",
+    "itemOpacity": "Opacidad del medio: {{percent}} %",
+    "contentOpacity": "Opacidad del contenido: {{percent}} %"
   },
   "tidy": {
     "title": "Ordenar",
@@ -705,5 +738,11 @@
     "fetching": "Obteniendo el medio…",
     "linkDone": "Medio importado",
     "fetchingFrom": "Obteniendo de {{source}}…"
+  },
+  "mouseThrough": {
+    "on": "Transparente al ratón",
+    "off": "Recuperar el ratón",
+    "warning": "Los clics y la rueda irán a la aplicación de debajo, y la ventana se mantiene encima. Para recuperar el control: vuelve a darle el foco (Alt+Tab).",
+    "dontAskAgain": "No preguntar de nuevo"
   }
 }
