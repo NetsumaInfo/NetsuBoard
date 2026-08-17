@@ -1,5 +1,36 @@
 [
   {
+    "id": "netsuboard-0.4.4",
+    "version": "0.4.4",
+    "date": "2026-08-17",
+    "title": {
+      "fr": "Tablettes graphiques et écrans tactiles",
+      "en": "Pen tablets and touch screens"
+    },
+    "highlights": {
+      "fr": [
+        "Le trait suit la pression du stylet, et l'inclinaison élargit la marque comme le flanc d'un crayon. Les deux se règlent dans Réglages ▸ Board ▸ Stylet ; un matériel sans capteur pose un trait d'épaisseur constante, comme la souris.",
+        "Le bout gomme du stylet efface, quel que soit l'outil choisi, et le bouton latéral peut naviguer au lieu d'ouvrir le menu.",
+        "Deux doigts zooment et déplacent la planche. Un deuxième doigt pendant un tracé annule ce tracé au lieu d'en poser un second, et la paume est ignorée tant que le stylet vient de servir.",
+        "Les commandes qui n'apparaissaient qu'au survol restent visibles là où rien ne survole : favoris et suppression des scènes, verrous de palette, étoiles de polices. Sur une tablette elles étaient tout simplement inatteignables.",
+        "Onglet Stylet dans les réglages du board, avec une lecture matérielle en direct : survoler la fenêtre avec le stylet affiche pression et inclinaison sans rien dessiner — de quoi distinguer un réglage coupé d'un pilote qui ne donne rien.",
+        "Cibles agrandies en option, pour viser un bouton sans voir sa main sur une tablette sans écran.",
+        "Le bouton de mise à jour ouvre la barre de titre au lieu de se coincer contre Fermer, la fenêtre des réglages occupe la place disponible, et les notes de version défilent au lieu de pousser leur bouton hors de l'écran.",
+        "Un geste au stylet ou au doigt qui s'interrompt ne laisse plus une poignée collée au curseur (roue chromatique, dégradé, panneau de palette)."
+      ],
+      "en": [
+        "Strokes follow pen pressure, and tilt widens the mark the way the side of a pencil does. Both are settings under Settings ▸ Board ▸ Pen; hardware with no sensor lays a constant-width stroke, exactly like the mouse.",
+        "The eraser end of the stylus erases whatever tool is selected, and the barrel button can navigate instead of opening the menu.",
+        "Two fingers zoom and pan the board. A second finger during a stroke cancels that stroke instead of starting another, and the palm is ignored while the stylus has just been in use.",
+        "Controls that only appeared on hover now stay out where nothing hovers: scene favourites and deletion, palette locks, font stars. On a tablet they were simply unreachable.",
+        "A Pen tab in the board settings, ending on a live hardware read-out: hovering the stylus over the window shows pressure and tilt without drawing anything — the only way to tell a disabled setting from a driver that reports nothing.",
+        "Optional larger targets, for aiming a button without seeing your hand on a tablet with no screen.",
+        "The update button opens the title bar instead of being wedged against Close, the settings window takes the room available, and the release notes scroll instead of pushing their button off screen.",
+        "A pen or finger gesture that gets interrupted no longer leaves a handle glued to the pointer (colour wheel, gradient, palette panel)."
+      ]
+    }
+  },
+  {
     "id": "netsuboard-0.4.3",
     "version": "0.4.3",
     "date": "2026-08-16",
