@@ -1,5 +1,38 @@
 [
   {
+    "id": "netsuboard-0.4.6",
+    "version": "0.4.6",
+    "date": "2026-08-17",
+    "title": {
+      "fr": "Voir à travers la planche, poser un post entier",
+      "en": "See through the board, land a whole post"
+    },
+    "highlights": {
+      "fr": [
+        "Un post à plusieurs médias arrive en entier, en rangée et dans l'ordre de lecture : carrousels X, posts photo TikTok, galeries Reddit. Un lien qui vise une image précise ne pose que celle-là.",
+        "Les photos de X/Twitter descendent en résolution d'origine, par l'endpoint des intégrations officielles — yt-dlp n'expose rien pour un tweet photo, et on récupérait une vignette de prévisualisation.",
+        "L'opacité du fond est un réglage : sous 1, la fenêtre devient translucide et vous voyez ce qu'il y a derrière, sans toucher aux médias posés. La portée se règle — l'interface reste opaque par défaut, une barre de titre translucide sur un bureau chargé devient illisible.",
+        "Alt + molette règle l'opacité : celle d'un média sous le curseur, ou celle de toute la planche sur le vide. Le fond, le contenu et l'interface sont trois opacités séparées — on regarde à travers ses références en dessinant dessous.",
+        "Mode transparent à la souris : clics, molette et survol traversent la fenêtre et atteignent l'application du dessous. La sortie est le retour du focus (Alt+Tab), expliquée avant d'entrer dans le mode, et la fenêtre est tenue au-dessus tant qu'il dure.",
+        "Les deux barres d'outils se réarrangent par glisser-déposer, sur une maquette de la barre elle-même ; la barre épinglée choisit en plus son bord, verticale à gauche ou à droite. Deux actions qui n'avaient qu'un raccourci — extraire une palette, ranger — s'y ajoutent.",
+        "Avance image par image, à la vraie cadence du fichier lue par ffprobe (23,976 et non 24) : sur une bande de frames elle change d'image, sur une vidéo ou un flux YouTube elle met en pause et avance d'exactement une image.",
+        "Un raccourci peut être retiré, et le tooltip d'un bouton affiche la touche qui lui correspond — un réassignement se voit sans ouvrir les réglages.",
+        "Un média encore en cours d'import arrive là où son carré de chargement se trouve, pas là où le lien a été collé : une rangée reste une rangée même si on déplace tout pendant le téléchargement."
+      ],
+      "en": [
+        "A post with several media lands whole, in a row and in reading order: X carousels, TikTok photo posts, Reddit galleries. A link that names one image posts only that one.",
+        "X/Twitter photos come down at original resolution, through the endpoint the official embeds use — yt-dlp exposes nothing for a photo tweet, and what landed was a preview thumbnail.",
+        "Background opacity is a setting: below 1 the window turns translucent and you see what is behind it, without touching the media placed on top. The scope is adjustable — the interface stays opaque by default, since a translucent title bar over a busy desktop stops being readable.",
+        "Alt + wheel sets opacity: that of the medium under the cursor, or of the whole board over empty space. Background, content and interface are three separate opacities — you look through your references while drawing under them.",
+        "Mouse-transparent mode: clicks, wheel and hover pass through the window and reach the application underneath. The way out is focus coming back (Alt+Tab), explained before the mode engages, and the window is held on top while it lasts.",
+        "Both toolbars are rearranged by dragging onto a mock of the bar itself; the pinned one also picks its edge, vertical on the left or the right. Two actions that only had a shortcut — extract a palette, tidy — are offered there too.",
+        "Frame-by-frame stepping at the file's real cadence, read from ffprobe (23.976, not 24): on a film strip it changes frame, on a video or a YouTube stream it pauses and moves by exactly one frame.",
+        "A shortcut can be unbound, and a button's tooltip shows the key bound to it — a rebind shows up without opening the settings.",
+        "A medium still being imported lands where its loading square is, not where the link was pasted: a row stays a row even if you move everything during the download."
+      ]
+    }
+  },
+  {
     "id": "netsuboard-0.4.5",
     "version": "0.4.5",
     "date": "2026-08-17",
