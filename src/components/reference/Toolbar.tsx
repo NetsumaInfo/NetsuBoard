@@ -3,9 +3,9 @@
 // DOCUMENT (annuler/rétablir, nouvelle scène, enregistrer, ouvrir, partager) puis la fenêtre
 // (réglages, épingle, détacher). Le partage est un menu : le projet lui-même, ou une image de la scène.
 //
-// `compact` : version épinglée (fenêtre coin, ~460 px). Ne garde que ce qui SERT à travailler la
-// planche — poser, dessiner, cadrer, annuler — et laisse le DOCUMENT (enregistrer, ouvrir, partager,
-// réglages) au clic droit, qui les porte déjà. Sans ça la barre déborderait de la fenêtre.
+// Les DEUX barres se disposent dans les Paramètres (`barButtons` / `pinnedButtons`, deux extrémités
+// chacune) ; `compact` est la version épinglée, qui choisit en plus son bord. Épingler, détacher et
+// rattacher n'en font jamais partie : ce sont les sorties du format.
 
 import { useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,11 +13,16 @@ import {
   ImagePlus, Type, Frame, Pencil, ZoomIn, ZoomOut, Maximize, FilePlus2,
   Save, SaveAll, FileCheck2, FolderOpen, Share2, PictureInPicture2, Minimize2, Pin, PinOff, Play, Pause,
   Settings2, Home, Undo2, Redo2, RotateCw, Magnet, Package, ImageDown, SwatchBook,
+  MousePointer2, MousePointerBan, Pipette, LayoutGrid,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { ComboKeys } from "@/components/ui/kbd";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
@@ -25,11 +30,19 @@ import { useBoard } from "./useReferenceBoard";
 import { fileLabel } from "./useScenePersistence";
 import { recoverAllOnlineMedia, recoverableOnlineItems } from "./boardMediaActions";
 import { ExportImageDialog } from "./ExportImageDialog";
+import { askMouseThrough, setMouseThrough } from "./boardMouseThrough";
+import { extractPaletteToBoard } from "./boardPaletteActions";
+import { isVerticalSide, type PinnedButtonId } from "./toolbarButtons";
 import type { BoardHandle } from "./ReferenceBoard";
+import type { ShortcutAction } from "./referenceShared";
 
-function IconBtn({ icon: Icon, label, onClick, disabled, active }: {
-  icon: typeof ImagePlus; label: string; onClick: () => void; disabled?: boolean; active?: boolean;
+// `action` = raccourci-commande qui fait la MÊME chose : sa touche paraît dans l'infobulle, lue dans
+// les préférences (un rebind se voit tout de suite).
+function IconBtn({ icon: Icon, label, onClick, disabled, active, action }: {
+  icon: typeof ImagePlus; label: string; onClick: () => void;
+  disabled?: boolean; active?: boolean; action?: ShortcutAction;
 }) {
+  const combo = useBoard((s) => (action ? s.prefs.shortcutKeys[action] : ""));
   return (
     <Tooltip>
       <TooltipTrigger
@@ -39,7 +52,12 @@ function IconBtn({ icon: Icon, label, onClick, disabled, active }: {
       >
         <Icon />
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent>
+        <span className="flex items-center gap-1.5">
+          {label}
+          {combo && <ComboKeys combo={combo} />}
+        </span>
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -92,6 +110,10 @@ export function Toolbar({
   const canRedo = useBoard((s) => s.future.length > 0);
   const [recovering, setRecovering] = useState(false);
   const [imgExport, setImgExport] = useState(false);
+  const mouseThrough = useBoard((s) => s.mouseThrough);
+  const prefs = useBoard((s) => s.prefs);
+  const askOpen = useBoard((s) => s.mouseThroughAsk);
+  const setAskOpen = useBoard((s) => s.setMouseThroughAsk);
   const setStudio = useBoard((s) => s.setStudio);
   const recoverableCount = recoverableOnlineItems(items).length;
   const hasItems = items.some((i) => i.kind !== "draw");
@@ -100,6 +122,11 @@ export function Toolbar({
 
   // Choisir un autre outil/ajout quitte le mode dessin (revient au curseur normal).
   const leaveDraw = () => { if (useBoard.getState().drawMode) setDrawMode(false); };
+  // Rangement : les réglages mémorisés du sélecteur « Ranger », comme le raccourci.
+  const tidySelection = () => {
+    const st = useBoard.getState();
+    st.tidy({ layout: st.prefs.arrangeLayout, uniform: st.prefs.arrangeUniform, gap: st.prefs.arrangeGap, sort: st.prefs.arrangeSort });
+  };
   const retryMissing = async () => {
     if (recovering) return;
     setRecovering(true);
@@ -115,10 +142,142 @@ export function Toolbar({
     }
   };
 
+  // Boutons adressables par les deux barres : une seule définition, jamais deux à garder d'accord.
+  const B: Record<PinnedButtonId, React.ReactNode> = {
+    text: <IconBtn icon={Type} label={t("toolbar.addText")} action="addText" onClick={() => { leaveDraw(); board.current?.addText(); }} />,
+    frame: <IconBtn icon={Frame} label={t("toolbar.addFrame")} action="addFrame" onClick={() => { leaveDraw(); board.current?.addFrame(); }} />,
+    draw: (
+      <IconBtn
+        icon={Pencil}
+        label={drawMode ? t("toolbar.exitDraw") : t("toolbar.draw")}
+        action="toggleDraw"
+        active={drawMode}
+        onClick={() => setDrawMode(!drawMode)}
+      />
+    ),
+    // Générateur de palettes : son état vit dans le store, le panneau survit aux rendus de la barre.
+    palette: <IconBtn icon={SwatchBook} label={t("palette.studio.open")} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />,
+    extractPalette: <IconBtn icon={Pipette} label={t("shortcut.extractPalette")} action="extractPalette" onClick={() => void extractPaletteToBoard()} />,
+    tidy: <IconBtn icon={LayoutGrid} label={t("shortcut.arrangeDefault")} action="arrangeDefault" onClick={tidySelection} />,
+    // Aimant : accrochage bords/centres/coins. Alt le suspend le temps d'un geste, ce bouton l'éteint.
+    snap: <IconBtn icon={Magnet} label={snap ? t("toolbar.snapOff") : t("toolbar.snapOn")} active={snap} onClick={() => setPrefs({ snap: !snap })} />,
+    zoomOut: <IconBtn icon={ZoomOut} label={t("actions.zoomOut")} action="zoomOut" onClick={() => board.current?.zoomBy(0.8)} />,
+    zoomIn: <IconBtn icon={ZoomIn} label={t("actions.zoomIn")} action="zoomIn" onClick={() => board.current?.zoomBy(1.25)} />,
+    fit: <IconBtn icon={Maximize} label={t("actions.fitAll")} action="fit" onClick={() => board.current?.fit()} />,
+    freeze: (
+      <IconBtn
+        icon={frozen ? Play : Pause}
+        label={frozen ? t("toolbar.playAll") : t("toolbar.freezeAll")}
+        action="toggleFreeze"
+        onClick={toggleFrozen}
+      />
+    ),
+    undo: <IconBtn icon={Undo2} label={t("actions.undo")} action="undo" onClick={undo} disabled={!canUndo} />,
+    redo: <IconBtn icon={Redo2} label={t("actions.redo")} action="redo" onClick={redo} disabled={!canRedo} />,
+    mouseThrough: (
+      <IconBtn
+        icon={mouseThrough ? MousePointer2 : MousePointerBan}
+        label={mouseThrough ? t("mouseThrough.off") : t("mouseThrough.on")}
+        action="toggleMouseThrough"
+        active={mouseThrough}
+        onClick={askMouseThrough}
+      />
+    ),
+    settings: onSettings ? <IconBtn icon={Settings2} label={t("actions.settings")} onClick={onSettings} /> : null,
+    save: onSave ? <IconBtn icon={Save} label={t("toolbar.saveScene")} action="save" onClick={onSave} /> : null,
+    saveAs: onSaveAs ? <IconBtn icon={SaveAll} label={t("toolbar.saveAs")} action="saveAs" onClick={onSaveAs} /> : null,
+    openProject: onOpen ? <IconBtn icon={FolderOpen} label={t("toolbar.openScene")} action="openProject" onClick={onOpen} /> : null,
+    newScene: <IconBtn icon={FilePlus2} label={t("actions.newScene")} action="newScene" onClick={() => newScene()} />,
+    // Partager : le PROJET (.netsu) ou une IMAGE de la scène — deux sorties, d'où le menu.
+    share: (
+      <DropdownMenu>
+        <Tooltip>
+          <TooltipTrigger
+            render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={t("toolbar.share")} />} />}
+          >
+            <Share2 />
+          </TooltipTrigger>
+          <TooltipContent>{t("toolbar.share")}</TooltipContent>
+        </Tooltip>
+        <DropdownMenuContent align="end">
+          {onExport && (
+            <DropdownMenuItem onClick={onExport}>
+              <Package /> {t("toolbar.shareProject")}
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem disabled={!hasItems} onClick={() => setImgExport(true)}>
+            <ImageDown /> {t("exportImage.menu")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+    home: onHome ? <IconBtn icon={Home} label={t("toolbar.home")} onClick={onHome} /> : null,
+  };
+
+  // Sorties du format épinglé : jamais masquables.
+  const windowButtons = (
+    <>
+      {onTogglePin && (
+        <IconBtn
+          icon={pinned ? Pin : PinOff}
+          label={pinned ? t("actions.unpin") : t("actions.pin")}
+          onClick={onTogglePin}
+        />
+      )}
+      {onDetach && <IconBtn icon={PictureInPicture2} label={t("actions.detach")} onClick={onDetach} />}
+      {onAttach && <IconBtn icon={Minimize2} label={t("actions.attach")} onClick={onAttach} />}
+    </>
+  );
+  const dialogs = (
+    <>
+      <ExportImageDialog open={imgExport} onOpenChange={setImgExport} />
+      <MouseThroughDialog open={askOpen} onOpenChange={setAskOpen} />
+    </>
+  );
+  const dragStyle = draggable ? ({ WebkitAppRegion: "drag" } as React.CSSProperties) : undefined;
+  const noDragStyle = draggable ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined;
+
+  // L'ORDRE est celui des préférences : c'est la disposition posée au glisser-déposer.
+  const group = (ids: PinnedButtonId[]) =>
+    ids.map((id) => <span key={id} className="contents">{B[id]}</span>);
+
+  // Barre RÉDUITE : les boutons choisis, sur le bord choisi.
+  if (compact) {
+    const vertical = isVerticalSide(prefs.pinnedSide);
+    return (
+      <div
+        className={cn(
+          "nr-chrome flex shrink-0 items-center gap-1 border-border bg-card/80 backdrop-blur",
+          vertical ? "h-full w-10 flex-col px-1 py-1" : "h-9 w-full px-1",
+          vertical ? (prefs.pinnedSide === "left" ? "border-r" : "border-l") : (prefs.pinnedSide === "bottom" ? "border-t" : "border-b"),
+          draggable && "select-none",
+          className,
+        )}
+        style={dragStyle}
+      >
+        <div
+          className={cn("flex min-h-0 min-w-0 items-center gap-1 overflow-auto", vertical && "flex-col")}
+          style={noDragStyle}
+        >
+          {group(prefs.pinnedButtons)}
+        </div>
+        {/* Ancrés à l'autre bout : les boutons choisis pour y aller, puis les sorties du format. */}
+        <div
+          className={cn("flex shrink-0 items-center gap-1", vertical ? "mt-auto flex-col" : "ml-auto")}
+          style={noDragStyle}
+        >
+          {group(prefs.pinnedButtonsEnd)}
+          {windowButtons}
+        </div>
+        {dialogs}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center gap-1 border-b border-border bg-card/80 px-2 backdrop-blur",
+        "nr-chrome flex shrink-0 items-center gap-1 border-b border-border bg-card/80 px-2 backdrop-blur",
         compact ? "h-9 px-1" : "h-11",
         draggable && "select-none",
         className,
@@ -130,47 +289,13 @@ export function Toolbar({
         className="flex shrink-0 items-center gap-1"
         style={draggable ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined}
       >
-      {onHome && !compact && (
-        <>
-          <IconBtn icon={Home} label={t("toolbar.home")} onClick={onHome} />
-          <Separator orientation="vertical" className="mx-1 h-5" />
-        </>
-      )}
-      {/* Ajouter une image / une vidéo / une séquence / un lien ne vit plus ici : glisser-déposer
-          pour les fichiers, Ctrl+V pour un lien, et le clic droit garde les quatre entrées. */}
-      <IconBtn icon={Type} label={t("toolbar.addText")} onClick={() => { leaveDraw(); board.current?.addText(); }} />
-      <IconBtn icon={Frame} label={t("toolbar.addFrame")} onClick={() => { leaveDraw(); board.current?.addFrame(); }} />
-      <IconBtn
-        icon={Pencil}
-        label={drawMode ? t("toolbar.exitDraw") : t("toolbar.draw")}
-        active={drawMode}
-        onClick={() => setDrawMode(!drawMode)}
-      />
-      {/* Palette generator: build a palette on a color wheel (harmonies, locks, board seed).
-          Its open state lives in the store — the panel outlives this toolbar's renders. */}
-      <IconBtn icon={SwatchBook} label={t("palette.studio.open")} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />
-
-      <Separator orientation="vertical" className="mx-1 h-5" />
-
-      {/* Aimant : accrochage bords/centres/coins et collage bord à bord. Alt le suspend le temps
-          d'un geste ; ce bouton, lui, l'éteint durablement. */}
-      <IconBtn icon={Magnet} label={snap ? t("toolbar.snapOff") : t("toolbar.snapOn")} active={snap} onClick={() => setPrefs({ snap: !snap })} />
-      <IconBtn icon={ZoomOut} label={t("actions.zoomOut")} onClick={() => board.current?.zoomBy(0.8)} />
-      <IconBtn icon={ZoomIn} label={t("actions.zoomIn")} onClick={() => board.current?.zoomBy(1.25)} />
-      <IconBtn icon={Maximize} label={t("actions.fitAll")} onClick={() => board.current?.fit()} />
-      <IconBtn
-        icon={frozen ? Play : Pause}
-        label={frozen ? t("toolbar.playAll") : t("toolbar.freezeAll")}
-        onClick={toggleFrozen}
-      />
-
+      {group(prefs.barButtons)}
       </div>
 
       {/* Zone centrale : nom du projet et son état. Centrée dans la place LAISSÉE par les deux
           groupes d'outils plutôt qu'en centre absolu — un centre absolu passerait sous les boutons
           dès que la fenêtre se resserre. Elle reste draggable (fenêtre détachée) hors des contrôles.
           Épinglé : la place manque pour un nom de projet, il ne reste que l'espace. */}
-      {compact ? <div className="min-w-0 flex-1" /> : (
       <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 px-2 text-xs text-muted-foreground">
         {/* Un projet lié à un fichier affiche SON nom et, en infobulle, son chemin complet : savoir
             où il est enregistré est la raison d'être du format. */}
@@ -205,67 +330,46 @@ export function Toolbar({
           </Button>
         )}
       </div>
-      )}
 
-      <div
-        className="flex shrink-0 items-center gap-1"
-        style={draggable ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined}
-      >
-        <IconBtn icon={Undo2} label={t("actions.undo")} onClick={undo} disabled={!canUndo} />
-        <IconBtn icon={Redo2} label={t("actions.redo")} onClick={redo} disabled={!canRedo} />
-
-        {!compact && (<>
-        <Separator orientation="vertical" className="mx-1 h-5" />
-
-        <IconBtn icon={FilePlus2} label={t("actions.newScene")} onClick={() => newScene()} />
-        {onSave && <IconBtn icon={Save} label={t("toolbar.saveScene")} onClick={onSave} />}
-        {onSaveAs && <IconBtn icon={SaveAll} label={t("toolbar.saveAs")} onClick={onSaveAs} />}
-        {onOpen && <IconBtn icon={FolderOpen} label={t("toolbar.openScene")} onClick={onOpen} />}
-
-        {/* Partager : le PROJET (fichier .netsu, médias embarqués selon le niveau choisi) ou une
-            IMAGE de la scène (PNG/JPG/SVG rendus depuis le modèle). Deux sorties très différentes
-            pour un même geste — d'où le menu plutôt que deux boutons de plus. */}
-        <DropdownMenu>
-          <Tooltip>
-            <TooltipTrigger
-              render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={t("toolbar.share")} />} />}
-            >
-              <Share2 />
-            </TooltipTrigger>
-            <TooltipContent>{t("toolbar.share")}</TooltipContent>
-          </Tooltip>
-          <DropdownMenuContent align="end">
-            {onExport && (
-              <DropdownMenuItem onClick={onExport}>
-                <Package /> {t("toolbar.shareProject")}
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem disabled={!hasItems} onClick={() => setImgExport(true)}>
-              <ImageDown /> {t("exportImage.menu")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Separator orientation="vertical" className="mx-1 h-5" />
-
-        {onSettings && <IconBtn icon={Settings2} label={t("actions.settings")} onClick={onSettings} />}
-        </>)}
-        {onTogglePin && (
-          <IconBtn
-            icon={pinned ? Pin : PinOff}
-            label={pinned ? t("actions.unpin") : t("actions.pin")}
-            onClick={onTogglePin}
-          />
-        )}
-        {onDetach && (
-          <IconBtn icon={PictureInPicture2} label={t("actions.detach")} onClick={onDetach} />
-        )}
-        {onAttach && (
-          <IconBtn icon={Minimize2} label={t("actions.attach")} onClick={onAttach} />
-        )}
+      <div className="flex shrink-0 items-center gap-1" style={noDragStyle}>
+        {group(prefs.barButtonsEnd)}
+        {windowButtons}
       </div>
 
-      <ExportImageDialog open={imgExport} onOpenChange={setImgExport} />
+      {dialogs}
     </div>
+  );
+}
+
+// Avertissement du mode transparent à la souris : il donne la SORTIE, pas un risque.
+function MouseThroughDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const { t } = useTranslation("reference");
+  const setPrefs = useBoard((s) => s.setPrefs);
+  const [dontAsk, setDontAsk] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{t("mouseThrough.on")}</DialogTitle>
+          <DialogDescription>{t("mouseThrough.warning")}</DialogDescription>
+        </DialogHeader>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Checkbox checked={dontAsk} onCheckedChange={(v) => setDontAsk(v === true)} />
+          {t("mouseThrough.dontAskAgain")}
+        </label>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("common:action.cancel")}</Button>
+          <Button
+            onClick={() => {
+              if (dontAsk) setPrefs({ mouseThroughWarned: true });
+              setMouseThrough(true);
+              onOpenChange(false);
+            }}
+          >
+            {t("common:action.continue")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
