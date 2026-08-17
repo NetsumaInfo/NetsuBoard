@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Toaster } from "@/components/ui/toast";
 import { AppSettings } from "@/components/settings/AppSettings";
 import { UpdateBootstrap } from "@/components/updates/UpdateBootstrap";
+import { UpdateButton } from "@/components/updates/UpdateButton";
 import { armAutoInstall } from "@/store/updater";
 import { useDiscordPresence } from "@/lib/discordPresence";
 import { TextContextMenu } from "@/components/common/TextContextMenu";
@@ -79,8 +80,15 @@ function Shell() {
           <span className="text-xs font-semibold tracking-tight">{t("app.name", "NetsuBoard")}</span>
           <BetaBadge />
           {/* Le conteneur s'ajuste à son contenu : le `ml-auto` interne de WindowControls n'a donc
-              aucune place à manger, et les deux raccourcis restent collés à l'épingle. */}
-          <div className="ml-auto flex items-center"><HeaderLinks /><WindowControls /></div>
+              aucune place à manger, et les deux raccourcis restent collés à l'épingle.
+              La mise à jour ouvre la barre, avant les raccourcis : coincée entre l'épingle et
+              Réduire, elle se lisait comme un contrôle de fenêtre et voisinait le bouton Fermer.
+              Absente tant qu'aucune version n'attend — cf. UpdateButton. */}
+          <div className="ml-auto flex items-center">
+            <UpdateButton variant="icon" />
+            <HeaderLinks />
+            <WindowControls withUpdate={false} />
+          </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">

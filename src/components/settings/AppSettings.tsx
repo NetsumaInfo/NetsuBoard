@@ -71,7 +71,7 @@ export function AppSettings() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Voile : ferme au clic et détache la fenêtre du fond, sans masquer le board (cf. en-tête). */}
       <button
         type="button"
@@ -85,7 +85,10 @@ export function AppSettings() {
         role="dialog"
         aria-modal="true"
         aria-label={t("reference:actions.settings")}
-        className="relative flex h-[min(44rem,100%)] w-[min(56rem,100%)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+        // La fenêtre prend la place disponible plutôt qu'un format fixe : les pages denses (Board,
+        // Console, Signaler) tenaient dans 44 rem au prix d'un défilement permanent. `min(…,100%)`
+        // la garde entière sur une petite fenêtre, où elle se colle simplement aux marges.
+        className="relative flex h-[min(52rem,100%)] w-[min(68rem,100%)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3.5">
           <h2 className="text-sm font-semibold text-foreground">{t("reference:actions.settings")}</h2>

@@ -21,7 +21,12 @@ async function win() {
   return m.getCurrentWindow();
 }
 
-export function WindowControls() {
+/**
+ * `withUpdate` = porter soi-même le bouton de mise à jour. Vrai partout où les contrôles sont seuls
+ * dans la barre (installation, portails de connexion) : la mise à jour doit y rester atteignable.
+ * La coquille principale, elle, le pose en TÊTE de sa barre, loin du bouton Fermer.
+ */
+export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) {
   const { t } = useTranslation(["shell", "common"]);
   const [maxed, setMaxed] = useState(false);
   const { pinned, togglePinned } = useApp(useShallow((s) => ({ pinned: s.pinned, togglePinned: s.togglePinned })));
@@ -42,9 +47,7 @@ export function WindowControls() {
   const btn = TITLEBAR_BTN;
   return (
     <div className="ml-auto flex items-center" data-no-drag>
-      {/* Mise à jour disponible : même coin, à toutes les étapes (installation, gates, application).
-          Absent tant qu'aucune version n'attend — cf. UpdateButton. */}
-      <UpdateButton variant="icon" />
+      {withUpdate && <UpdateButton variant="icon" />}
       <Tooltip>
         <TooltipTrigger render={
           <button
