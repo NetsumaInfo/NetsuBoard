@@ -58,6 +58,10 @@ export function WindowLoading() {
 // n'y a qu'un module, et lui donner une navigation reviendrait à meubler du vide.
 function Shell() {
   const { t } = useTranslation();
+  // Épinglé = fenêtre de coin, souvent étroite : la barre de titre tombe à l'icône et aux contrôles.
+  // Marque, pastille de canal et raccourcis (dépôt, soutien) ne sont pas des commandes de la fenêtre
+  // et, gardés, ils poussaient Fermer hors du cadre.
+  const pinned = useApp((s) => s.pinned);
 
   // Réapplique l'épinglage (always-on-top) au démarrage : l'état réel de la fenêtre Tauri se perd à
   // chaque lancement alors que la préférence, elle, survit — et c'est ELLE que la page lit pour
@@ -76,17 +80,23 @@ function Shell() {
     <TooltipProvider delay={600}>
       <div className="flex h-screen flex-col overflow-hidden">
         <div data-tauri-drag-region className="flex h-9 shrink-0 items-center gap-2 px-3">
-          <BrandIcon className="size-6" />
-          <span className="text-xs font-semibold tracking-tight">{t("app.name", "NetsuBoard")}</span>
-          <BetaBadge />
+          <BrandIcon className="size-6 shrink-0" />
+          {!pinned && (
+            <>
+              <span className="truncate text-xs font-semibold tracking-tight">{t("app.name", "NetsuBoard")}</span>
+              <BetaBadge className="shrink-0" />
+            </>
+          )}
           {/* Le conteneur s'ajuste à son contenu : le `ml-auto` interne de WindowControls n'a donc
               aucune place à manger, et les deux raccourcis restent collés à l'épingle.
               La mise à jour ouvre la barre, avant les raccourcis : coincée entre l'épingle et
               Réduire, elle se lisait comme un contrôle de fenêtre et voisinait le bouton Fermer.
-              Absente tant qu'aucune version n'attend — cf. UpdateButton. */}
-          <div className="ml-auto flex items-center">
+              Absente tant qu'aucune version n'attend — cf. UpdateButton.
+              `shrink-0` : les contrôles de fenêtre ne se compriment JAMAIS, c'est la marque qui cède
+              en premier — une fenêtre étroite doit rester fermable. */}
+          <div className="ml-auto flex shrink-0 items-center">
             <UpdateButton variant="icon" />
-            <HeaderLinks />
+            {!pinned && <HeaderLinks />}
             <WindowControls withUpdate={false} />
           </div>
         </div>
