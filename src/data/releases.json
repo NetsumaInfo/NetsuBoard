@@ -1,5 +1,34 @@
 [
   {
+    "id": "netsuboard-0.4.5",
+    "version": "0.4.5",
+    "date": "2026-08-17",
+    "title": {
+      "fr": "Les liens YouTube restent vivants, l'installation se tient mieux",
+      "en": "YouTube links stay alive, the install behaves"
+    },
+    "highlights": {
+      "fr": [
+        "yt-dlp se met à jour tout seul au premier démarrage d'une nouvelle version de l'application. C'est le seul composant qui pourrit — les plateformes cassent ses extracteurs toutes les quelques semaines —, et une installation laissée tranquille perdait peu à peu la moitié d'un board.",
+        "YouTube demande de résoudre un défi en exécutant du JavaScript : l'application prête son propre Node à yt-dlp au lieu de le laisser retomber sur un client déprécié qui finira par ne plus rien résoudre.",
+        "La mise à jour depuis l'application ne laisse plus de fichier verrouillé derrière elle : l'installeur demande la fermeture, libère l'application et son service, et attend qu'ils soient réellement libres au lieu de dormir une demi-seconde.",
+        "Une installation posée dans Program Files par erreur se répare au lieu d'aligner les erreurs de fichier : l'installeur propose une élévation une seule fois, et dit pourquoi si vous refusez.",
+        "La désinstallation ne passe plus par un script PowerShell déposé dans le dossier temporaire — un motif que Defender note comme un dropper. Elle est en NSIS natif, ne touche que le dossier de NetsuBoard, et laisse vos fonds d'écran et préférences si la case correspondante est décochée.",
+        "Le provisionnement du premier lancement est exécuté comme un script ordinaire, plus comme un bloc de code construit à la volée : deuxième motif qui faisait mal noter l'application par les antivirus.",
+        "Barre de titre allégée en mode épinglé : le bouton Fermer reste dans le cadre même sur une fenêtre étroite."
+      ],
+      "en": [
+        "yt-dlp updates itself on the first launch of a new application version. It is the one component that rots — the platforms break its extractors every few weeks — and an install left alone slowly lost half of what a board holds.",
+        "YouTube asks for a challenge to be solved by running JavaScript: the application now lends yt-dlp its own Node instead of letting it fall back to a deprecated client that will eventually resolve nothing.",
+        "Updating from inside the application no longer leaves a locked file behind: the installer asks the window to close, releases the application and its service, and waits until they really are free rather than sleeping half a second.",
+        "An install placed in Program Files by mistake repairs itself instead of stacking file errors: the installer offers to elevate once, and says why if you decline.",
+        "Uninstalling no longer runs a PowerShell script dropped in the temporary folder — a pattern Defender scores as a dropper. It is plain NSIS, touches only NetsuBoard's own folder, and leaves your wallpapers and preferences behind when that box is unchecked.",
+        "First-run provisioning runs as an ordinary script rather than a code block built on the fly: the second pattern that had antivirus engines scoring the application badly.",
+        "A leaner title bar when pinned: the Close button stays inside the frame even on a narrow window."
+      ]
+    }
+  },
+  {
     "id": "netsuboard-0.4.4",
     "version": "0.4.4",
     "date": "2026-08-17",
