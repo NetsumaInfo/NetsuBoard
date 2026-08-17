@@ -7,10 +7,15 @@ name: Release
 # This workflow deliberately does NOT create or publish the GitHub release: it uploads artefacts and
 # stops there. Publishing stays a manual, deliberate act — see docs/releasing.md.
 
+# Manual only. `tauri build` writes the updater signature, so it needs TAURI_SIGNING_PRIVATE_KEY as
+# a repository secret; without it the job dies on `failed to decode secret key` after ~8 min of Rust.
+# Fired on every `v*` tag it would therefore hang a permanent red check beside each release — which
+# is how a genuine failure gets ignored. Restore the tag trigger the day the secret exists:
+#
+#   push:
+#     tags: ['v*']
 on:
   workflow_dispatch:
-  push:
-    tags: ['v*']
 
 # `actions: read` is required by the SignPath action to read the job and download its artefact.
 permissions:
