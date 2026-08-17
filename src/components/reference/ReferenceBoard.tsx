@@ -13,6 +13,7 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
@@ -34,6 +35,8 @@ import { shapeBBox } from "./drawGeometry";
 import { isPalm, isTouchFirst, kindOf, usesBarrel, watchPen, type PointerKind } from "./tabletInput";
 import { boundsOf, rotatedBBox } from "./boardArrange";
 import { useLive } from "./boardLive";
+import { watchMouseThroughExit } from "./boardMouseThrough";
+import { clampMediaOpacity } from "./boardPrefs";
 import { itemToPngBlob } from "./boardRender";
 import { primeBoardThumbs } from "./boardImageLod";
 import { posterTime } from "./boardVideoLod";
@@ -107,6 +110,9 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   const fitOnOpen = useBoard((s) => s.prefs.fitOnOpen);
   const sceneId = useBoard((s) => s.sceneId);
   const placeFrame = useBoard((s) => s.placeFrame);
+  const seeThroughShell = useBoard((s) => s.prefs.seeThroughShell);
+  const seeThroughPlaceFrame = useBoard((s) => s.prefs.seeThroughPlaceFrame);
+  const contentOpacity = useBoard((s) => s.prefs.contentOpacity);
   const drawMode = useBoard((s) => s.drawMode);
   const selectedIds = useBoard((s) => s.selectedIds);
   const selectedId = useBoard((s) => s.selectedId);
@@ -256,6 +262,23 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   // quand il survole la barre d'outils plutôt que la planche.
   useEffect(() => { watchPen(); }, []);
 
+  // Fond translucide → la page et les coquilles s'effacent (cf. `nr-see-through`), sinon l'opacité
+  // se dilue dans le fond de l'application au lieu de révéler le bureau. La seconde classe dit si
+  // l'interface suit, ou reprend une surface opaque.
+  useEffect(() => {
+    const root = document.documentElement;
+    const on = background.opacity < 1;
+    root.classList.toggle("nr-see-through", on);
+    root.classList.toggle("nr-see-through-shell", on && seeThroughShell);
+    return () => {
+      root.classList.remove("nr-see-through");
+      root.classList.remove("nr-see-through-shell");
+    };
+  }, [background.opacity, seeThroughShell]);
+
+  // Transparent à la souris : le focus retrouvé rend la souris, et le démontage aussi.
+  useEffect(() => watchMouseThroughExit(), []);
+
   useEffect(() => {
     const kd = (e: KeyboardEvent) => { if (e.code === "Space") space.current = true; };
     const ku = (e: KeyboardEvent) => { if (e.code === "Space") space.current = false; };
@@ -328,8 +351,29 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   // Molette coalescée : les trackpads tirent bien plus d'événements que de frames → on accumule le
   // delta et on applique UN zoom par frame (setView re-rend le board, inutile de le faire 3× par vsync).
   const wheelAcc = useRef<{ dy: number; x: number; y: number; left: number; top: number } | null>(null);
+  // Alt + molette = OPACITÉ, jamais zoom. Sur un média : le sien. Sur le vide : celle de toute la
+  // planche. C'est le geste des outils de référence, et il ne coûte aucune touche.
+  const wheelOpacity = useCallback((e: React.WheelEvent) => {
+    const step = e.deltaY > 0 ? -0.05 : 0.05;
+    const st = useBoard.getState();
+    const hit = (e.target as HTMLElement | null)?.closest?.("[data-board-item]") as HTMLElement | null;
+    const id = hit?.dataset.boardItem;
+    const item = id ? st.items.find((it) => it.id === id) : undefined;
+    if (item) {
+      const next = clampMediaOpacity((item.opacity ?? 1) + step);
+      st.patchItem(item.id, { opacity: next < 1 ? next : undefined }, false);
+      st.setNotice({ kind: "ok", text: i18n.t("reference:notice.itemOpacity", { percent: Math.round(next * 100) }) });
+      return;
+    }
+    const next = clampMediaOpacity(st.prefs.contentOpacity + step);
+    st.setPrefs({ contentOpacity: next });
+    st.setNotice({ kind: "ok", text: i18n.t("reference:notice.contentOpacity", { percent: Math.round(next * 100) }) });
+  }, []);
+
   const onWheel = useCallback(
     (e: React.WheelEvent) => {
+      // Alt tenu : la molette règle l'opacité. Le zoom garde la molette nue.
+      if (e.altKey) { wheelOpacity(e); return; }
       // L'origine du conteneur est mesurée UNE fois par frame (à l'ouverture de l'accumulateur) :
       // un getBoundingClientRect par événement forçait un recalcul de layout à la cadence du
       // trackpad, entrelacé avec les écritures de transform du geste.
@@ -351,7 +395,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         zoomAt(w.x, w.y, Math.exp(-w.dy * k));
       });
     },
-    [zoomAt],
+    [zoomAt, wheelOpacity],
   );
 
   // Le glissé sur le fond navigue-t-il au lieu de sélectionner ? `auto` tranche sur la machine :
@@ -724,31 +768,40 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         "relative h-full w-full cursor-default touch-none overflow-hidden outline-none",
         over && "ring-2 ring-inset ring-primary",
       )}
-      style={{ backgroundColor: background.color }}
     >
-      {/* Grille de points (repère spatial, masquée en fond monochrome) : div dédiée TRANSLATÉE en
-          modulo du pas — déplacement composite GPU, zéro repaint pendant le pan (l'ancien
-          backgroundPosition sur le conteneur re-rasterisait tout le viewport à chaque frame). */}
-      {background.mode === "dots" && (
-        <div
-          ref={dotsRef}
-          aria-hidden
-          className="pointer-events-none absolute will-change-transform"
-          style={{
-            inset: -dotGap,
-            backgroundImage: "radial-gradient(circle, var(--color-border) 1px, transparent 1px)",
-            backgroundSize: `${dotGap}px ${dotGap}px`,
-            transform: `translate(${view.tx % dotGap}px, ${view.ty % dotGap}px)`,
-          }}
-        />
-      )}
+      {/* Le fond est une COUCHE : son opacité n'atteint que l'aplat et les points, jamais les médias.
+          Sous 1, ce qui apparaît est la fenêtre elle-même (cf. `nr-see-through`). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+        style={{ backgroundColor: background.color, opacity: background.opacity }}
+      >
+        {/* Grille de points (repère spatial, masquée en fond monochrome) : div dédiée TRANSLATÉE en
+            modulo du pas — déplacement composite GPU, zéro repaint pendant le pan (l'ancien
+            backgroundPosition sur le conteneur re-rasterisait tout le viewport à chaque frame). */}
+        {background.mode === "dots" && (
+          <div
+            ref={dotsRef}
+            aria-hidden
+            className="pointer-events-none absolute will-change-transform"
+            style={{
+              inset: -dotGap,
+              backgroundImage: "radial-gradient(circle, var(--color-border) 1px, transparent 1px)",
+              backgroundSize: `${dotGap}px ${dotGap}px`,
+              transform: `translate(${view.tx % dotGap}px, ${view.ty % dotGap}px)`,
+            }}
+          />
+        )}
+      </div>
       {/* couche transformée : tous les items en coordonnées board (z 10 → le dessin peut passer
           devant (z 20) ou derrière (z 0) selon `drawBack`). `data-board-pan` : ciblée par le pan
           impératif (applyGesture). */}
+      {/* L'opacité GLOBALE des contenus est posée sur la couche entière — médias, notes, cadres et
+          tracé d'un coup — et l'opacité propre d'un item s'y multiplie (opacités imbriquées). */}
       <div
         data-board-pan
         className="absolute left-0 top-0 z-10 origin-top-left will-change-transform"
-        style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})` }}
+        style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`, opacity: contentOpacity }}
       >
         {/* Cadre de la zone de pose : aplat très léger + contour, SOUS la couche des items (zIndex 0
             contre 1) — son aplat ne teinte donc jamais un média, quel que soit son plan.
@@ -762,6 +815,8 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
               width: contentBounds.w,
               height: contentBounds.h,
               zIndex: 0,
+              // Repère de limites : il suit l'opacité du fond, sauf réglage contraire.
+              opacity: seeThroughPlaceFrame ? background.opacity : 1,
               border: `${1.5 / view.scale}px solid color-mix(in srgb, var(--color-fg) 14%, transparent)`,
               background: "color-mix(in srgb, var(--color-fg) 4%, transparent)",
             }}

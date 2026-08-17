@@ -47,6 +47,11 @@ export interface ShellSlice {
   // Sert le mode « coin de l'écran » (un seul écran) pour garder l'app visible pendant Resolve.
   pinned: boolean;
   togglePinned: () => void;
+  // Fenêtre tenue au-dessus par un MODE et non par l'épingle : le mode transparent à la souris, qui
+  // serait inutilisable derrière l'application du dessous. Jamais persisté — c'est un état de mode —
+  // et l'épingle de la barre de titre l'affiche, sinon la fenêtre serait au-dessus sans le dire.
+  onTopHold: boolean;
+  setOnTopHold: (on: boolean) => void;
 
   // Hôte cible actif (Resolve / Premiere / After Effects) — sélecteur en pied de sidebar.
   // Change la source des rushs du Derush et la cible du build timeline.
@@ -178,6 +183,9 @@ export const createShellSlice: StateCreator<AppState, [], [], ShellSlice> = (set
       nr.setWindowSize(size.w, size.h);
       return { pinned };
     }),
+
+  onTopHold: false,
+  setOnTopHold: (on) => set({ onTopHold: on }),
 
   status: null,
   statusLoading: false,

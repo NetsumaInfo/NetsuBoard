@@ -2,6 +2,7 @@
 // inspecteur d'item + sélecteur de rushs/plans du projet.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { useApp } from "@/store";
 import { Toolbar } from "./Toolbar";
 import { BoardContextMenu } from "./BoardMenu";
@@ -14,6 +15,7 @@ import { ReferenceHome } from "./ReferenceHome";
 import { ReferenceBoard, type BoardHandle } from "./ReferenceBoard";
 import { PaletteStudio } from "./PaletteStudio";
 import { useBoard } from "./useReferenceBoard";
+import { isVerticalSide } from "./toolbarButtons";
 import { useScenePersistence } from "./useScenePersistence";
 import { useBoardShortcuts } from "./useBoardShortcuts";
 import { useProjectActions } from "./useProjectActions";
@@ -38,7 +40,9 @@ export function ReferencePanel() {
   const items = useBoard((s) => s.items);
   // Épinglé (fenêtre principale au-dessus, format coin) → board flottante, barre d'outils réduite.
   const pinned = useApp((s) => s.pinned);
+  const togglePinned = useApp((s) => s.togglePinned);
   const pinnedToolbar = useBoard((s) => s.prefs.pinnedToolbar);
+  const pinnedSide = useBoard((s) => s.prefs.pinnedSide);
   const touchUi = useBoard((s) => s.prefs.touchUi);
   const bigTargets = useBoard((s) => s.prefs.bigTargets);
 
@@ -47,7 +51,13 @@ export function ReferencePanel() {
   const goBoard = useCallback(() => setMode("board"), []);
   const project = useProjectActions(persistence, goBoard);
 
-  useBoardShortcuts(boardRef, { onSave: project.save, onSaveAs: project.saveAs, onOpenProject: project.openProject });
+  useBoardShortcuts(boardRef, {
+    onSave: project.save,
+    onSaveAs: project.saveAs,
+    onOpenProject: project.openProject,
+    onSettings: () => openSettings(),
+    onTogglePin: togglePinned,
+  });
   useReferencePush(boardRef);
   useAutosave(persistence);
   useUnsavedWarning();
@@ -92,7 +102,7 @@ export function ReferencePanel() {
   // l'accueil, sur une planche on reste sur la planche — dans les deux sens de la bascule.
   if (mode === "home") {
     return (
-      <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " bg-[var(--color-bg)]" : ""}`}>
+      <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " nr-shell-bg bg-[var(--color-bg)]" : ""}`}>
         <ReferenceHome
           hasSession={items.length > 0}
           onResume={() => setMode("board")}
@@ -118,24 +128,33 @@ export function ReferencePanel() {
   // clic droit —, et le réglage `pinnedToolbar` la retire pour retrouver la planche entièrement nue.
   const onHome = () => setMode("home");
   const onOpen = persistence.available ? () => setSceneDlg(true) : undefined;
+  // Bord de la barre épinglée : gauche/droite la rendent verticale, bas/droite la posent APRÈS la
+  // planche. La barre pleine reste en haut.
+  const vertical = pinned && isVerticalSide(pinnedSide);
+  const barAfter = pinned && (pinnedSide === "bottom" || pinnedSide === "right");
+  const bar = (!pinned || pinnedToolbar) ? (
+    // `key` : les deux barres n'ont pas le même contenu, la nouvelle apparaît en fondu plutôt
+    // que de remplacer l'ancienne d'un trait pendant que la fenêtre change de format.
+    <Toolbar
+      key={pinned ? "compact" : "full"}
+      board={boardRef}
+      compact={pinned}
+      className="animate-in fade-in duration-200"
+      onHome={onHome}
+      onSave={persistence.available ? project.save : undefined}
+      onSaveAs={persistence.available ? project.saveAs : undefined}
+      onOpen={onOpen}
+      onSettings={() => openSettings()}
+      onExport={!pinned && persistence.available ? () => setExportDlg(true) : undefined}
+    />
+  ) : null;
   return (
-    <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " bg-[var(--color-bg)]" : ""}`}>
-      {(!pinned || pinnedToolbar) && (
-        // `key` : les deux barres n'ont pas le même contenu, la nouvelle apparaît en fondu plutôt
-        // que de remplacer l'ancienne d'un trait pendant que la fenêtre change de format.
-        <Toolbar
-          key={pinned ? "compact" : "full"}
-          board={boardRef}
-          compact={pinned}
-          className="animate-in fade-in duration-200"
-          onHome={onHome}
-          onSave={persistence.available ? project.save : undefined}
-          onSaveAs={persistence.available ? project.saveAs : undefined}
-          onOpen={onOpen}
-          onSettings={() => openSettings()}
-          onExport={!pinned && persistence.available ? () => setExportDlg(true) : undefined}
-        />
-      )}
+    <div className={cn(
+      "relative flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden",
+      vertical ? "flex-row" : "flex-col",
+      pinned && "nr-shell-bg bg-[var(--color-bg)]",
+    )}>
+      {!barAfter && bar}
       <BoardContextMenu
         board={boardRef}
         onHome={onHome}
@@ -149,6 +168,7 @@ export function ReferencePanel() {
         <Inspector />
         <SequencePlayer />
       </BoardContextMenu>
+      {barAfter && bar}
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />
       <CropOverlay />

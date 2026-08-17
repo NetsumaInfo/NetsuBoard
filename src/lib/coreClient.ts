@@ -429,6 +429,7 @@ const reference: RefApi = {
   scanFolder: (dir, opts) => call("reference:scanFolder", [dir, opts || {}]),
   writeFile: (p, data, encoding) => call("reference:writeFile", [p, data, encoding]),
   sampleFrame: (p, opts) => call("reference:sampleFrame", [p, opts || {}]),
+  playInfo: (p) => call("reference:playInfo", [p]),
   extractMedia: (url, options) => call("reference:extractMedia", [url, options || {}]),
   extractFrames: (opts) => call("reference:extractFrames", [opts]),
   exportBoard: (scene, destPath, opts) => call("netsu:export", [scene, destPath, opts]),
@@ -475,6 +476,9 @@ const reference: RefApi = {
         // false → la WebView gère le DnD HTML5 (glisser une carte vers le board + déposer des
         // fichiers OS arrivent via dataTransfer). true (défaut) le confie à l'OS et BLOQUE le DnD HTML5.
         dragDropEnabled: false,
+        // Sans ça, l'opacité du fond n'aurait rien à révéler : la fenêtre resterait opaque et le
+        // réglage se contenterait de délaver la planche.
+        transparent: true,
       });
       win.once("tauri://error", (e) => console.error("[reference] échec ouverture fenêtre détachée", e));
     })();
@@ -627,6 +631,13 @@ export function makeCoreClient(): NrApi {
         if (!isTauri) return;
         const { getCurrentWindow } = await import("@tauri-apps/api/window");
         await getCurrentWindow().setAlwaysOnTop(on).catch(() => {});
+      })();
+    },
+    setMouseTransparent: (on) => {
+      void (async () => {
+        if (!isTauri) return;
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        await getCurrentWindow().setIgnoreCursorEvents(on).catch(() => {});
       })();
     },
     setWindowSize: (w, h) => {

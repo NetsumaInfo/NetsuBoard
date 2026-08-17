@@ -60,7 +60,7 @@ export function Inspector() {
   if (count >= 2) {
     return (
       <div className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
-        <div className="flex w-max max-w-[96vw] items-center gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 px-3 py-2 shadow-xl backdrop-blur">
+        <div className="flex w-max max-w-[96vw] items-center gap-1 overflow-x-auto rounded-xl border border-border bg-card/95 px-3 py-2 shadow-xl backdrop-blur nr-chrome">
           <ArrangeBar count={count} />
         </div>
       </div>
@@ -128,7 +128,7 @@ export function Inspector() {
 
   return (
     <div data-note-toolbar className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
-      <div className="flex w-max max-w-[96vw] items-center gap-1 rounded-xl border border-border bg-card/95 px-3 py-2 shadow-xl backdrop-blur">
+      <div className="flex w-max max-w-[96vw] items-center gap-1 rounded-xl border border-border bg-card/95 px-3 py-2 shadow-xl backdrop-blur nr-chrome">
         {/* Contrôles propres au type */}
         {isMedia && (
           <>

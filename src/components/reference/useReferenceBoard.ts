@@ -90,6 +90,11 @@ export interface BoardState {
   // clic sur le board — on y sélectionne les images dont on veut extraire les couleurs.
   // `targetId` = bloc palette réécrit à la validation ; null = poser un nouveau bloc.
   studio: { targetId: string | null } | null;
+  // Fenêtre transparente à la souris (cf. `boardMouseThrough`). Jamais persisté : une planche qui
+  // rouvrirait sourde à la souris serait perdue.
+  mouseThrough: boolean;
+  // Avertissement en attente (barre d'outils ou raccourci) : la boite de dialogue s'ouvre dessus.
+  mouseThroughAsk: boolean;
   frozen: boolean;             // tout figé (aucune lecture vidéo/YouTube)
   navigating: boolean;         // gel transitoire pendant pan/zoom/transformation (distinct de frozen)
   navigationHolds: number;     // compteur : plusieurs gestes peuvent brièvement se chevaucher
@@ -148,6 +153,8 @@ export interface BoardState {
   requestFocus: (id: string | null) => void;
   setCropping: (id: string | null) => void;
   setStudio: (studio: { targetId: string | null } | null) => void;
+  setMouseThrough: (on: boolean) => void;
+  setMouseThroughAsk: (on: boolean) => void;
   toggleFrozen: () => void;
   beginNavigation: () => void;
   endNavigation: () => void;
@@ -260,6 +267,8 @@ export const useBoard = create<BoardState>((set, get) => ({
   croppingId: null,
   studio: null,
   seqFrames: {},
+  mouseThrough: false,
+  mouseThroughAsk: false,
   frozen: false,
   navigating: false,
   navigationHolds: 0,
@@ -636,6 +645,8 @@ export const useBoard = create<BoardState>((set, get) => ({
   requestFocus: (id) => set({ focusReq: id }),
   setCropping: (id) => { resetCoalesce(); set({ croppingId: id }); },
   setStudio: (studio) => set({ studio }),
+  setMouseThrough: (on) => set({ mouseThrough: on }),
+  setMouseThroughAsk: (on) => set({ mouseThroughAsk: on }),
   toggleFrozen: () => set((s) => ({ frozen: !s.frozen })),
   beginNavigation: () => set((s) => ({ navigationHolds: s.navigationHolds + 1, navigating: true })),
   endNavigation: () => set((s) => {

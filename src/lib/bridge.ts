@@ -562,7 +562,11 @@ export interface RefApi {
   // `count` > 1 étale les cadres sur [`at`, `to`] (fin omise = durée du fichier) et les rend tous
   // dans `pngs` — de quoi décrire une PORTÉE de vidéo et pas seulement son premier instant.
   sampleFrame(path: string, opts?: { at?: number; to?: number; count?: number; side?: number }): Promise<{ ok: boolean; png?: string; pngs?: string[]; error?: string }>;
-  extractMedia(url: string, options?: { projectPath?: string; title?: string }): Promise<{ ok: boolean; items?: { path: string; kind: "image" | "video" }[]; error?: string }>;
+  // Cadence EXACTE d'un fichier local (23,976 et non 24) : un pas d'une image la demande.
+  playInfo(path: string): Promise<{ duration: number; fps: number; codec: string; native: boolean; error?: string }>;
+  // `index` = numéro de slide (1-based) d'un post carrousel : le lien de partage le porte
+  // (`img_index`, `/photo/N`) et on ne rapporte alors QUE ce média. Omis = tout le post.
+  extractMedia(url: string, options?: { projectPath?: string; title?: string; index?: number }): Promise<{ ok: boolean; items?: { path: string; kind: "image" | "video" }[]; error?: string }>;
   // Décompose une vidéo locale en frames image (assets disque) pour bâtir une séquence d'images.
   // `in/out` = plage de boucle (s), `fps` = cadence d'échantillonnage, `max` = plafond de frames.
   // `fps` omis ou ≤ 0 = cadence de la source ; la réponse renvoie celle réellement employée.
@@ -857,6 +861,11 @@ export interface NrApi {
   // Épingle la fenêtre principale au-dessus des autres (always-on-top), pour la garder visible
   // dans un coin de l'écran tout en travaillant dans Resolve. No-op hors Tauri.
   setAlwaysOnTop(on: boolean): void;
+  // TRANSPARENT À LA SOURIS : la fenêtre ignore clics, molette et survol — ils vont à ce qu'il y a
+  // dessous. Une planche épinglée devient un calque de référence au-dessus d'un logiciel de dessin
+  // ou de 3D. On en sort en redonnant le FOCUS à la fenêtre (Alt+Tab, barre des tâches) : le clic,
+  // lui, ne peut plus l'atteindre. No-op hors Tauri.
+  setMouseTransparent(on: boolean): void;
   // Redimensionne la fenêtre principale (taille logique). Sert à passer en petit format « coin »
   // quand on épingle, et à réagrandir au dépinglage (le responsif est inconfortable en très étroit).
   setWindowSize(w: number, h: number): void;
@@ -1012,6 +1021,7 @@ const mock: NrApi = {
   openPath: async () => false,
   revealPath: async () => false,
   setAlwaysOnTop: () => {},
+  setMouseTransparent: () => {},
   setWindowSize: () => {},
   // Mock navigateur : persistance en mémoire (localStorage) pour tester l'UI hors Resolve.
   reference: (() => {
@@ -1044,6 +1054,7 @@ const mock: NrApi = {
       scanFolder: async (dir: string) => ({ ok: false, root: dir, name: "", files: [], truncated: false, count: 0 }),
       writeFile: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       sampleFrame: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      playInfo: async () => ({ duration: 0, fps: 0, codec: "", native: false }),
       extractMedia: async () => ({ ok: false, error: "mock" }),
       extractFrames: async () => ({ ok: false, error: "mock" }),
       exportBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),

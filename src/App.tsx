@@ -79,7 +79,7 @@ function Shell() {
   return (
     <TooltipProvider delay={600}>
       <div className="flex h-screen flex-col overflow-hidden">
-        <div data-tauri-drag-region className="flex h-9 shrink-0 items-center gap-2 px-3">
+        <div data-tauri-drag-region className="nr-chrome-page flex h-9 shrink-0 items-center gap-2 px-3">
           <BrandIcon className="size-6 shrink-0" />
           {!pinned && (
             <>

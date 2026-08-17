@@ -9,6 +9,10 @@ import {
   HANDWRITING_FONT, DEFAULT_DRAW_KEYS, DEFAULT_SHORTCUT_KEYS, DOWNLOADABLE_EMBED_PROVIDERS,
   type DrawKeys, type ShortcutKeys, type EmbedProvider,
 } from "./referenceShared";
+import {
+  DEFAULT_PINNED_BUTTONS, DEFAULT_PINNED_BUTTONS_END, DEFAULT_BAR_BUTTONS, DEFAULT_BAR_BUTTONS_END,
+  PINNED_BUTTONS, PINNED_SIDES, type PinnedButtonId, type PinnedSide,
+} from "./toolbarButtons";
 
 // Cadence d'échantillonnage « même que la source » : l'extraction relit la vraie cadence de la vidéo
 // au lieu de rééchantillonner. Sentinelle plutôt qu'un champ à part → un seul réglage à lire.
@@ -18,14 +22,32 @@ export const SOURCE_FPS = 0;
 export interface BoardBg {
   mode: "dots" | "solid";
   color: string;
+  // Opacité du FOND SEUL (aplat + points) — les médias restent opaques. Sous 1, la fenêtre laisse
+  // voir ce qu'il y a derrière.
+  opacity: number;
 }
 export const BG_KEY = "nr-ref-bg";
+// En dessous, les points deviennent illisibles et la planche n'a plus de limite visible.
+export const BG_OPACITY_MIN = 0.1;
+// Plancher des MÉDIAS, aligné sur celui du fond : à 10 % l'image reste un repère, en dessous elle
+// n'est plus qu'un souvenir — et une planche qu'on ne retrouve plus est une planche perdue.
+export const MEDIA_OPACITY_MIN = 0.1;
+export function clampMediaOpacity(v: number): number {
+  return Math.min(1, Math.max(MEDIA_OPACITY_MIN, v));
+}
 export function readBg(): BoardBg {
+  const fallback: BoardBg = { mode: "solid", color: "var(--color-bg)", opacity: 1 };
   try {
     const v = JSON.parse(localStorage.getItem(BG_KEY) || "");
-    if (v && (v.mode === "dots" || v.mode === "solid") && typeof v.color === "string") return v;
+    if (v && (v.mode === "dots" || v.mode === "solid") && typeof v.color === "string") {
+      const o = Number(v.opacity);
+      return { mode: v.mode, color: v.color, opacity: Number.isFinite(o) ? clampBgOpacity(o) : 1 };
+    }
   } catch { /* défaut ci-dessous */ }
-  return { mode: "solid", color: "var(--color-bg)" };
+  return fallback;
+}
+export function clampBgOpacity(v: number): number {
+  return Math.min(1, Math.max(BG_OPACITY_MIN, v));
 }
 
 // Réglages d'enregistrement auto (panneau Paramètres). `ms` = délai de debounce de l'autosave.
@@ -78,6 +100,24 @@ export interface BoardPrefs {
   // annuler) au lieu d'une planche nue. Le reste — enregistrer, ouvrir, partager, réglages — n'y
   // apparaît jamais, le clic droit le porte déjà.
   pinnedToolbar: boolean;
+  // Contenu et bord de cette barre réduite : chacun travaille épinglé sur un coin d'écran différent,
+  // avec ses propres outils. L'ordre de rendu reste celui de `PINNED_BUTTONS`.
+  // Les deux extrémités de la barre, DISJOINTES et dans l'ordre voulu : c'est ce que pose le
+  // glisser-déposer des Paramètres. Sur une barre épinglée, la place utile est aux deux bouts.
+  pinnedButtons: PinnedButtonId[];
+  pinnedButtonsEnd: PinnedButtonId[];
+  // Même chose pour la barre PLEINE : elle se dispose aussi.
+  barButtons: PinnedButtonId[];
+  barButtonsEnd: PinnedButtonId[];
+  pinnedSide: PinnedSide;
+  // Ce que l'opacité du fond atteint, en plus du fond lui-même. L'INTERFACE reste opaque par défaut :
+  // une barre de titre translucide sur un bureau chargé ne se lit plus. Le cadre de la zone de pose,
+  // lui, suit — c'est un repère, pas un objet à garder devant un bureau.
+  seeThroughShell: boolean;
+  seeThroughPlaceFrame: boolean;
+  // Opacité de TOUT le contenu de la planche (médias, notes, cadres, tracé), multipliée par celle de
+  // chaque item. C'est le second curseur : voir à travers ses références pour dessiner dessous.
+  contentOpacity: number;
   // What the item bar does when the app loses focus (a click in another application). Default
   // `keep`: the board is a reference held BESIDE the tool being worked in, so its bar staying put
   // is what lets the next click land on a control instead of on re-selecting the item.
@@ -92,6 +132,8 @@ export interface BoardPrefs {
   onlineDefaultsVersion: number;
   // Plateformes concernées par ce téléchargement automatique (les autres restent en carte embed).
   autoDownloadProviders: EmbedProvider[];
+  // Avertissement du mode transparent à la souris déjà écarté ? Expliqué une fois, pas deux.
+  mouseThroughWarned: boolean;
   // Repasser un média téléchargé en lecteur/carte embed doit-il SUPPRIMER le fichier local ?
   // Défaut NON : la bascule n'est qu'un changement d'affichage, le retour au fichier reste immédiat.
   dropDownloadOnEmbed: boolean;
@@ -193,6 +235,14 @@ const PREFS_DEFAULT: BoardPrefs = {
   dotGap: 24,
   fitOnOpen: false,
   pinnedToolbar: true,
+  pinnedButtons: [...DEFAULT_PINNED_BUTTONS],
+  pinnedButtonsEnd: [...DEFAULT_PINNED_BUTTONS_END],
+  barButtons: [...DEFAULT_BAR_BUTTONS],
+  barButtonsEnd: [...DEFAULT_BAR_BUTTONS_END],
+  pinnedSide: "top",
+  seeThroughShell: false,
+  seeThroughPlaceFrame: true,
+  contentOpacity: 1,
   blurBehavior: "keep",
   seqFps: 12,
   seqHeight: 240,
@@ -201,6 +251,7 @@ const PREFS_DEFAULT: BoardPrefs = {
   autoDownloadOnline: true,
   onlineDefaultsVersion: 1,
   autoDownloadProviders: [...DOWNLOADABLE_EMBED_PROVIDERS],
+  mouseThroughWarned: false,
   dropDownloadOnEmbed: false,
   upQuick: false,
   upEngine: "ia",
@@ -233,6 +284,15 @@ const PREFS_DEFAULT: BoardPrefs = {
   bigTargets: false,
 };
 export const PREFS_KEY = "nr-ref-prefs";
+// Un bouton ne vit que dans UNE zone, et seuls les boutons connus survivent.
+function splitZones(v: Record<string, unknown>, startKey: string, endKey: string) {
+  if (!Array.isArray(v[startKey])) return {};
+  const known = (list: unknown): PinnedButtonId[] =>
+    Array.isArray(list) ? list.filter((id): id is PinnedButtonId => PINNED_BUTTONS.some((b) => b.id === id)) : [];
+  const end = known(v[endKey]);
+  return { [startKey]: known(v[startKey]).filter((id) => !end.includes(id)), [endKey]: end };
+}
+
 export function readPrefs(): BoardPrefs {
   try {
     const v = JSON.parse(localStorage.getItem(PREFS_KEY) || "");
@@ -249,6 +309,11 @@ export function readPrefs(): BoardPrefs {
       favFonts: Array.isArray(v.favFonts) ? v.favFonts : [],
       autoDownloadProviders: Array.isArray(v.autoDownloadProviders)
         ? v.autoDownloadProviders : PREFS_DEFAULT.autoDownloadProviders,
+      // Un bouton retiré du produit ne doit pas rester dans une barre enregistrée, et un bord
+      // inconnu ne doit pas laisser la barre sans place.
+      ...splitZones(v, "pinnedButtons", "pinnedButtonsEnd"),
+      ...splitZones(v, "barButtons", "barButtonsEnd"),
+      pinnedSide: PINNED_SIDES.some((s) => s.id === v.pinnedSide) ? v.pinnedSide : PREFS_DEFAULT.pinnedSide,
       // fusion (jamais de raccourci manquant si une nouvelle action/outil apparaît après une sauvegarde)
       drawKeys: mergeKeys(DEFAULT_DRAW_KEYS, v.drawKeys),
       shortcutKeys: mergeKeys(DEFAULT_SHORTCUT_KEYS, v.shortcutKeys),

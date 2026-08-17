@@ -29,7 +29,11 @@ async function win() {
 export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) {
   const { t } = useTranslation(["shell", "common"]);
   const [maxed, setMaxed] = useState(false);
-  const { pinned, togglePinned } = useApp(useShallow((s) => ({ pinned: s.pinned, togglePinned: s.togglePinned })));
+  const { pinned, onTopHold, togglePinned } = useApp(useShallow((s) => ({
+    pinned: s.pinned, onTopHold: s.onTopHold, togglePinned: s.togglePinned,
+  })));
+  // L'épingle dit ce que fait la FENÊTRE : elle s'allume aussi quand un mode la tient au-dessus.
+  const onTop = pinned || onTopHold;
 
   useEffect(() => {
     if (!isTauri) return;
@@ -53,14 +57,16 @@ export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) 
           <button
             type="button"
             aria-label={pinned ? t("windowControls.unpin") : t("windowControls.pinAbove")}
-            aria-pressed={pinned}
-            className={`${btn} ${pinned ? "text-primary hover:text-primary" : ""}`}
+            aria-pressed={onTop}
+            className={`${btn} ${onTop ? "text-primary hover:text-primary" : ""}`}
             onClick={togglePinned}
           >
-            <Pin className={pinned ? "fill-current" : ""} />
+            <Pin className={onTop ? "fill-current" : ""} />
           </button>
         } />
-        <TooltipContent>{pinned ? t("windowControls.unpinShort") : t("windowControls.pinAbove")}</TooltipContent>
+        <TooltipContent>
+          {onTopHold && !pinned ? t("windowControls.pinnedByMode") : pinned ? t("windowControls.unpinShort") : t("windowControls.pinAbove")}
+        </TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger render={

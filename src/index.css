@@ -330,6 +330,24 @@ html.nr-wallpaper-on body {
   background: transparent;
 }
 
+/* Planche TRANSLUCIDE (opacité du fond < 1) : le board peint son propre fond, la page et les
+   coquilles qui posaient un aplat (fenêtre détachée, planche épinglée) s'effacent. */
+html.nr-see-through,
+html.nr-see-through body,
+html.nr-see-through .nr-shell-bg {
+  background: transparent;
+}
+
+/* Périmètre de cette translucidité (Paramètres). Par défaut l'INTERFACE — barre de titre, barres
+   d'outils, panneaux flottants — reprend une surface opaque : une barre de titre translucide sur un
+   bureau chargé ne se lit plus. `nr-see-through-shell` la laisse suivre le fond. */
+html.nr-see-through:not(.nr-see-through-shell) .nr-chrome {
+  background-color: var(--color-card);
+}
+html.nr-see-through:not(.nr-see-through-shell) .nr-chrome-page {
+  background-color: var(--color-bg);
+}
+
 /* Module Carnet — éditeur BlockNote thémé sur la palette de marque (fond transparent, posé sur la Card
    de l'app). Les menus/popovers vivent dans un PORTAL dont la racine `.bn-root.dark` REDÉFINIT les
    tokens (thème Mantine #1f1f1f) → on cible aussi `.bn-root` avec une spécificité supérieure

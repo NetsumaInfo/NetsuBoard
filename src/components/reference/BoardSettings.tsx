@@ -14,7 +14,11 @@ import { ColorPicker } from "@/components/ui/color-picker";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { UP_SCALES } from "@/components/upscale/upscaleShared";
 import { useBoard } from "./useReferenceBoard";
-import { SOURCE_FPS, type AutoToggle, type BoardPrefs, type BlurBehavior } from "./boardPrefs";
+import {
+  SOURCE_FPS, BG_OPACITY_MIN, MEDIA_OPACITY_MIN, clampBgOpacity, clampMediaOpacity,
+  type AutoToggle, type BoardPrefs, type BlurBehavior,
+} from "./boardPrefs";
+import { Slider } from "@/components/ui/slider";
 import { FLAT_PRESSURE, probeDevices } from "./tabletInput";
 import { useBoardUpChoices } from "./useBoardUpChoices";
 import { DOWNLOADABLE_EMBED_PROVIDERS, EMBED_LEVELS, EMBED_QUALITIES, EMBED_MARGINS, type EmbedProvider } from "./referenceShared";
@@ -26,6 +30,8 @@ import {
   SHORTCUT_DEFS, DEFAULT_SHORTCUT_KEYS,
 } from "./referenceShared";
 import { FontPicker, NumberSpin, MiniSelect, fontLabel } from "./inspectorControls";
+import { PINNED_SIDES } from "./toolbarButtons";
+import { PinnedBarEditor } from "./PinnedBarEditor";
 
 const INTERVALS: { label: string; ms: number }[] = [
   { label: "0,5 s", ms: 500 },
@@ -301,6 +307,49 @@ export function BoardSettings({ tab, onCapturingChange }: {
               ))}
             </div>
           )}
+          {/* Opacité du fond seul : les médias restent opaques. */}
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 text-xs text-muted-foreground">{t("settings.bgOpacity")}</span>
+            <Slider
+              aria-label={t("settings.bgOpacity")}
+              value={[Math.round(background.opacity * 100)]}
+              min={Math.round(BG_OPACITY_MIN * 100)}
+              max={100}
+              step={1}
+              onValueChange={(v) => setBackground({ opacity: clampBgOpacity((Array.isArray(v) ? v[0] : v) / 100) })}
+            />
+            <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+              {Math.round(background.opacity * 100)} %
+            </span>
+          </div>
+          {/* Opacité des CONTENUS : médias, notes, cadres, tracé. Alt+molette la règle aussi, sur le
+              vide pour toute la planche, sur un média pour lui seul. */}
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 text-xs text-muted-foreground">{t("settings.contentOpacity")}</span>
+            <Slider
+              aria-label={t("settings.contentOpacity")}
+              value={[Math.round(prefs.contentOpacity * 100)]}
+              min={Math.round(MEDIA_OPACITY_MIN * 100)}
+              max={100}
+              step={1}
+              onValueChange={(v) => setPrefs({ contentOpacity: clampMediaOpacity((Array.isArray(v) ? v[0] : v) / 100) })}
+            />
+            <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+              {Math.round(prefs.contentOpacity * 100)} %
+            </span>
+          </div>
+          {/* Périmètre de la translucidité : ce qu'elle atteint en plus du fond. */}
+          {background.opacity < 1 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-xs text-muted-foreground">{t("settings.seeThroughScope")}</span>
+              <Seg active={prefs.seeThroughShell} onClick={() => setPrefs({ seeThroughShell: !prefs.seeThroughShell })}>
+                {t("settings.seeThroughShell")}
+              </Seg>
+              <Seg active={prefs.seeThroughPlaceFrame} onClick={() => setPrefs({ seeThroughPlaceFrame: !prefs.seeThroughPlaceFrame })}>
+                {t("settings.seeThroughPlaceFrame")}
+              </Seg>
+            </div>
+          )}
         </section>
 
         <Separator />
@@ -492,6 +541,19 @@ export function BoardSettings({ tab, onCapturingChange }: {
 
         <Separator />
 
+        {/* Barre d'outils de la fenêtre normale : même éditeur que la barre épinglée. */}
+        <section className="flex flex-col gap-2">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.barButtons")}</h3>
+          <PinnedBarEditor
+            side="top"
+            start={prefs.barButtons}
+            end={prefs.barButtonsEnd}
+            onChange={(next) => setPrefs({ barButtons: next.start, barButtonsEnd: next.end })}
+          />
+        </section>
+
+        <Separator />
+
         {/* Fenêtre épinglée : barre d'outils réduite, ou planche entièrement nue */}
         <section className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
@@ -501,6 +563,26 @@ export function BoardSettings({ tab, onCapturingChange }: {
             </Seg>
           </div>
           <p className="text-[11px] text-muted-foreground">{t("settings.pinnedToolbarHint")}</p>
+          {prefs.pinnedToolbar && (<>
+            <div className="flex items-center gap-1.5">
+              <span className="mr-1 text-xs text-muted-foreground">{t("settings.pinnedSide")}</span>
+              {PINNED_SIDES.map((s) => (
+                <Seg key={s.id} active={prefs.pinnedSide === s.id} onClick={() => setPrefs({ pinnedSide: s.id })}>
+                  {t(s.labelKey)}
+                </Seg>
+              ))}
+            </div>
+            {/* Contenu de la barre, posé au glisser-déposer sur une maquette de la barre elle-même.
+                Épingler, détacher et rattacher n'y figurent pas : ce sont les sorties du format,
+                elles restent là quoi qu'on retire. */}
+            <span className="text-xs text-muted-foreground">{t("settings.pinnedButtons")}</span>
+            <PinnedBarEditor
+              side={prefs.pinnedSide}
+              start={prefs.pinnedButtons}
+              end={prefs.pinnedButtonsEnd}
+              onChange={(next) => setPrefs({ pinnedButtons: next.start, pinnedButtonsEnd: next.end })}
+            />
+          </>)}
         </section>
 
         <Separator />
@@ -834,6 +916,7 @@ export function BoardSettings({ tab, onCapturingChange }: {
 
         {/* Raccourcis-commandes — MODIFIABLES : clic sur le combo → appuie sur la nouvelle combinaison. */}
         <ShortcutEditor
+          ns="reference"
           defs={SHORTCUT_DEFS}
           keys={prefs.shortcutKeys}
           onChange={(shortcutKeys) => setPrefs({ shortcutKeys })}
