@@ -4,7 +4,7 @@
 
 import { nr } from "@/lib/bridge";
 import i18n from "@/i18n";
-import { displaySrc, fitSize, parseVideoEmbed, probeNat, youtubeId } from "./referenceShared";
+import { displaySrc, fitSize, parseVideoEmbed, probeNat, slideIndex, youtubeId } from "./referenceShared";
 import { useBoard } from "./useReferenceBoard";
 import {
   originalOnlineSource,
@@ -289,6 +289,8 @@ export async function downloadMediaFromEmbed(id: string): Promise<boolean> {
     const res = await nr.reference.extractMedia(url, {
       projectPath: st.filePath || undefined,
       title: it.title || "media",
+      // Carte posée depuis un lien de slide → on télécharge CETTE slide.
+      index: slideIndex(url) || undefined,
     });
     if (res.ok && res.items?.length) {
       const [first, ...rest] = res.items;
@@ -299,16 +301,19 @@ export async function downloadMediaFromEmbed(id: string): Promise<boolean> {
         kind: first.kind, ref: first.path, src, w, h,
         natW: nat.w || undefined, natH: nat.h || undefined, sourceUrl: url,
       });
-      for (let i = 0; i < rest.length; i++) {
-        const a = rest[i];
+      // Slides suivantes du même post : EN RANGÉE à droite de la carte, dans l'ordre du post.
+      const gap = st.prefs.arrangeGap;
+      let x = it.x + w + gap;
+      for (const a of rest) {
         const asrc = displaySrc(a.kind, a.path);
         const an = await probeNat(a.kind, asrc);
         const s = fitSize(an.w, an.h);
         st.addItem({
           kind: a.kind, ref: a.path, src: asrc,
-          x: it.x + (i + 1) * 28, y: it.y + (i + 1) * 28, w: s.w, h: s.h, rotation: 0,
+          x, y: it.y, w: s.w, h: s.h, rotation: 0,
           natW: an.w || undefined, natH: an.h || undefined, title: it.title, sourceUrl: url,
         });
+        x += s.w + gap;
       }
       st.setNotice(null);
       return true;

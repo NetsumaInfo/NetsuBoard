@@ -10,6 +10,8 @@ const actions = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 
 const persistence = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'reference', 'useScenePersistence.ts'), 'utf8');
 const toolbar = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'reference', 'Toolbar.tsx'), 'utf8');
 const prefs = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'reference', 'boardPrefs.ts'), 'utf8');
+const embeds = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'reference', 'embeds.ts'), 'utf8');
+const extract = fs.readFileSync(path.join(__dirname, '..', 'core', 'extract.js'), 'utf8');
 const recoveryFile = path.join(__dirname, '..', 'src', 'components', 'reference', 'boardMediaRecovery.ts');
 
 function loadRecoveryModule() {
@@ -40,9 +42,33 @@ test('online media downloads by default while YouTube stays linked', () => {
   assert.match(prefs, /onlineDefaultsVersion:\s*1/);
 });
 
-test('Instagram video extraction falls back to its embed instead of an OpenGraph thumbnail', () => {
-  assert.match(source, /e\.provider !== "instagram"\s*&&\s*await resolvePageAndPlace\(text, at\)/);
+test('poster-only providers fall back to their embed instead of an OpenGraph thumbnail', () => {
+  // Le routage ne nomme AUCUNE plateforme : il consulte la liste des providers dont l'OpenGraph
+  // n'est qu'un poster, et Instagram y est.
+  assert.match(source, /!OG_POSTER_ONLY_PROVIDERS\.has\(e\.provider\)\s*&&\s*await resolvePageAndPlace\(text, at\)/);
+  assert.doesNotMatch(source, /provider !== "instagram"/);
+  assert.match(embeds, /OG_POSTER_ONLY_PROVIDERS = new Set<EmbedProvider>\(\["instagram"\]\)/);
   assert.match(source, /const fb = e \?\?/);
+});
+
+test('a slide link posts only that slide of a carousel', () => {
+  // Le numéro de slide vit dans l'URL de partage (`img_index`, `/photo/N`) : c'est la seule chose qui
+  // distingue « ce média » de « ce post ».
+  assert.match(embeds, /export function slideIndex\(url: string\): number/);
+  assert.match(embeds, /img_index/);
+  assert.match(embeds, /\\\/\(\?:photo\|video\)\\\/\(\\d\+\)/);
+  assert.match(source, /index: slideIndex\(url\) \|\| undefined/);
+  assert.match(actions, /index: slideIndex\(url\) \|\| undefined/);
+});
+
+test('extraction keeps every slide of a post, images included', () => {
+  // `--ignore-no-formats-error` est ce qui empêche une slide photo de faire échouer tout le post ;
+  // sans lui, yt-dlp sort en code 1 et les vidéos déjà téléchargées sont jetées avec elle.
+  assert.match(extract, /'-i', '--ignore-no-formats-error'/);
+  assert.match(extract, /kind: hasStream \? 'video' : 'image'/);
+  // Les photos d'un tweet ne passent pas par yt-dlp : son extracteur n'expose ni format ni vignette.
+  assert.match(extract, /cdn\.syndication\.twimg\.com\/tweet-result/);
+  assert.match(extract, /searchParams\.set\('name', 'orig'\)/);
 });
 
 test('every remote image and video keeps the user-entered source URL', () => {

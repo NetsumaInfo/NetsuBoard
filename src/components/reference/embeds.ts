@@ -191,6 +191,10 @@ export function sourceName(url: string): string | null {
 // extrait le vrai média par défaut (yt-dlp/gallery-dl). `generic` → extraction tentée puis repli embed.
 export const EMBED_PLAYER_PROVIDERS = new Set<EmbedProvider>(["vimeo", "dailymotion", "twitch", "streamable"]);
 
+// Providers dont l'OpenGraph ne rend qu'un poster du post, jamais le média : une extraction ratée
+// tombe sur la carte embed plutôt que sur une vignette qui passerait pour le média.
+export const OG_POSTER_ONLY_PROVIDERS = new Set<EmbedProvider>(["instagram"]);
+
 // Providers dont l'embed est peu fiable (mur de login / X-Frame / iframe noire) → candidats au
 // téléchargement automatique du vrai média. Source unique : la liste réglable des Paramètres
 // (« Télécharger les vidéos en ligne ») et le balayage post-import lisent CETTE liste.
@@ -200,6 +204,23 @@ export const DOWNLOADABLE_EMBED_PROVIDERS: EmbedProvider[] =
     "threads", "snapchat", "pinterest", "linkedin", "tumblr", "flickr",
     "bilibili", "vk", "kuaishou", "niconico", "odysee", "rumble", "generic",
   ];
+
+/**
+ * Slide VISÉE par un lien de post, ou 0 pour le post entier. C'est ce qui distingue « ce média » de
+ * « ce post » : Instagram met `img_index=N`, X termine par `/photo/N` ou `/video/N`.
+ */
+export function slideIndex(url: string): number {
+  const s = url.trim();
+  try {
+    const u = new URL(s);
+    const q = u.searchParams.get("img_index") || u.searchParams.get("slide");
+    const n = q ? Number.parseInt(q, 10) : Number.NaN;
+    if (Number.isFinite(n) && n > 0) return n;
+  } catch { /* pas une URL absolue : le repli regex suffit */ }
+  const m = s.match(/\/(?:photo|video)\/(\d+)/i);
+  const n = m ? Number.parseInt(m[1], 10) : Number.NaN;
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
 
 // Une URL pointe-t-elle directement un fichier vidéo / image ? Extension prise du dernier segment
 // du chemin, sinon du paramètre de requête (CDN type pbs.twimg.com/...?format=jpg, ?fm=webp).

@@ -54,7 +54,10 @@ export type ShortcutAction =
   | "delete" | "deselect" | "selectAll" | "duplicate"
   | "undo" | "redo" | "save" | "saveAs" | "openProject" | "fit" | "zoomIn" | "zoomOut"
   | "copy" | "cut" | "fitSelection" | "extractPalette" | "resetAll" | "toFront" | "toBack"
-  | "normalizeHeight" | "normalizeWidth" | "normalizeArea" | "arrangeDefault";
+  | "normalizeHeight" | "normalizeWidth" | "normalizeArea" | "arrangeDefault"
+  | "addText" | "addFrame" | "toggleDraw" | "toggleFreeze" | "prevFrame" | "nextFrame"
+  | "toggleMouseThrough" | "newScene" | "openSettings" | "togglePin" | "paletteStudio"
+  | "crop" | "groupSequence";
 export const SHORTCUT_DEFS: { action: ShortcutAction; labelKey: string; combo: string }[] = [
   { action: "delete", labelKey: "shortcut.delete", combo: "Delete" },
   { action: "deselect", labelKey: "shortcut.deselect", combo: "Escape" },
@@ -79,6 +82,21 @@ export const SHORTCUT_DEFS: { action: ShortcutAction; labelKey: string; combo: s
   { action: "extractPalette", labelKey: "shortcut.extractPalette", combo: "G" },
   { action: "toFront", labelKey: "shortcut.toFront", combo: "PageUp" },
   { action: "toBack", labelKey: "shortcut.toBack", combo: "PageDown" },
+  // Outils et lecture : lettres nues, inactives en mode dessin (les lettres y sont aux outils).
+  { action: "addText", labelKey: "shortcut.addText", combo: "T" },
+  { action: "addFrame", labelKey: "shortcut.addFrame", combo: "N" },
+  { action: "toggleDraw", labelKey: "shortcut.toggleDraw", combo: "B" },
+  { action: "toggleFreeze", labelKey: "shortcut.toggleFreeze", combo: "P" },
+  { action: "prevFrame", labelKey: "shortcut.prevFrame", combo: "," },
+  { action: "nextFrame", labelKey: "shortcut.nextFrame", combo: "." },
+  // Sous Maj : une lettre nue couperait la souris de la fenetre sur une frappe de trop.
+  { action: "toggleMouseThrough", labelKey: "shortcut.toggleMouseThrough", combo: "Shift+M" },
+  { action: "newScene", labelKey: "shortcut.newScene", combo: "Ctrl+N" },
+  { action: "openSettings", labelKey: "shortcut.openSettings", combo: "Ctrl+," },
+  { action: "togglePin", labelKey: "shortcut.togglePin", combo: "Ctrl+Shift+P" },
+  { action: "paletteStudio", labelKey: "shortcut.paletteStudio", combo: "Shift+G" },
+  { action: "crop", labelKey: "shortcut.crop", combo: "C" },
+  { action: "groupSequence", labelKey: "shortcut.groupSequence", combo: "Ctrl+G" },
 ];
 export type ShortcutKeys = ShortcutMap;
 export const DEFAULT_SHORTCUT_KEYS: ShortcutKeys = Object.fromEntries(SHORTCUT_DEFS.map((d) => [d.action, d.combo]));
@@ -493,9 +511,11 @@ export {
   parseVideoEmbed,
   EMBED_PLAYER_PROVIDERS,
   DOWNLOADABLE_EMBED_PROVIDERS,
+  OG_POSTER_ONLY_PROVIDERS,
   isVideoUrl,
   isImageUrl,
   sourceName,
+  slideIndex,
 } from "./embeds";
 export type { EmbedProvider } from "./embeds";
 

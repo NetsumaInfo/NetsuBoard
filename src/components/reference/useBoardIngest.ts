@@ -15,7 +15,9 @@ import {
   youtubeNatSize,
   giphyGifUrl,
   parseVideoEmbed,
+  slideIndex,
   EMBED_PLAYER_PROVIDERS,
+  OG_POSTER_ONLY_PROVIDERS,
   isVideoUrl,
   isImageUrl,
   sourceName,
@@ -69,6 +71,13 @@ function gridLayout(
     x: x0 + (i % cols) * (w + gap),
     y: y0 + Math.floor(i / cols) * (h + gap),
   }));
+}
+
+// Centre ACTUEL d'un item déjà posé (carré de chargement), sinon `fallback` : un import déplacé
+// pendant qu'il charge arrive là où il a été déposé.
+function liveCenter(id: string, fallback: { x: number; y: number }): { x: number; y: number } {
+  const it = useBoard.getState().items.find((i) => i.id === id);
+  return it ? { x: it.x + it.w / 2, y: it.y + it.h / 2 } : fallback;
 }
 
 // Ratio MESURÉ → géométrie de l'item, centrée sur `c`. null quand la mesure a échoué (source
@@ -293,7 +302,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         // résolution du chemin disque — le pont WebView2 peut mettre jusqu'à 4 s (timeout) sur un
         // File sans chemin (presse-papier, pont pas encore attaché), et le chemin ne sert qu'au
         // localisateur durable, pas à l'affichage.
-        size = fitSizeOf(await probeNat(kind, blob), box, c);
+        size = fitSizeOf(await probeNat(kind, blob), box, liveCenter(id, c));
         useBoard.getState().patchItem(id, { loading: undefined, ...size }, false);
         [path] = await pending;
         // Chemin disque connu → c'est LUI le localisateur durable. La source d'affichage, elle, reste
@@ -305,7 +314,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         // le chemin disque — ici l'attente est structurelle.
         [path] = await pending;
         const src = displaySrc(kind, path || "");
-        size = src ? fitSizeOf(await probeNat(kind, src), box, c) : null;
+        size = src ? fitSizeOf(await probeNat(kind, src), box, liveCenter(id, c)) : null;
         useBoard.getState().patchItem(id, {
           loading: undefined,
           src,
@@ -323,7 +332,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
             const durable = displaySrc(kind, res.path);
             // Conteneur non lu par le webview : l'asset est sa PREMIÈRE source affichable, donc aussi
             // la première mesurable — le blob, lui, n'aurait rien rendu.
-            const late = (direct || size) ? null : fitSizeOf(await probeNat(kind, durable), box, c);
+            const late = (direct || size) ? null : fitSizeOf(await probeNat(kind, durable), box, liveCenter(id, c));
             useBoard.getState().patchItem(id, { ref: res.path, ...(direct ? null : { src: durable }), ...late }, false);
             if (!direct) URL.revokeObjectURL(blob);
           }
@@ -700,17 +709,33 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     [place, addVideoFileUrl, addImageUrl],
   );
 
-  // Pose le(s) média(s) EXTRAIT(s) (yt-dlp/gallery-dl) — grille si plusieurs — en mémorisant le lien
-  // d'origine (`sourceUrl`) → permet de rebasculer en carte embed plus tard.
+  // Pose le(s) média(s) EXTRAIT(s) en mémorisant le lien d'origine (`sourceUrl`) → bascule en carte
+  // embed possible plus tard. Les slides d'un carrousel se posent EN RANGÉE, dans l'ordre du post.
   const placeExtracted = useCallback(
     async (items: { path: string; kind: "image" | "video" }[], sourceUrl: string, at?: { x: number; y: number }) => {
       const c = at ?? centerPoint();
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
+      const title = sourceTitle(sourceUrl);
+      const box = useBoard.getState().prefs.mediaMaxSize;
+      const gap = useBoard.getState().prefs.arrangeGap;
+      const measured: {
+        path: string; kind: "image" | "video"; src: string;
+        nat: { w: number; h: number }; w: number; h: number;
+      }[] = [];
+      for (const it of items) {
         const src = displaySrc(it.kind, it.path);
         const nat = await probeNat(it.kind, src);
-        const off = i * 28; // décalage en escalier (plusieurs médias d'un même post ne se superposent pas)
-        place(it.kind, it.path, src, nat, sourceTitle(sourceUrl), { x: c.x + off, y: c.y + off }, { sourceUrl });
+        measured.push({ ...it, src, nat, ...fitSize(nat.w || box, nat.h || box, box) });
+      }
+      if (measured.length === 1) {
+        const [only] = measured;
+        place(only.kind, only.path, only.src, only.nat, title, c, { sourceUrl });
+        return;
+      }
+      const total = measured.reduce((sum, m) => sum + m.w, 0) + gap * (measured.length - 1);
+      let x = c.x - total / 2;
+      for (const m of measured) {
+        place(m.kind, m.path, m.src, m.nat, title, { x: x + m.w / 2, y: c.y }, { sourceUrl });
+        x += m.w + gap;
       }
     },
     [place, centerPoint],
@@ -750,6 +775,8 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         const res = await nr.reference.extractMedia(url, {
           projectPath: useBoard.getState().filePath || undefined,
           title: hostTitle(url),
+          // Lien qui désigne une slide précise → on ne rapporte que celle-là.
+          index: slideIndex(url) || undefined,
         });
         if (res.ok && res.items?.length) {
           await placeExtracted(res.items, url, at);
@@ -800,6 +827,8 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       // Plateforme reconnue → on la nomme ; sinon on reste vague plutôt que d'exhiber un hôte.
       const source = sourceName(text);
       const loadingId = addLoading(at, sourceTitle(text));
+      // Ce qui existait avant l'import : le reste est le média de ce lien, et il suit le placeholder.
+      const before = new Set(useBoard.getState().items.map((it) => it.id));
       useBoard.getState().setNotice({
         kind: "ok",
         sticky: true,
@@ -816,12 +845,11 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
           if (isVideoUrl(text)) return await addRemoteMedia(text, "video", at);
           if (isImageUrl(text)) return await addRemoteMedia(text, "image", at);
 
-          // 4. Réseau social reconnu → extraction (qualité pleine, multi-images), repli OpenGraph.
-          //    Instagram's OpenGraph result is only a poster, so failed video extraction falls back to
-          //    the official embed below. Generic links still try OpenGraph first, then extraction.
+          // 4. Réseau social reconnu → extraction (post entier ou slide visée), repli OpenGraph sauf
+          //    pour les providers dont l'OpenGraph n'est qu'un poster. Générique : OpenGraph d'abord.
           const found = e
             ? (await extractAndPlace(text, at))
-              || (e.provider !== "instagram" && await resolvePageAndPlace(text, at))
+              || (!OG_POSTER_ONLY_PROVIDERS.has(e.provider) && await resolvePageAndPlace(text, at))
             : prefs.autoDownloadOnline
               ? (await resolvePageAndPlace(text, at)) || (await extractAndPlace(text, at))
               : await resolvePageAndPlace(text, at);
@@ -839,7 +867,16 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         })();
         return ok;
       } finally {
+        // Le média rejoint le carré de chargement là où il est, pas le point où le lien a été collé.
+        // Le décalage s'applique à tout ce qui vient d'arriver : un carrousel garde sa rangée.
+        const moved = liveCenter(loadingId, at);
+        const dx = moved.x - at.x;
+        const dy = moved.y - at.y;
         removeItem(loadingId);
+        if (dx || dy) {
+          const fresh = useBoard.getState().items.filter((it) => !before.has(it.id)).map((it) => it.id);
+          if (fresh.length) useBoard.getState().moveBy(fresh, dx, dy, false);
+        }
         // Échec : la notice s'efface SANS rien annoncer. Chaque appelant a déjà son message d'échec
         // (dialogue d'ajout de lien, collage clavier) — en poser un second les ferait se chasser.
         useBoard.getState().setNotice(ok ? { kind: "ok", text: i18n.t("reference:ingest.linkDone") } : null);
