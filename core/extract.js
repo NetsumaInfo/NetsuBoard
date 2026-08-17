@@ -23,7 +23,7 @@ const crypto = require('crypto');
 const { spawn } = require('child_process');
 const {
   PYTHON, DETECT_ENV, DATA_DIR, ffBin, NR_HOME,
-  cookieBrowserCandidates, ytCookiesFile, ytDlpCommand,
+  cookieBrowserCandidates, ytCookiesFile, ytDlpCommand, jsRuntimeArgs,
 } = require('./config');
 const { t } = require('./i18n');
 const sidecar = require('./netsu/sidecar');
@@ -131,6 +131,7 @@ async function tryYtdlp(url, cookies, outputDir) {
     '--restrict-filenames',
     '-o', outTpl,
     '--print', 'after_move:filepath',
+    ...jsRuntimeArgs(),
   ];
   // Instagram changes its public web API frequently. The current extractor plus browser
   // impersonation keeps this path independent from a locked local Chrome cookie database.

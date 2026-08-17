@@ -31,6 +31,7 @@ const { createRpc } = require("./rpc");
 const { killSidecars } = require("./sidecars");
 const { ffBin, NR_HOME } = require("./config");
 const { getCapabilities } = require("./export/capabilities");
+const { refreshYtDlpForAppVersion } = require("./ytdlpUpdate");
 
 const HOST = "127.0.0.1";
 // Port IMPOSÉ par la coquille Tauri (elle en choisit un libre et le sert au renderer via
@@ -122,6 +123,11 @@ function onListening() {
   void getCapabilities()
     .then((caps) => console.log(`Encodeurs vidéo: ${caps.hwEncoders.join(', ') || 'CPU'}`))
     .catch((error) => console.warn('Sonde encodeurs indisponible, repli CPU:', String(error)));
+  // Refreshes yt-dlp on the first boot of a new application version, and on that boot only. In the
+  // background: the check is one HTTPS request, but a version gap downloads a new binary, and no
+  // link on a board should wait for that.
+  void refreshYtDlpForAppVersion()
+    .catch((error) => console.warn('yt-dlp: mise à jour ignorée:', String(error)));
 }
 
 server.on("listening", onListening);

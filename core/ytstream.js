@@ -20,7 +20,7 @@ const https = require("node:https");
 const path = require("node:path");
 const fs = require("node:fs");
 const { spawn } = require("node:child_process");
-const { DETECT_ENV, ytDlpCommand, cookieBrowserCandidates, ytCookiesFile } = require("./config");
+const { DETECT_ENV, ytDlpCommand, cookieBrowserCandidates, ytCookiesFile, jsRuntimeArgs } = require("./config");
 
 // Board muet → un flux VIDÉO SEUL suffit et évite le merge ffmpeg. Repli progressif (piste audio
 // incluse) pour les vidéos sans DASH mp4.
@@ -90,6 +90,7 @@ function runYtdlp(id, cookiesBrowser, cookiesFile) {
       "--no-playlist", "--no-warnings", "--no-progress",
       "--socket-timeout", "20",
       "-g",
+      ...jsRuntimeArgs(),
     ];
     if (cookiesFile) args.push("--cookies", cookiesFile);
     else if (cookiesBrowser) args.push("--cookies-from-browser", cookiesBrowser);

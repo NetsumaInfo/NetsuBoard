@@ -100,6 +100,27 @@ function ytDlpCommand() {
   return { bin: process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp', args: [] };
 }
 
+// YouTube's player challenge is solved by running JavaScript, and yt-dlp shells out to a runtime to
+// do it. Only `deno` is enabled by default — nothing here ships deno — so on a machine without one
+// yt-dlp prints "No supported JavaScript runtime could be found ... some formats may be missing",
+// falls back to a client it has already deprecated, and the day that client goes, every YouTube
+// link in the application stops resolving. `--no-warnings` on our side hides the notice entirely.
+//
+// The runtime is already on disk: this core RUNS on the node.exe bundled in resources/bin, which
+// satisfies yt-dlp's "v22 and up", so `process.execPath` is handed over rather than hoping the
+// machine has its own. Deno keeps priority when the user has one; this only adds a fallback.
+// Path form is `node:<path>`, split on the FIRST colon by yt-dlp, so a Windows drive letter is safe.
+//
+// `--js-runtimes` exists since yt-dlp 2025.11.12, and an older build would exit 2 on the unknown
+// option instead of merely losing formats. Nothing can install one: `setup.ps1` downloads
+// `releases/latest`, never a pinned version. The `python -m yt_dlp` fallback of `ytDlpCommand()`
+// assumes the same floor — a dev venv left on a 2025 release resolves nothing until it is upgraded.
+function jsRuntimeArgs() {
+  const major = Number.parseInt(process.versions.node, 10);
+  if (!Number.isFinite(major) || major < 22) return [];
+  return ['--js-runtimes', `node:${process.execPath}`];
+}
+
 // Interpréteur Python du PONT RESOLVE : la fusionscript.dll de Resolve 21 est compilée pour
 // Python 3.13 (ABI) → charger le helper avec un 3.13, distinct du venv 3.10 des sidecars.
 // Surchargeable via nr.config.json (resolvePython) ; à défaut on retombe sur PYTHON.
@@ -314,7 +335,7 @@ const yieldLoop = () => new Promise((r) => setImmediate(r));
 
 module.exports = {
   CONFIG, ffBin, transcribeCli, ML_BACKEND, ONNX_BACKEND, TRANSCRIBE_BACKEND,
-  PYTHON, RESOLVE_PYTHON, DETECT_ENV, COOKIES_BROWSER, cookieBrowserCandidates, ytCookiesFile, ytDlpCommand,
+  PYTHON, RESOLVE_PYTHON, DETECT_ENV, COOKIES_BROWSER, cookieBrowserCandidates, ytCookiesFile, ytDlpCommand, jsRuntimeArgs,
   VOICE_DIR, DATA_DIR, UPSCALE_TEST_DIR, ROTO_DIR, SEQ_DIR, SESSION_CACHE_ROOT,
   SHADER_DIR, RTX_DIR, RTX_EXE, RTX_DLLS, rtxBin, NR_HOME, CONFIG_PATH, WALLPAPER_DIR,
   // Dossiers relocalisables : TOUJOURS via les getters (une const destructurée au require figerait la
