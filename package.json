@@ -29,6 +29,7 @@
     "test:packaging": "node --test test/packaging.test.cjs",
     "test:setup": "node --test test/setup-selection.test.cjs",
     "test:bug-report": "node --test test/bug-report.test.cjs",
+    "test:collab": "vitest run test/collab",
     "check:i18n": "node scripts/check-i18n.mjs",
     "package": "powershell -ExecutionPolicy Bypass -File scripts/build.ps1",
     "update:manifest": "node scripts/create-update-manifest.mjs",
@@ -51,6 +52,7 @@
     "clsx": "^2.1.1",
     "convex": "^1.44.0",
     "i18next": "^26.3.6",
+    "loro-crdt": "^1.14.1",
     "lucide-react": "^0.460.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -69,8 +71,10 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "convex-test": "^0.0.55",
     "tailwindcss": "^4.3.1",
     "typescript": "~5.8.3",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "vitest": "^4.1.10"
   }
 }
