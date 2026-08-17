@@ -272,9 +272,16 @@ async function runSetup(ev) {
       NR_SETUP_SCRIPT: script,
       NR_SETUP_HARDWARE: JSON.stringify(hardware),
     };
+    // `-File`, never `-Command` with a scriptblock built from a file read at runtime. The former
+    // shape — Bypass + [scriptblock]::Create(ReadAllText(...)) + a hidden window — is what fileless
+    // loaders do, AMSI scans the constructed block, and Defender's classifiers score the whole
+    // process tree accordingly: an unsigned app.exe spawning node.exe spawning that is how
+    // Trojan:Script/Wacatac.B!ml gets earned. `-File` reads the script the ordinary way.
+    // The UTF-8 the scriptblock used to force now comes from the script's BOM, which is what
+    // Windows PowerShell 5.1 reads; scripts/build.ps1 rewrites the staged copy with one too.
+    // `Bypass` stays until setup.ps1 is Authenticode-signed — see docs/code-signing.md.
     const ps = spawn('powershell', [
-      '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command',
-      '& ([scriptblock]::Create([IO.File]::ReadAllText($env:NR_SETUP_SCRIPT, [Text.Encoding]::UTF8)))',
+      '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script,
     ], { windowsHide: true, env });
 
     let errTail = '';

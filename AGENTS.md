@@ -63,6 +63,7 @@ What is still inherited and **live**: the Resolve bridge cut down to `resolve:st
 | Code structure and cleanliness rules | `docs/code-style.md` |
 | GPU and encoder matrix | `docs/windows-compatibility.md` |
 | Release process and signing key | `docs/releasing.md` |
+| Authenticode, SmartScreen reputation, Defender false positives | `docs/code-signing.md` |
 | Security policy | `SECURITY.md` |
 | Licensing (AGPL-3.0-only, third-party notices) | `LICENSE`, `LICENSES/`, `docs/licensing.md` |
 

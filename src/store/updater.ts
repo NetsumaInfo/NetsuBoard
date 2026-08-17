@@ -149,11 +149,12 @@ export const useUpdater = create<UpdateState>((set, get) => ({
     if (!pendingUpdate || get().phase !== "downloaded") return;
     set({ phase: "installing", error: null });
     try {
+      // Nothing runs after this line on the success path: the plugin hands the NSIS installer to
+      // ShellExecute and exits the process on the spot. The installer runs in `passive` mode, then
+      // relaunches the application itself (`/R` on its own command line). Only a failure BEFORE the
+      // hand-off — a corrupt archive, a signature that does not verify — comes back here, and it
+      // leaves the running application untouched.
       await pendingUpdate.install();
-      // L'installateur NSIS tourne en mode `passive` : il ferme l'application, l'écrase et la
-      // relance. `relaunch()` couvre le cas où il rend la main sans avoir tué le processus.
-      const { relaunch } = await import("@tauri-apps/plugin-process");
-      await relaunch();
     } catch (error) {
       set({ phase: "error", error: String(error) });
     }

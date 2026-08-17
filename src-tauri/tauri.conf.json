@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "NetsuBoard",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "identifier": "com.netsuboard.app",
   "build": {
     "frontendDist": "../dist",
@@ -52,6 +52,11 @@
     "targets": ["nsis"],
     "license": "AGPL-3.0-only",
     "licenseFile": "../LICENSE",
+    "publisher": "Haim Faraj",
+    "homepage": "https://github.com/NetsumaInfo/NetsuBoard",
+    "copyright": "© 2026 Haim Faraj — AGPL-3.0-only",
+    "shortDescription": "Infinite reference board",
+    "longDescription": "Infinite reference board for images, local video, YouTube, embeds, notes and drawing, with a GPU shader upscaler.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

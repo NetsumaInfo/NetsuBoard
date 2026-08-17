@@ -9,16 +9,34 @@ test('Tauri packages the staged runtime tree', () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, 'src-tauri', 'tauri.conf.json'), 'utf8'));
   assert.ok(config.bundle.resources.includes('resources/**/*'));
   assert.equal(config.bundle.createUpdaterArtifacts, true);
-  assert.match(config.plugins.updater.endpoints[0], /github\.com\/NetsumaInfo\/NetsuRush\/releases\/latest\/download\/latest\.json$/);
+  assert.match(config.plugins.updater.endpoints[0], /github\.com\/NetsumaInfo\/NetsuBoard\/releases\/latest\/download\/latest\.json$/);
   assert.equal(config.bundle.windows.nsis.installerHooks, 'windows/installer-hooks.nsh');
   const hooks = fs.readFileSync(path.join(root, 'src-tauri', 'windows', 'installer-hooks.nsh'), 'utf8');
   assert.match(hooks, /NSIS_HOOK_PREINSTALL/);
-  assert.match(hooks, /FindWindow \$0 "" "NetsuRush"/);
+  assert.match(hooks, /FindWindow \$0 "" "NetsuBoard"/);
   assert.match(hooks, /SendMessage \$0 \$\{WM_CLOSE\}/);
-  assert.match(hooks, /netsurush-release-lock\.exe/);
+  assert.match(hooks, /netsuboard-release-lock\.exe/);
   assert.match(hooks, /--release-lock/);
   const preinstall = hooks.match(/!macro NSIS_HOOK_PREINSTALL([\s\S]*?)!macroend/)?.[1] || "";
   assert.doesNotMatch(preinstall, /powershell\.exe|stop-runtime\.ps1|taskkill\.exe|Stop-Process/);
+  // $PLUGINSDIR expands to nothing until it is initialised: without this line the helper is
+  // extracted into $INSTDIR and the command below runs on a path that holds no file.
+  assert.match(preinstall, /InitPluginsDir[\s\S]*File \/oname=\$PLUGINSDIR\\netsuboard-release-lock\.exe/);
+  // The lock is released on the application itself, not only on its background service: app.exe is
+  // the first file the install section writes, and the one that fails when it is still held.
+  assert.match(preinstall, /--release-lock "\$INSTDIR\\app\.exe"/);
+  assert.match(preinstall, /--release-lock "\$INSTDIR\\resources\\bin\\node\.exe"/);
+  // No fixed sleep decides whether the files are free: a kill releases them asynchronously, and an
+  // antivirus can hold a binary for seconds. Both are waited on until they can really be opened.
+  assert.match(preinstall, /Push "\$INSTDIR\\app\.exe"\s*\n\s*Call NetsuRequireWritable/);
+  assert.match(preinstall, /Push "\$INSTDIR\\resources\\bin\\node\.exe"\s*\n\s*Call NetsuRequireWritable/);
+  assert.match(hooks, /Function NetsuRequireWritable[\s\S]*FileOpen \$R1 "\$R0" a/);
+  // `installMode: currentUser` runs the installer as the plain user. An $INSTDIR someone pointed at
+  // Program Files is then unwritable, and every File fails one dialog at a time; the hook asks for
+  // administrator rights once instead, and never asks twice for the same run.
+  assert.match(preinstall, /FileOpen \$0 "\$INSTDIR\\netsuboard-write-probe\.tmp" w/);
+  assert.match(preinstall, /ExecShell "runas" "\$EXEPATH" "\$1 \/NRELEVATED \/D=\$INSTDIR"/);
+  assert.match(preinstall, /\$\{GetOptions\} \$CMDLINE "\/NRELEVATED" \$1/);
   const rust = fs.readFileSync(path.join(root, 'src-tauri', 'src', 'lib.rs'), 'utf8');
   assert.match(rust, /RmRegisterResources/);
   assert.match(rust, /RmGetList/);
@@ -48,14 +66,15 @@ test('the package script stages all core and Python files plus first-run setup',
   assert.match(script, /Join-Path \$root 'core\\\*'/);
   assert.match(script, /Join-Path \$root 'python\\\*'/);
   assert.match(script, /Join-Path \$PSScriptRoot 'setup\.ps1'/);
-  assert.match(script, /Join-Path \$PSScriptRoot 'uninstall-cleanup\.ps1'/);
+  // Aucun uninstall-cleanup.ps1 stagé : le nettoyage de désinstallation est en NSIS natif.
+  assert.doesNotMatch(script, /uninstall-cleanup\.ps1'\)/);
 });
 
 test('adaptive runtime entrypoints exist in source before staging', () => {
   for (const relative of [
     'core/adaptiveCodec.js', 'core/compatibility.js', 'core/hardware.js',
     'python/device_probe.py', 'python/nrdevice.py', 'scripts/setup.ps1',
-    'scripts/uninstall-cleanup.ps1', 'src-tauri/windows/installer-hooks.nsh',
+    'src-tauri/windows/installer-hooks.nsh',
     'python/requirements-base.txt', 'python/requirements-search.txt',
     'python/requirements-netsulab.txt', 'python/requirements-voice.txt',
     'python/requirements-interpolate.txt',
@@ -664,19 +683,41 @@ test('the NOVA-VAD confirmation layer installs with the voice module, weights op
 });
 
 test('uninstall cleanup preserves personal data unless explicitly selected', () => {
-  const script = fs.readFileSync(path.join(root, 'scripts', 'uninstall-cleanup.ps1'), 'utf8');
-  const runtimeBlock = script.slice(script.indexOf('if ($Runtime) {'), script.indexOf('if ($UserData) {'));
-  const userDataBlock = script.slice(script.indexOf('if ($UserData) {'), script.indexOf('if ($Runtime -and $UserData) {'));
+  const hooks = fs.readFileSync(path.join(root, 'src-tauri', 'windows', 'installer-hooks.nsh'), 'utf8');
+  // Les commentaires citent les chemins que le nettoyage s'interdit ; seules les lignes de code
+  // exécutées peuvent porter les assertions d'absence.
+  const code = hooks.split('\n').filter((line) => !/^\s*;/.test(line)).join('\n');
+  const post = code.slice(code.indexOf('!macro NSIS_HOOK_POSTUNINSTALL'));
+  const runtimeBlock = post.slice(
+    post.indexOf('$NRRuntimeState = ${BST_CHECKED}'),
+    post.indexOf('$NRUserDataState = ${BST_CHECKED}'),
+  );
+  const userDataBlock = post.slice(post.indexOf('$NRUserDataState = ${BST_CHECKED}'));
 
-  assert.doesNotMatch(runtimeBlock, /Remove-Tree \$localRoot/);
-  assert.doesNotMatch(runtimeBlock, /snapshots/);
-  // La base porte le roster de personnages nommés (saisi à la main) : elle suit les données
-  // personnelles, jamais le nettoyage des caches. L'index FAISS, lui, est régénérable.
-  assert.doesNotMatch(runtimeBlock, /netsurush\.db/);
-  assert.match(runtimeBlock, /faiss_\*/);
-  assert.match(userDataBlock, /Remove-Tree \$dataRoot/);
-  assert.match(userDataBlock, /Join-Path \$localRoot 'snapshots'/);
-  assert.match(script, /if \(\$Runtime -and \$UserData\) \{\s*Remove-Tree \$localRoot/);
+  // Les fonds d'écran et les préférences sont des créations : ils suivent la case des données
+  // personnelles, jamais celle des prérequis et des caches.
+  // `\\snapshots` et non `snapshots` : le bloc runtime emporte legitimement adobe-snapshots.
+  assert.doesNotMatch(
+    runtimeBlock,
+    /wallpapers|prefs\.json|netsu-recents\.json|upscale-ledger\.json|\\snapshots/,
+  );
+  assert.match(userDataBlock, /RMDir \/r "\$NRHome\\wallpapers"/);
+  assert.match(userDataBlock, /RMDir \/r "\$NRHome\\snapshots"/);
+  // Le home ne part QUE s'il est vide : une case décochée laisse forcément son contenu derrière.
+  assert.doesNotMatch(post, /RMDir \/r "\$NRHome"/);
+  assert.match(post, /RMDir "\$NRHome"/);
+  // Sans %LOCALAPPDATA% les chemins viseraient la racine du disque.
+  assert.match(post, /\$\{If\} \$LOCALAPPDATA != ""/);
+
+  // Aucun chemin de NetsuRush : les deux applications s'installent côte à côte et désinstaller
+  // l'une ne doit jamais emporter le home, les données ou le panneau CEP de l'autre.
+  assert.doesNotMatch(code, /netsurush/i);
+
+  // Aucun script déposé dans %TEMP% et relancé en PowerShell : c'est le motif que les classifieurs
+  // de Defender notent comme dropper, et la chaîne est scannée dès l'installation.
+  assert.doesNotMatch(code, /powershell/i);
+  assert.doesNotMatch(code, /ExecutionPolicy/i);
+  assert.doesNotMatch(code, /\$TEMP/);
 });
 
 // Le panier « temps réel » et les modèles NTIRE ajoutent trois provenances distinctes : shaders GLSL

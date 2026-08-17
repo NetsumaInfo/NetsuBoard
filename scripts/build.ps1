@@ -61,8 +61,10 @@ if ($LASTEXITCODE -ne 0) { throw 'fetch-node echoue' }
 Write-Host '== 4/5 Stage des ressources (core/scripts/shaders) =='
 $required = @(
   'core\server.js',
-  'scripts\setup.ps1',
-  'scripts\uninstall-cleanup.ps1'
+  'scripts\setup.ps1'
+  # Aucun uninstall-cleanup.ps1 : la desinstallation nettoie en NSIS natif (installer-hooks.nsh).
+  # Copier un .ps1 dans %TEMP% pour le lancer en -ExecutionPolicy Bypass est le motif que les
+  # classifieurs de Defender notent comme dropper, et la chaine est scannee des l'installation.
   # vendor\shaders n'est PAS exige : l'etape 4 telecharge les shaders (fetch-shaders.ps1) quand la
   # copie locale manque. L'exiger ici rendait ce repli inatteignable et cassait le build d'un clone
   # neuf, ou vendor/ est absent (gitignore).
@@ -100,8 +102,6 @@ Get-ChildItem -Path $stageCore -Recurse -Directory -Filter '__pycache__' |
 # Le BOM force la lecture UTF-8. Lecture via .NET pour ne pas dependre de l'ANSI.
 $ps1Text = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot 'setup.ps1'), [System.Text.UTF8Encoding]::new($false))
 [System.IO.File]::WriteAllText((Join-Path $stageScripts 'setup.ps1'), $ps1Text, [System.Text.UTF8Encoding]::new($true))
-$uninstallText = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot 'uninstall-cleanup.ps1'), [System.Text.UTF8Encoding]::new($false))
-[System.IO.File]::WriteAllText((Join-Path $stageScripts 'uninstall-cleanup.ps1'), $uninstallText, [System.Text.UTF8Encoding]::new($true))
 
 # Aucun stage vendor/ML : OmniShotCut, NOVA-VAD, les poids Real-ESRGAN et sam2 appartenaient aux
 # modules IA, qui n existent plus ici. Seuls les shaders sont stages plus bas.
@@ -130,13 +130,31 @@ if (Test-Path $stageWindows) { Remove-Item -Recurse -Force $stageWindows }
 New-Item -ItemType Directory -Force -Path $stageWindows | Out-Null
 
 Write-Host '== 5/5 tauri build (NSIS) =='
+# Signature Authenticode. Elle est OPT-IN par NETSUBOARD_SIGN_COMMAND et n'est deliberement pas figee
+# dans tauri.conf.json : un signCommand permanent ferait echouer tout build sur une machine sans
+# outil de signature. Tauri lance la commande sur CHAQUE binaire du paquet, %1 = le fichier a signer.
+# Sans signature l'installeur reste diffusable, mais il repart de zero en reputation SmartScreen a
+# chaque version et se fait noter beaucoup plus durement par les classifieurs de Defender.
+# Details et choix de certificat : docs\code-signing.md
+$signConfig = Join-Path $root 'src-tauri\tauri.sign.conf.json'
+if (Test-Path $signConfig) { Remove-Item -Force $signConfig }
+$tauriArgs = @()
+if ($env:NETSUBOARD_SIGN_COMMAND) {
+  $overlay = @{ bundle = @{ windows = @{ signCommand = $env:NETSUBOARD_SIGN_COMMAND } } }
+  $json = $overlay | ConvertTo-Json -Depth 6
+  [System.IO.File]::WriteAllText($signConfig, $json, [System.Text.UTF8Encoding]::new($false))
+  $tauriArgs = @('--config', $signConfig)
+  Write-Host "  signature Authenticode ACTIVE : $env:NETSUBOARD_SIGN_COMMAND"
+} else {
+  Write-Warning 'NETSUBOARD_SIGN_COMMAND absent : installeur NON SIGNE (SmartScreen avertira).'
+}
 # Supprime seulement l'artefact de la version courante : ainsi un ancien setup ne peut jamais
 # transformer un build incomplet en faux succes, tout en preservant les versions precedentes.
 if (Test-Path $outDir) {
   Get-ChildItem -Path $outDir -Filter $artifactFilter -File -ErrorAction SilentlyContinue |
     Remove-Item -Force
 }
-npm run tauri build
+if ($tauriArgs.Count -gt 0) { npm run tauri build -- @tauriArgs } else { npm run tauri build }
 if ($LASTEXITCODE -ne 0) { throw 'tauri build echoue' }
 
 $out = Get-ChildItem -Path $outDir -Filter $artifactFilter -File -ErrorAction SilentlyContinue |

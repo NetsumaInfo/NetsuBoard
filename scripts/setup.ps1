@@ -1,4 +1,4 @@
-<#
+﻿<#
   NetsuBoard -- first-run provisioning (Windows).
 
   Installs into -Home (writable) what the NSIS installer does not bundle. There are exactly three
@@ -257,9 +257,9 @@ foreach ($source in $shaderSources) {
   }
 }
 if (-not (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyContinue)) {
-  # Repli réseau, atteignable seulement depuis un dépôt de dev sans vendor\shaders. $PSScriptRoot est
-  # VIDE ici : core/setup.js exécute ce fichier comme un scriptblock, pas comme un script — il n'a
-  # donc pas de chemin. Le chemin réel arrive par NR_SETUP_SCRIPT.
+  # Repli réseau, atteignable seulement depuis un dépôt de dev sans vendor\shaders. core/setup.js
+  # lance ce fichier avec -File, donc $PSScriptRoot est renseigné ; NR_SETUP_SCRIPT reste prioritaire
+  # et reste le chemin de référence quand l'appelant en impose un.
   $scriptDir = if ($env:NR_SETUP_SCRIPT) { Split-Path -Parent $env:NR_SETUP_SCRIPT } else { $PSScriptRoot }
   $fetch = if ($scriptDir) { Join-Path $scriptDir 'fetch-shaders.ps1' } else { '' }
   if ($fetch -and (Test-Path $fetch)) { & $fetch -Dest $shaderDir 2>&1 | ForEach-Object { Info ([string]$_) } }
