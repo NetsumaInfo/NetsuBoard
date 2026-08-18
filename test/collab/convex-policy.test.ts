@@ -15,7 +15,11 @@ import {
   storageReservationMatches,
 } from "../../convex/heads";
 import { coalesceMediaHashes } from "../../convex/media";
-import { profileHandle } from "../../convex/social";
+import {
+  classifySocialIdentifier,
+  profileHandle,
+  uniqueProfileIds,
+} from "../../convex/social";
 
 function hex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
@@ -150,5 +154,36 @@ describe("Convex collaboration policy", () => {
     expect(alice).not.toBe(bob);
     expect(profileHandle("Renamed", account).slice(-16)).toBe(alice.slice(-16));
     expect(alice.length).toBeLessThanOrEqual(64);
+  });
+
+  it("classifies every supported exact friend identifier", () => {
+    expect(classifySocialIdentifier(" 1010539781551292598 ")).toEqual({
+      discordId: "1010539781551292598",
+      discordUsername: "1010539781551292598",
+      handle: "1010539781551292598",
+    });
+    expect(classifySocialIdentifier("Netsuma")).toEqual({
+      discordId: null,
+      discordUsername: "netsuma",
+      handle: "netsuma",
+    });
+    expect(classifySocialIdentifier("@netsuma-4jb1phz6tx8cfgcx")).toEqual({
+      discordId: null,
+      discordUsername: null,
+      handle: "netsuma-4jb1phz6tx8cfgcx",
+    });
+  });
+
+  it("deduplicates one profile and fails closed for distinct matches", () => {
+    expect(
+      uniqueProfileIds([
+        { userId: "same" },
+        { userId: "same" },
+        null,
+      ]),
+    ).toEqual(["same"]);
+    expect(
+      uniqueProfileIds([{ userId: "discord-owner" }, { userId: "handle-owner" }]),
+    ).toEqual(["discord-owner", "handle-owner"]);
   });
 });

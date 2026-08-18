@@ -27,6 +27,15 @@ export type CollabFailure = {
   message: string;
 };
 
+export function collabErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  return fallback;
+}
+
 async function invoker() {
   if (!("__TAURI_INTERNALS__" in window)) throw new Error("collaboration requires the desktop app");
   return (await import("@tauri-apps/api/core")).invoke;

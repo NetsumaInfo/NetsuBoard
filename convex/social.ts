@@ -9,6 +9,7 @@
 // server-side: possession of a key is never authorisation.
 
 import {
+  internalMutation,
   query,
   mutation,
   type QueryCtx,
@@ -19,6 +20,8 @@ import { authComponent } from "./auth";
 
 const MAX_FRIENDS = 200;
 const MAX_PENDING_REQUESTS = 100;
+const DISCORD_ID = /^\d{17,20}$/;
+const DISCORD_USERNAME = /^[a-z0-9_.]{2,32}$/;
 
 function validText(value: string, maximum: number) {
   return (
@@ -43,6 +46,25 @@ function normalizeHandle(handle: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+function normalizeDiscordUsername(username: string) {
+  return username.trim().replace(/^@/, "").toLowerCase();
+}
+
+export function classifySocialIdentifier(identifier: string) {
+  const normalized = normalizeDiscordUsername(identifier);
+  return {
+    discordId: DISCORD_ID.test(normalized) ? normalized : null,
+    discordUsername: DISCORD_USERNAME.test(normalized) ? normalized : null,
+    handle: normalizeHandle(identifier),
+  };
+}
+
+export function uniqueProfileIds(
+  profiles: ReadonlyArray<{ userId: string } | null | undefined>,
+) {
+  return [...new Set(profiles.flatMap((profile) => profile ? [profile.userId] : []))];
+}
+
 export function profileHandle(suggested: string, accountId: string) {
   const base = normalizeHandle(suggested) || "user";
   const suffix = accountId.toLowerCase().replace(/[^a-z0-9]/g, "").slice(-16);
@@ -62,10 +84,78 @@ async function publicProfile(ctx: QueryCtx, userId: string) {
   return {
     userId,
     handle: profile?.handle ?? "",
+    discordUsername: profile?.discordUsername ?? null,
     name: profile?.name ?? "",
     image: profile?.image ?? null,
   };
 }
+
+/** Records only Discord fields fetched by the authenticated server action. */
+export const syncDiscordProfile = internalMutation({
+  args: {
+    userId: v.string(),
+    discordId: v.string(),
+    discordUsername: v.string(),
+    name: v.string(),
+    image: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const discordUsername = normalizeDiscordUsername(args.discordUsername);
+    const name = args.name.trim() || discordUsername;
+    if (!DISCORD_ID.test(args.discordId) || !DISCORD_USERNAME.test(discordUsername))
+      throw new Error("invalid Discord profile");
+    if (!validText(name, 120)) throw new Error("invalid public profile");
+    if (args.image) {
+      if (args.image.length > 2048) throw new Error("profile image URL is too long");
+      try {
+        if (new URL(args.image).protocol !== "https:") throw new Error();
+      } catch {
+        throw new Error("profile image URL must use HTTPS");
+      }
+    }
+
+    const discordIdOwners = await ctx.db
+      .query("profiles")
+      .withIndex("by_discord_id", (q) => q.eq("discordId", args.discordId))
+      .take(2);
+    if (discordIdOwners.some((profile) => profile.userId !== args.userId))
+      throw new Error("Discord account is already linked to another NetsuBoard account");
+
+    const now = Date.now();
+    const usernameOwners = await ctx.db
+      .query("profiles")
+      .withIndex("by_discord_username", (q) =>
+        q.eq("discordUsername", discordUsername),
+      )
+      .take(10);
+    for (const profile of usernameOwners) {
+      if (profile.userId !== args.userId) {
+        await ctx.db.patch(profile._id, { discordUsername: undefined, updatedAt: now });
+      }
+    }
+
+    const existing = await profileOf(ctx, args.userId);
+    const handle = existing?.handle ?? profileHandle(discordUsername, args.userId);
+    const handleOwner = await ctx.db
+      .query("profiles")
+      .withIndex("by_handle", (q) => q.eq("handle", handle))
+      .unique();
+    if (handleOwner && handleOwner.userId !== args.userId)
+      throw new Error("this NetsuBoard handle is already in use");
+
+    const row = {
+      userId: args.userId,
+      handle,
+      discordId: args.discordId,
+      discordUsername,
+      name,
+      image: args.image,
+      updatedAt: now,
+    };
+    if (existing) await ctx.db.patch(existing._id, row);
+    else await ctx.db.insert("profiles", row);
+  },
+});
 
 /**
  * Publishes the caller's server-authenticated public fields so others can find them by a unique
@@ -159,21 +249,47 @@ export const listSocial = query({
 });
 
 /**
- * Sends a friend request by handle.
+ * Sends a friend request by exact Discord id, Discord username, or NetsuBoard handle.
  *
  * A request that crosses one already coming the other way is accepted immediately: making two people
  * who each asked first wait for one another would be a dead end with no way out.
  */
 export const sendRequest = mutation({
-  args: { handle: v.string() },
-  handler: async (ctx, { handle }) => {
+  args: { identifier: v.string() },
+  handler: async (ctx, { identifier }) => {
     const user = await requireUser(ctx);
-    const normalized = normalizeHandle(handle);
-    if (!validText(normalized, 64)) throw new Error("invalid handle");
-    const target = await ctx.db
-      .query("profiles")
-      .withIndex("by_handle", (q) => q.eq("handle", normalized))
-      .unique();
+    if (!validText(identifier.trim(), 128)) throw new Error("invalid identifier");
+    const classified = classifySocialIdentifier(identifier);
+    const matches = [];
+    if (validText(classified.handle, 64)) {
+      matches.push(
+        await ctx.db
+          .query("profiles")
+          .withIndex("by_handle", (q) => q.eq("handle", classified.handle))
+          .unique(),
+      );
+    }
+    if (classified.discordId) {
+      matches.push(
+        ...(await ctx.db
+          .query("profiles")
+          .withIndex("by_discord_id", (q) => q.eq("discordId", classified.discordId!))
+          .take(2)),
+      );
+    }
+    if (classified.discordUsername) {
+      matches.push(
+        ...(await ctx.db
+          .query("profiles")
+          .withIndex("by_discord_username", (q) =>
+            q.eq("discordUsername", classified.discordUsername!),
+          )
+          .take(2)),
+      );
+    }
+    const targetIds = uniqueProfileIds(matches);
+    if (targetIds.length > 1) return { status: "ambiguous" as const };
+    const target = matches.find((profile) => profile?.userId === targetIds[0]);
     if (!target) return { status: "unknown" as const };
     if (target.userId === user._id) return { status: "self" as const };
 

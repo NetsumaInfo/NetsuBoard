@@ -245,7 +245,13 @@ the UI must never report backend recovery as complete before acknowledgement.
 ## Invitations, activity, and lifecycle
 
 NetsuBoard keeps its own friend graph because Discord OAuth identifies the account but does not expose
-the Discord friend list. Profiles, friends, pending requests, projects, and invitations are bounded.
+the Discord friend list. The authenticated Discord `/users/@me` response synchronizes the account's
+stable numeric Discord id and current normalized Discord username into optional, exact profile
+indexes; the renderer cannot claim either value. A friend request accepts that Discord id, that
+username, or the existing NetsuBoard handle. It performs bounded exact index reads, deduplicates one
+account found through multiple keys, and fails closed when distinct accounts match. Existing profiles
+gain the Discord fields on their next authenticated app start, with no table scan or prefix search.
+Profiles, friends, pending requests, projects, and invitations are bounded.
 Only friends may be invited. Invitations expire after seven days, reserve one of ten seats, and grant
 editor or viewer—not owner.
 

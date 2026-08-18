@@ -5,6 +5,7 @@ import { Check, Laptop, Trash2, UserPlus, UserRound, Users, X } from "lucide-rea
 import { api } from "@/lib/convexApi";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
 import {
+  collabErrorMessage,
   deviceIdentity,
   forgetDevice,
   respondInvite as respondInviteNative,
@@ -15,7 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 type AuthUser = { name?: string | null; image?: string | null } | null | undefined;
-type Profile = { userId: string; handle: string; name: string; image: string | null };
+type Profile = {
+  userId: string;
+  handle: string;
+  discordUsername?: string | null;
+  name: string;
+  image: string | null;
+};
 type Social = {
   self: Profile | null;
   friends: Array<Profile & { since: number }>;
@@ -39,7 +46,13 @@ function Row({ profile, children }: { profile: Profile; children?: React.ReactNo
       <Avatar url={profile.image} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm">{profile.name || profile.handle}</p>
-        {profile.handle && <p className="truncate text-xs text-muted-foreground">@{profile.handle}</p>}
+        {(profile.discordUsername || profile.handle) && (
+          <p className="truncate text-xs text-muted-foreground">
+            {profile.discordUsername ? `@${profile.discordUsername}` : ""}
+            {profile.discordUsername && profile.handle ? " · " : ""}
+            {profile.handle ? `@${profile.handle}` : ""}
+          </p>
+        )}
       </div>
       {children}
     </div>
@@ -78,7 +91,7 @@ export function CollabSection() {
   const [nativeReady, setNativeReady] = useState<boolean | null>(null);
   const [nativeError, setNativeError] = useState<string | null>(null);
   const [currentDeviceId, setCurrentDeviceId] = useState<string | null>(null);
-  const [handle, setHandle] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [linkedProjects, setLinkedProjects] = useState<Set<string>>(new Set());
@@ -97,7 +110,7 @@ export function CollabSection() {
       .catch((error) => {
         if (!cancelled) {
           setNativeReady(false);
-          setNativeError(error instanceof Error ? error.message : String(error));
+          setNativeError(collabErrorMessage(error, t("collab.device.unavailable")));
         }
       });
     return () => { cancelled = true; };
@@ -122,13 +135,13 @@ export function CollabSection() {
   if (!isAuthenticated) return null;
 
   async function add() {
-    const wanted = handle.trim();
+    const wanted = identifier.trim();
     if (!wanted || busy) return;
     setBusy(true);
     try {
-      const result = (await sendRequest({ handle: wanted })) as { status: string };
+      const result = (await sendRequest({ identifier: wanted })) as { status: string };
       setStatus(result.status);
-      if (result.status === "sent" || result.status === "linked") setHandle("");
+      if (result.status === "sent" || result.status === "linked") setIdentifier("");
     } catch {
       setStatus("error");
     } finally {
@@ -161,7 +174,7 @@ export function CollabSection() {
       if (!(await refreshNativeCollaborationAuth())) throw new Error(t("collab.device.unavailable"));
       await forgetDevice(deviceId);
     } catch (error) {
-      setNativeError(error instanceof Error ? error.message : String(error));
+      setNativeError(collabErrorMessage(error, t("collab.device.unavailable")));
     } finally {
       setBusy(false);
     }
@@ -180,7 +193,7 @@ export function CollabSection() {
       if (!result?.ok) throw new Error(result?.error || t("collab.projects.failed"));
       setLinkedProjects((current) => new Set(current).add(projectId));
     } catch (error) {
-      setNativeError(error instanceof Error ? error.message : String(error));
+      setNativeError(collabErrorMessage(error, t("collab.projects.failed")));
     } finally {
       setBusy(false);
     }
@@ -242,13 +255,13 @@ export function CollabSection() {
         )}
         <div className="mt-3 flex gap-2">
           <Input
-            value={handle}
-            onChange={(event) => setHandle(event.target.value)}
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter") void add(); }}
             placeholder={t("collab.friends.placeholder")}
             className="h-8"
           />
-          <Button size="sm" disabled={busy || !handle.trim()} onClick={() => void add()}>
+          <Button size="sm" disabled={busy || !identifier.trim()} onClick={() => void add()}>
             <UserPlus className="size-3.5" /> {t("collab.friends.add")}
           </Button>
         </div>

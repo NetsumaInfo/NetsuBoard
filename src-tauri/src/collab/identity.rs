@@ -79,6 +79,7 @@ impl From<io::Error> for IdentityError {
 
 /// Everything the renderer is allowed to know. No secret has a field here, by construction.
 #[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DeviceIdentityPublic {
     /// Ed25519 public key, lowercase hex. The iroh EndpointId string form arrives with the iroh
     /// integration; the bytes below are already the final identity.
@@ -476,5 +477,19 @@ mod tests {
             proof.statement.exchange_public,
             identity.public().exchange_public
         );
+    }
+
+    #[test]
+    fn public_identity_serializes_for_the_typescript_contract() {
+        let public = DeviceIdentityPublic {
+            device_id: "device".into(),
+            exchange_public: "exchange".into(),
+            created_at: 42,
+        };
+        let value = serde_json::to_value(public).expect("serialize public identity");
+        assert_eq!(value["deviceId"], "device");
+        assert_eq!(value["exchangePublic"], "exchange");
+        assert_eq!(value["createdAt"], 42);
+        assert!(value.get("device_id").is_none());
     }
 }

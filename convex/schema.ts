@@ -38,17 +38,22 @@ export default defineSchema({
   // Discord is only an identity provider here: its friend list is unreachable (the API needs the
   // Social SDK and Discord's approval), so NetsuBoard keeps its own graph, keyed by Better Auth ids.
 
-  // Directory used to add someone by a server-enforced unique NetsuBoard handle. Display name and
-  // avatar come from Better Auth rather than renderer claims; nothing here is secret.
+  // Exact directory used to add someone by a server-enforced NetsuBoard handle or by Discord fields
+  // observed from the account's OAuth token. Display name and avatar also come from authenticated
+  // server identity rather than renderer claims; nothing here is secret.
   profiles: defineTable({
     userId: v.string(),
     handle: v.string(), // lowercased unique NetsuBoard handle, the lookup key
+    discordId: v.optional(v.string()), // stable Discord snowflake, never renderer-supplied
+    discordUsername: v.optional(v.string()), // current normalized Discord username
     name: v.string(), // as displayed
     image: v.optional(v.string()),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_handle", ["handle"]),
+    .index("by_handle", ["handle"])
+    .index("by_discord_id", ["discordId"])
+    .index("by_discord_username", ["discordUsername"]),
 
   // Accepted friendship, written as TWO rows, one per direction: every list query then reads a
   // single index instead of merging two.

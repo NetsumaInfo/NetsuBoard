@@ -97,7 +97,11 @@ function AccountInner() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{user.name || t("settings:account.discordUser")}</p>
-              {user.email && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
+              {(profile?.username || user.email) && (
+                <p className="truncate text-xs text-muted-foreground">
+                  {profile?.username ? `@${profile.username}` : user.email}
+                </p>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={() => void signOut()}>
               <LogOut className="size-3.5" /> {t("settings:account.signOut")}

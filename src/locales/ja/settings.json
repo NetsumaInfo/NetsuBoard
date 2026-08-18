@@ -685,9 +685,9 @@
     },
     "friends": {
       "title": "フレンド",
-      "subtitle": "Discord はフレンド一覧をアプリに渡しません。NetsuBoard ID で追加してください。",
-      "yourHandle": "あなたの ID: @{{handle}}",
-      "placeholder": "NetsuBoard ID",
+      "subtitle": "Discord ID、Discord ユーザー名、または NetsuBoard ID で追加できます。",
+      "yourHandle": "あなたの NetsuBoard ID: @{{handle}}",
+      "placeholder": "Discord ID・ユーザー名、または NetsuBoard ID",
       "add": "追加",
       "accept": "承認",
       "remove": "削除",
@@ -699,7 +699,8 @@
         "pending": "すでに送信済みです。",
         "already": "すでにフレンドです。",
         "self": "これはあなたです。",
-        "unknown": "その ID は見つかりません。相手が一度ログインして NetsuBoard を開いている必要があります。",
+        "unknown": "該当するユーザーが見つかりません。相手が一度ログインして NetsuBoard を開いている必要があります。",
+        "ambiguous": "複数のユーザーに一致します。Discord ID を使用してください。",
         "error": "送信できませんでした。"
       }
     },

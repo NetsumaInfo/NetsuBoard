@@ -685,9 +685,9 @@
     },
     "friends": {
       "title": "好友",
-      "subtitle": "Discord 不向应用提供好友列表。请用 NetsuBoard ID 添加。",
-      "yourHandle": "你的 ID：@{{handle}}",
-      "placeholder": "NetsuBoard ID",
+      "subtitle": "可使用 Discord ID、Discord 用户名或 NetsuBoard ID 添加好友。",
+      "yourHandle": "你的 NetsuBoard ID：@{{handle}}",
+      "placeholder": "Discord ID、用户名或 NetsuBoard ID",
       "add": "添加",
       "accept": "接受",
       "remove": "移除",
@@ -699,7 +699,8 @@
         "pending": "请求已发送过。",
         "already": "已经是好友。",
         "self": "这是你自己。",
-        "unknown": "未找到该 ID。对方需要登录并打开过一次 NetsuBoard。",
+        "unknown": "未找到该用户。对方需要登录并打开过一次 NetsuBoard。",
+        "ambiguous": "该标识对应多名用户。请使用对方的 Discord ID。",
         "error": "发送失败。"
       }
     },

@@ -685,9 +685,9 @@
     },
     "friends": {
       "title": "Amigos",
-      "subtitle": "Discord no entrega su lista de amigos a las aplicaciones. Añade a alguien con su identificador de NetsuBoard.",
-      "yourHandle": "Tu identificador: @{{handle}}",
-      "placeholder": "Identificador de NetsuBoard",
+      "subtitle": "Añade a alguien con su ID de Discord, usuario de Discord o identificador de NetsuBoard.",
+      "yourHandle": "Tu identificador de NetsuBoard: @{{handle}}",
+      "placeholder": "ID o usuario de Discord, o ID de NetsuBoard",
       "add": "Añadir",
       "accept": "Aceptar",
       "remove": "Quitar",
@@ -699,7 +699,8 @@
         "pending": "Solicitud ya enviada.",
         "already": "Ya es tu amigo.",
         "self": "Eres tú.",
-        "unknown": "No se encontró a nadie con ese identificador. Debe haber abierto NetsuBoard una vez, con sesión iniciada.",
+        "unknown": "No se encontró a nadie. Debe haber abierto NetsuBoard una vez con sesión iniciada.",
+        "ambiguous": "Ese identificador coincide con varias personas. Usa su ID de Discord.",
         "error": "No se pudo enviar."
       }
     },

@@ -685,9 +685,9 @@
     },
     "friends": {
       "title": "Friends",
-      "subtitle": "Discord does not hand its friend list to applications. Add someone by their NetsuBoard ID.",
-      "yourHandle": "Your ID: @{{handle}}",
-      "placeholder": "NetsuBoard ID",
+      "subtitle": "Add someone with their Discord ID, Discord username, or NetsuBoard ID.",
+      "yourHandle": "Your NetsuBoard ID: @{{handle}}",
+      "placeholder": "Discord ID or username, or NetsuBoard ID",
       "add": "Add",
       "accept": "Accept",
       "remove": "Remove",
@@ -699,7 +699,8 @@
         "pending": "Request already sent.",
         "already": "Already a friend.",
         "self": "That is you.",
-        "unknown": "No one found with that ID. They must have opened NetsuBoard once, signed in.",
+        "unknown": "No one found. They must have opened NetsuBoard once while signed in.",
+        "ambiguous": "That identifier matches more than one person. Use their Discord ID.",
         "error": "Could not send."
       }
     },

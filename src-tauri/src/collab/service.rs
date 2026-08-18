@@ -21,6 +21,24 @@ const ROSTER_REFRESH_INTERVAL: Duration = Duration::from_secs(30);
 const MAX_PUBLISH_RETRY: Duration = Duration::from_secs(15 * 60);
 const MEDIA_NOTICE_INTERVAL: Duration = Duration::from_secs(60 * 60);
 
+fn registration_arguments<T: Serialize>(
+    statement: &T,
+    signature: &str,
+    label: Option<&str>,
+) -> serde_json::Value {
+    let mut arguments = serde_json::json!({
+        "statement": statement,
+        "signature": signature,
+    });
+    if let Some(label) = label.map(str::trim).filter(|label| !label.is_empty()) {
+        arguments
+            .as_object_mut()
+            .expect("registration arguments are an object")
+            .insert("label".into(), serde_json::json!(label));
+    }
+    arguments
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ProjectRole {
@@ -1374,16 +1392,13 @@ async fn run_actor(
                             .await?;
                         let proof = identity
                             .registration_proof(&challenge.challenge, &challenge.account_id)?;
-                        let _: serde_json::Value = client
-                            .mutation(
-                                "devices:registerDevice",
-                                serde_json::json!({
-                                    "statement": proof.statement,
-                                    "signature": proof.signature,
-                                    "label": configuration.device_label,
-                                }),
-                            )
-                            .await?;
+                        let arguments = registration_arguments(
+                            &proof.statement,
+                            &proof.signature,
+                            configuration.device_label.as_deref(),
+                        );
+                        let _: serde_json::Value =
+                            client.mutation("devices:registerDevice", arguments).await?;
                     }
                     convex = Some(client);
                     let client = convex.as_ref().expect("client just installed");
@@ -2435,8 +2450,8 @@ async fn run_actor(
 mod tests {
     use super::{
         checkpoint_needs_rekey, has_remote_endpoint, publication_debounce, publish_retry_delay,
-        roster_allows_peer_write, CachedRoster, CloseProject, CollabService, OpenProject,
-        ProjectAccess, ProjectRole, RosterDevice, MAX_PUBLISH_RETRY,
+        registration_arguments, roster_allows_peer_write, CachedRoster, CloseProject,
+        CollabService, OpenProject, ProjectAccess, ProjectRole, RosterDevice, MAX_PUBLISH_RETRY,
     };
     use crate::collab::ids::OpaqueToken;
     use crate::collab::ops::{CollabOp, Geometry, ItemKind, OperationBatch};
@@ -2577,5 +2592,16 @@ mod tests {
         assert!(!checkpoint_needs_rekey(None, 4));
         assert!(!checkpoint_needs_rekey(Some(4), 4));
         assert!(checkpoint_needs_rekey(Some(3), 4));
+    }
+
+    #[test]
+    fn device_registration_omits_an_absent_or_blank_label() {
+        let statement = serde_json::json!({ "deviceId": "device" });
+        let absent = registration_arguments(&statement, "signature", None);
+        assert!(absent.get("label").is_none());
+        let blank = registration_arguments(&statement, "signature", Some("  "));
+        assert!(blank.get("label").is_none());
+        let named = registration_arguments(&statement, "signature", Some("Laptop"));
+        assert_eq!(named["label"], "Laptop");
     }
 }

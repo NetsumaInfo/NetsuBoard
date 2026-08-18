@@ -685,9 +685,9 @@
     },
     "friends": {
       "title": "Freunde",
-      "subtitle": "Discord gibt seine Freundesliste nicht an Anwendungen weiter. Füge jemanden über die NetsuBoard-Kennung hinzu.",
-      "yourHandle": "Deine Kennung: @{{handle}}",
-      "placeholder": "NetsuBoard-Kennung",
+      "subtitle": "Füge jemanden mit Discord-ID, Discord-Benutzername oder NetsuBoard-Kennung hinzu.",
+      "yourHandle": "Deine NetsuBoard-Kennung: @{{handle}}",
+      "placeholder": "Discord-ID oder -Benutzername, oder NetsuBoard-ID",
       "add": "Hinzufügen",
       "accept": "Annehmen",
       "remove": "Entfernen",
@@ -699,7 +699,8 @@
         "pending": "Anfrage bereits gesendet.",
         "already": "Bereits befreundet.",
         "self": "Das bist du.",
-        "unknown": "Niemand mit dieser Kennung gefunden. Die Person muss NetsuBoard einmal angemeldet geöffnet haben.",
+        "unknown": "Niemand gefunden. Die Person muss NetsuBoard einmal angemeldet geöffnet haben.",
+        "ambiguous": "Diese Kennung passt zu mehreren Personen. Verwende deren Discord-ID.",
         "error": "Senden fehlgeschlagen."
       }
     },
