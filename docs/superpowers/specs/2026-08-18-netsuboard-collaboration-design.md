@@ -145,18 +145,21 @@ material is encrypted with Windows DPAPI for the current user.
 challenge. The device signs a domain-separated statement binding the challenge, account identifier,
 device identifier, signing key, exchange key, and iroh endpoint. Convex verifies the proof before an
 atomic challenge consumption and device insert. A changed exchange or endpoint key requires a new
-proof and is surfaced as a device identity change.
+proof and is surfaced as a device identity change. Forgetting a device persists a server tombstone
+before deleting its active row, preventing the same native identity from enrolling itself again.
 
 ### Membership and peer admission
 
-Rust fetches the project roster directly from Convex over TLS and validates each device proof before
-using it. A peer handshake proves possession of the registered signing key and binds project id,
-device id, endpoint id, protocol version, key epoch, nonce, and transcript hash.
+Rust fetches the project roster directly from Convex over TLS and accepts only proof-registered
+devices. iroh's authenticated QUIC handshake proves possession of the registered EndpointId. The
+inner encrypted update is independently signed by that same device and binds project id, device id,
+protocol purpose, key epoch, sequence/base metadata, and the exact ciphertext hash.
 
-The service refreshes authorization every five minutes. A cached roster may authorize an existing
-or reconnecting peer for at most fifteen minutes. When Convex is unavailable beyond that period,
-local edits continue but new network sessions and existing project data transfer pause. This bounds
-revocation delay instead of silently allowing indefinite stale access.
+Inbound P2P authorization reuses an online roster for at most thirty seconds before attempting a
+refresh. If Convex is unavailable, the service may continue with its locally signed cached roster so
+existing collaborators can keep working offline. Revocation can therefore be delayed for the length
+of a backend outage; durable publication and key rotation still require Convex and fail closed. This
+availability tradeoff is explicit in the UI/operational contract and threat model.
 
 Every Convex head write verifies, in the same mutation, that the device is active, belongs to the
 authenticated account, is still a project member, has a writer role, and uses the current key epoch.
@@ -199,8 +202,9 @@ Roles are `owner`, `editor`, and `viewer`.
 - Viewers receive state and media but their UI and native service both reject write operations.
 
 The owner cannot leave or delete their own membership while the project still exists. Projects are
-limited to ten members including the owner, five active devices per account, and twenty pending
-invitations per project. Expired, accepted, and rejected invitations do not remain active quota rows.
+limited to ten members including the owner and five active devices per account. Pending invitations
+reserve the remaining project seats, so a project can never have more than nine. Expired, accepted,
+and rejected invitations do not remain active quota rows.
 
 A collaborative project id is stored in the board scene/project metadata. It is never selected from a
 single global `localStorage` value. Opening or changing a scene closes the previous native session
@@ -294,20 +298,23 @@ Startup imports the durable checkpoint and all journaled updates, verifies signa
 then resumes unpublished outbox work. Corrupt rows are quarantined with a visible recovery error;
 they are not silently ignored.
 
-Identity private keys and every project content key stored in SQLite are individually DPAPI-wrapped.
-Database file permissions, encryption, and authenticated key metadata are defense in depth; no
-plaintext key is made durable.
+Identity private keys and every locally stored project content key are individually DPAPI-wrapped in
+native-owned files. SQLite holds the local Loro journal, signed cached roster, and already sealed
+outbox but never a plaintext project/device key. No plaintext key is made durable.
 
 ## Encryption and envelopes
 
 Every checkpoint, head, and direct Loro update is encrypted with XChaCha20-Poly1305 under the current
-project epoch. Clear authenticated header fields are limited to protocol version, project id digest,
-device id, sequence, key epoch, content type, base version digest, ciphertext length, and nonce. The
-complete header is additional authenticated data and the device signs header plus ciphertext.
+project epoch. The random nonce is carried inside the encoded ciphertext. The clear signed header is
+limited to project id, device id, sequence, base checkpoint epoch, key epoch, purpose, and ciphertext
+hash. Stable protocol/project/purpose fields are AEAD associated data. The device signs the canonical
+complete header plus ciphertext, so the non-circular ciphertext hash and all routing metadata are
+authenticated.
 
-Project key distribution uses HPKE with X25519, HKDF-SHA256, and ChaCha20-Poly1305. An envelope binds
-project, epoch, sender device, target device, target exchange key digest, and creation time. Native
-code rejects substitution, downgrade, replay, and envelopes for a different device.
+Project key distribution uses HPKE with X25519, HKDF-SHA256, and ChaCha20-Poly1305. Its HPKE context
+binds protocol, project, epoch, and the resolved recipient exchange key. Convex separately binds the
+envelope row to the proved target device and current membership. Native code rejects cross-project,
+cross-epoch, and cross-recipient substitution.
 
 Convex therefore learns membership, device metadata, sizes, timing, and encrypted object churn, but
 not board content or original media bytes.
@@ -334,9 +341,10 @@ Direct iroh delivery is immediate. Convex publication is coalesced after three s
 at least every thirty seconds while dirty, on project close, and before an orderly application exit.
 The local outbox remains the truth when publication fails.
 
-An encrypted payload up to 512 KiB is stored inline. A larger payload uses a short-lived Convex upload
-URL and is finalized with its storage id, BLAKE3 digest, length, header, and signature. Failed or
-abandoned uploads are cleaned without changing the active head.
+An encrypted payload of roughly 512 KiB or less is stored inline (the implementation caps its Base64
+wire body below 768 KiB). A larger payload uses a short-lived Convex upload URL and is finalized with
+its storage id, BLAKE3 digest, length, header, and signature. Failed or abandoned uploads are cleaned
+without changing the active head.
 
 Each active device owns at most one unabsorbed server head. Replacing it requires compare-and-swap
 against its previous sequence and checkpoint generation. A server mutation verifies authorization,
@@ -353,6 +361,10 @@ Compaction builds a separate temporary Loro document from the selected checkpoin
 heads. It never snapshots the live document directly. The new encrypted checkpoint is committed by
 CAS with the selected head sequences. Only that successful mutation marks those heads absorbed. A
 concurrent head survives for the next compaction.
+
+After a membership/device rotation commits, an existing writer immediately re-encrypts the selected
+checkpoint/head set under the new key. Any failure is retried on the next security refresh, and old
+per-device envelopes are pruned only by the successful new-key checkpoint mutation.
 
 Unabsorbed heads are not automatically deleted after thirty days. The owner sees the device, age,
 and encrypted size and may explicitly discard one through an audited destructive action.

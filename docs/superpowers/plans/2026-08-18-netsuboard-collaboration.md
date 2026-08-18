@@ -1,12 +1,27 @@
 # NetsuBoard Collaboration Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Deliver the complete 2-to-10-person local-first collaboration contract in the approved design, including native authority, secure membership, offline recovery, P2P media, lifecycle UI, and acceptance evidence.
 
 **Architecture:** A single Rust `CollabService` actor owns Loro, iroh, keys, durable SQLite state, media, and authenticated Convex HTTP calls. React renderers submit typed intent and render projections; Convex stores only authenticated metadata and encrypted recovery objects. Every production behavior is introduced through a failing Rust or Vitest test before implementation.
 
 **Tech Stack:** Tauri 2.11, Rust 2021, Loro 1.x, iroh 1.x, Tokio, rusqlite, reqwest, XChaCha20-Poly1305, HPKE/X25519, Ed25519, BLAKE3, React 19, TypeScript 5.8, Vitest, Convex 1.44, Better Auth.
+
+---
+
+## Execution record (2026-08-18)
+
+Tasks 1–16 and the static portion of Task 17 are implemented and verified. The two-machine Windows
+acceptance remains explicitly pending because repository rules prohibit this task from restarting the
+existing Tauri window. Direct evidence and the live checklist are recorded in
+`docs/collab-acceptance.md`.
+
+The implementation kept the planned boundaries but combined two proposed files: recovery,
+publication, and compaction live in `service.rs`, while versioned iroh framing/handshake admission live
+in `net.rs`. Convex functions remain in the repository's flat `convex/` layout with shared policy in
+`collabPolicy.ts`. These are organizational deviations only; no renderer key/peer/path authority was
+reintroduced.
 
 ---
 
@@ -22,11 +37,10 @@ Native collaboration files remain focused under `src-tauri/src/collab/`:
 - `doc.rs`: Loro schema, atomic operation batches, snapshots, updates, and projections.
 - `crypto.rs`: project key ring, sealing, signatures, envelopes, and rotation primitives.
 - `convex.rs`: pinned authenticated Convex HTTP client and file uploads.
-- `recovery.rs`: head publication, resume, CAS retry, and temporary-document compaction.
-- `protocol.rs`: versioned iroh frames and handshake transcript.
-- `net.rs`: endpoint lifecycle, authorization refresh, sync, presence, and bounded queues.
+- `service.rs`: actor plus head publication, resume, CAS retry, and temporary-document compaction.
+- `net.rs`: versioned iroh frames, authenticated endpoint admission, authorization refresh, sync,
+  endpoint lifecycle, and bounded queues.
 - `blobs.rs`: import grants, BLAKE3 store, resumable chunks, authorization, and GC.
-- `service.rs`: the single actor and high-level command surface.
 - `mod.rs`: exports only.
 
 Renderer collaboration files live under `src/lib/collab/` instead of unrelated top-level helpers:
@@ -37,8 +51,9 @@ Renderer collaboration files live under `src/lib/collab/` instead of unrelated t
 - `session.ts`: scene-bound project selection and lifecycle.
 - `operations.ts`: board changes to typed native intent.
 
-React files remain under `src/components/reference/` and settings. Convex modules use shared helpers in
-`convex/collab/` so every public function follows the same authentication and authorization path.
+React files remain under `src/components/reference/` and settings. Convex modules use shared helpers
+in `convex/collabPolicy.ts` and their module-local authenticated guards so every public function
+follows the same authorization contract.
 
 ## Task 1: Establish collaboration test harness and baseline
 
@@ -50,7 +65,7 @@ React files remain under `src/components/reference/` and settings. Convex module
 - Create: `test/collab/convexHarness.ts`
 - Modify: `src-tauri/src/collab/mod.rs`
 
-- [ ] **Step 1: Add a failing renderer collaboration smoke test**
+- [x] **Step 1: Add a failing renderer collaboration smoke test**
 
 ```ts
 // test/collab/smoke.test.ts
@@ -64,7 +79,7 @@ describe("collaboration contract", () => {
 });
 ```
 
-- [ ] **Step 2: Install and run Vitest to verify RED**
+- [x] **Step 2: Install and run Vitest to verify RED**
 
 Run: `npm install --save-dev vitest@latest convex-test@latest`
 
@@ -72,7 +87,7 @@ Run: `npx vitest run test/collab/smoke.test.ts`
 
 Expected: FAIL because `src/lib/collab/types.ts` does not exist.
 
-- [ ] **Step 3: Add the test configuration and minimal contract**
+- [x] **Step 3: Add the test configuration and minimal contract**
 
 ```ts
 // vitest.config.ts
@@ -110,7 +125,7 @@ export const COLLAB_PROTOCOL_VERSION = 1 as const;
 
 Add `"test:collab": "vitest run test/collab"` to `scripts`.
 
-- [ ] **Step 4: Verify GREEN and the existing static baseline**
+- [x] **Step 4: Verify GREEN and the existing static baseline**
 
 Run: `npm run test:collab`
 
@@ -120,7 +135,7 @@ Run: `cargo test --locked collab:: --lib` from `src-tauri/`.
 
 Expected: the existing three identity tests pass before native replacement starts.
 
-- [ ] **Step 5: Commit only harness files**
+- [x] **Step 5: Commit only harness files**
 
 ```bash
 git add package.json package-lock.json vitest.config.ts test/collab/smoke.test.ts test/collab/convexHarness.ts src/lib/collab/types.ts
@@ -137,7 +152,7 @@ git commit -m "test(collab): add collaboration harness"
 - Modify: `src-tauri/src/collab/outbox.rs`
 - Modify: `src-tauri/src/collab/blobs.rs`
 
-- [ ] **Step 1: Write failing identifier and traversal tests**
+- [x] **Step 1: Write failing identifier and traversal tests**
 
 ```rust
 #[test]
@@ -163,13 +178,13 @@ fn opaque_token_is_random_and_expires() {
 }
 ```
 
-- [ ] **Step 2: Run the focused Rust test and verify RED**
+- [x] **Step 2: Run the focused Rust test and verify RED**
 
 Run: `cargo test --locked collab::ids --lib` from `src-tauri/`.
 
 Expected: FAIL because `ids` and its types are absent.
 
-- [ ] **Step 3: Implement validated newtypes and one confinement helper**
+- [x] **Step 3: Implement validated newtypes and one confinement helper**
 
 ```rust
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -191,17 +206,17 @@ existing ancestor, and compares path components rather than string prefixes.
 Define `CollabError { code: CollabErrorCode, message: String }` with stable codes for validation,
 authorization, unavailable, conflict, corrupt, storage, network, key pending, and read-only.
 
-- [ ] **Step 4: Replace raw project-id path joins**
+- [x] **Step 4: Replace raw project-id path joins**
 
 Change key-ring, outbox, document, and blob paths to take `&ProjectId` and use `storage_key()`.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `cargo test --locked collab::ids --lib` from `src-tauri/`.
 
 Expected: PASS, including traversal and token tests.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/src/collab/error.rs src-tauri/src/collab/ids.rs src-tauri/src/collab/mod.rs src-tauri/src/collab/crypto.rs src-tauri/src/collab/outbox.rs src-tauri/src/collab/blobs.rs
@@ -215,7 +230,7 @@ git commit -m "fix(collab): confine native identifiers and paths"
 - Create: `src-tauri/src/collab/device.rs`
 - Modify: `src-tauri/src/collab/mod.rs`
 
-- [ ] **Step 1: Write failing proof-binding tests**
+- [x] **Step 1: Write failing proof-binding tests**
 
 ```rust
 #[test]
@@ -237,13 +252,13 @@ fn registration_proof_binds_every_public_identity() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked registration_proof --lib` from `src-tauri/`.
 
 Expected: FAIL because registration statements and proofs are absent.
 
-- [ ] **Step 3: Implement domain-separated proof types**
+- [x] **Step 3: Implement domain-separated proof types**
 
 ```rust
 #[derive(Serialize, Deserialize)]
@@ -267,19 +282,19 @@ pub struct RegistrationProof {
 Canonical signing bytes are `b"netsuboard/device-registration/v1\0"` plus deterministic CBOR or a
 length-prefixed field encoding. `deviceId` is the BLAKE3 digest of the Ed25519 public key.
 
-- [ ] **Step 4: Harden DPAPI handling**
+- [x] **Step 4: Harden DPAPI handling**
 
 Keep signing and exchange secrets separate, zeroize plaintext buffers, pass immutable DPAPI input
 buffers where the Windows API permits, write through a random temporary file, fsync, and atomically
 replace the identity file.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `cargo test --locked collab::identity collab::device --lib` from `src-tauri/`.
 
 Expected: proof binding, reload stability, corrupt-file rejection, and different-key tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/src/collab/identity.rs src-tauri/src/collab/device.rs src-tauri/src/collab/mod.rs
@@ -296,7 +311,7 @@ git commit -m "feat(collab): prove and protect device identity"
 - Modify: `src-tauri/src/collab/mod.rs`
 - Modify: `docs/distribution.md`
 
-- [ ] **Step 1: Write a failing crash-boundary transaction test**
+- [x] **Step 1: Write a failing crash-boundary transaction test**
 
 ```rust
 #[test]
@@ -314,13 +329,13 @@ fn local_commit_persists_update_sequence_and_exact_envelope_atomically() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked commit_persists_update --lib` from `src-tauri/`.
 
 Expected: FAIL because `ProjectStore` is absent.
 
-- [ ] **Step 3: Add bundled SQLite and implement schema migration**
+- [x] **Step 3: Add bundled SQLite and implement schema migration**
 
 Add `rusqlite = { version = "0.37", features = ["bundled"] }`.
 
@@ -339,19 +354,19 @@ pub fn commit_local(&mut self, update: &[u8], envelope: &SealedHead) -> Result<(
 }
 ```
 
-- [ ] **Step 4: Add rollback, unpublished-retention, and migration tests**
+- [x] **Step 4: Add rollback, unpublished-retention, and migration tests**
 
 Inject a failure after each statement and assert reopening sees either all three values or none.
 Insert more than eight unpublished rows and assert none are deleted. Open schema version zero and
 assert migration reaches version one without losing rows.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `cargo test --locked collab::store --lib` from `src-tauri/`.
 
 Expected: all transaction, reopen, rollback, and retention tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/src/collab/store.rs src-tauri/src/collab/outbox.rs src-tauri/src/collab/mod.rs docs/distribution.md
@@ -365,7 +380,7 @@ git commit -m "feat(collab): persist projects and outbox atomically"
 - Replace: `src-tauri/src/collab/doc.rs`
 - Modify: `src-tauri/src/collab/mod.rs`
 
-- [ ] **Step 1: Write failing atomicity and Unicode tests**
+- [x] **Step 1: Write failing atomicity and Unicode tests**
 
 ```rust
 #[test]
@@ -389,13 +404,13 @@ fn text_indices_are_unicode_scalar_indices() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked collab::doc --lib` from `src-tauri/`.
 
 Expected: the prototype applies part of an invalid batch or lacks strict typed validation.
 
-- [ ] **Step 3: Define strict operation types**
+- [x] **Step 3: Define strict operation types**
 
 ```rust
 #[derive(Deserialize, Serialize)]
@@ -428,24 +443,24 @@ pub enum CollabOp {
 Every nested type validates finite numbers, dimensions, crop/trim ranges, URL schemes, MIME length,
 manifest hash and size, string length, array count, and supported item kind.
 
-- [ ] **Step 4: Apply through a shadow state and one Loro commit**
+- [x] **Step 4: Apply through a shadow state and one Loro commit**
 
 Prevalidate sequential effects, retain a pre-batch snapshot, apply only after validation, commit once,
 persist the resulting update, and restore from the snapshot on an unexpected persistence error.
 Use the order list as the only z-order source. Use `LoroText` indices in Unicode scalar values.
 
-- [ ] **Step 5: Add convergence coverage**
+- [x] **Step 5: Add convergence coverage**
 
 Create two documents with distinct peer ids, apply concurrent operations for every enum variant,
 exchange updates in both orders, and assert identical projections and version vectors.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `cargo test --locked collab::doc collab::ops --lib` from `src-tauri/`.
 
 Expected: atomicity, validation, Unicode, all-operation, duplicate-import, and convergence tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src-tauri/src/collab/ops.rs src-tauri/src/collab/doc.rs src-tauri/src/collab/mod.rs
@@ -461,7 +476,7 @@ git commit -m "feat(collab): make Loro operations typed and atomic"
 - Create: `test/collab/operations.test.ts`
 - Remove after replacement: `src/lib/collabProjection.ts`
 
-- [ ] **Step 1: Write failing empty, z-order, drawing, and Unicode diff tests**
+- [x] **Step 1: Write failing empty, z-order, drawing, and Unicode diff tests**
 
 ```ts
 it("projects an empty native document to an empty board", () => {
@@ -480,31 +495,31 @@ it("diffs text by Unicode scalar value", () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npx vitest run test/collab/projection.test.ts test/collab/operations.test.ts`
 
 Expected: FAIL on empty deletion, z overwrite, drawings, or code-unit indexing.
 
-- [ ] **Step 3: Implement total projection**
+- [x] **Step 3: Implement total projection**
 
 Map every durable `BoardItem` field to the native contract. Recompute `src`, availability, and object
 URLs locally. Rebuild `shapes` from stable native shapes/strokes. Ignore any geometry `z` field and
 assign order indices after all item groups merge.
 
-- [ ] **Step 4: Implement operation diffing**
+- [x] **Step 4: Implement operation diffing**
 
 Use `Array.from(text)` for scalar arrays, common prefix/suffix edits, stable field-group comparisons,
 and explicit add/delete/move/drawing operations. Never serialize `src`, `loading`, selection,
 playback position, or object URLs.
 
-- [ ] **Step 5: Verify GREEN and field coverage**
+- [x] **Step 5: Verify GREEN and field coverage**
 
 Run: `npm run test:collab`
 
 Expected: projection round-trips every durable fixture field and all focused tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/collab/projection.ts src/lib/collab/operations.ts test/collab/projection.test.ts test/collab/operations.test.ts src/lib/collabProjection.ts
@@ -524,7 +539,7 @@ git commit -m "feat(collab): cover the complete board projection"
 - Create: `src/lib/collab/client.ts`
 - Modify: `src/lib/collab/types.ts`
 
-- [ ] **Step 1: Write failing role and project-routing service tests**
+- [x] **Step 1: Write failing role and project-routing service tests**
 
 ```rust
 #[tokio::test]
@@ -543,13 +558,13 @@ async fn closing_a_project_rejects_late_operations() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked collab::service --lib` from `src-tauri/`.
 
 Expected: FAIL because the prototype exposes independent commands without an actor.
 
-- [ ] **Step 3: Implement the actor API**
+- [x] **Step 3: Implement the actor API**
 
 ```rust
 pub enum ServiceCommand {
@@ -568,19 +583,19 @@ pub enum ServiceCommand {
 Use a bounded Tokio `mpsc` command queue and `oneshot` replies. Perform SQLite and large Loro work in
 bounded blocking jobs. Emit revision/status events only after durable commit.
 
-- [ ] **Step 4: Replace low-level commands with high-level commands**
+- [x] **Step 4: Replace low-level commands with high-level commands**
 
 Register only configure-auth, create/open/close, apply, projection, lifecycle, membership intent,
 media intent, and status subscription commands. Remove commands that accept exchange public keys,
 peer allowlists, arbitrary endpoints, arbitrary file sources, raw keys, or raw project paths.
 
-- [ ] **Step 5: Scope capabilities and CSP**
+- [x] **Step 5: Scope capabilities and CSP**
 
 Define collaboration permissions for `main` and `reference` only. No remote URL receives them. Add a
 CSP that allows the app, local core connection, configured Convex origins, required image/media data
 schemes, and HTTPS frame/embed origins while forbidding remote scripts and objects.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `cargo test --locked collab::service --lib` from `src-tauri/`.
 
@@ -590,7 +605,7 @@ Run: `cargo check --locked` from `src-tauri/`.
 
 Expected: PASS with every command registered.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src-tauri/src/collab/service.rs src-tauri/src/collab/commands.rs src-tauri/src/collab/mod.rs src-tauri/src/lib.rs src-tauri/capabilities/default.json src-tauri/permissions/collaboration.toml src-tauri/tauri.conf.json src/lib/collab/client.ts src/lib/collab/types.ts
@@ -610,7 +625,7 @@ git commit -m "refactor(collab): make Rust the collaboration authority"
 - Remove after replacement: `convex/devices.ts`
 - Remove after replacement: `convex/social.ts`
 
-- [ ] **Step 1: Write failing Convex authorization tests**
+- [x] **Step 1: Write failing Convex authorization tests**
 
 ```ts
 it("does not let an editor invite a member", async () => {
@@ -628,19 +643,19 @@ it("derives profile identity instead of trusting renderer copy", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npx vitest run test/collab/convex-access.test.ts`
 
 Expected: current writer invitation and renderer-supplied profile behavior fails the contract.
 
-- [ ] **Step 3: Implement indexed bounded schema**
+- [x] **Step 3: Implement indexed bounded schema**
 
 Create tables for profiles, projects, members, invitations, devices, device challenges, key envelopes,
 checkpoints, heads, activities, media requests, and audit events. Use compound indexes matching every
 lookup. Store project content bytes only on checkpoint/head rows or `_storage`.
 
-- [ ] **Step 4: Implement shared guards**
+- [x] **Step 4: Implement shared guards**
 
 ```ts
 export async function requireAccount(ctx: QueryCtx | MutationCtx) {
@@ -661,23 +676,23 @@ export async function requireRole(
 }
 ```
 
-Enforce owner-only invitation/removal/role/delete, max ten members, max twenty pending invites, max
-five active devices, stable invite codes, and no owner leave.
+Enforce owner-only invitation/removal/role/delete, max ten members, pending invitations bounded by
+the remaining project seats, max five active devices, stable invite codes, and no owner leave.
 
-- [ ] **Step 5: Verify registration proof atomically**
+- [x] **Step 5: Verify registration proof atomically**
 
 Issue a five-minute single-use challenge. Verify Ed25519 proof over the canonical registration
 statement with a permissively licensed audited dependency, then consume challenge and insert device
 inside one mutation. Include the current user's other active devices in project rosters.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `npm run test:collab`
 
 Expected: unauthenticated, non-member, viewer, editor, owner, cap, replay, proof-substitution, and
 same-account multi-device cases pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add convex/schema.ts convex/collab/access.ts convex/collab/profiles.ts convex/collab/projects.ts convex/collab/devices.ts test/collab/convex-access.test.ts convex/projects.ts convex/devices.ts convex/social.ts
@@ -695,7 +710,7 @@ git commit -m "feat(collab): enforce Convex membership and device proofs"
 - Modify: `src/lib/collab/client.ts`
 - Create: `test/collab/auth-handoff.test.ts`
 
-- [ ] **Step 1: Write failing URL-pinning and token-redaction tests**
+- [x] **Step 1: Write failing URL-pinning and token-redaction tests**
 
 ```rust
 #[test]
@@ -711,13 +726,13 @@ fn auth_session_debug_never_prints_token() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked collab::convex --lib` from `src-tauri/`.
 
 Expected: FAIL because no native client exists.
 
-- [ ] **Step 3: Add the HTTP client**
+- [x] **Step 3: Add the HTTP client**
 
 Add `reqwest` with rustls and JSON features plus Tokio time/macros. `build.rs` reads the public
 deployment URL used for packaging and exposes a compile-time value. Development may use a loopback
@@ -735,13 +750,13 @@ pub async fn call<T: DeserializeOwned>(
 Send `{ path, args, format: "json" }`, `Authorization: Bearer`, strict content-length limits, a
 ten-second timeout, and typed Convex error parsing. Never log headers, body ciphertext, or JWT.
 
-- [ ] **Step 4: Implement renderer token refresh**
+- [x] **Step 4: Implement renderer token refresh**
 
 Call `authClient.convex.token({ fetchOptions: { throw: false } })`, pass the token to the native
 configure command, refresh before expiry or after one unauthorized response, and clear native auth
 on sign-out. Do not persist it in collaboration storage.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `cargo test --locked collab::convex --lib` from `src-tauri/`.
 
@@ -752,7 +767,7 @@ Run: `npx vitest run test/collab/auth-handoff.test.ts`
 
 Expected: refresh and clear-auth tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/src/collab/convex.rs src-tauri/src/collab/service.rs src-tauri/build.rs src/lib/collab/client.ts test/collab/auth-handoff.test.ts
@@ -767,7 +782,7 @@ git commit -m "feat(collab): authenticate native Convex access"
 - Create: `convex/collab/keys.ts`
 - Create: `test/collab/convex-keys.test.ts`
 
-- [ ] **Step 1: Write failing recipient and epoch tests**
+- [x] **Step 1: Write failing recipient and epoch tests**
 
 ```rust
 #[test]
@@ -784,25 +799,25 @@ fn old_epoch_cannot_publish_after_rotation_begins() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked collab::crypto --lib` from `src-tauri/`.
 
 Expected: prototype key-wrap API accepts renderer-selected public keys or lacks pending rotation.
 
-- [ ] **Step 3: Implement native resolved-target envelopes**
+- [x] **Step 3: Implement native resolved-target envelopes**
 
 Expose `wrap_for_device(project, epoch, VerifiedDevice)` only inside native code. Bind project, epoch,
 sender, target, target exchange-key digest, and timestamp in HPKE info/AAD. DPAPI-wrap every durable
 content key. Zeroize plaintext keys after use.
 
-- [ ] **Step 4: Implement owner-only Convex rotation state**
+- [x] **Step 4: Implement owner-only Convex rotation state**
 
 `beginRemoval` removes membership and marks `rotationPending` atomically. `putEnvelope` accepts only
 the owner, current member target, active verified device, and pending next epoch. `commitRotation`
 checks every active target has an envelope before advancing epoch and clearing pending state.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `cargo test --locked collab::crypto --lib`
 
@@ -810,7 +825,7 @@ Run: `npx vitest run test/collab/convex-keys.test.ts`
 
 Expected: recipient, replay, downgrade, substitution, removal, missing-envelope, and commit tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/src/collab/crypto.rs src-tauri/src/collab/store.rs convex/collab/keys.ts test/collab/convex-keys.test.ts
@@ -827,7 +842,7 @@ git commit -m "feat(collab): rotate project keys after revocation"
 - Modify: `src-tauri/src/collab/service.rs`
 - Create: `test/collab/convex-recovery.test.ts`
 
-- [ ] **Step 1: Write failing CAS and notification consolidation tests**
+- [x] **Step 1: Write failing CAS and notification consolidation tests**
 
 ```ts
 it("preserves a concurrent head during checkpoint CAS", async () => {
@@ -845,30 +860,31 @@ it("does not rewrite an already unread activity", async () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npx vitest run test/collab/convex-recovery.test.ts`
 
 Expected: current publication is unwired, lacks file fallback, or rewrites inbox rows.
 
-- [ ] **Step 3: Implement bounded Convex recovery functions**
+- [x] **Step 3: Implement bounded Convex recovery functions**
 
 Add one-shot checkpoint/head reads, `generateUploadUrl`, finalize inline/file-backed head, per-device
 CAS replacement, activity transition, acknowledgement after merged generation, checkpoint CAS, and
-audited stale-head discard. Enforce 512 KiB inline and explicit encrypted-size limits.
+audited stale-head discard. Keep roughly 512 KiB encrypted payloads inline through an explicit Base64
+wire ceiling and enforce explicit file-backed encrypted-size limits.
 
-- [ ] **Step 4: Implement native publication and exact retries**
+- [x] **Step 4: Implement native publication and exact retries**
 
 Seal once, store exact bytes, publish after three-second idle and thirty-second maximum, reuse the
 same outbox sequence on retry, and mark published only after Convex returns the committed head.
 
-- [ ] **Step 5: Implement temporary-document compaction**
+- [x] **Step 5: Implement temporary-document compaction**
 
 Create a new Loro document, import selected checkpoint plus selected heads, export its full snapshot,
 seal it, CAS against generation and selected head sequences, then mark only those heads absorbed.
 Never export the live actor document as the compacted checkpoint.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `cargo test --locked collab::recovery --lib` from `src-tauri/`.
 
@@ -877,7 +893,7 @@ Run: `npx vitest run test/collab/convex-recovery.test.ts`
 Expected: crash resume, exact retry, inline/file fallback, CAS race, concurrent head, unread no-op,
 stale retention, and explicit discard tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add convex/collab/recovery.ts convex/heads.ts src-tauri/src/collab/recovery.rs src-tauri/src/collab/store.rs src-tauri/src/collab/service.rs test/collab/convex-recovery.test.ts
@@ -891,7 +907,7 @@ git commit -m "feat(collab): recover encrypted offline branches"
 - Replace: `src-tauri/src/collab/net.rs`
 - Modify: `src-tauri/src/collab/service.rs`
 
-- [ ] **Step 1: Write failing handshake and frame-limit tests**
+- [x] **Step 1: Write failing handshake and frame-limit tests**
 
 ```rust
 #[tokio::test]
@@ -907,13 +923,13 @@ fn decoder_rejects_oversized_length_before_allocating() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked collab::protocol collab::net --lib` from `src-tauri/`.
 
 Expected: prototype renderer allowlist or 64 MiB allocation policy violates the tests.
 
-- [ ] **Step 3: Define versioned signed frames**
+- [x] **Step 3: Define versioned signed frames**
 
 ```rust
 pub enum WireFrame {
@@ -930,21 +946,21 @@ pub enum WireFrame {
 Bind project digest, device id, endpoint id, protocol version, epoch, nonce, timestamp, and transcript
 hash. Verify the native roster and proof before document exchange.
 
-- [ ] **Step 4: Implement bounded sync**
+- [x] **Step 4: Implement bounded sync**
 
 Exchange version vectors, request missing ranges, import idempotently, acknowledge, and resync a slow
 peer instead of buffering without limit. Add handshake, read, write, idle, and authorization-refresh
 timeouts. Refresh roster every five minutes and pause sessions after fifteen minutes without fresh
 authorization.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `cargo test --locked collab::protocol collab::net --lib` from `src-tauri/`.
 
 Expected: registered two-peer convergence, unknown/revoked peer, signature, replay, stale epoch,
 duplicate, reorder, frame bound, slow-peer, timeout, and stale-roster tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src-tauri/src/collab/protocol.rs src-tauri/src/collab/net.rs src-tauri/src/collab/service.rs
@@ -961,7 +977,7 @@ git commit -m "feat(collab): authenticate and bound iroh sync"
 - Create: `convex/collab/media.ts`
 - Create: `test/collab/convex-media.test.ts`
 
-- [ ] **Step 1: Write failing arbitrary-path, resume, and GC tests**
+- [x] **Step 1: Write failing arbitrary-path, resume, and GC tests**
 
 ```rust
 #[test]
@@ -988,31 +1004,31 @@ fn referenced_and_outbox_blobs_survive_gc() {
 }
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `cargo test --locked collab::blobs --lib` from `src-tauri/`.
 
 Expected: current command accepts arbitrary paths or lacks resumable ranges and durable GC pins.
 
-- [ ] **Step 3: Implement native import grants and blob store**
+- [x] **Step 3: Implement native import grants and blob store**
 
 Create grants only from a native file dialog or trusted drag event. Store a random 256-bit token,
 canonical path, allowed project, expiry, and consumed flag. Stream into a confined temporary file,
 enforce type/size limits, calculate BLAKE3, fsync, and atomically move to a hash path.
 
-- [ ] **Step 4: Implement resumable authorized chunks**
+- [x] **Step 4: Implement resumable authorized chunks**
 
 Use authenticated manifests, bounded chunk size/count, per-chunk BLAKE3, persisted received bitmap,
 final full hash, cancellation, and transfer timeout. Serve only hashes referenced by a project for a
 currently authorized peer. A partial file is never registered as a provider.
 
-- [ ] **Step 5: Implement coalesced media requests and GC**
+- [x] **Step 5: Implement coalesced media requests and GC**
 
 Convex stores one bounded hash set per project/requester and does not patch again inside the retry
 window. Native GC pins current references, outbox, transfers, and local keep-offline rows; it starts a
 thirty-day grace only after the last pin disappears.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run: `cargo test --locked collab::blobs --lib` from `src-tauri/`.
 
@@ -1021,7 +1037,7 @@ Run: `npx vitest run test/collab/convex-media.test.ts`
 Expected: import confinement, expiry, one-use token, oversize, wrong hash, resume, authorization,
 request coalescing, pins, grace, collection, and placeholder-state tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src-tauri/src/collab/blobs.rs src-tauri/src/collab/protocol.rs src-tauri/src/collab/net.rs src-tauri/src/collab/store.rs convex/collab/media.ts test/collab/convex-media.test.ts
@@ -1043,7 +1059,7 @@ git commit -m "feat(collab): transfer media securely over iroh"
 - Remove after replacement: `src/components/reference/useCollabProject.ts`
 - Create: `test/collab/session.test.ts`
 
-- [ ] **Step 1: Write failing project-switch and empty-board tests**
+- [x] **Step 1: Write failing project-switch and empty-board tests**
 
 ```ts
 it("closes project A before operations can target project B", async () => {
@@ -1063,32 +1079,32 @@ it("applies an empty authoritative projection", () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npx vitest run test/collab/session.test.ts`
 
 Expected: global localStorage session or the empty-projection guard fails.
 
-- [ ] **Step 3: Persist project binding in scene metadata**
+- [x] **Step 3: Persist project binding in scene metadata**
 
 Add optional `collaboration: { projectId, schemaVersion }` to durable scene/project metadata. Remove
 the global active-project key. On scene change, await close before open. Keep local board unchanged if
 creation fails before the initial checkpoint commit.
 
-- [ ] **Step 4: Make native projection authoritative**
+- [x] **Step 4: Make native projection authoritative**
 
 Disable solo autosave as a truth source while collaboration is active. Submit operations to native,
 then update the board only from committed native revisions. Mount the same session client in the
 detached reference window. Provide explicit local export rather than background competing saves.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `npm run test:collab`
 
 Expected: switch ordering, late-event rejection, empty deletion, creation rollback, solo autosave,
 detached window, and explicit export tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/collab/session.ts src/components/reference/ReferencePanel.tsx src/components/reference/ReferenceWindow.tsx src/components/reference/useScenePersistence.ts src/components/reference/useAutosave.ts src/components/reference/useProjectActions.ts src/lib/collabSession.ts src/components/reference/CollabHost.tsx src/components/reference/useCollabBridge.ts src/components/reference/useCollabProject.ts test/collab/session.test.ts
@@ -1107,7 +1123,7 @@ git commit -m "feat(collab): bind collaboration to board scenes"
 - Modify: `src/locales/{fr,en,de,es,ja,zh}/settings.json`
 - Create: `test/collab/ui-state.test.ts`
 
-- [ ] **Step 1: Write failing state-machine tests**
+- [x] **Step 1: Write failing state-machine tests**
 
 ```ts
 it.each([
@@ -1122,26 +1138,26 @@ it.each([
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `npx vitest run test/collab/ui-state.test.ts`
 
 Expected: current UI lacks lifecycle and distinct media states.
 
-- [ ] **Step 3: Implement project and membership controls**
+- [x] **Step 3: Implement project and membership controls**
 
 Support authenticated creation, invite code, pending invites, accept/reject, owner member list, role
 change, removal, device list/revoke, leave, delete, key waiting, and rotation progress. Require login
 only for collaboration; keep solo skip behavior unchanged. Disable shared mutation controls for
 viewers and keep native enforcement.
 
-- [ ] **Step 4: Implement compact board status**
+- [x] **Step 4: Implement compact board status**
 
 Show connecting, peer count, offline queued, recovery failure, key pending, rotation pending, media
 requested, no holder online, archived unavailable, and read-only without covering board content. Use
 the project Tooltip component and no native `title=`.
 
-- [ ] **Step 5: Add all six locales and verify GREEN**
+- [x] **Step 5: Add all six locales and verify GREEN**
 
 Run: `npm run check:i18n`
 
@@ -1151,7 +1167,7 @@ Run: `npm run test:collab`
 
 Expected: status distinction, owner/editor/viewer controls, login requirement, and action tests pass.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/reference/CollaborationDialog.tsx src/components/reference/Toolbar.tsx src/components/settings/CollabSection.tsx src/components/settings/AccountPanel.tsx src/components/reference/CollaborationStatus.tsx src/locales/*/reference.json src/locales/*/settings.json test/collab/ui-state.test.ts
@@ -1170,7 +1186,7 @@ git commit -m "feat(collab): complete collaboration lifecycle UI"
 - Modify: `src-tauri/src/collab/mod.rs`
 - Remove replaced files listed by Tasks 4, 6, 8, 11, and 14
 
-- [ ] **Step 1: Write a failing static contract test**
+- [x] **Step 1: Write a failing static contract test**
 
 ```js
 // test/collaboration-contract.test.cjs
@@ -1182,24 +1198,24 @@ test('collaboration docs and command surface contain no prototype claims', () =>
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `node --test test/collaboration-contract.test.cjs`
 
 Expected: prototype status or dangerous command names remain.
 
-- [ ] **Step 3: Reconcile docs with implemented evidence**
+- [x] **Step 3: Reconcile docs with implemented evidence**
 
 Make `docs/collab.md` the operational contract matching the approved design and actual status. Add the
 external reference row to `AGENTS.md`. Document SQLite bundling, native Convex URL provisioning,
 upload storage, CSP origins, restart requirements, key/device limits, and precise media states.
 
-- [ ] **Step 4: Remove dead prototype paths**
+- [x] **Step 4: Remove dead prototype paths**
 
 Use `rg` to prove every replaced helper, command, table, and low-level IPC name has no callsite before
 deleting it. Preserve unrelated work and `docs/perso.lnk` untouched.
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Run: `node --test test/collaboration-contract.test.cjs`
 
@@ -1209,7 +1225,7 @@ Run: `rg -n "collab_key_wrap|collab_net_allow|nb\.collab\.project|implemented so
 
 Expected: no obsolete implementation hit.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/collab.md docs/architecture.md docs/invariants.md docs/convex-setup.md docs/distribution.md AGENTS.md src-tauri/src/collab/mod.rs test/collaboration-contract.test.cjs src src-tauri convex
@@ -1224,7 +1240,7 @@ Before committing, inspect `git diff --cached --name-only` and unstage any unrel
 **Files:**
 - Modify only when a failing acceptance check identifies a collaboration defect.
 
-- [ ] **Step 1: Run focused collaboration tests**
+- [x] **Step 1: Run focused collaboration tests**
 
 Run: `npm run test:collab`
 
@@ -1238,7 +1254,7 @@ Run: `cargo test --locked collab:: --lib` from `src-tauri/`.
 
 Expected: all native collaboration tests pass.
 
-- [ ] **Step 2: Run repository checks separately**
+- [x] **Step 2: Run repository checks separately**
 
 Run: `npm run check:i18n`
 
@@ -1257,13 +1273,13 @@ Run: `cargo check --locked` from `src-tauri/`.
 Expected: every command exits zero. Existing quarantined Node suites are not used to excuse a new
 collaboration failure.
 
-- [ ] **Step 3: Audit the spec requirement by requirement**
+- [x] **Step 3: Audit the spec requirement by requirement**
 
 For each heading and every bullet under `Verification and acceptance` in the design spec, record the
 test name, command output, source location, or explicit runtime-only status that proves it. Treat an
 uncertain or indirectly covered item as incomplete and add a focused failing test before fixing it.
 
-- [ ] **Step 4: Inspect the final worktree and dependency/license surface**
+- [x] **Step 4: Inspect the final worktree and dependency/license surface**
 
 Run: `git diff --check`
 
@@ -1276,7 +1292,7 @@ Run: `cargo tree -e normal` from `src-tauri/`.
 Expected: no accidental generated artifacts, no unrelated staged file, no missing dependency, and no
 new non-redistributable runtime component.
 
-- [ ] **Step 5: Request the required native restart for runtime validation**
+- [x] **Step 5: Request the required native restart for runtime validation**
 
 Do not launch, close, rebuild, or package the running application. State that Rust/core changes need
 the user to restart the existing Tauri window. After the user restarts it, verify create/invite/join,
@@ -1284,7 +1300,10 @@ two-device concurrent editing, offline recovery, member removal/rotation, image 
 video transfer, detached-window edits, and all visible error states. Record anything that cannot be
 observed as not verified at runtime rather than complete.
 
-- [ ] **Step 6: Keep acceptance fixes attributable**
+Closeout status: the restart and two-account acceptance pass are explicitly requested from the user;
+the runtime checklist remains pending and is not represented as verified.
+
+- [x] **Step 6: Keep acceptance fixes attributable**
 
 When an acceptance check fails, return to the owning task, add the focused regression test there,
 commit the exact test and implementation paths with that task's commit message, and rerun this full

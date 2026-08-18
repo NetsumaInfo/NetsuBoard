@@ -42,11 +42,17 @@ The updater reads `latest.json` from the latest GitHub release; archives are sig
 - **Unattended install is opt-in and launch-only** (`nr.update.autoInstall`, off unless turned on in Settings → Updates). It downloads and restarts without a click, but only on the version the *boot* probe found — a manual check keeps its two clicks — only once `App.tsx` has armed it from the shell, so a relaunch can never cut the first-run runtime download or an in-flight sign-in, and only if the download lands within 120 s of that arming: past the launch window the bytes wait for the title-bar button rather than closing the window on a running upscale. Turning off auto-check turns it off too: there is no probe left to feed it.
 - **The percentage is exact**: the store publishes the raw `downloaded / contentLength` float with no rounding and no artificial 99 % ceiling, and the UI renders it to one decimal — an integer percentage sits still for seconds on a large installer and then jumps. Progress events are coalesced to one store write per 80 ms so the title bar does not re-render per HTTP chunk.
 
-## Authentication — optional Discord sign-in over Convex
+## Authentication and collaboration — optional for solo boards, required for shared boards
 
-The account is **optional and never required to open a board**. It exists for one reason: naming the tester on a bug report and giving them their own sending quota. Everything below is inert until `VITE_CONVEX_URL` is set — with no deployment the app boots straight to the board, exactly as before.
+The account is **optional for solo boards** and required for collaboration. It identifies bug reports,
+friends, invitations, project membership, and proved devices. Everything below is inert until
+`VITE_CONVEX_URL` is set for both Vite and the native build-time deployment pin. Without a deployment,
+the app still boots straight to a local board, but shared-project controls are unavailable.
 
-- **The backend is `convex/`**: Better Auth mounted as a Convex component (`convex.config.ts`), Discord as the only social provider, the beta access check (`access.ts`), the bug relay and the OAuth landing page (`http.ts`). Secrets live **on the deployment**, never in the bundle: `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `BUG_WEBHOOK`, `SITE_URL`, `OPEN_BETA`. Setup steps: [`convex-setup.md`](convex-setup.md).
+- **The backend is `convex/`**: Better Auth, Discord OAuth, beta access, bug relay, profiles/friends,
+  invitations, membership, device proofs, wrapped project keys, encrypted recovery heads/checkpoints,
+  upload ownership receipts, consolidated activity, and media requests. Original media and plaintext
+  boards never enter Convex. Secrets live on the deployment. Setup: [`convex-setup.md`](convex-setup.md).
 - **Every import of the auth chain is DYNAMIC.** `convexEnv.ts` carries the witness and no dependency; `main.tsx` only pulls `ConvexBetterAuthProvider`, `convexClient` and `authClient` once the witness is true, and `LoginGate` is `lazy`. Static, they landed in the entry chunk of every renderer — ~140 KB raw / 48 KB gzipped of startup parsing for a feature that may not exist.
 - **The gate is traversable.** No deployment, or "skip" clicked once (`nr.auth.skipped`), or a login under 7 days old with the network down (`nr.auth.lastAuthAt`) → the children render. A board that will not open because a backend is unreachable is a broken board.
 - **Order is `SetupGate` → `AuthGate` → `Shell`.** Language is the first step of the setup screen; a sign-in screen in front of it would speak a language the user has not chosen yet.

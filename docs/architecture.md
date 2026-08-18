@@ -6,6 +6,7 @@ Deep notes for agents and contributors. Read the section you need; do not load t
 
 ```
 src-tauri/            Rust shell: WebView2 window, HEVC flag, native mpv player, spawn/kill of the core
+  ├─ collab/          Loro authority, SQLite outbox, DPAPI keys, Convex client, iroh, blob store
   └─ spawns
 core/server.js        Node service, HTTP on 127.0.0.1, headless, port picked at launch
   ├─ media-server.js  /media (Range/seek) + /stream (live ffmpeg remux) + mediaGuard token
@@ -19,10 +20,17 @@ core/server.js        Node service, HTTP on 127.0.0.1, headless, port picked at 
   ├─ hardware.js + adaptiveCodec.js + export/        encoder probe and export profiles
   ├─ wallpaper/       wallpaper variants (blur, GIF→mp4, posters)
   └─ setup.js + config.js   first-run provisioning, NR_HOME, nr.config.json
-        ▲ HTTP/SSE (CORS open on the RPC and event routes only)
+        ▲ HTTP/SSE (loopback Host plus exact Tauri/loopback renderer origins)
 src/                  React renderer
   └─ lib/bridge.ts → coreClient.ts (fetch /rpc + EventSource /events)
 ```
+
+Collaborative projects use a second, native-only path: React sends typed intent through high-level
+Tauri commands to one Rust `CollabService`; Rust returns a total board projection and emits revision
+events to both windows. Rust calls Convex directly with a short-lived JWT supplied in memory by the
+authenticated renderer, and speaks iroh in-process. The Node core stores only the scene-to-project
+binding. It never owns the Loro document, project keys, peer selection, or collaborative media. See
+[`collab.md`](collab.md) for the complete trust and recovery contract.
 
 - `core/` is CommonJS (`core/package.json`). The root `package.json` is `type: module` for the Vite renderer.
 - **Ports.** Vite serves development on `localhost:1430` with `strictPort` (NetsuRush holds 1420, and both dev servers must be able to run at once). The core's port is **not fixed**: the Rust shell sweeps `8760`–`8779` for a free one, passes it as `NR_CORE_PORT`, and the renderer asks the shell for it (`nr_core_port`). Run alone (`npm run core`), the service sweeps the same range itself. That range is **disjoint from NetsuRush's** (`8730`–`8749`), and `/healthz` answers `app: "netsuboard"` so a sweep can tell the two services apart. The retained port is published to `NR_HOME/core-port.json` for out-of-process clients.
@@ -44,6 +52,11 @@ Any new channel must be added in **all three** places, or it is immediate debt:
 | `mock` fallback | `src/lib/bridge.ts` |
 
 `core/rpc.js` entries stay thin: they delegate to the `core/` modules with injected dependencies. No business logic in `rpc.js` or `server.js`.
+
+This three-place rule applies to Node-core RPC. Native collaboration commands are intentionally not
+mirrored into Node: they are declared in `src-tauri/src/collab/commands.rs`, registered in
+`src-tauri/src/lib.rs`, and wrapped by `src/lib/collab/client.ts`. Their arguments remain high-level
+project operations; never expose raw keys, arbitrary paths, peer endpoints, or ciphertext recipients.
 
 ## Shell and navigation
 

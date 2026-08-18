@@ -1,351 +1,319 @@
-# Real-time collaboration — specification
+# Collaboration
 
-**Status: specification only. Nothing in this document is implemented.** No code, schema or dependency described here exists in the tree yet. Implementation starts once this document is validated.
+**Implementation status:** complete in source, statically verified, not yet validated in a live
+two-machine session. Native changes require a Tauri window restart before the running application can
+exercise them.
 
-Scope: shared moodboard projects for **2 to 10 people**. Participants place, move and organise items, write, draw and add media at the same time. Local-first: every machine holds a complete copy of the **collaborative state** and stays fully usable offline. Original media remains on-demand unless it has been downloaded or pinned locally.
+NetsuBoard supports local-first shared boards for **2 to 10 members**. Members can edit the complete
+persisted board contract: item creation and deletion, geometry, ordering, text, drawing, crop and trim,
+appearance, playback, palettes, sequences, links, embeds, and media manifests.
 
-The board also exists in NetsuRush. There is no shared package or automatic synchronisation between repositories. Every implementation change to the collaborative board — data model, conflict rule, IPC, persistence, media behaviour or UI — must be mirrored manually in NetsuRush, and the PR must state exactly what needs mirroring.
+The design has three deliberately separate jobs:
 
-## 1. Layers and ownership
+| Job | Owner | Data |
+|---|---|---|
+| Authoritative document and local durability | Rust `CollabService` + Loro + SQLite | Plaintext while open, local snapshots, encrypted outbox |
+| Live transport and original media | iroh over authenticated QUIC | Signed Loro updates and hash-addressed chunks |
+| Identity, recovery, and invitations | Better Auth + Convex | Membership metadata, encrypted checkpoints/heads, wrapped keys, consolidated notices |
+
+Convex is not the live document server and iroh is not the authorization database. Loro determines
+document convergence; Convex determines current membership; iroh moves already-authorized bytes.
 
-| Layer | Component | Owns | Never holds |
-|---|---|---|---|
-| Collaborative truth | **Loro** | project state, merge of concurrent edits, local undo | media bytes |
-| Transport | **iroh** | direct QUIC connections, live updates, media transfer | authority over state |
-| Rendezvous | **Convex** | invites, members, devices, key envelopes, checkpoint, heads, inbox | plaintext board content or media |
+## Runtime architecture
 
-Convex necessarily sees account and routing metadata: project id, membership, roles, device ids, timestamps, epochs and ciphertext sizes. Project names and notification copy are encrypted unless the product explicitly chooses to expose them; an inbox entry may identify its actors but must not require a plaintext board name.
+`src-tauri/src/collab/service.rs` runs one actor for the process. It owns every open Loro document,
+project role, key epoch, local SQLite store, outbox, peer roster, media-retention pins, and Convex
+client. The actor serializes document mutations so two renderer windows cannot race the same project.
 
-`iroh-docs` is **not** used: Loro fills that role, and stacking both creates two competing sync systems.
+The React renderer is a projection consumer. It submits versioned typed operations and replaces its
+board state with the total projection returned by Rust. It does not own a second Loro document, export
+CRDT updates, select arbitrary peers or key recipients, or persist keys. The main and detached board
+windows obtain independent leases on the same native project; the final lease closing releases it.
 
-For 2–10 participants, peers connect through iroh directly when possible and through an encrypted relay fallback otherwise. `iroh-gossip` is only considered if group size grows.
+The renderer obtains a short-lived Convex JWT from Better Auth and passes it to Rust in memory. Rust
+validates the deployment URL, keeps the token out of logs and disk, registers the device, and calls the
+pinned deployment directly. The renderer refreshes authentication every five minutes while a shared
+scene is open. Collaboration pauses when the session cannot refresh, but accepted local edits remain
+durable in SQLite.
+
+Each collaborative project is bound to one saved scene id. Solo scene autosave is no longer an
+authority for its items: it saves the scene binding and view metadata while the Loro document owns the
+shared items. `Save As` is blocked because duplicating a scene id without defining a new collaboration
+project would create two local names for one remote truth. Explicit export remains available.
+
+## Document and operation contract
+
+The document format and the renderer-to-native operation protocol are independently versioned at
+version 1. Unknown versions fail closed.
+
+The document contains fixed maps/lists for metadata, items, item order, strokes, and stroke order.
+Items and strokes use never-reused ids and tombstones. Projection filters tombstoned children even if
+a concurrent move leaves an order entry behind, so deletion wins over stale movement.
 
-## 2. Process layout
-
-`CollabDocumentService` lives in **Rust, `src-tauri/`**, using the `loro` crate. It is the single authority.
-
-The service owns: the Loro document, local persistence of its snapshot, the local `UndoManager`, import/export, checkpoint and head production, project keys, encryption, device signature, and the projection pushed to renderers.
-
-Rationale: the highest-frequency paths are *update → network* and *update → windows*. Both are in-process or one native hop from Rust. The low-frequency paths (autosave, `.netsu` export) are the ones that cross a boundary. Project keys never enter a JS heap or a WebView.
-
-Renderers hold a **read-only replica** (`loro-crdt`, WASM), one per window. A replica never exports, never persists, never accepts an update from anywhere but the service, and sends every write to the service as an operation. It rebuilds its state from the service after a reload. One authority, N caches — not two truths.
-
-### 2.1 IPC contracts
-
-**Renderers ↔ service** — Tauri commands and events.
-
-- Commands: `collab_apply(projectId, ops[])`, `collab_bootstrap(projectId)`, `collab_undo`, `collab_redo`, `collab_ephemeral(state)`.
-- Binary transport: Loro updates travel over a per-window `Channel` typed on **`InvokeResponseBody::Raw`**, or as a command returning **`tauri::ipc::Response`**. A `Channel<T>` over a `serde` struct and a plain `Vec<u8>` return both serialise to JSON — they compile and work, and only measurement reveals the mistake.
-- JSON events carry only: presence, connection state, transfer progress, and the identifier or sequence of an available update.
-
-**Service ↔ iroh** — in-process. No IPC.
-
-**Service ↔ core Node** — there is no direct Rust↔Node bus. The renderer is the courier for rare operations (snapshot save, `.netsu` export). Bytes do not travel through the renderer:
-
-1. Rust writes the payload into a dedicated directory under the NetsuBoard home.
-2. The renderer forwards an **opaque, unguessable identifier** — never a path.
-3. The core rebuilds the path itself, canonicalises it (resolving junctions, symlinks and 8.3 short names **before** the containment test), verifies it stays inside that directory, enforces a maximum size and the expected type, consumes the file **once**, and deletes it.
-4. The temporary file carries its own TTL, so an interrupted flow leaves nothing behind.
-
-A renderer that could hand over an arbitrary path would be a file-read primitive for a compromised WebView.
-
-The temporary directory must not reuse any of the paths listed as known collisions at the end of `docs/invariants.md`.
-
-Any new core channel is declared in the three usual places: `core/rpc.js`, `NrApi` + implementation in `src/lib/coreClient.ts`, `mock` in `src/lib/bridge.ts`.
-
-**Service ↔ Convex** — the renderer is the courier. The Convex client and the Better Auth session stay in the renderer; the service produces sealed, signed envelopes and the renderer uploads opaque bytes. Consequence, accepted: **no synchronisation while NetsuBoard is closed.** At next launch the session is restored, the renderer reads `projectInbox` and the heads, hands the ciphertext to the service, and the service decrypts, verifies and merges. A background service is a possible V2, not a requirement.
-
-## 3. Document model
-
-The Loro document holds project metadata, items indexed by id, their committed geometry, texts as `LoroText`, finished strokes, stacking order as a movable list, and media references and manifests.
-
-### 3.1 Operation vocabulary
-
-Renderers never write into containers by path. A generic `set(path)` API allows invalid states and bypasses the atomicity rules below. Writes are versioned operations, produced by TypeScript, **validated and applied by Rust**:
-
-The initial vocabulary is normative, not illustrative:
-
-`AddItem`, `DeleteItem`, `SetGeometry`, `SetCrop`, `SetTrim`, `SetItemAppearance`, `SetTextStyle`, `TextInsert`, `TextDelete`, `SetFrameStyle`, `SetPlayback`, `SetMediaManifest`, `SetLink`, `SetEmbed`, `SetSequence`, `SetPalette`, `MoveItem`, `AddStroke`, `DeleteStroke`.
-
-Together these operations must cover every writable persisted field of `BoardItem`. Unknown fields and unknown operation versions are rejected. Adding a persisted field to `BoardItem` therefore requires, in the same change, a schema decision, a typed operation or an explicit local-only classification, Rust validation, TypeScript projection, migration coverage and the NetsuRush mirror.
-
-Two independent version numbers, with different lifetimes:
-
-- **Document schema version**, stored inside the Loro document. A build that does not understand it refuses to open the project rather than corrupting it.
-- **Operation protocol version**, on the Rust↔TypeScript wire.
-
-Compatibility tests cover both directions.
-
-### 3.2 Container schema and lifecycle
-
-The document has a versioned, fixed root layout:
-
-- `meta`: project id, display metadata and document schema version; any copy of that display metadata stored separately in Convex is encrypted;
-- `items`: map keyed by random, never-reused item ids;
-- `order`: movable list of item ids;
-- `strokes`: map keyed by random, never-reused stroke ids;
-- `strokeOrder`: movable list of stroke ids.
-
-Each item is a mergeable child map with typed fields. Concurrent initialisation uses Loro's mergeable-container API; a renderer never creates containers directly. Text content is a `LoroText`. Geometry, crop, trim, appearance groups, playback state, frame style, media manifest, link, embed, sequence metadata and palette state are each stored as one atomic value for their operation group, not as independently writable scalar keys.
-
-Deletion is a tombstone, not removal of the child container. `DeleteItem` sets the lifecycle tombstone and removes the id from `order`; projection filters every tombstoned id even if a concurrent move leaves or reinserts an order entry. Item ids are never reused, so a stale `AddItem` cannot resurrect a deleted item. Strokes use the same tombstone rule. Local undo may create a new lifecycle operation through Loro's `UndoManager`; it never mutates history in place.
-
-Only Rust runs document migrations. A newer unknown schema is opened read-only with an explicit incompatibility error; it is never rewritten. Migrations are deterministic and covered by golden snapshots shared with the TypeScript projection tests.
-
-### 3.3 Ephemeral, never committed
-
-Personal pan and zoom, selection, cursors, active tool, intermediate positions during a drag, the current point of a stroke in progress, video playback position.
-
-These travel through Loro's `EphemeralStore` over iroh. Never through Convex, never into the document.
-
-Geometry is committed **on pointer release**. A stroke is synchronised **once finished**. This split is what keeps operation count proportional to gestures rather than to frames.
-
-### 3.4 Strokes
-
-A finished stroke is stored as a **single encoded binary value**, not as a Loro list of points: one operation per stroke instead of thousands. A stroke is immutable once committed; it can only be deleted.
-
-Consequence: the eraser cannot split a stroke. Erasing part of a stroke deletes it and creates the remaining segments as new strokes.
-
-### 3.5 Conflict rules
-
-Loro guarantees convergence, not a desirable outcome. Per-field decisions:
-
-| Field | Rule |
-|---|---|
-| Delete vs move | delete wins |
-| Geometry | `{x, y, w, h, rotation}` is **one LWW register**, serialised — never five map keys |
-| Crop | atomic rectangle |
-| Video trim | atomic range |
-| Text | `LoroText` |
-| Stacking order | movable list |
-| Finished stroke | immutable, then deletable |
-| Media source | atomic manifest, identified by hash |
-| Pan, zoom, selection, playback | local or ephemeral |
-
-Five separate keys for geometry produce exactly the field-by-field merge to avoid: Alice's position with Bob's size.
-
-Accepted consequence: two people resizing the same item by different handles — one wins entirely. The result must be **visible** on screen (the item jumps), never silent.
-
-Undo uses Loro's local `UndoManager`, so nobody undoes someone else's work.
-
-## 4. Media
-
-**Links, YouTube, embeds** — only the URL and metadata are synchronised. Each participant fetches from the source.
-
-**Local images** — the manifest is synchronised immediately: content hash, name, MIME type, size and dimensions. The original travels over `iroh-blobs`. An optional encrypted WebP thumbnail may live in Convex so the board stays readable when every holder is offline.
-
-**Local videos** — the original never enters Convex. Order of operations: show the item and its availability state immediately; transfer a poster or light proxy first; transfer the original **on demand only**; resume interrupted transfers; verify with the hash. Once received, the receiver becomes an iroh provider too.
-
-Availability is live or explicitly labelled as stale. On connection, peers advertise the BLAKE3 hashes they can currently provide. The UI may say *three online sources* or *last known on Alice*; it must never present a last-known holder as a currently available copy. A missing asset distinguishes: online provider available, only stale provider knowledge, no known provider, and locally collected.
-
-### 4.1 Blob store
-
-The board asset store and `iroh-blobs` do not share a hash function or an owner today. For collaborative projects:
-
-- **BLAKE3** is the network identity of a blob.
-- Rust owns the `collab-blobs` store and its GC.
-- Node reads it during `.netsu` export.
-- The manifest carries hash, local path, size, MIME and availability.
-
-Rust and Node never write concurrently into the same directory. Existing solo assets stay in their current store until solo → collaborative conversion.
-
-### 4.2 Retention
-
-Blob retention is **decoupled from Loro history**. Loro stores references and hashes, not bytes; keeping full CRDT history does not require keeping every past media file.
-
-Pinned, never collected: blobs referenced by the current state, by the outbox, or by an active transfer.
-
-A blob no longer referenced by the current state enters a **30-day grace period**, then becomes collectable.
-
-An older document state that references a collected blob shows a placeholder and attempts best-effort P2P recovery. Other peers may have different grace deadlines or a local pin, so recovery is possible but never promised. Its wording must be distinct from the "no holder online" state — otherwise the user waits forever for a file that may no longer exist anywhere:
-
-- *archived media unavailable* — collected locally, recovery uncertain;
-- *no holder online* — the file exists, nobody is reachable right now.
-
-Thumbnails are cached locally by hash and downloaded once per device. Convex egress is counted in downloads; without this cache, thumbnails are the single line of code that decides the monthly ceiling.
-
-A future **keep offline** pin is local to one device. It must not silently impose disk usage on every collaborator. Project-wide replication policy is a separate future feature.
-
-## 5. Convex
-
-Convex stores invites, memberships, device changes, key envelopes, a checkpoint, at most one unmerged head per device and consolidated notifications. Live sync, cursors and all media go over iroh.
-
-Tables: `projects`, `projectMembers`, `projectInvites`, `userDevices`, `projectCheckpoints`, `projectHeads`, `projectInbox`, per-device key envelopes.
-
-`projectHeads` has a unique logical index on `(projectId, deviceId)`.
-
-`projectInbox` holds **one consolidated notification per user and project**, updated in place, never inserted repeatedly. The server-side copy contains no plaintext project name. Example payload meaning: *Alice and Karim edited a shared project*; after decryption, the client may decorate it with the local project name.
-
-Every query and mutation authenticates the Better Auth session and checks project membership server-side. Head and checkpoint publication require a writer role; compaction requires a writer role and the CAS described below; invitations, membership changes, key-envelope changes and destructive head disposal require owner/admin rights; inbox reads are scoped to the current user. Convex cannot validate encrypted CRDT contents, but it validates ids, roles, epochs, sequence uniqueness, sizes and quotas before accepting their opaque payloads.
-
-Convex is **not** a presence system. Availability is determined by trying to reach EndpointIds over iroh. No polling, no heartbeat.
-
-Retention is bounded, quotas are per project so a bug cannot fill storage, and old checkpoint files are deleted only after a successful CAS.
-
-### 5.1 No shallow snapshots in V1
-
-An empty head set does **not** prove that no offline device holds unpublished work. A shallow snapshot cannot import concurrent operations that predate its cut point, so a device returning after the cut would be unable to merge.
-
-V1: full Loro checkpoints only, no CRDT history deletion, full resync accepted when needed. Shallow arrives later with a coordinated epoch protocol or an explicit rebase mechanism for late devices.
-
-### 5.2 Heads
-
-One head per device, carrying its unmerged branch as a **delta from the checkpoint's version vector**. A delta is not guaranteed small: under a measured threshold it lives in a Convex document, above it in file storage, with the same CAS path on the pointer. Convex documents are capped at 1 MiB, and file storage has no in-place patch — each upload yields a new `storageId`.
-
-**Local work always goes through a head. A checkpoint only ever absorbs heads.** Injecting local work straight into a checkpoint reintroduces lost updates: two devices compacting the same heads plus their own local work would overwrite each other. When a checkpoint only merges already-published material, overwriting is harmless because both results converge.
-
-**Stale-head threshold: 30 days.** After 30 days without refresh, the head is marked stale and the project owner is warned. An unabsorbed published head is **never deleted automatically**: the originating disk may be gone, so the server copy may be the only surviving branch. It remains bounded by the one-head-per-device invariant.
-
-The owner may explicitly discard a stale, unabsorbed head after a destructive warning that names the device, age and byte size and states that published edits may be permanently lost. That decision is audited. This is the only retention path allowed to lose a published operation.
-
-### 5.3 Envelope
-
-Cleartext but authenticated header: `projectId`, `deviceId`, `seq`, `baseCheckpointEpoch`, `keyEpoch`, ciphertext hash.
-
-`keyEpoch` must be readable **without decrypting** — otherwise a device cannot know which key to try.
-
-Encrypted body: start version vector, end version vector, Loro delta.
-
-The device signature covers header and ciphertext. Convex verifies nothing about CRDT inclusion; it guarantees only the CAS on epoch and head revisions. Inclusion is computed client-side after decryption.
-
-### 5.4 Compaction
-
-The compactor **never exports its live document**, which may contain unpublished local work. It builds a temporary document containing only the current checkpoint and the heads selected at the start of compaction, imports them, produces the new checkpoint, then commits. Local edits made meanwhile stay in the device's own head.
-
-The commit is a single mutation carrying `expectedEpoch`, the new checkpoint `storageId`, the exact list of consumed heads, and each head's observed revision. In one transaction: verify the epoch matches; verify every head still exists with the same revision; replace the checkpoint pointer; increment the epoch; delete only the consumed head records.
-
-If a head or the epoch changed, the mutation fails and compaction restarts. Convex mutations are transactional.
-
-Head deletion is expressed in version vectors, not intent:
-
-```
-delete head H  ⟺  VV(checkpoint_new) ⊇ VV(H)  AND  H unchanged since read (CAS)
-```
-
-### 5.5 Outbox
-
-A monotonic sequence is not enough on its own. Order is mandatory:
-
-1. produce and encrypt the head;
-2. record it in a **durable local outbox**, in the same atomic write as the `seq` counter, before any send;
-3. only then upload to Convex;
-4. mark the entry published on confirmation.
-
-After a crash the device republishes **exactly the same head**, same `(projectId, deviceId, seq, hash)`, and Convex treats that tuple idempotently. Same `(projectId, deviceId, seq)` with a **different hash** is rejected, never upserted: it signals a bug or a cloned device.
-
-If `seq` were incremented in memory and the crash happened before the write, the device would reuse a sequence number for different content and idempotency would not catch it.
-
-## 6. Keys, membership, permissions
-
-Each device holds a **persistent** iroh identity — never regenerated at startup — used to authenticate connections, plus a **dedicated X25519 exchange key**, registered in Convex and signed by the device identity. No key material is derived from the Ed25519 iroh identity.
-
-### 6.1 Cryptographic profile
-
-The wire format is versioned and uses maintained, audited library implementations only:
-
-- device identity and envelope signatures: the persistent Ed25519 iroh identity;
-- project-key wrapping: HPKE with DHKEM(X25519, HKDF-SHA256), HKDF-SHA256 and ChaCha20-Poly1305;
-- project master key: 32 random bytes from the operating-system CSPRNG for each `keyEpoch`;
-- checkpoint, head and thumbnail encryption: XChaCha20-Poly1305 with a fresh random 192-bit nonce for every ciphertext;
-- subkeys: HKDF-SHA256 from the project master key with distinct, versioned labels for checkpoints, heads and thumbnails;
-- integrity and content identity: BLAKE3 where a content hash is required; AEAD authentication remains the security boundary.
-
-The canonical header bytes are authenticated as AEAD associated data. The signature covers the format version, canonical header, nonce and ciphertext. Parsers reject non-canonical encodings, unknown versions, nonce reuse detected within a local outbox, oversized inputs and any authentication failure. Secret buffers are zeroised where the libraries permit it. No custom cipher, key conversion or signature construction is introduced.
-
-On Windows, device secrets, exchange secrets and the project-key ring are encrypted at rest with DPAPI scoped to the current Windows user. Metadata and outbox commits use atomic replace semantics. A corrupt or unavailable key ring is a hard, visible error: NetsuBoard never silently regenerates an identity. Recovery means enrolling a new device through another authorised member; local unpublished work whose key material is irrecoverable may be lost, and the UI must say so before any reset.
-
-Each project has its own symmetric key, distributed as **one HPKE envelope per authorised device**. Convex stores those envelopes and never the bare key. An authorised device creates the new device's envelope after verifying its signed exchange key; once published, the recipient can enrol without the inviter remaining online.
-
-Invites are time-limited and, where possible, single-use.
-
-**Revocation.** A new key is generated, re-wrapped for the remaining devices, and used for new writes only. Devices still authorised keep retired keys **read-only, protected on disk**. A retired key may only be destroyed once every head of its epoch has been absorbed into a checkpoint re-encrypted under the current key, or after the owner explicitly discards every remaining stale head of that epoch with the destructive warning above.
-
-Rotation protects the future only. A removed member keeps everything already received locally. This is irreducible in a local-first design.
-
-**Access control is server-side, not key-based.** A revoked device may still hold a valid Better Auth session, so the head-write mutation must verify `projectMembers` on every call. Possession of a key is not authorisation.
-
-**Read-only** is enforced on both paths: Convex rejects writes from a member without the write role, and every Rust peer rejects a direct device-signed update whose locally cached membership role is not writer. That is real applicative control for a trusted group. It is not resistance to a byzantine collaborator who already holds the project key. And a reader holding the project key **reads everything, permanently**: read-only bounds writing, never reading. No CRDT can express a reader who cannot decrypt.
-
-Authorisation to connect lives in the EndpointId. iroh verifies the remote public key at accept time:
-
-```
-if remoteEndpointId ∉ local allowlist → refuse before any exchange
-```
-
-The allowlist is derived from Convex but stored locally, default closed, so an unavailable Convex neither opens nor breaks anything.
-
-Key substitution by a compromised Convex deployment is mitigated by **TOFU**: the key is pinned at first pairing and any change raises a loud alert. A short verification code compared out of band is an optional hardening.
-
-## 7. Source of truth and migration
-
-For a collaborative project: Loro is the only source. SQLite/JSON stores its snapshot. `BoardItem[]` becomes a projection. `.netsu` exports from Loro. Autosave persists the Loro document.
-
-Only **solo → collaborative** conversion exists. A project is never maintained as a modifiable solo version and a modifiable collaborative version at the same time.
-
-## 8. Sizing
-
-Document size is **not** assumed to be a few tens of kilobytes. The ephemeral/committed split reduces operation count sharply, but drawings can carry very many points and text history grows. Measure separately:
-
-current state size, history size, full checkpoint size, head sizes, stroke contribution, and import/export time.
-
-These measurements decide when shallow snapshots become necessary. Nothing else does.
-
-## 9. Network and cost
-
-Convex carries no original media and no live traffic. Its egress still includes encrypted checkpoints, large heads stored as files, optional thumbnails and existing outbound application traffic such as bug-report relay. Beta telemetry must measure each category separately; the dominant category is not assumed in advance.
-
-The real cost is the **iroh relay**. When a direct connection cannot be established, all media traffic is relayed. Public n0 relays are free but rate-limited, development-grade, and carry no uptime guarantee; a dedicated cloud relay is billed by the hour and is expensive under continuous operation.
-
-No fixed direct-connection rate is assumed. During beta, measure the share of relayed traffic and, above all, the **relayed video volume**, then decide between a dedicated relay and self-hosting.
-
-A Windows Defender inbound rule is **not** shipped preemptively: iroh degrades to relay behind a firewall that blocks inbound UDP. The rule is judged on the share of direct connections it actually gains, measured on a clean Windows install, with CGNAT and corporate VPN cases included. The question is cost and throughput, not connectivity.
-
-## 10. Implementation order
-
-1. Specification of document ownership and the security model.
-2. Persistent device identity.
-3. Allowlist and iroh authentication.
-4. Direct connection and `iroh-blobs` transfer test.
-5. Local Loro model and solo → collaborative conversion.
-6. Cryptographic profile, DPAPI key ring, key distribution and rotation.
-7. Direct live synchronisation.
-8. Convex checkpoint and heads with CAS.
-9. Media, cached thumbnails, resumable transfers.
-10. Direct versus relayed traffic measurement.
-
-## 11. Test matrix
-
-No scenario may lose a published operation except an explicit, audited owner decision to discard an unabsorbed stale head after the destructive warning.
-
-- Two devices edit offline, then publish two heads.
-- Two compactors start simultaneously.
-- A head changes during compaction.
-- The compactor produces local work during compaction.
-- A device returns after several checkpoint changes.
-- Network failure between upload and CAS.
-- Old checkpoint file correctly cleaned up.
-- Crash before and after the Convex upload.
-- Idempotent republication of the same `(projectId, deviceId, seq, hash)`.
-- Old head decrypted after key rotation.
-- New device without the retired key.
-- Stale head retained after 30 days with no automatic data loss.
-- Explicit owner discard of a stale head, with audit record and destructive warning.
-- Key retirement blocked by an unreachable device, then unblocked by absorption or explicit stale-head discard.
-- Two windows editing the same project simultaneously.
-- `.netsu` export during an edit.
-- BLAKE3 blob imported by Node with no concurrent write.
-- Compromised renderer sending an invalid operation, rejected by Rust.
-- Read-only or revoked member rejected on both direct iroh and every Convex write path.
-- Corrupt DPAPI key ring produces a visible recovery flow and never a silent identity reset.
-- Concurrent delete and move leaves the item tombstoned and absent from projection.
-- Unknown schema and operation versions are rejected without rewriting the document.
-- Update large enough to prove no JSON event is used.
-- Blob GC versus time travel: a collected media shows a placeholder, never a crash or a silent empty frame.
-- Sessions with 2, then 5, then 10 collaborators.
-
-## 12. Remaining measured decisions
-
-- **Stroke encoding format.** It must be versioned, deterministic and decoded identically by Rust and TypeScript. Select it through a compatibility prototype before implementing collaborative drawing.
-- **Document/file threshold.** Start with a conservative 768 KiB maximum measured with Convex's size calculation, leaving room below the 1 MiB document limit; confirm or lower it from real encrypted-head measurements. Larger heads use file storage.
-
-Version vectors remain encrypted. A device caches the checkpoint vector locally to compute its delta; Convex does not inspect CRDT causality.
+Operations are typed Rust enums with `deny_unknown_fields`. The contract covers:
+
+- item lifecycle, geometry, crop, trim, appearance, text style, frames, and playback;
+- Unicode text insert/delete using scalar indices;
+- media variants, links, remote embeds, YouTube ids, sequences, and palettes;
+- ordering, finished drawing strokes, and stroke deletion.
+
+A batch is validated completely before it is committed. Non-finite geometry, invalid ranges,
+oversized arrays/strings, unsupported URL schemes, sender file paths, malformed hashes, unknown fields,
+and unknown protocols are rejected. If any operation is invalid, no operation in the batch is applied.
+
+Geometry, crop, trim, and other coupled values are atomic registers instead of unrelated scalar keys.
+Text uses Loro text operations. A finished stroke is one immutable encoded value, not thousands of
+point operations; erasing part of a stroke deletes it and creates replacement segments. Undo and redo
+are local Loro history actions and cannot undo another member's action.
+
+Drag previews, selection, pan/zoom, active tools, in-progress strokes, and playback position remain
+local in V1. Geometry is published after the committed gesture, not on every pointer frame. Shared
+cursors and presence are intentionally not claimed by this version.
+
+## Local durability and offline recovery
+
+Every acknowledged native edit is committed in one SQLite transaction with:
+
+1. the Loro update;
+2. a monotonically increasing device sequence;
+3. the exact sealed and signed outbox envelope.
+
+The network send happens only afterward. A crash therefore republishes the same sequence, ciphertext,
+hash, and signature. Convex accepts an identical retry and rejects sequence reuse with different
+content.
+
+Publications are scheduled after three idle seconds and no later than thirty seconds after the first
+unpublished edit. Transient failures retry at 30, 60, 120, 240, 480, then 900 seconds. Authorization
+or read-only failures do not retry blindly. Every durable publish rechecks membership and role in
+Convex.
+
+Convex stores one encrypted checkpoint per project and at most one unabsorbed head per proved device.
+Small ciphertexts are inline; larger ciphertexts use file storage. A file-backed payload must first be
+registered to the authenticated project, account, and device. Cleanup accepts only such a reservation,
+so an arbitrary Convex storage id cannot be deleted through a collaboration mutation.
+
+Opening a project imports the checkpoint and every head, verifies their Ed25519 signatures and
+XChaCha20-Poly1305 authentication, merges them, and republishes any local branch. Consequently, text,
+layout, drawing, URLs, and media manifests recover even when their author is offline.
+
+Compaction never snapshots the live document directly. It builds a temporary Loro document from the
+selected checkpoint and selected server heads, then commits with compare-and-swap on the checkpoint
+epoch and every consumed head revision. A head changed during compaction survives. Published,
+unabsorbed heads are never deleted automatically. After thirty days, the owner sees the device, age,
+and encrypted size and may discard one only through a second destructive confirmation. That decision
+is written to the bounded project audit trail.
+
+## Identity, authorization, and keys
+
+The native service creates one persistent Ed25519 device identity. Its public key is also the iroh
+EndpointId. A separate X25519 key receives project-key envelopes; Ed25519 material is never converted
+into an exchange key. Private identity and project-key files are protected with Windows DPAPI for the
+current account and are written with replace-existing, write-through atomic replacement.
+
+Device registration is challenge based and single use. The device signs a versioned statement binding
+the Convex account, challenge, device id, signing key, exchange key, and endpoint id. Convex verifies
+the proof before the device may publish or receive an envelope. An account may register at most five
+devices. Forgetting a device writes a durable server tombstone before deleting its active row, so the
+same native identity cannot silently re-enrol itself with a still-live web session.
+
+Roles are `owner`, `editor`, and `viewer`:
+
+- owner: invite, change roles, remove members, rotate keys, delete the project, and edit;
+- editor: edit and provision a newly registered authorized device for the current epoch;
+- viewer: recover and render, but cannot publish or mutate shared state.
+
+Viewer checks exist in controls, Zustand mutators, native commands, P2P admission, and Convex
+mutations. Possessing a project key is not authorization.
+
+Project content uses a random 32-byte key per epoch. Heads, checkpoints, and direct P2P updates use
+domain-separated XChaCha20-Poly1305 subkeys and random nonces; their authenticated clear header
+carries project, device, sequence, checkpoint base, key epoch, purpose, and ciphertext hash. Project
+keys are wrapped per device with HPKE X25519/HKDF-SHA256/ChaCha20-Poly1305, with protocol, project,
+epoch, and the resolved recipient exchange key bound into the HPKE context.
+
+Removing a member, downgrading a writer, or forgetting a device marks rotation pending and removes the
+affected envelopes. During rotation, new publications are rejected. The owner writes envelopes for
+all current proved devices at `currentEpoch + 1`; Convex advances the epoch only after every envelope
+exists. The owner's next recovery immediately rewrites the selected checkpoint and heads under the
+new key using the normal CAS path; a failed attempt is retried on the next security refresh. Only a
+successfully committed checkpoint prunes obsolete key envelopes. A removed device retains anything it
+legitimately decrypted before removal, but cannot obtain the new epoch or publish a new head.
+
+Device revocation is not account-session revocation. The tombstone blocks the forgotten native
+identity used by NetsuBoard; an attacker who also controls the account session and deliberately creates
+a brand-new native identity is an account-compromise case and must be handled by revoking the account
+session/credentials.
+
+## P2P synchronization
+
+iroh runs one persistent endpoint with versioned ALPNs for document and blob protocols. QUIC proves
+the remote EndpointId. Connections start closed and are admitted through:
+
+1. the global device allowlist derived from current shared projects;
+2. the per-project roster;
+3. the writer bit for inbound document updates;
+4. a versioned Ed25519 signature binding author, project, and exact payload.
+
+As soon as a refreshed active-project roster contains another device, the endpoint starts listening;
+it does not wait for the local user to make the next edit. Rebuilding authority replaces the complete
+per-project roster map, so closing the final lease removes that project's network authorization even
+when the same peer remains connected for another project.
+
+Frames and version vectors have hard size limits, exchanges time out after thirty seconds, and media
+requests are bound to a hash currently referenced by the open project. An inbound P2P write refreshes
+the online Convex roster at most once per project every thirty seconds; durable publication always
+checks again. If Convex is unreachable, the service may use its locally signed cached roster. This
+preserves local-first availability but delays a revocation until connectivity returns.
+
+Direct connections are preferred and iroh's encrypted relay fallback is accepted. Relay operators can
+observe connection metadata and ciphertext sizes, not document or media plaintext.
+
+## Media
+
+The CRDT stores a manifest, never an absolute path or object URL. A local asset manifest contains a
+lowercase BLAKE3 hash, safe display name, MIME type, and byte length. Remote links, embeds, and YouTube
+items synchronize their URL/id metadata and are fetched independently.
+
+Local bytes live in Rust's separate `collab/blobs` store. Import is authorized by a random 256-bit,
+one-use, fifteen-minute grant created only by the native file picker or a trusted WebView2 OS drop.
+The recovery path for an already saved scene accepts only a canonical regular file found in that scene
+or the application-owned reference asset directory. Canonicalization occurs before confinement and
+rejects links. Images are capped at 2 GiB and videos at 256 GiB.
+
+Transfers are requested on demand over the project-authorized iroh connection. They resume from the
+partial length, use 256 KiB chunks with per-chunk BLAKE3 verification, enforce the declared final size,
+then verify the full hash before atomic promotion. HTTP range playback is served only through
+`http://collab.localhost/<project>/<hash>` after the active native lease proves the project is open
+and its document references that hash. The protocol rejects non-Tauri/non-development browser
+origins and never emits wildcard CORS.
+
+The board projection appears before media downloads. Up to four missing assets resolve in the
+background. A video original therefore does not block notes, links, geometry, or other collaborators.
+Failed P2P attempts create at most one media-request notification per project/hash/hour from that
+device; Convex coalesces at most 64 hashes into one requester/project row. Other members are told to
+open the scene and stay online.
+
+Availability has two honest states:
+
+- **No holder online:** the manifest exists, but no authorized source is reachable now.
+- **Archived media unavailable:** this device collected its retained copy and recovery elsewhere is
+  only best effort.
+
+Current references are pinned per local project. When the final pin disappears, a marker starts a
+thirty-day grace period; the file's original creation date is irrelevant. Re-pinning removes the
+marker. Interrupted partials expire after 24 hours. Leaving, deleting, or aborting a project drops its
+pin file so it cannot retain media forever.
+
+## Convex data and free-plan controls
+
+Convex can read account ids, public profiles, friendships, project ids, roles, device public keys,
+timestamps, epochs, ciphertext sizes, media hashes requested by a member, and traffic patterns. It
+cannot read board plaintext, project keys, sender paths, or original media.
+
+Collaboration uses these tables: `profiles`, `friends`, `friendRequests`, `userDevices`,
+`revokedDevices`, registration challenges, `projects`, `projectMembers`, `projectInvites`, `projectKeyEnvelopes`,
+`projectCheckpoints`, `projectHeads`, `projectPayloadUploads`, `projectInbox`,
+`projectMediaRequests`, and the bounded `projectAuditEvents` security history.
+
+Cost controls are structural:
+
+- live document and original-media traffic bypass Convex;
+- membership is capped at 10, devices at 5/account, and projects at 100/account;
+- point-in-time recovery calls replace live document subscriptions;
+- Account settings reads lightweight project summaries; member profiles and pending invitations are
+  fetched only for the single board whose collaboration dialog is open;
+- one current head per device and one checkpoint per project bound recovery rows;
+- each device may hold at most three registered unfinished recovery uploads; reservations expire
+  after one hour when the next upload is registered;
+- one unread activity row per user/project is reused and is not rewritten for repeat edits by the
+  same actor;
+- missing-media notices are coalesced for an hour in native code and on the server;
+- normal publication performs one roster query; the second occurs only after key rotation;
+- P2P authorisation reads are cached for thirty seconds;
+- queries use indexes and bounded `take` calls on user-controlled lists;
+- audit writes occur only for rare member, device, rotation, and stale-head decisions and retain at
+  most 200 rows/project;
+- original images and videos never consume Convex file egress.
+
+As of August 2026, the documented Convex Free limits include 1,000,000 function calls/month,
+0.5 GiB database storage, 1 GiB database I/O/month, 1 GiB file storage, and 1 GiB data egress/month.
+Limits are team-wide and may change; verify the current official limits before capacity decisions.
+Encrypted recovery payloads and bug-report attachments, not media originals, are the expected egress
+drivers. Exceeding Free limits can cause function errors, so SQLite/outbox durability is required and
+the UI must never report backend recovery as complete before acknowledgement.
+
+## Invitations, activity, and lifecycle
+
+NetsuBoard keeps its own friend graph because Discord OAuth identifies the account but does not expose
+the Discord friend list. Profiles, friends, pending requests, projects, and invitations are bounded.
+Only friends may be invited. Invitations expire after seven days, reserve one of ten seats, and grant
+editor or viewer—not owner.
+
+Project creation is transactional at product level: Convex metadata is created, Rust opens the local
+document, imports existing board items and assets, then forces the initial encrypted checkpoint. The
+scene becomes collaborative only after that checkpoint and the owner envelope are recoverable. A
+failure before this boundary calls the empty-project rollback.
+
+Convex keeps one consolidated activity row per recipient/project. Repeat edits by the same actor do
+not cause repeat inbox writes until the row is cleared; another actor is added to the same row. On the
+next authenticated launch, the app shows a transient localized toast unless that project is already
+open, and keeps the durable message in Account settings until dismissed. Media requests use the same
+row with distinct wording that asks a holder to open the scene and remain online.
+
+Accepting an invitation marks the same row as key-provisioning-needed for existing writers. An
+already-running app reacts to that single backend change by refreshing its native roster and wrapping
+the current project key for every missing proved device; there is no project polling loop.
+
+Leaving closes the native project, removes local retention pins, deletes the caller's envelopes,
+pending uploads, request and inbox rows, and forces rotation. Deleting a project is owner-only and
+deletes every Convex row and referenced recovery storage object. The owner cannot leave; they must
+delete. The current running device cannot revoke itself.
+
+## Limits and residual risks
+
+- The WebView renderer is trusted to display plaintext that the user can already see. A renderer
+  compromise can read visible board content and invoke other pre-existing desktop capabilities; raw
+  collaboration keys still never enter JS.
+- Previously authorized members may retain old plaintext, exported files, screenshots, and old key
+  epochs. Cryptographic revocation cannot erase them.
+- A signed cached roster preserves offline collaboration, so membership revocation is delayed during
+  a Convex outage. Rotation and durable publishing remain blocked until the backend returns.
+- Authorized writers are not treated as Byzantine adversaries. Signatures make corruption detectable,
+  but a legitimate editor can intentionally create undesirable valid edits or consume their bounded
+  share of resources.
+- Convex upload URLs are capabilities. Retained file payloads require ownership reservations, but a
+  malicious authorized writer could still abandon a raw upload before registration; operational
+  storage monitoring remains necessary.
+- The pre-existing Tauri asset protocol still has broad scope for solo-board local media. Collaboration
+  imports do not rely on that scope, but it remains a renderer-compromise impact outside this feature.
+- There is no background Windows service. Closed applications do not transfer media; recovery and
+  notifications resume at the next launch.
+- Media deleted after all peers' grace periods may be gone everywhere. The placeholder is final unless
+  an independently retained copy reconnects.
+- V1 does not provide shared cursors, background sync while the app is closed, Byzantine moderation,
+  server-readable search, or shallow history truncation.
+
+## Verification and operations
+
+Automated acceptance covers 2–10-replica convergence across the full board contract, Unicode edits,
+atomic invalid-batch rollback, durable outbox sequencing, exact head confirmation, checkpoint CAS,
+signed P2P binding, viewer enforcement, path and token confinement, media range/grant behavior,
+thirty-day GC transitions, Convex policy helpers, scene binding, renderer build, core type checking,
+locale parity, Clippy, Rust tests, and `cargo check --locked`.
+
+Before release, perform a real two-machine Windows session with two distinct accounts:
+
+1. restart both Tauri windows so the new Rust core is running;
+2. create a project from an existing board and verify its initial checkpoint;
+3. invite an editor and a viewer, then exercise concurrent text, move, reorder, drawing, and delete;
+4. disconnect each machine in turn and verify SQLite edits recover through Convex after reconnect;
+5. close the media holder, verify `No holder online`, reopen it, and verify resumable transfer;
+6. revoke a device and remove a member, verify rotation blocks publication until committed, then
+   verify the old device cannot publish or reconnect;
+7. inspect the Convex dashboard for one head/device, one inbox row/recipient/project, bounded media
+   requests, no original media, and no orphaned retained upload reservations;
+8. inspect Free-plan function, database I/O, file storage, and egress metrics after the session.
+
+The board also exists in NetsuRush, but this collaboration stack is intentionally implemented only in
+NetsuBoard. Mirroring renderer files alone would be unsafe: NetsuRush would need its own Convex schema,
+auth deployment, Rust service, home, ports, CSP, native commands, documentation, and product decision.

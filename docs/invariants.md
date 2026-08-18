@@ -111,6 +111,30 @@ A board carries hundreds of media, many of them animated. Four rules keep it usa
 
 Reverse playback (`playMode: "pingpong"`) steps `currentTime` on a `BACKSTEP_MS` budget rather than every animation frame: each write forces a decode from the previous keyframe, and one board can hold dozens of them.
 
+## Collaborative boards
+
+- **Rust is the sole collaborative authority.** Renderers submit typed operations and render total
+  projections. They never persist or export Loro state, keys, raw peer endpoints, or recipient lists.
+- **Acknowledgement means durable local recovery.** The Loro update, monotonic sequence, and exact
+  sealed outbox entry commit in one SQLite transaction before network publication.
+- **A checkpoint absorbs published heads only.** Compaction runs in a temporary document and commits
+  by checkpoint-epoch plus head-revision CAS. Exporting the live document into a checkpoint can lose a
+  concurrent offline branch.
+- **Membership, key possession, and transport identity are separate checks.** Every Convex write checks
+  the current role; every P2P update checks the EndpointId and project writer roster; every payload is
+  signed and encrypted. A key alone never grants write access.
+- **Rotation is pending until committed.** A removal, writer downgrade, or device revocation blocks new
+  publication until the owner has stored the next epoch envelope for every current proved device and
+  Convex advances the epoch.
+- **Media manifests never carry local paths or object URLs.** Local bytes use BLAKE3 ids and enter only
+  through native one-use grants. The custom `collab` protocol serves a hash only while an open document
+  references it.
+- **Media retention begins at last unpin.** Current project references are pinned. The thirty-day grace
+  marker is created when the final pin disappears; a blob's original modification time is irrelevant.
+- **Collaborative scenes do not use solo autosave as item authority.** Scene persistence stores the
+  project binding and view metadata; Loro stores shared items. Save As is blocked, explicit export is
+  allowed.
+
 ## Preferences shared across origins
 
 `core/prefs.js` + `src/hooks/useSharedPrefs.ts`, tested by `test/shared-prefs.test.cjs`. `localStorage` is **per origin** — the Tauri window and the detached board window each had their own copy, so a setting changed in one did not exist in the other.
