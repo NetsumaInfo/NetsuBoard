@@ -52,6 +52,23 @@ Fresh closeout results recorded on 2026-08-18:
 | Direct Rust dependency licence audit | New CRDT, P2P, storage, hashing, signature, and encryption crates report permissive MIT, Apache-2.0, BSD-3-Clause, or CC0-compatible licences |
 | `git diff --check` | Passed; Git only reports existing CRLF normalization notices |
 
+## Runtime smoke snapshot
+
+Fresh development-runtime evidence recorded on 2026-08-18:
+
+- the configured Convex development deployment accepted the complete collaboration schema and all
+  new indexes, then reported its functions ready;
+- the current Rust binary, Tauri window, embedded player, and Node core launched successfully;
+- `GET /healthz` returned `200` for the native/no-origin client and the two intended loopback renderer
+  origins, while a remote origin returned `403`;
+- an unauthenticated `projects:createProject` call was rejected server-side with `not signed in`, and
+  anonymous list queries disclosed no project, device, profile, friendship, or request row;
+- the native service initialized the DPAPI-protected device identity under the NetsuBoard collaboration
+  home without exposing its contents.
+
+Windows was locked at the PIN screen during the UI pass. No authentication input was attempted, so
+the interactive and visual scenarios below remain deliberately unverified.
+
 ## Required live acceptance
 
 These checks require a deployed/pinned Convex backend, a deliberate restart of the existing Tauri
