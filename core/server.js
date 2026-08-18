@@ -32,6 +32,7 @@ const { killSidecars } = require("./sidecars");
 const { ffBin, NR_HOME } = require("./config");
 const { getCapabilities } = require("./export/capabilities");
 const { refreshYtDlpForAppVersion } = require("./ytdlpUpdate");
+const { controlRequestAllowed } = require('./httpSecurity');
 
 const HOST = "127.0.0.1";
 // Port IMPOSÉ par la coquille Tauri (elle en choisit un libre et le sert au renderer via
@@ -49,18 +50,23 @@ const rpc = createRpc();
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, `http://${HOST}`);
 
-  // CORS UNIQUEMENT pour le RPC/SSE/health (le webview Tauri tauri://localhost et vite :1420 sont
-  // cross-origin et lisent ces réponses via fetch). On NE met PAS d'en-tête CORS sur /media et
-  // /stream : ces routes servent des fichiers disque arbitraires ; sans `Access-Control-Allow-Origin`,
-  // un site web tiers ouvert dans un navigateur ne peut PAS lire leur contenu via fetch (les balises
-  // <img>/<video> du webview, elles, n'exigent pas de CORS pour s'afficher).
-  if (u.pathname !== "/media" && u.pathname !== "/stream" && u.pathname !== "/ytstream") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Headers", "content-type");
+  // RPC/SSE/health accept only the Tauri origin or a loopback dev/served renderer. CORS `*` here is
+  // a browser-to-loopback confused-deputy primitive: a public web page could invoke ffmpeg, open
+  // paths, or mutate local state. Requests from local non-browser integrations carry no Origin.
+  const guardedControlRoute = u.pathname === '/rpc' || u.pathname === '/events' || u.pathname === '/healthz';
+  const rendererAllowed = controlRequestAllowed(req.headers);
+  if (guardedControlRoute && !rendererAllowed) {
+    res.writeHead(403).end('forbidden origin');
+    return;
+  }
+  if (guardedControlRoute && req.headers.origin) {
+    res.setHeader("Access-Control-Allow-Origin", String(req.headers.origin));
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "content-type,x-nr-token");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   }
   if (req.method === "OPTIONS") {
-    res.writeHead(204).end();
+    res.writeHead(guardedControlRoute ? 204 : 403).end();
     return;
   }
 

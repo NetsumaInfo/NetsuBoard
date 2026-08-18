@@ -673,5 +673,59 @@
     "title": "Indexation",
     "subtitle": "Les rush sont d'abord découpés en plans, puis chaque plan est analysé. Les réglages qui ne changent rien aux résultats sont déjà actifs.",
     "cutTitle": "Découpe en plans"
+  },
+  "collab": {
+    "device": {
+      "title": "Cet appareil",
+      "subtitle": "Sa clé publique sert à t'identifier auprès de tes collaborateurs. La clé privée ne quitte jamais cette machine.",
+      "failed": "Identité illisible : {{error}}",
+      "ready": "Identité native protégée et prête.",
+      "unavailable": "La collaboration native n’est pas disponible.",
+      "unnamed": "Appareil NetsuBoard", "current": "cet appareil", "revoke": "Révoquer cet appareil"
+    },
+    "friends": {
+      "title": "Amis",
+      "subtitle": "Discord ne donne pas sa liste d'amis aux applications. Ajoute quelqu'un par son identifiant NetsuBoard.",
+      "yourHandle": "Ton identifiant : @{{handle}}",
+      "placeholder": "Identifiant NetsuBoard",
+      "add": "Ajouter",
+      "accept": "Accepter",
+      "remove": "Retirer",
+      "awaiting": "En attente",
+      "empty": "Aucun ami pour l'instant.",
+      "status": {
+        "sent": "Demande envoyée.",
+        "linked": "Vous êtes amis.",
+        "pending": "Demande déjà envoyée.",
+        "already": "Déjà dans tes amis.",
+        "self": "C'est toi.",
+        "unknown": "Aucune personne trouvée avec cet identifiant. La personne doit avoir ouvert NetsuBoard une fois, connectée.",
+        "error": "Échec de l'envoi."
+      }
+    },
+    "invites": {
+      "title": "Invitations",
+      "join": "Rejoindre",
+      "sharedBoard": "Board partagé"
+    },
+    "projects": {
+      "title": "Projets partagés", "members": "{{count}} membre(s)", "rotation": "rotation de clé en attente",
+      "add": "Ajouter aux scènes", "added": "Dans les scènes", "failed": "Impossible d’ajouter cette scène",
+      "role": { "owner": "Propriétaire", "editor": "Peut modifier", "viewer": "Lecture seule" }
+    },
+    "activity": {
+      "title": "Activité collaborative",
+      "changed": "{{count}} personne(s) ont modifié un board pendant ton absence. Ouvre sa scène pour récupérer les changements.",
+      "media": "{{count}} personne(s) attendent un média original. Ouvre la scène et reste en ligne pour le transmettre.",
+      "key": "{{count}} nouveau(x) membre(s) attendent l’accès chiffré. Ouvre la scène pour transmettre la clé du projet.",
+      "dismiss": "Masquer"
+    },
+    "peers": {
+      "title": "Connexions",
+      "subtitle": "Appareils de tes amis autorisés à se connecter au tien. « Tester » ouvre une vraie connexion chiffrée.",
+      "test": "Tester",
+      "direct": "Connexion directe",
+      "relayed": "Via relais"
+    }
   }
 }

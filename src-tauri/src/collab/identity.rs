@@ -135,6 +135,17 @@ impl DeviceIdentity {
         self.signing.sign(message).to_bytes()
     }
 
+    pub fn verify_self(&self, message: &[u8], signature: &[u8]) -> bool {
+        use ed25519_dalek::{Signature, Verifier as _};
+        let Ok(signature) = <&[u8; 64]>::try_from(signature) else {
+            return false;
+        };
+        self.signing
+            .verifying_key()
+            .verify(message, &Signature::from_bytes(signature))
+            .is_ok()
+    }
+
     /// The 32 secret bytes, for building the iroh endpoint from this very identity.
     ///
     /// Crate-private on purpose: this is the only place the seed is handed out, and it never leaves
@@ -178,7 +189,7 @@ pub fn get_or_init() -> Result<&'static DeviceIdentity, IdentityError> {
 /// Deliberately not `core_log_path()` from `lib.rs`, which still resolves to `%LOCALAPPDATA%\
 /// NetsuRush` (listed as a known violation at the end of `docs/invariants.md`). Sharing that
 /// directory would mean NetsuBoard and NetsuRush fighting over one device identity.
-fn home_dir() -> PathBuf {
+pub(crate) fn home_dir() -> PathBuf {
     if let Some(home) = std::env::var_os("NR_HOME") {
         return PathBuf::from(home);
     }

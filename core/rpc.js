@@ -43,6 +43,7 @@ const bugreport = require("./bugreport"); // envoi d'un rapport de bug → webho
 const bugContext = require("./bugContext"); // instantané machine joint au rapport (specs auto)
 
 const JSONH = { "Content-Type": "application/json" };
+const MAX_RPC_BODY = 128 * 1024 * 1024;
 
 function createRpc() {
   const clients = new Set(); // flux SSE ouverts
@@ -454,16 +455,32 @@ function createRpc() {
 
     // Invocation : POST /rpc
     if (u.pathname === "/rpc" && req.method === "POST") {
+      if (!String(req.headers['content-type'] || '').toLowerCase().startsWith('application/json')) {
+        res.writeHead(415, JSONH).end(JSON.stringify({ ok: false, error: 'application/json required' }));
+        return true;
+      }
       let body = "";
-      req.on("data", (c) => (body += c));
+      let oversized = false;
+      req.on("data", (c) => {
+        if (oversized) return;
+        body += c;
+        if (Buffer.byteLength(body) > MAX_RPC_BODY) {
+          oversized = true;
+          body = '';
+        }
+      });
       req.on("end", async () => {
+        if (oversized) {
+          res.writeHead(413, JSONH).end(JSON.stringify({ ok: false, error: 'RPC body too large' }));
+          return;
+        }
         let msg = {};
         try {
           msg = JSON.parse(body);
         } catch {}
         if (process.env.NR_CORE_DEBUG) console.error("[rpc]", msg.channel);
-        const h = H[msg.channel];
-        if (!h) {
+        const h = typeof msg.channel === 'string' && Object.hasOwn(H, msg.channel) ? H[msg.channel] : null;
+        if (!h || !Array.isArray(msg.args || [])) {
           res.writeHead(404, JSONH).end(JSON.stringify({ ok: false, error: `unknown channel: ${msg.channel}` }));
           return;
         }

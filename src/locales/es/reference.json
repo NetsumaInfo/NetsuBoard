@@ -516,6 +516,10 @@
     "doubleClickEdit": "Doble clic para editar…",
     "frameDefault": "Marco",
     "missingMedia": "Medio ausente",
+    "mediaWaiting": "Esperando a un dispositivo que tenga este medio",
+    "mediaRemoved": "Medio retirado del proyecto",
+    "mediaSize": "{{size}}",
+    "retryMedia": "Reintentar",
     "notBundled": "{{size}} · no incluido",
     "relocate": "Relocalizar",
     "downloading": "Descargando…",
@@ -744,5 +748,37 @@
     "off": "Recuperar el ratón",
     "warning": "Los clics y la rueda irán a la aplicación de debajo, y la ventana se mantiene encima. Para recuperar el control: vuelve a darle el foco (Alt+Tab).",
     "dontAskAgain": "No preguntar de nuevo"
+  },
+  "collab": {
+    "menu": "Colaborar",
+    "title": "Colaborar",
+    "subtitle": "Elige a los amigos que quieres invitar a este proyecto.",
+    "signedOut": "Conecta tu cuenta de Discord en Ajustes.",
+    "noFriends": "Primero añade amigos en Ajustes › Cuenta.",
+    "invited": "{{n}} invitación(es) enviada(s).",
+    "notice": "El tablero pasa a ser colaborativo. Las personas invitadas se unen desde sus Ajustes.",
+    "close": "Cerrar",
+    "create": "Crear e invitar",
+    "invite": "Invitar",
+    "fileBacked": "Guarda primero este tablero en la biblioteca de escenas antes de compartirlo.",
+    "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su escena compartida. Usa la exportación para crear una copia local.",
+    "role": { "owner": "Propietario", "editor": "Puede editar", "viewer": "Solo lectura" },
+    "rotationPending": "La revocación está registrada. Las nuevas publicaciones esperan a que un dispositivo del propietario termine la rotación de clave.",
+    "staleHead": {
+      "title": "Rama de recuperación obsoleta",
+      "warning": "Un dispositivo no ha fusionado esta rama durante más de 30 días.",
+      "detail": "{{days}} días · {{size}} cifrados",
+      "discard": "Descartar",
+      "confirmTitle": "¿Descartar esta rama?",
+      "confirmWarning": "Los cambios publicados únicamente por este dispositivo se perderán para siempre. Continúa solo si ese dispositivo ya no puede volver a conectarse."
+    },
+    "status": { "pending": "sincronización pendiente", "rotation": "rotación de clave pendiente" },
+    "members": { "remove": "Quitar del proyecto", "pending": "Invitación pendiente", "cancelInvite": "Cancelar invitación" },
+    "lifecycle": {
+      "leave": "Salir del proyecto", "delete": "Eliminar proyecto",
+      "leaveTitle": "¿Salir de este proyecto?", "deleteTitle": "¿Eliminar este proyecto?",
+      "leaveWarning": "Conservarás lo ya recibido en este dispositivo, pero ya no podrás sincronizar el proyecto.",
+      "deleteWarning": "Los datos de conexión, las invitaciones y las copias cifradas se eliminarán para todos. No se puede deshacer."
+    }
   }
 }

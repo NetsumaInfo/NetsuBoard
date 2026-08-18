@@ -161,6 +161,7 @@ function sqliteBackend(dbPath) {
     get: (id) => db.prepare('SELECT id, name, data, updated_at FROM scenes WHERE id = ?').get(id) || null,
     put: (id, name, data, ts) => db.prepare(UPSERT).run(id, name, data, ts),
     del: (id) => db.prepare('DELETE FROM scenes WHERE id = ?').run(id),
+    close: () => db.close(),
   };
 }
 
@@ -190,6 +191,7 @@ function jsonBackend(filePath) {
       delete o[id];
       write(o);
     },
+    close: () => {},
   };
 }
 
@@ -213,7 +215,10 @@ function createReferenceStore(dataDir) {
     try {
       const id = scene.id || uid();
       const ts = Date.now();
-      const data = JSON.stringify({ items: scene.items || [], view: scene.view || null });
+      const collaboration = scene.collaboration && typeof scene.collaboration.projectId === 'string'
+        ? { projectId: scene.collaboration.projectId }
+        : null;
+      const data = JSON.stringify({ items: scene.items || [], view: scene.view || null, collaboration });
       backend.put(id, scene.name || 'Sans titre', data, ts);
       return { ok: true, id, updatedAt: ts };
     } catch (e) {
@@ -224,13 +229,25 @@ function createReferenceStore(dataDir) {
   function loadScene(id) {
     const row = backend.get(id);
     if (!row) return null;
-    let parsed = { items: [], view: null };
+    let parsed = { items: [], view: null, collaboration: null };
     try { parsed = JSON.parse(row.data); } catch (_) {}
-    return { id: row.id, name: row.name, items: parsed.items || [], view: parsed.view || null, updatedAt: row.updated_at };
+    return {
+      id: row.id,
+      name: row.name,
+      items: parsed.items || [],
+      view: parsed.view || null,
+      collaboration: parsed.collaboration || null,
+      updatedAt: row.updated_at,
+    };
   }
 
   function listScenes() {
-    try { return backend.list(); } catch (_) { return []; }
+    try {
+      return backend.list().map((meta) => ({
+        ...meta,
+        collaboration: loadScene(meta.id)?.collaboration || null,
+      }));
+    } catch (_) { return []; }
   }
 
   function deleteScene(id) {
@@ -409,7 +426,7 @@ function createReferenceStore(dataDir) {
 
   return {
     kind, listScenes, loadScene, saveScene, deleteScene, saveAsset, fetchAsset, resolveMedia,
-    storagePath: () => dir,
+    storagePath: () => dir, close: () => backend.close(),
     assetsDir, assetPath, isAppAsset, removeAsset, sweepAssets,
   };
 }

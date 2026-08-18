@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useDiscordLogin } from "@/components/auth/useDiscordLogin";
 import { AvatarDecoration } from "./AvatarDecoration";
+import { CollabSection } from "./CollabSection";
 import { useDiscordProfile } from "./useDiscordProfile";
 
 // Better Auth user document (Discord fields: name = handle, image = avatar, email).
@@ -104,6 +105,9 @@ function AccountInner() {
           </div>
         )}
       </div>
+
+      {/* Friends and this device only exist for a signed-in account: the section returns null otherwise. */}
+      <CollabSection />
     </section>
   );
 }

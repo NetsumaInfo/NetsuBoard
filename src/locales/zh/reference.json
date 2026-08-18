@@ -516,6 +516,10 @@
     "doubleClickEdit": "双击编辑…",
     "frameDefault": "边框",
     "missingMedia": "媒体缺失",
+    "mediaWaiting": "正在等待拥有此媒体的设备",
+    "mediaRemoved": "媒体已从项目中移除",
+    "mediaSize": "{{size}}",
+    "retryMedia": "重试",
     "notBundled": "{{size}} · 未打包",
     "relocate": "重新定位",
     "downloading": "下载中…",
@@ -744,5 +748,37 @@
     "off": "收回鼠标",
     "warning": "点击和滚轮将传给下方应用，窗口保持在最前。要收回：重新让它获得焦点（Alt+Tab）。",
     "dontAskAgain": "不再询问"
+  },
+  "collab": {
+    "menu": "协作",
+    "title": "协作",
+    "subtitle": "选择要邀请到此项目的好友。",
+    "signedOut": "请在设置中连接你的 Discord 账号。",
+    "noFriends": "请先在“设置 › 账户”中添加好友。",
+    "invited": "已发送 {{n}} 条邀请。",
+    "notice": "看板将变为协作模式。受邀者可在设置中加入。",
+    "close": "关闭",
+    "create": "创建并邀请",
+    "invite": "邀请",
+    "fileBacked": "共享前，请先将此看板保存到场景库。",
+    "saveAsBlocked": "协作项目仍由共享场景管理。请使用导出来创建本地副本。",
+    "role": { "owner": "所有者", "editor": "可编辑", "viewer": "仅查看" },
+    "rotationPending": "撤销已记录。新发布会等待所有者设备完成密钥轮换。",
+    "staleHead": {
+      "title": "过期的恢复分支",
+      "warning": "某台设备已超过 30 天未合并此分支。",
+      "detail": "{{days}} 天 · 已加密 {{size}}",
+      "discard": "丢弃",
+      "confirmTitle": "丢弃此分支？",
+      "confirmWarning": "仅由此设备发布的更改将永久丢失。只有在该设备无法再重新连接时才继续。"
+    },
+    "status": { "pending": "等待同步", "rotation": "等待密钥轮换" },
+    "members": { "remove": "从项目移除", "pending": "邀请待处理", "cancelInvite": "取消邀请" },
+    "lifecycle": {
+      "leave": "退出项目", "delete": "删除项目",
+      "leaveTitle": "退出此项目？", "deleteTitle": "删除此项目？",
+      "leaveWarning": "此设备已收到的内容会保留，但你将无法再同步此项目。",
+      "deleteWarning": "所有成员的连接数据、邀请和加密恢复副本都会被删除，且无法撤销。"
+    }
   }
 }

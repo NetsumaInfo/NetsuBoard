@@ -22,19 +22,35 @@ import { useDiscordPresence } from "@/lib/discordPresence";
 import { TextContextMenu } from "@/components/common/TextContextMenu";
 
 // Fenêtre détachée du board (hash #reference, 2e WebviewWindow Tauri) : le board nu, sans le cadre.
-const ReferenceWindow = lazy(() => import("@/components/reference/ReferenceWindow").then((m) => ({ default: m.ReferenceWindow })));
+const ReferenceWindow = lazy(() =>
+  import("@/components/reference/ReferenceWindow").then((m) => ({
+    default: m.ReferenceWindow,
+  })),
+);
 const IS_REFERENCE_WINDOW =
-  typeof window !== "undefined" && window.location.hash.replace(/^#\/?/, "").startsWith("reference");
+  typeof window !== "undefined" &&
+  window.location.hash.replace(/^#\/?/, "").startsWith("reference");
 
 // Chargé PARESSEUSEMENT : le gate tire `convex/react`. Sans déploiement Convex il n'est jamais
 // monté, et son chunk ne part donc jamais sur le réseau.
-const LoginGate = lazy(() => import("@/components/auth/LoginGate").then((m) => ({ default: m.LoginGate })));
+const LoginGate = lazy(() =>
+  import("@/components/auth/LoginGate").then((m) => ({ default: m.LoginGate })),
+);
+const CollaborationNotifications = lazy(() =>
+  import("@/components/reference/CollaborationNotifications").then((m) => ({
+    default: m.CollaborationNotifications,
+  })),
+);
 
 // Gate de connexion : TRAVERSANT tant que Convex n'est pas configuré (dev, navigateur, mock). Un
 // board local doit s'ouvrir sans backend — le compte ne sert qu'à nommer un rapport de bug.
 function AuthGate({ children }: { children: ReactNode }) {
   if (!convexConfigured) return <>{children}</>;
-  return <Suspense fallback={<WindowLoading />}><LoginGate>{children}</LoginGate></Suspense>;
+  return (
+    <Suspense fallback={<WindowLoading />}>
+      <LoginGate>{children}</LoginGate>
+    </Suspense>
+  );
 }
 
 // Cadre affiché avant que la langue et le core ne soient prêts. La fenêtre Tauri est frameless : ses
@@ -43,13 +59,20 @@ function AuthGate({ children }: { children: ReactNode }) {
 export function WindowLoading() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <div data-tauri-drag-region className="flex h-9 shrink-0 items-center gap-2 px-3">
+      <div
+        data-tauri-drag-region
+        className="flex h-9 shrink-0 items-center gap-2 px-3"
+      >
         <BrandIcon className="size-6" />
         <span className="text-xs font-semibold tracking-tight">NetsuBoard</span>
         <BetaBadge />
-        <div className="ml-auto"><WindowControls /></div>
+        <div className="ml-auto">
+          <WindowControls />
+        </div>
       </div>
-      <div className="flex flex-1 items-center justify-center"><Spinner /></div>
+      <div className="flex flex-1 items-center justify-center">
+        <Spinner />
+      </div>
     </div>
   );
 }
@@ -66,11 +89,15 @@ function Shell() {
   // Réapplique l'épinglage (always-on-top) au démarrage : l'état réel de la fenêtre Tauri se perd à
   // chaque lancement alors que la préférence, elle, survit — et c'est ELLE que la page lit pour
   // choisir son format, donc une fenêtre non épinglée sous une interface en mode épinglé.
-  useEffect(() => { void nr.setAlwaysOnTop?.(useApp.getState().pinned); }, []);
+  useEffect(() => {
+    void nr.setAlwaysOnTop?.(useApp.getState().pinned);
+  }, []);
 
   // Unattended launch update (opt-in, off by default). Armed HERE and nowhere else: setup and login
   // are behind us, so the relaunch it may trigger cannot cut a runtime download or a sign-in.
-  useEffect(() => { armAutoInstall(); }, []);
+  useEffect(() => {
+    armAutoInstall();
+  }, []);
 
   // Rich Presence Discord : pousse le board ouvert au core. Monté ICI seulement — la fenêtre détachée
   // du board est le même renderer et pousserait un second contexte concurrent.
@@ -79,11 +106,16 @@ function Shell() {
   return (
     <TooltipProvider delay={600}>
       <div className="flex h-screen flex-col overflow-hidden">
-        <div data-tauri-drag-region className="nr-chrome-page flex h-9 shrink-0 items-center gap-2 px-3">
+        <div
+          data-tauri-drag-region
+          className="nr-chrome-page flex h-9 shrink-0 items-center gap-2 px-3"
+        >
           <BrandIcon className="size-6 shrink-0" />
           {!pinned && (
             <>
-              <span className="truncate text-xs font-semibold tracking-tight">{t("app.name", "NetsuBoard")}</span>
+              <span className="truncate text-xs font-semibold tracking-tight">
+                {t("app.name", "NetsuBoard")}
+              </span>
               <BetaBadge className="shrink-0" />
             </>
           )}
@@ -104,6 +136,12 @@ function Shell() {
         <div className="flex flex-1 overflow-hidden">
           <ReferencePanel />
         </div>
+
+        {convexConfigured && (
+          <Suspense fallback={null}>
+            <CollaborationNotifications />
+          </Suspense>
+        )}
 
         {/* Paramètres : rendus au niveau de la coquille, pas dans la page — ils s'ouvrent aussi
             depuis la pastille d'erreur, qui vit ici, et doivent survivre au passage accueil ↔ board. */}
@@ -137,7 +175,9 @@ export default function App() {
     return (
       <ErrorBoundary>
         <TextContextMenu />
-        <Suspense fallback={<WindowLoading />}><ReferenceWindow /></Suspense>
+        <Suspense fallback={<WindowLoading />}>
+          <ReferenceWindow />
+        </Suspense>
       </ErrorBoundary>
     );
   }

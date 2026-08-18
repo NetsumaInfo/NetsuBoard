@@ -516,6 +516,10 @@
     "doubleClickEdit": "Doppelklick zum Bearbeiten…",
     "frameDefault": "Rahmen",
     "missingMedia": "Medium fehlt",
+    "mediaWaiting": "Warten auf ein Gerät mit diesem Medium",
+    "mediaRemoved": "Medium aus dem Projekt entfernt",
+    "mediaSize": "{{size}}",
+    "retryMedia": "Erneut versuchen",
     "notBundled": "{{size}} · nicht eingebettet",
     "relocate": "Neu verknüpfen",
     "downloading": "Wird geladen…",
@@ -744,5 +748,37 @@
     "off": "Maus zurückholen",
     "warning": "Klicks und Scrollen gehen an die Anwendung darunter, das Fenster bleibt im Vordergrund. Zurückholen: dem Fenster wieder den Fokus geben (Alt+Tab).",
     "dontAskAgain": "Nicht mehr fragen"
+  },
+  "collab": {
+    "menu": "Zusammenarbeiten",
+    "title": "Zusammenarbeiten",
+    "subtitle": "Wähle die Freunde aus, die du zu diesem Projekt einlädst.",
+    "signedOut": "Verbinde dein Discord-Konto in den Einstellungen.",
+    "noFriends": "Füge zuerst Freunde unter Einstellungen › Konto hinzu.",
+    "invited": "{{n}} Einladung(en) gesendet.",
+    "notice": "Das Board wird kollaborativ. Eingeladene treten über ihre Einstellungen bei.",
+    "close": "Schließen",
+    "create": "Erstellen und einladen",
+    "invite": "Einladen",
+    "fileBacked": "Speichere dieses Board vor dem Teilen in der Szenenbibliothek.",
+    "saveAsBlocked": "Ein kollaboratives Projekt bleibt an seine geteilte Szene gebunden. Exportiere es für eine lokale Kopie.",
+    "role": { "owner": "Eigentümer", "editor": "Darf bearbeiten", "viewer": "Nur ansehen" },
+    "rotationPending": "Der Widerruf ist gespeichert. Neue Veröffentlichungen warten, bis ein Eigentümergerät die Schlüsselrotation beendet.",
+    "staleHead": {
+      "title": "Veralteter Wiederherstellungszweig",
+      "warning": "Ein Gerät hat diesen Zweig seit mehr als 30 Tagen nicht zusammengeführt.",
+      "detail": "{{days}} Tage · {{size}} verschlüsselt",
+      "discard": "Verwerfen",
+      "confirmTitle": "Diesen Zweig verwerfen?",
+      "confirmWarning": "Änderungen, die nur von diesem Gerät veröffentlicht wurden, gehen endgültig verloren. Fahre nur fort, wenn dieses Gerät keine Verbindung mehr herstellen kann."
+    },
+    "status": { "pending": "Synchronisierung ausstehend", "rotation": "Schlüsselrotation ausstehend" },
+    "members": { "remove": "Aus Projekt entfernen", "pending": "Einladung ausstehend", "cancelInvite": "Einladung abbrechen" },
+    "lifecycle": {
+      "leave": "Projekt verlassen", "delete": "Projekt löschen",
+      "leaveTitle": "Dieses Projekt verlassen?", "deleteTitle": "Dieses Projekt löschen?",
+      "leaveWarning": "Bereits empfangene Daten bleiben auf diesem Gerät, aber das Projekt wird nicht mehr synchronisiert.",
+      "deleteWarning": "Vermittlungsdaten, Einladungen und verschlüsselte Sicherungen werden für alle Mitglieder unwiderruflich gelöscht."
+    }
   }
 }

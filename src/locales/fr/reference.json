@@ -516,6 +516,10 @@
     "doubleClickEdit": "Double-clic pour éditer…",
     "frameDefault": "Cadre",
     "missingMedia": "Média manquant",
+    "mediaWaiting": "Média en attente — ouvre l’appareil qui le possède",
+    "mediaRemoved": "Média retiré du projet",
+    "mediaSize": "{{size}}",
+    "retryMedia": "Réessayer",
     "notBundled": "{{size}} · non embarqué",
     "relocate": "Relocaliser",
     "downloading": "Téléchargement…",
@@ -744,5 +748,37 @@
     "off": "Reprendre la souris",
     "warning": "Clics et molette iront à l'application du dessous, et la fenêtre reste au-dessus. Pour reprendre la main : redonne-lui le focus (Alt+Tab).",
     "dontAskAgain": "Ne plus demander"
+  },
+  "collab": {
+    "menu": "Collaborer",
+    "title": "Collaborer",
+    "subtitle": "Choisis les amis à inviter sur ce projet.",
+    "signedOut": "Connecte ton compte Discord dans les Paramètres.",
+    "noFriends": "Ajoute d'abord des amis dans Paramètres › Compte.",
+    "invited": "{{n}} invitation(s) envoyée(s).",
+    "notice": "Le board devient collaboratif. Les personnes invitées le rejoignent depuis leurs Paramètres.",
+    "close": "Fermer",
+    "create": "Créer et inviter",
+    "invite": "Inviter",
+    "fileBacked": "Enregistre d’abord ce board dans la bibliothèque de scènes avant de le partager.",
+    "saveAsBlocked": "Un projet collaboratif reste piloté par sa scène partagée. Utilise l’export pour créer une copie locale.",
+    "role": { "owner": "Propriétaire", "editor": "Peut modifier", "viewer": "Lecture seule" },
+    "rotationPending": "La révocation est enregistrée. Les nouvelles publications attendent qu’un appareil du propriétaire termine la rotation de clé.",
+    "staleHead": {
+      "title": "Branche de récupération obsolète",
+      "warning": "Un appareil n’a pas fusionné cette branche depuis plus de 30 jours.",
+      "detail": "{{days}} j · {{size}} chiffrés",
+      "discard": "Abandonner",
+      "confirmTitle": "Abandonner cette branche ?",
+      "confirmWarning": "Les modifications publiées uniquement par cet appareil seront perdues définitivement. Continue seulement si cet appareil ne peut plus se reconnecter."
+    },
+    "status": { "pending": "synchronisation en attente", "rotation": "rotation de clé en attente" },
+    "members": { "remove": "Retirer du projet", "pending": "Invitation en attente", "cancelInvite": "Annuler l’invitation" },
+    "lifecycle": {
+      "leave": "Quitter le projet", "delete": "Supprimer le projet",
+      "leaveTitle": "Quitter ce projet ?", "deleteTitle": "Supprimer ce projet ?",
+      "leaveWarning": "Tu garderas ce que ton appareil a déjà reçu, mais tu ne pourras plus synchroniser ce projet.",
+      "deleteWarning": "Le rendez-vous, les invitations et les sauvegardes chiffrées seront supprimés pour tous les membres. Cette action est irréversible."
+    }
   }
 }

@@ -585,22 +585,30 @@ function MissingContent({ item }: { item: Item }) {
     if (!p) return;
     patchItem(item.id, { ref: p, src: displaySrc(item.kind, p), missing: undefined });
   };
+  const collaborativeReason = item.missing?.reason;
+  const retry = () => window.dispatchEvent(new Event("nb-collab-retry-media"));
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted/30 p-3 text-center">
       <FileQuestion className="size-7 shrink-0 text-muted-foreground" strokeWidth={1.5} />
-      <p className="line-clamp-2 text-xs font-medium text-foreground break-all">{item.missing?.name || t("item.missingMedia")}</p>
-      {!!item.missing?.size && <p className="text-[10px] text-muted-foreground">{t("item.notBundled", { size: humanSize(item.missing.size) })}</p>}
+      <p className="line-clamp-2 text-xs font-medium text-foreground break-all">
+        {collaborativeReason === "waiting"
+          ? t("item.mediaWaiting")
+          : collaborativeReason === "removed"
+            ? t("item.mediaRemoved")
+            : item.missing?.name || t("item.missingMedia")}
+      </p>
+      {!!item.missing?.size && <p className="text-[10px] text-muted-foreground">{t("item.mediaSize", { size: humanSize(item.missing.size) })}</p>}
       <button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => void relocate()}
+        onClick={() => collaborativeReason === "waiting" ? retry() : void relocate()}
         className="mt-1 inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
       >
-        <FolderSearch className="size-3.5" /> {t("item.relocate")}
+        <FolderSearch className="size-3.5" /> {t(collaborativeReason === "waiting" ? "item.retryMedia" : "item.relocate")}
       </button>
       {/* Un board reçu arrive rarement avec UN seul trou : proposer le dossier entier depuis la
           première tuile évite de répéter le même geste autant de fois qu'il y a de rushs. */}
-      {missingCount > 1 && (
+      {!collaborativeReason && missingCount > 1 && (
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}

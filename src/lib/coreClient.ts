@@ -6,6 +6,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { NrApi, RefApi, PowerApi } from "./bridge";
 import i18n from "@/i18n";
+import { rememberImportGrants } from "@/lib/collab/importGrants";
 import { logError } from "@/lib/appLog";
 import { readPreviewSettings } from "@/lib/previewSettings";
 import { beginHeavyCall, isHeavyChannel } from "@/lib/busyBus";
@@ -129,7 +130,11 @@ async function ensurePathBridge(): Promise<boolean> {
         import("@tauri-apps/api/core"),
         import("@tauri-apps/api/window"),
       ]);
-      await listen<{ id: number; paths: string[] }>("nr://file-paths", (e) => {
+      await listen<{ id: number; paths: string[]; grants?: string[] }>("nr://file-paths", (e) => {
+        rememberImportGrants((e.payload.paths || []).map((path, index) => ({
+          path,
+          grant: e.payload.grants?.[index] ?? "",
+        })));
         const done = pathWaiters.get(e.payload.id);
         if (done) { pathWaiters.delete(e.payload.id); done(e.payload.paths || []); }
       });
@@ -287,6 +292,22 @@ async function dlgOpen(opts: Record<string, unknown>): Promise<string | string[]
   if (!isTauri) return null;
   const { open } = await import("@tauri-apps/plugin-dialog");
   return (await open(opts)) as string | string[] | null;
+}
+
+async function trustedFileOpen(
+  kind: "video" | "image" | "any",
+  multiple: boolean,
+): Promise<string | string[] | null> {
+  if (!isTauri) return null;
+  const { invoke } = await import("@tauri-apps/api/core");
+  const selected = await invoke<Array<{ path: string; grant: string }>>("nr_pick_trusted_files", {
+    kind,
+    multiple,
+  });
+  if (!selected.length) return null;
+  rememberImportGrants(selected);
+  const paths = selected.map((entry) => entry.path);
+  return multiple ? paths : paths[0];
 }
 async function dlgSave(defaultPath?: string): Promise<string | null> {
   if (!isTauri) return null;
@@ -608,15 +629,15 @@ export function makeCoreClient(): NrApi {
     chooseFiles: () =>
       isRemote
         ? requestParentFiles(true, VIDEO_EXT)
-        : (dlgOpen({ multiple: true, filters: [{ name: i18n.t("common:fileType.video"), extensions: VIDEO_EXT }] }) as Promise<string[] | null>),
+        : (trustedFileOpen("video", true) as Promise<string[] | null>),
     chooseImages: () =>
       isRemote
         ? requestParentFiles(true, IMAGE_EXT)
-        : (dlgOpen({ multiple: true, filters: [{ name: i18n.t("common:fileType.image"), extensions: IMAGE_EXT }] }) as Promise<string[] | null>),
+        : (trustedFileOpen("image", true) as Promise<string[] | null>),
     chooseAnyFile: () =>
       isRemote
         ? requestParentFiles(false, []).then((a) => (a && a[0]) || null)
-        : (dlgOpen({ multiple: false }) as Promise<string | null>),
+        : (trustedFileOpen("any", false) as Promise<string | null>),
     pathsForFiles: (files) => resolveFilePaths(files),
     warmFilePaths: () => { void ensurePathBridge(); },
     saveFile: (defaultName) => dlgSave(defaultName),

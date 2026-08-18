@@ -277,6 +277,7 @@ export interface BoardItem {
     kind: string;
     locator?: string;
     frameLocators?: Array<string | null>;
+    reason?: "local" | "waiting" | "removed";
   };
 }
 
@@ -426,6 +427,9 @@ export interface BoardScene {
   // seule, cas d'une archive v1). Absent = scène de la bibliothèque interne.
   filePath?: string | null;
   fileReadonly?: boolean;
+  // A collaborative project is bound to this scene, never to a renderer-global setting. The role
+  // is intentionally absent: Rust refreshes it from Convex (or a signed native cache) on open.
+  collaboration?: { projectId: string } | null;
   items: BoardItem[];
   // Vue sauvegardée (pan/zoom) pour rouvrir la scène cadrée pareil.
   view?: BoardView;

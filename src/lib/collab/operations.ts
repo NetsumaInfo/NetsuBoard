@@ -116,7 +116,8 @@ function automaticAsset(ref: string, item: BoardItem): MediaAsset | null {
   if (!/^https?:/i.test(ref)) return null;
   let displayName = "remote-media";
   try {
-    displayName = new URL(ref).pathname.split("/").filter(Boolean).at(-1) ?? displayName;
+    const segments = new URL(ref).pathname.split("/").filter(Boolean);
+    displayName = segments[segments.length - 1] ?? displayName;
   } catch { /* Rust performs the authoritative URL validation. */ }
   return {
     remoteUrl: ref,
@@ -154,6 +155,27 @@ function mediaManifest(item: BoardItem, resolveAsset: AssetResolver): MediaManif
       naturalWidth: item.localMedia.natW,
       naturalHeight: item.localMedia.natH,
     } : undefined,
+  };
+}
+
+function mediaIdentity(item: BoardItem) {
+  return {
+    ref: item.ref,
+    sourceUrl: item.sourceUrl,
+    previous: item.prevMedia ? {
+      kind: item.prevMedia.kind,
+      ref: item.prevMedia.ref,
+      trimIn: item.prevMedia.trimIn,
+      trimOut: item.prevMedia.trimOut,
+      crop: item.prevMedia.crop,
+      sourceUrl: item.prevMedia.sourceUrl,
+    } : null,
+    local: item.localMedia ? {
+      kind: item.localMedia.kind,
+      ref: item.localMedia.ref,
+      natW: item.localMedia.natW,
+      natH: item.localMedia.natH,
+    } : null,
   };
 }
 
@@ -348,7 +370,7 @@ export function diffBoard(
     if (!same(playback(old), playback(item))) ops.push({ type: "setPlayback", itemId: item.id, playback: playback(item) });
     if (!same(crop(old), crop(item))) ops.push({ type: "setCrop", itemId: item.id, crop: crop(item) });
     if (!same(trim(old), trim(item))) ops.push({ type: "setTrim", itemId: item.id, trim: trim(item) });
-    if (old.ref !== item.ref || old.sourceUrl !== item.sourceUrl) {
+    if (!same(mediaIdentity(old), mediaIdentity(item))) {
       ops.push({ type: "setMediaManifest", itemId: item.id, manifest: mediaManifest(item, resolveAsset) });
     }
     if (!same(link(old), link(item))) ops.push({ type: "setLink", itemId: item.id, link: link(item) });

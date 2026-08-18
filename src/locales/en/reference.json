@@ -516,6 +516,10 @@
     "doubleClickEdit": "Double-click to edit…",
     "frameDefault": "Frame",
     "missingMedia": "Missing media",
+    "mediaWaiting": "Waiting for a device that holds this media",
+    "mediaRemoved": "Media removed from the project",
+    "mediaSize": "{{size}}",
+    "retryMedia": "Try again",
     "notBundled": "{{size}} · not bundled",
     "relocate": "Relocate",
     "downloading": "Downloading…",
@@ -744,5 +748,37 @@
     "off": "Take the mouse back",
     "warning": "Clicks and wheel will go to the application underneath, and the window stays on top. To take control back: give it focus again (Alt+Tab).",
     "dontAskAgain": "Don't ask again"
+  },
+  "collab": {
+    "menu": "Collaborate",
+    "title": "Collaborate",
+    "subtitle": "Pick the friends to invite to this project.",
+    "signedOut": "Connect your Discord account in Settings.",
+    "noFriends": "Add friends first in Settings › Account.",
+    "invited": "{{n}} invitation(s) sent.",
+    "notice": "The board becomes collaborative. Invited people join it from their Settings.",
+    "close": "Close",
+    "create": "Create and invite",
+    "invite": "Invite",
+    "fileBacked": "Save this board to the scene library before sharing it.",
+    "saveAsBlocked": "A collaborative project remains owned by its shared scene. Use export to create a local copy.",
+    "role": { "owner": "Owner", "editor": "Can edit", "viewer": "View only" },
+    "rotationPending": "The revocation is recorded. New publications wait for an owner device to finish key rotation.",
+    "staleHead": {
+      "title": "Stale recovery branch",
+      "warning": "A device has not merged this branch for more than 30 days.",
+      "detail": "{{days}} days · {{size}} encrypted",
+      "discard": "Discard",
+      "confirmTitle": "Discard this branch?",
+      "confirmWarning": "Changes published only by this device will be lost permanently. Continue only if that device can no longer reconnect."
+    },
+    "status": { "pending": "sync pending", "rotation": "key rotation pending" },
+    "members": { "remove": "Remove from project", "pending": "Invitation pending", "cancelInvite": "Cancel invitation" },
+    "lifecycle": {
+      "leave": "Leave project", "delete": "Delete project",
+      "leaveTitle": "Leave this project?", "deleteTitle": "Delete this project?",
+      "leaveWarning": "You keep what this device already received, but can no longer sync this project.",
+      "deleteWarning": "Rendezvous data, invitations, and encrypted recovery copies will be deleted for every member. This cannot be undone."
+    }
   }
 }

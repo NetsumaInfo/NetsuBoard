@@ -1,6 +1,9 @@
 use super::error::CollabError;
 use std::fmt;
-use std::path::{Component, Path, PathBuf};
+use std::io::Write as _;
+use std::path::Path;
+#[cfg(test)]
+use std::path::{Component, PathBuf};
 
 const MAX_PROJECT_ID_BYTES: usize = 128;
 
@@ -65,6 +68,62 @@ fn hex_lower(bytes: &[u8]) -> String {
     output
 }
 
+/// Atomically replaces a durable metadata file. `std::fs::rename` does not replace an existing
+/// destination on Windows, while removing first creates a crash window where the file disappears.
+pub fn atomic_replace(source: &Path, destination: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt as _;
+        use windows::Win32::Storage::FileSystem::{
+            MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
+        };
+        use windows_core::PCWSTR;
+
+        let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
+        let destination_wide: Vec<u16> = destination
+            .as_os_str()
+            .encode_wide()
+            .chain(Some(0))
+            .collect();
+        unsafe {
+            MoveFileExW(
+                PCWSTR(source_wide.as_ptr()),
+                PCWSTR(destination_wide.as_ptr()),
+                MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
+            )
+            .map_err(std::io::Error::other)
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        std::fs::rename(source, destination)
+    }
+}
+
+pub fn atomic_write(destination: &Path, bytes: &[u8]) -> Result<(), CollabError> {
+    if let Some(parent) = destination.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let token = OpaqueToken::generate()?;
+    let temp = destination.with_extension(format!("{}.part", token.as_str()));
+    let result = (|| {
+        let mut file = std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp)?;
+        file.write_all(bytes)?;
+        file.sync_all()?;
+        drop(file);
+        atomic_replace(&temp, destination)?;
+        Ok::<(), CollabError>(())
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(temp);
+    }
+    result
+}
+
+#[cfg(test)]
 pub fn confined_child(root: &Path, relative: &Path) -> Result<PathBuf, CollabError> {
     if relative.as_os_str().is_empty()
         || relative

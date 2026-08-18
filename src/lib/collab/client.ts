@@ -1,0 +1,172 @@
+import type { BoardItem } from "@/components/reference/referenceShared";
+import { projectBoard, type NativeProject } from "./projection";
+import { COLLAB_PROTOCOL_VERSION, type CollabOp, type ProjectRole } from "./types";
+import { takeImportGrant } from "./importGrants";
+
+export type ApplyResult = { revision: number; applied: number };
+export type CollabChanged = { projectId: string; revision: number };
+export type ProjectSession = {
+  projectId: string;
+  sceneId: string;
+  role: ProjectRole;
+  keyEpoch: number;
+  leaseId: string;
+};
+export type ProjectStatus = {
+  role: ProjectRole;
+  keyEpoch: number;
+  rotationRequired: boolean;
+  peerCandidates: number;
+  offlineQueued: boolean;
+};
+export type ImportedMedia = { hash: string; name: string; mime: string; size: number };
+export type MediaResolution = { status: "available" | "waiting" | "removed"; hash: string };
+export type CollabFailure = {
+  code: "authorization" | "conflict" | "corrupt" | "key_pending" | "network"
+    | "read_only" | "storage" | "unavailable" | "validation";
+  message: string;
+};
+
+async function invoker() {
+  if (!("__TAURI_INTERNALS__" in window)) throw new Error("collaboration requires the desktop app");
+  return (await import("@tauri-apps/api/core")).invoke;
+}
+
+export async function configureAuth(
+  deploymentUrl: string,
+  token: string,
+  deviceLabel?: string,
+): Promise<void> {
+  await (await invoker())("collab_configure_auth", {
+    configuration: { deploymentUrl, token, deviceLabel },
+  });
+}
+
+export async function deviceIdentity(): Promise<{ deviceId: string; createdAt: number }> {
+  return (await invoker())("collab_device_identity");
+}
+
+export async function openProject(projectId: string, sceneId: string, role: ProjectRole): Promise<ProjectSession> {
+  return (await invoker())<ProjectSession>("collab_project_open", { request: { projectId, sceneId, role } });
+}
+
+export async function createProject(): Promise<{ projectId: string }> {
+  return (await invoker())<{ projectId: string }>("collab_project_create");
+}
+
+export async function abortProject(projectId: string): Promise<void> {
+  await (await invoker())("collab_project_abort", { projectId });
+}
+
+export async function flushCheckpoint(projectId: string): Promise<void> {
+  await (await invoker())("collab_project_flush_checkpoint", { projectId });
+}
+
+export async function inviteMembers(
+  projectId: string,
+  userIds: string[],
+  role: Exclude<ProjectRole, "owner"> = "editor",
+): Promise<{ results: Array<{ userId: string; status: string }> }> {
+  return (await invoker())("collab_project_invite", { request: { projectId, userIds, role } });
+}
+
+export async function respondInvite(inviteId: string, accept: boolean): Promise<{
+  status: string;
+  projectId?: string;
+  keyStatus?: string;
+}> {
+  return (await invoker())("collab_invite_respond", { request: { inviteId, accept } });
+}
+
+export async function cancelInvite(inviteId: string): Promise<void> {
+  await (await invoker())("collab_invite_cancel", { inviteId });
+}
+
+export async function setMemberRole(
+  projectId: string,
+  userId: string,
+  role: Exclude<ProjectRole, "owner">,
+): Promise<void> {
+  await (await invoker())("collab_member_set_role", { request: { projectId, userId, role } });
+}
+
+export async function removeMember(projectId: string, userId: string): Promise<void> {
+  await (await invoker())("collab_member_remove", { request: { projectId, userId } });
+}
+
+export async function leaveProject(projectId: string): Promise<void> {
+  await (await invoker())("collab_project_leave", { projectId });
+}
+
+export async function deleteProject(projectId: string): Promise<void> {
+  await (await invoker())("collab_project_delete", { projectId });
+}
+
+export async function discardStaleHead(headId: string): Promise<void> {
+  await (await invoker())("collab_head_discard_stale", { headId });
+}
+
+export async function forgetDevice(deviceId: string): Promise<void> {
+  await (await invoker())("collab_device_forget", { deviceId });
+}
+
+export async function importMedia(projectId: string, path: string, mime: string): Promise<ImportedMedia> {
+  const grant = takeImportGrant(path) ?? await (await invoker())<string>("collab_media_grant_known", {
+    projectId,
+    path,
+  });
+  return (await invoker())<ImportedMedia>("collab_media_import", {
+    request: { projectId, grant, mime },
+  });
+}
+
+export async function resolveMedia(
+  projectId: string,
+  asset: ImportedMedia,
+): Promise<MediaResolution> {
+  return (await invoker())<MediaResolution>("collab_media_resolve", {
+    request: { projectId, asset },
+  });
+}
+
+export function mediaUrl(projectId: string, hash: string): string {
+  return `http://collab.localhost/${encodeURIComponent(projectId)}/${hash}`;
+}
+
+export async function closeProject(projectId: string, leaseId: string): Promise<void> {
+  await (await invoker())("collab_project_close", { request: { projectId, leaseId } });
+}
+
+export async function applyOperations(projectId: string, ops: CollabOp[]): Promise<ApplyResult> {
+  if (!ops.length) return { revision: 0, applied: 0 };
+  return (await invoker())<ApplyResult>("collab_project_apply", {
+    projectId,
+    batch: { protocol: COLLAB_PROTOCOL_VERSION, ops },
+  });
+}
+
+export async function nativeProjection(projectId: string): Promise<NativeProject> {
+  return (await invoker())<NativeProject>("collab_project_projection", { projectId });
+}
+
+export async function projectStatus(projectId: string): Promise<ProjectStatus> {
+  return (await invoker())<ProjectStatus>("collab_project_status", { projectId });
+}
+
+export async function boardProjection(projectId: string): Promise<BoardItem[]> {
+  return projectBoard(await nativeProjection(projectId), (hash) => mediaUrl(projectId, hash));
+}
+
+export async function undo(projectId: string): Promise<ApplyResult> {
+  return (await invoker())<ApplyResult>("collab_project_undo", { projectId });
+}
+
+export async function redo(projectId: string): Promise<ApplyResult> {
+  return (await invoker())<ApplyResult>("collab_project_redo", { projectId });
+}
+
+export async function onChanged(handler: (event: CollabChanged) => void): Promise<() => void> {
+  if (!("__TAURI_INTERNALS__" in window)) return () => {};
+  const { listen } = await import("@tauri-apps/api/event");
+  return listen<CollabChanged>("nb-collab-changed", (event) => handler(event.payload));
+}

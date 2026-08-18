@@ -48,6 +48,19 @@ const savable = (name: string) => {
   return { name, items: persistable(st.items), view: st.view, retain: retainedRefs() };
 };
 
+const collaboration = () => {
+  const projectId = useBoard.getState().collabProjectId;
+  return projectId ? { projectId } : null;
+};
+
+// A collaborative scene persists its binding and view, but never a second writable copy of the
+// board. On reopen the native Loro projection replaces the empty cache, including when the project
+// itself is empty.
+const sceneItems = () => {
+  const state = useBoard.getState();
+  return state.collabProjectId ? [] : persistable(state.items);
+};
+
 // Un item relu : la `src` d'affichage se recalcule depuis le localisateur durable — pour l'item
 // lui-même comme pour le média d'avant un upscale, dont le bouton « revenir en arrière » a besoin.
 const hydrate = (items: BoardItem[]): BoardItem[] =>
@@ -102,6 +115,11 @@ export function useScenePersistence() {
   // interne est détachée (`sceneId: null`) — le fichier fait foi, garder les deux les ferait diverger.
   const saveProjectAs = useCallback(async () => {
     const st = useBoard.getState();
+    if (st.collabProjectId) {
+      const error = tr("collab.saveAsBlocked");
+      flash(error, "error");
+      return { ok: false, error };
+    }
     const dest = await api?.saveNetsuPath(`${st.sceneName || "board"}.netsu`);
     if (!dest) return null; // annulé
     const projectName = fileLabel(dest);
@@ -141,6 +159,7 @@ export function useScenePersistence() {
         view: (res.scene.view as BoardView) ?? undefined,
         filePath: res.readonly ? null : (res.path ?? srcPath),
         fileReadonly: !!res.readonly,
+        collaboration: null,
       });
       // Une archive v1 n'est pas un document vivant : on la charge comme un board neuf, à qui
       // « Enregistrer sous » donnera un vrai fichier de projet.
@@ -169,8 +188,9 @@ export function useScenePersistence() {
         const res = await api?.saveScene({
           id: st.sceneId ?? undefined,
           name: finalName,
-          items: persistable(st.items),
+          items: sceneItems(),
           view: st.view,
+          collaboration: collaboration(),
         });
         if (res?.ok) {
           useBoard.setState({ sceneId: res.id ?? st.sceneId, sceneName: finalName, dirty: false });
@@ -187,6 +207,34 @@ export function useScenePersistence() {
     [api, saveProject],
   );
 
+  const bindCollaboration = useCallback(async (projectId: string) => {
+    const state = useBoard.getState();
+    if (state.filePath) {
+      throw new Error("A file-backed board must be imported into the scene library before sharing");
+    }
+    const result = await api?.saveScene({
+      id: state.sceneId ?? undefined,
+      name: state.sceneName,
+      items: [],
+      view: state.view,
+      collaboration: { projectId },
+    });
+    if (!result?.ok || !result.id) {
+      throw new Error(result?.error || "Could not bind the collaborative project to this scene");
+    }
+    useBoard.setState({
+      sceneId: result.id,
+      collabProjectId: projectId,
+      collabRole: null,
+      collabKeyEpoch: 0,
+      collabRotationRequired: false,
+      collabPeerCandidates: 0,
+      collabOfflineQueued: false,
+      dirty: false,
+    });
+    return result.id;
+  }, [api]);
+
   const open = useCallback(
     async (id: string) => {
       const sc = await api?.loadScene(id);
@@ -197,6 +245,7 @@ export function useScenePersistence() {
         name: sc.name,
         items,
         view: (sc.view as BoardView) ?? undefined,
+        collaboration: sc.collaboration ?? null,
       });
     },
     [api],
@@ -218,6 +267,7 @@ export function useScenePersistence() {
   // un board anonyme va dans la scène réservée AUTOSAVE_ID, sans toucher l'indicateur dirty.
   const saveAuto = useCallback(async () => {
     const st = useBoard.getState();
+    if (st.collabProjectId) return;
     if (st.filePath && !st.fileReadonly) {
       try {
         const res = await api?.saveProject(st.filePath, savable(st.sceneName));
@@ -236,8 +286,9 @@ export function useScenePersistence() {
       const res = await api?.saveScene({
         id: st.sceneId ?? AUTOSAVE_ID,
         name: st.sceneName,
-        items: persistable(st.items),
+        items: sceneItems(),
         view: st.view,
+        collaboration: collaboration(),
       });
       if (res && !res.ok) throw new Error(res.error || tr("notice.unknown"));
       if (st.sceneId && res?.ok) useBoard.setState({ dirty: false });
@@ -327,7 +378,13 @@ export function useScenePersistence() {
   // Transfert vers la fenêtre détachée : fige le board courant sous l'id réservé.
   const handoff = useCallback(async () => {
     const st = useBoard.getState();
-    await api?.saveScene({ id: HANDOFF_ID, name: st.sceneName, items: persistable(st.items), view: st.view });
+    await api?.saveScene({
+      id: HANDOFF_ID,
+      name: st.sceneName,
+      items: st.collabProjectId ? [] : persistable(st.items),
+      view: st.view,
+      collaboration: st.collabProjectId ? { projectId: st.collabProjectId } : null,
+    });
   }, [api]);
   // Charge le handoff puis le détache de son id réservé (board de travail anonyme, non lié au handoff).
   const loadHandoff = useCallback(async () => {
@@ -337,7 +394,7 @@ export function useScenePersistence() {
 
   return {
     save, open, list, remove, handoff, loadHandoff, saveAuto, loadAuto, weigh, exportBoard, importBoard,
-    saveProject, saveProjectAs, openProject, recentProjects, forgetProject,
+    saveProject, saveProjectAs, openProject, recentProjects, forgetProject, bindCollaboration,
     available: !!api,
   };
 }

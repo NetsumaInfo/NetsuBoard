@@ -41,6 +41,7 @@
     "@fontsource-variable/caveat": "^5.2.8",
     "@fontsource-variable/inter": "^5.2.8",
     "@material/material-color-utilities": "^0.4.0",
+    "@noble/ed25519": "^3.1.0",
     "@number-flow/react": "^0.6.0",
     "@tauri-apps/plugin-deep-link": "^2.4.9",
     "@tauri-apps/plugin-dialog": "^2.7.1",
@@ -52,7 +53,6 @@
     "clsx": "^2.1.1",
     "convex": "^1.44.0",
     "i18next": "^26.3.6",
-    "loro-crdt": "^1.14.1",
     "lucide-react": "^0.460.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -76,5 +76,8 @@
     "typescript": "~5.8.3",
     "vite": "^7.0.4",
     "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
   }
 }

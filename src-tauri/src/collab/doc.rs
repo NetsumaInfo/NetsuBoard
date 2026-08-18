@@ -1,6 +1,6 @@
 //! The collaborative document (`docs/collab.md` §3).
 //!
-//! One authoritative Loro document per project, owned here. Renderers hold read-only replicas and
+//! One authoritative Loro document per project, owned here. Renderers receive total projections and
 //! never write into containers: they send typed operations, Rust validates and applies them.
 //!
 //! Why not a generic `set(path)` API: it would let a buggy — or compromised — renderer build states
@@ -8,18 +8,23 @@
 //! crop, trim and every other group is ONE value, so two people dragging the same item produce one
 //! winner rather than Alice's position married to Bob's size.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
 use loro::{ExportMode, LoroDoc, LoroMap, LoroMovableList, LoroValue, VersionVector};
+use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 use super::identity;
 use super::ids::ProjectId;
 pub use super::ops::CollabOp as Op;
-use super::ops::{CollabOp, OperationBatch, OP_PROTOCOL_VERSION};
+use super::ops::{
+    Appearance, BoardPalette, CollabOp, Crop, EmbedMetadata, FrameStyle, Geometry, ItemKind,
+    LinkMetadata, MediaManifest, OperationBatch, Playback, SequenceMetadata, Stroke, TextStyle,
+    Trim, VectorShape, OP_PROTOCOL_VERSION,
+};
 
 /// Layout of the document itself. A build that does not understand it opens the project read-only
 /// rather than rewriting it into something the writer cannot read back.
@@ -72,10 +77,52 @@ impl From<loro::LoroError> for DocError {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 pub struct ApplyResult {
     pub revision: u64,
     pub applied: usize,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ItemProjection {
+    pub item_id: String,
+    pub kind: ItemKind,
+    pub geometry: Geometry,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crop: Option<Crop>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trim: Option<Trim>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub appearance: Option<Appearance>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text_style: Option<TextStyle>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frame_style: Option<FrameStyle>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub playback: Option<Playback>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub media: Option<MediaManifest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link: Option<LinkMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub embed: Option<EmbedMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sequence: Option<SequenceMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub palette: Option<BoardPalette>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectProjection {
+    pub revision: u64,
+    pub items: Vec<ItemProjection>,
+    pub order: Vec<String>,
+    pub strokes: Vec<Stroke>,
+    pub shapes: Vec<VectorShape>,
 }
 
 struct Project {
@@ -89,6 +136,9 @@ struct Project {
 }
 
 static PROJECTS: Mutex<Option<HashMap<String, Project>>> = Mutex::new(None);
+/// A loaded document is not necessarily UI-authorized: an already-started network task may finish
+/// after the final lease closes and load durable state again.
+static LEASED_PROJECTS: Mutex<Option<HashSet<String>>> = Mutex::new(None);
 
 fn projects_dir() -> PathBuf {
     super::identity::collab_dir().join("projects")
@@ -187,12 +237,7 @@ fn save(project: &Project) -> Result<(), DocError> {
         .doc
         .export(ExportMode::Snapshot)
         .map_err(|err| DocError::Loro(err.to_string()))?;
-    if let Some(parent) = project.path.parent() {
-        fs::create_dir_all(parent).map_err(|err| DocError::Io(err.to_string()))?;
-    }
-    let temp = project.path.with_extension("loro.part");
-    fs::write(&temp, &bytes).map_err(|err| DocError::Io(err.to_string()))?;
-    fs::rename(&temp, &project.path).map_err(|err| DocError::Io(err.to_string()))?;
+    super::ids::atomic_write(&project.path, &bytes).map_err(|err| DocError::Io(err.to_string()))?;
     Ok(())
 }
 
@@ -241,6 +286,123 @@ fn index_in_order(list: &LoroMovableList, id: &str) -> Option<usize> {
         }
     }
     None
+}
+
+fn ordered_ids(list: &LoroMovableList) -> Vec<String> {
+    (0..list.len())
+        .filter_map(|index| list.get(index))
+        .filter_map(|value| value.into_value().ok())
+        .filter_map(|value| match value {
+            LoroValue::String(value) => Some(value.to_string()),
+            _ => None,
+        })
+        .collect()
+}
+
+fn atomic<T: DeserializeOwned>(map: &LoroMap, key: &str) -> Result<Option<T>, DocError> {
+    let Some(LoroValue::String(raw)) = map.get(key).and_then(|value| value.into_value().ok())
+    else {
+        return Ok(None);
+    };
+    serde_json::from_str::<Option<T>>(raw.as_str())
+        .map_err(|error| DocError::Loro(format!("invalid {key} group: {error}")))
+}
+
+fn kind(map: &LoroMap) -> Result<ItemKind, DocError> {
+    let Some(LoroValue::String(value)) = map.get("kind").and_then(|value| value.into_value().ok())
+    else {
+        return Err(DocError::Loro("item has no kind".into()));
+    };
+    serde_json::from_str(&format!("\"{}\"", value.as_str()))
+        .map_err(|error| DocError::Loro(format!("invalid item kind: {error}")))
+}
+
+fn text_value(map: &LoroMap) -> Option<String> {
+    map.get(KEY_TEXT)
+        .and_then(|value| value.into_container().ok())
+        .and_then(|container| container.into_text().ok())
+        .map(|text| text.to_string())
+}
+
+fn ordered_data<T: DeserializeOwned>(
+    map: LoroMap,
+    list: LoroMovableList,
+) -> Result<Vec<T>, DocError> {
+    let mut output = Vec::new();
+    for id in ordered_ids(&list) {
+        let Some(entry) = map
+            .get(&id)
+            .and_then(|value| value.into_container().ok())
+            .and_then(|container| container.into_map().ok())
+        else {
+            continue;
+        };
+        if matches!(
+            entry
+                .get(KEY_DELETED)
+                .and_then(|value| value.into_value().ok()),
+            Some(LoroValue::Bool(true))
+        ) {
+            continue;
+        }
+        let Some(LoroValue::String(raw)) =
+            entry.get("data").and_then(|value| value.into_value().ok())
+        else {
+            continue;
+        };
+        output.push(
+            serde_json::from_str(raw.as_str())
+                .map_err(|error| DocError::Loro(format!("invalid ordered data: {error}")))?,
+        );
+    }
+    Ok(output)
+}
+
+fn project_projection_from_doc(
+    doc: &LoroDoc,
+    revision: u64,
+) -> Result<ProjectProjection, DocError> {
+    let mut projected_items = Vec::new();
+    let mut projected_order = Vec::new();
+    for id in ordered_ids(&order(doc)) {
+        let Ok(item) = live_item(doc, &id) else {
+            continue;
+        };
+        let Some(geometry) = atomic::<Geometry>(&item, "geometry")? else {
+            return Err(DocError::Loro(format!("item {id} has no geometry")));
+        };
+        projected_order.push(id.clone());
+        projected_items.push(ItemProjection {
+            item_id: id,
+            kind: kind(&item)?,
+            geometry,
+            crop: atomic(&item, "crop")?,
+            trim: atomic(&item, "trim")?,
+            appearance: atomic(&item, "appearance")?,
+            text_style: atomic(&item, "textStyle")?,
+            text: text_value(&item),
+            frame_style: atomic(&item, "frameStyle")?,
+            playback: atomic(&item, "playback")?,
+            media: atomic(&item, "media")?,
+            link: atomic(&item, "link")?,
+            embed: atomic(&item, "embed")?,
+            sequence: atomic(&item, "sequence")?,
+            palette: atomic(&item, "palette")?,
+        });
+    }
+    Ok(ProjectProjection {
+        revision,
+        items: projected_items,
+        order: projected_order,
+        strokes: ordered_data(
+            doc.get_map(ROOT_STROKES),
+            doc.get_movable_list(ROOT_STROKE_ORDER),
+        )?,
+        shapes: ordered_data(
+            doc.get_map(ROOT_SHAPES),
+            doc.get_movable_list(ROOT_SHAPE_ORDER),
+        )?,
+    })
 }
 
 fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
@@ -419,6 +581,7 @@ fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
     Ok(())
 }
 
+#[cfg(test)]
 fn apply_batch_to_doc(doc: &LoroDoc, ops: &[Op]) -> Result<Vec<u8>, DocError> {
     OperationBatch::v1(ops.to_vec())
         .validate()
@@ -441,33 +604,87 @@ fn apply_batch_to_doc(doc: &LoroDoc, ops: &[Op]) -> Result<Vec<u8>, DocError> {
     Ok(update)
 }
 
-/// Applies a batch as ONE commit, so a gesture is one entry in the history and one undo step.
-///
-/// A batch is all-or-nothing at validation time: a refused operation aborts before anything is
-/// written, because half a gesture is a state the board cannot draw.
-pub fn apply(project_id: &str, protocol: u32, ops: &[Op]) -> Result<ApplyResult, DocError> {
+/// Builds and validates a delta against a shadow document without changing the live document.
+/// The service persists this exact delta and its sealed outbox envelope in one SQLite transaction
+/// before calling `commit_update`, so a crash cannot leave visible work without a recoverable head.
+pub fn prepare_update(project_id: &str, protocol: u32, ops: &[Op]) -> Result<Vec<u8>, DocError> {
     if protocol != OP_PROTOCOL_VERSION {
         return Err(DocError::Protocol(protocol));
     }
     with_project(project_id, true, |project| {
-        apply_batch_to_doc(&project.doc, ops)?;
+        let snapshot = project
+            .doc
+            .export(ExportMode::Snapshot)
+            .map_err(|error| DocError::Loro(error.to_string()))?;
+        let candidate = LoroDoc::new();
+        candidate.import(&snapshot)?;
+        candidate.set_peer_id(project.doc.peer_id())?;
+        OperationBatch::v1(ops.to_vec())
+            .validate()
+            .map_err(|error| DocError::Rejected(error.to_string()))?;
+        for operation in ops {
+            apply_one(&candidate, operation)?;
+        }
+        candidate.commit();
+        candidate
+            .export(ExportMode::updates(&project.doc.oplog_vv()))
+            .map_err(|error| DocError::Loro(error.to_string()))
+    })
+}
+
+pub fn head_delta_with(
+    project_id: &str,
+    base_version: &[u8],
+    candidate_update: &[u8],
+) -> Result<Vec<u8>, DocError> {
+    let base = if base_version.is_empty() {
+        VersionVector::default()
+    } else {
+        VersionVector::decode(base_version).map_err(|error| DocError::Loro(error.to_string()))?
+    };
+    with_project(project_id, false, |project| {
+        let snapshot = project
+            .doc
+            .export(ExportMode::Snapshot)
+            .map_err(|error| DocError::Loro(error.to_string()))?;
+        let candidate = LoroDoc::new();
+        candidate.import(&snapshot)?;
+        candidate.import(candidate_update)?;
+        candidate
+            .export(ExportMode::updates(&base))
+            .map_err(|error| DocError::Loro(error.to_string()))
+    })
+}
+
+pub fn commit_update(
+    project_id: &str,
+    update: &[u8],
+    applied: usize,
+) -> Result<ApplyResult, DocError> {
+    with_project(project_id, true, |project| {
+        project.doc.import(update)?;
         project.revision += 1;
         save(project)?;
         Ok(ApplyResult {
             revision: project.revision,
-            applied: ops.len(),
+            applied,
         })
     })
 }
 
-/// Full snapshot, for a renderer replica that is starting from nothing.
-pub fn bootstrap(project_id: &str) -> Result<Vec<u8>, DocError> {
-    with_project(project_id, false, |project| {
-        project
-            .doc
-            .export(ExportMode::Snapshot)
-            .map_err(|err| DocError::Loro(err.to_string()))
-    })
+/// Builds a checkpoint from an explicitly selected remote set. This deliberately has no access to
+/// the live actor document: unpublished local work can therefore never leak into a checkpoint and
+/// be lost when two devices compact concurrently.
+pub fn compact_updates(updates: &[Vec<u8>]) -> Result<(Vec<u8>, Vec<u8>), DocError> {
+    let compacted = LoroDoc::new();
+    for update in updates {
+        compacted.import(update)?;
+    }
+    let version = compacted.oplog_vv().encode();
+    let snapshot = compacted
+        .export(ExportMode::Snapshot)
+        .map_err(|error| DocError::Loro(error.to_string()))?;
+    Ok((snapshot, version))
 }
 
 /// Everything the caller is missing, given the version vector its replica already holds.
@@ -488,7 +705,12 @@ pub fn pull(project_id: &str, since: &[u8]) -> Result<Vec<u8>, DocError> {
 /// Imports a remote update — from a peer, a head or a checkpoint — into the authoritative document.
 pub fn merge(project_id: &str, update: &[u8]) -> Result<ApplyResult, DocError> {
     with_project(project_id, true, |project| {
-        project.doc.import(update)?;
+        if !import_if_new(&project.doc, update)? {
+            return Ok(ApplyResult {
+                revision: project.revision,
+                applied: 0,
+            });
+        }
         project.revision += 1;
         save(project)?;
         Ok(ApplyResult {
@@ -496,6 +718,12 @@ pub fn merge(project_id: &str, update: &[u8]) -> Result<ApplyResult, DocError> {
             applied: 1,
         })
     })
+}
+
+fn import_if_new(doc: &LoroDoc, update: &[u8]) -> Result<bool, DocError> {
+    let before = doc.oplog_vv().encode();
+    doc.import(update)?;
+    Ok(doc.oplog_vv().encode() != before)
 }
 
 /// Undo is LOCAL: Loro's `UndoManager` only reverts this device's own operations, so nobody can
@@ -539,11 +767,116 @@ pub fn version(project_id: &str) -> Result<Vec<u8>, DocError> {
     })
 }
 
+pub fn projection(project_id: &str) -> Result<ProjectProjection, DocError> {
+    with_project(project_id, false, |project| {
+        project_projection_from_doc(&project.doc, project.revision)
+    })
+}
+
+fn projection_media_hashes(projection: &ProjectProjection) -> std::collections::HashSet<String> {
+    fn add_asset(
+        hashes: &mut std::collections::HashSet<String>,
+        asset: &crate::collab::ops::MediaAsset,
+    ) {
+        if let Some(hash) = &asset.content_hash {
+            hashes.insert(hash.clone());
+        }
+    }
+
+    let mut hashes = std::collections::HashSet::new();
+    for item in &projection.items {
+        if let Some(manifest) = &item.media {
+            add_asset(&mut hashes, &manifest.primary);
+            if let Some(previous) = &manifest.previous {
+                add_asset(&mut hashes, &previous.asset);
+            }
+            if let Some(local) = &manifest.local {
+                add_asset(&mut hashes, &local.asset);
+            }
+        }
+        if let Some(sequence) = &item.sequence {
+            for frame in &sequence.frames {
+                add_asset(&mut hashes, frame);
+            }
+        }
+        if let Some(link) = &item.link {
+            if matches!(link.kind, crate::collab::ops::LinkKind::File) {
+                hashes.insert(link.target.clone());
+            }
+        }
+    }
+    hashes
+}
+
+/// Content hashes the current document authorises this project to request or serve.
+///
+/// The P2P media protocol calls this after it has already authenticated the peer and project. A
+/// hash learned in a different project is therefore not enough to read bytes from this machine.
+pub fn media_hashes(project_id: &str) -> Result<std::collections::HashSet<String>, DocError> {
+    projection(project_id).map(|projection| projection_media_hashes(&projection))
+}
+
+/// The renderer-facing media protocol has no peer roster to check. It must refuse a document that
+/// is not currently leased instead of using `with_project`, which intentionally opens durable
+/// documents on demand for recovery.
+pub fn open_media_hashes(
+    project_id: &str,
+) -> Result<Option<std::collections::HashSet<String>>, DocError> {
+    ProjectId::parse(project_id).map_err(|error| DocError::Rejected(error.to_string()))?;
+    let leased = LEASED_PROJECTS
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .as_ref()
+        .is_some_and(|projects| projects.contains(project_id));
+    if !leased {
+        return Ok(None);
+    }
+    let mut guard = PROJECTS
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let Some(project) = guard.get_or_insert_with(HashMap::new).get_mut(project_id) else {
+        return Ok(None);
+    };
+    let projection = project_projection_from_doc(&project.doc, project.revision)?;
+    Ok(Some(projection_media_hashes(&projection)))
+}
+
+/// Grants renderer media access only after the native actor has installed a project lease.
+pub fn activate(project_id: &str) -> Result<(), DocError> {
+    ProjectId::parse(project_id).map_err(|error| DocError::Rejected(error.to_string()))?;
+    LEASED_PROJECTS
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .get_or_insert_with(HashSet::new)
+        .insert(project_id.to_owned());
+    Ok(())
+}
+
+/// Releases the in-memory authority after the last native project lease closes.
+pub fn close(project_id: &str) -> Result<bool, DocError> {
+    ProjectId::parse(project_id).map_err(|error| DocError::Rejected(error.to_string()))?;
+    LEASED_PROJECTS
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .get_or_insert_with(HashSet::new)
+        .remove(project_id);
+    let mut guard = PROJECTS
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    Ok(guard
+        .get_or_insert_with(HashMap::new)
+        .remove(project_id)
+        .is_some())
+}
+
 #[cfg(test)]
 mod path_tests {
-    use super::{apply_batch_to_doc, items, live_item, project_path, Op, KEY_TEXT};
+    use super::{
+        activate, apply_batch_to_doc, close, import_if_new, items, live_item, open_media_hashes,
+        project_path, project_projection_from_doc, projection, Op, KEY_TEXT,
+    };
     use crate::collab::ops::{Geometry, ItemKind};
-    use loro::{LoroDoc, LoroValue};
+    use loro::{ExportMode, LoroDoc, LoroValue};
 
     fn geometry(x: f64) -> Geometry {
         Geometry {
@@ -556,6 +889,34 @@ mod path_tests {
             natural_height: None,
             detached: false,
         }
+    }
+
+    #[test]
+    fn empty_document_has_a_total_empty_projection() {
+        let projection = project_projection_from_doc(&LoroDoc::new(), 4).expect("projection");
+        assert_eq!(projection.revision, 4);
+        assert!(projection.items.is_empty());
+        assert!(projection.order.is_empty());
+        assert!(projection.strokes.is_empty());
+        assert!(projection.shapes.is_empty());
+    }
+
+    #[test]
+    fn closing_the_last_lease_removes_renderer_media_authority() {
+        let token = crate::collab::ids::OpaqueToken::generate().expect("token");
+        let project_id = format!("close-media-{}", token.as_str());
+        projection(&project_id).expect("open document");
+        assert!(open_media_hashes(&project_id)
+            .expect("unleased hashes")
+            .is_none());
+        activate(&project_id).expect("lease");
+        assert!(open_media_hashes(&project_id)
+            .expect("open hashes")
+            .is_some());
+        assert!(close(&project_id).expect("close"));
+        assert!(open_media_hashes(&project_id)
+            .expect("closed hashes")
+            .is_none());
     }
 
     #[test]
@@ -586,6 +947,20 @@ mod path_tests {
 
         assert!(apply_batch_to_doc(&doc, &operations).is_err());
         assert!(items(&doc).get("one").is_none());
+    }
+
+    #[test]
+    fn replaying_the_same_remote_update_is_a_noop() {
+        let source = LoroDoc::new();
+        source
+            .get_map("fixture")
+            .insert("value", 1)
+            .expect("insert");
+        source.commit();
+        let update = source.export(ExportMode::all_updates()).expect("update");
+        let target = LoroDoc::new();
+        assert!(import_if_new(&target, &update).expect("first import"));
+        assert!(!import_if_new(&target, &update).expect("duplicate import"));
     }
 
     #[test]
@@ -626,5 +1001,160 @@ mod path_tests {
                 .and_then(|value| value.into_value().ok()),
             Some(LoroValue::String(kind)) if kind.as_str() == "text"
         ));
+    }
+
+    #[test]
+    fn two_through_ten_replicas_converge_across_the_complete_board_contract() {
+        use serde_json::json;
+
+        let geometry = |x: f64| {
+            json!({
+                "x": x, "y": 0.0, "width": 100.0, "height": 80.0,
+                "rotation": 0.0, "detached": false,
+            })
+        };
+        let base_ops: Vec<Op> = serde_json::from_value(json!([
+            { "type": "addItem", "itemId": "shared", "kind": "video", "geometry": geometry(0.0) },
+            { "type": "addItem", "itemId": "temporary", "kind": "image", "geometry": geometry(1.0) },
+            { "type": "addItem", "itemId": "note", "kind": "text", "geometry": geometry(2.0) },
+            { "type": "addItem", "itemId": "frame", "kind": "frame", "geometry": geometry(3.0) },
+            { "type": "addItem", "itemId": "sequence", "kind": "sequence", "geometry": geometry(4.0) },
+            { "type": "addItem", "itemId": "palette", "kind": "palette", "geometry": geometry(5.0) }
+        ]))
+        .expect("base operations");
+        let base = LoroDoc::new();
+        base.set_peer_id(100).expect("peer id");
+        apply_batch_to_doc(&base, &base_ops).expect("base");
+        let base_version = base.oplog_vv();
+        let snapshot = base.export(ExportMode::Snapshot).expect("snapshot");
+
+        let batches = vec![
+            json!([
+                { "type": "setGeometry", "itemId": "shared", "geometry": {
+                    "x": 50.0, "y": 20.0, "width": 320.0, "height": 180.0,
+                    "rotation": 12.0, "naturalWidth": 1920.0, "naturalHeight": 1080.0,
+                    "detached": false
+                }},
+                { "type": "deleteItem", "itemId": "temporary" }
+            ]),
+            json!([
+                { "type": "setCrop", "itemId": "shared", "crop": { "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8 } },
+                { "type": "setTrim", "itemId": "shared", "trim": { "start": 1.0, "end": 3.0, "duration": 5.0 } }
+            ]),
+            json!([{ "type": "setAppearance", "itemId": "shared", "appearance": {
+                "title": "Clip", "opacity": 0.8, "flipHorizontal": true, "flipVertical": false
+            }}]),
+            json!([
+                { "type": "setTextStyle", "itemId": "note", "style": {
+                    "fontSize": 24.0, "fontFamily": "Inter", "color": "#ffffff",
+                    "background": "#000000", "highlight": "#ff0000", "lineHeight": 1.4,
+                    "indent": 1, "bullet": true, "numbered": false, "strike": false,
+                    "align": "center", "bold": true, "italic": true, "underline": false
+                }},
+                { "type": "textInsert", "itemId": "note", "index": 0, "text": "Bonjour 👋" }
+            ]),
+            json!([{ "type": "setFrameStyle", "itemId": "frame", "frame": {
+                "fillMode": "tint", "fillColor": "#112233", "titleBackground": "#445566"
+            }}]),
+            json!([{ "type": "setPlayback", "itemId": "sequence", "playback": {
+                "playMode": "pingpong", "frame": 2, "fps": 12.0, "speed": 1.5,
+                "sequencePlaying": false, "sequenceIn": 1, "sequenceOut": 3
+            }}]),
+            json!([{ "type": "setMediaManifest", "itemId": "shared", "manifest": {
+                "primary": {
+                    "contentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "displayName": "clip.mp4", "mime": "video/mp4", "size": 42
+                }
+            }}]),
+            json!([
+                { "type": "setLink", "itemId": "note", "link": {
+                    "kind": "url", "target": "https://example.com/reference", "label": "Source"
+                }},
+                { "type": "setEmbed", "itemId": "shared", "embed": {
+                    "level": "full", "quality": "high", "marginSeconds": 2.0
+                }}
+            ]),
+            json!([
+                { "type": "setSequence", "itemId": "sequence", "sequence": { "frames": [{
+                    "remoteUrl": "https://example.com/frame.png", "displayName": "frame.png",
+                    "mime": "image/png", "size": 10
+                }]}},
+                { "type": "setPalette", "itemId": "palette", "palette": {
+                    "colors": ["#112233", "#abcdef"], "sourceItemIds": ["shared"],
+                    "showValues": true, "colorFormat": "hex", "layout": "grid"
+                }},
+                { "type": "moveItem", "itemId": "palette", "before": "shared" }
+            ]),
+            json!([
+                { "type": "addStroke", "strokeId": "stroke-one", "color": "#fff",
+                  "width": 3.0, "opacity": 1.0, "encodedPoints": "AQID", "detached": false },
+                { "type": "upsertShape", "shapeId": "shape-one", "kind": "arrow",
+                  "color": "#fff", "width": 2.0, "points": [0.0, 0.0, 10.0, 10.0],
+                  "startHead": "none", "endHead": "arrow", "dash": "solid",
+                  "route": "straight", "opacity": 1.0, "rounded": false,
+                  "ownerPoints": [], "detached": true }
+            ]),
+        ];
+
+        for replica_count in 2..=10 {
+            let mut updates = Vec::new();
+            for (index, batch) in batches.iter().take(replica_count).enumerate() {
+                let replica = LoroDoc::new();
+                replica.import(&snapshot).expect("replica snapshot");
+                replica.set_peer_id((index + 1) as u64).expect("peer id");
+                let operations: Vec<Op> =
+                    serde_json::from_value(batch.clone()).expect("operations");
+                apply_batch_to_doc(&replica, &operations).expect("replica operation");
+                updates.push(
+                    replica
+                        .export(ExportMode::updates(&base_version))
+                        .expect("replica update"),
+                );
+            }
+
+            let left = LoroDoc::new();
+            left.import(&snapshot).expect("left snapshot");
+            for update in &updates {
+                left.import(update).expect("left update");
+            }
+            let right = LoroDoc::new();
+            right.import(&snapshot).expect("right snapshot");
+            for update in updates.iter().rev() {
+                right.import(update).expect("right update");
+            }
+            assert_eq!(
+                serde_json::to_value(
+                    project_projection_from_doc(&left, 0).expect("left projection")
+                )
+                .expect("left JSON"),
+                serde_json::to_value(
+                    project_projection_from_doc(&right, 0).expect("right projection")
+                )
+                .expect("right JSON"),
+                "{replica_count} replicas must converge regardless of import order",
+            );
+        }
+
+        let final_doc = LoroDoc::new();
+        final_doc.import(&snapshot).expect("final snapshot");
+        for (index, batch) in batches.into_iter().enumerate() {
+            let replica = LoroDoc::new();
+            replica.import(&snapshot).expect("replica snapshot");
+            replica.set_peer_id((index + 1) as u64).expect("peer id");
+            let operations: Vec<Op> = serde_json::from_value(batch).expect("operations");
+            let update = apply_batch_to_doc(&replica, &operations).expect("operation");
+            final_doc.import(&update).expect("final update");
+        }
+        let projection = project_projection_from_doc(&final_doc, 0).expect("projection");
+        assert!(!projection.order.contains(&"temporary".to_owned()));
+        assert_eq!(projection.strokes.len(), 1);
+        assert_eq!(projection.shapes.len(), 1);
+        let shared = projection
+            .items
+            .iter()
+            .find(|item| item.item_id == "shared")
+            .expect("shared item");
+        assert!(shared.crop.is_some() && shared.trim.is_some() && shared.media.is_some());
+        assert!(shared.appearance.is_some() && shared.embed.is_some());
     }
 }

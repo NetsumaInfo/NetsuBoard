@@ -516,6 +516,10 @@
     "doubleClickEdit": "ダブルクリックで編集…",
     "frameDefault": "フレーム",
     "missingMedia": "メディアがありません",
+    "mediaWaiting": "このメディアを持つデバイスを待っています",
+    "mediaRemoved": "プロジェクトから削除されたメディア",
+    "mediaSize": "{{size}}",
+    "retryMedia": "再試行",
     "notBundled": "{{size}} · 未同梱",
     "relocate": "場所を指定",
     "downloading": "ダウンロード中…",
@@ -744,5 +748,37 @@
     "off": "マウスを戻す",
     "warning": "クリックとホイールは下のアプリへ届き、ウィンドウは最前面に留まります。戻すにはフォーカスを与えてください（Alt+Tab）。",
     "dontAskAgain": "次回から表示しない"
+  },
+  "collab": {
+    "menu": "共同編集",
+    "title": "共同編集",
+    "subtitle": "このプロジェクトに招待するフレンドを選びます。",
+    "signedOut": "設定で Discord アカウントを接続してください。",
+    "noFriends": "先に「設定 › アカウント」でフレンドを追加してください。",
+    "invited": "{{n}} 件の招待を送信しました。",
+    "notice": "ボードが共同編集になります。招待された人は設定から参加します。",
+    "close": "閉じる",
+    "create": "作成して招待",
+    "invite": "招待",
+    "fileBacked": "共有する前に、このボードをシーンライブラリへ保存してください。",
+    "saveAsBlocked": "共同プロジェクトは共有シーンが管理します。ローカルコピーは書き出しで作成してください。",
+    "role": { "owner": "所有者", "editor": "編集可", "viewer": "閲覧のみ" },
+    "rotationPending": "取り消しは記録済みです。所有者の端末が鍵のローテーションを完了するまで新しい公開は待機します。",
+    "staleHead": {
+      "title": "古い復旧ブランチ",
+      "warning": "このブランチはデバイスから30日以上マージされていません。",
+      "detail": "{{days}}日 · 暗号化済み {{size}}",
+      "discard": "破棄",
+      "confirmTitle": "このブランチを破棄しますか？",
+      "confirmWarning": "このデバイスだけが公開した変更は完全に失われます。そのデバイスが再接続できない場合にのみ続行してください。"
+    },
+    "status": { "pending": "同期を保留中", "rotation": "鍵のローテーション待ち" },
+    "members": { "remove": "プロジェクトから削除", "pending": "招待を保留中", "cancelInvite": "招待を取り消す" },
+    "lifecycle": {
+      "leave": "プロジェクトを退出", "delete": "プロジェクトを削除",
+      "leaveTitle": "このプロジェクトを退出しますか？", "deleteTitle": "このプロジェクトを削除しますか？",
+      "leaveWarning": "この端末が受信済みの内容は残りますが、以後このプロジェクトを同期できません。",
+      "deleteWarning": "接続情報、招待、暗号化された復旧コピーが全メンバー分削除されます。元に戻せません。"
+    }
   }
 }

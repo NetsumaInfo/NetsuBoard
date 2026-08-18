@@ -1,6 +1,8 @@
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine as _;
-use ed25519_dalek::{Signature, Signer as _, SigningKey, Verifier as _, VerifyingKey};
+#[cfg(test)]
+use ed25519_dalek::{Signature, Verifier as _, VerifyingKey};
+use ed25519_dalek::{Signer as _, SigningKey};
 use serde::{Deserialize, Serialize};
 
 use super::error::CollabError;
@@ -9,6 +11,7 @@ const REGISTRATION_DOMAIN: &[u8] = b"netsuboard/device-registration/v1\0";
 const REGISTRATION_VERSION: u16 = 1;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RegistrationStatement {
     pub version: u16,
     pub challenge: String,
@@ -89,6 +92,7 @@ impl RegistrationStatement {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RegistrationProof {
     pub statement: RegistrationStatement,
     pub signature: String,
@@ -106,6 +110,7 @@ impl RegistrationProof {
         })
     }
 
+    #[cfg(test)]
     pub fn verify(&self) -> Result<(), CollabError> {
         let bytes = self.statement.signing_bytes()?;
         let public = decode_hex_32(&self.statement.signing_public)?;
@@ -145,6 +150,7 @@ fn validate_hex_key(label: &str, value: &str) -> Result<(), CollabError> {
     Ok(())
 }
 
+#[cfg(test)]
 fn decode_hex_32(value: &str) -> Result<[u8; 32], CollabError> {
     validate_hex_key("public key", value)?;
     let mut output = [0_u8; 32];
@@ -154,6 +160,7 @@ fn decode_hex_32(value: &str) -> Result<[u8; 32], CollabError> {
     Ok(output)
 }
 
+#[cfg(test)]
 fn hex_nibble(value: u8) -> Result<u8, CollabError> {
     match value {
         b'0'..=b'9' => Ok(value - b'0'),

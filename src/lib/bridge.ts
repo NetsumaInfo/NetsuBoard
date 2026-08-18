@@ -430,18 +430,21 @@ export interface RefSceneMeta {
   id: string;
   name: string;
   updatedAt: number;
+  collaboration?: { projectId: string } | null;
 }
 export interface RefSceneIn {
   id?: string;
   name: string;
   items: unknown[];
   view?: unknown;
+  collaboration?: { projectId: string } | null;
 }
 export interface RefSceneOut {
   id: string;
   name: string;
   items: unknown[];
   view: unknown | null;
+  collaboration?: { projectId: string } | null;
   updatedAt: number;
 }
 // ---- Partage « .netsu » (board → conteneur SQLite type-routé) ----
@@ -1040,7 +1043,7 @@ const mock: NrApi = {
         const o = read();
         const id = scene.id || Math.random().toString(36).slice(2, 10);
         const updatedAt = Date.now();
-        o[id] = { id, name: scene.name, items: scene.items, view: scene.view ?? null, updatedAt };
+        o[id] = { id, name: scene.name, items: scene.items, view: scene.view ?? null, collaboration: scene.collaboration ?? null, updatedAt };
         write(o);
         return { ok: true, id, updatedAt };
       },

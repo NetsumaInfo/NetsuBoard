@@ -330,10 +330,7 @@ impl MediaAsset {
             }
         }
         validate_text("media.displayName", &self.display_name, 1024)?;
-        validate_text("media.mime", &self.mime, 255)?;
-        if !self.mime.contains('/') || self.mime.chars().any(char::is_whitespace) {
-            return Err(CollabError::validation("invalid media MIME type"));
-        }
+        validate_mime(&self.mime)?;
         if self.size > i64::MAX as u64 {
             return Err(CollabError::validation("media is too large"));
         }
@@ -342,6 +339,28 @@ impl MediaAsset {
         }
         Ok(())
     }
+}
+
+pub(crate) fn validate_mime(value: &str) -> Result<(), CollabError> {
+    validate_text("media.mime", value, 255)?;
+    let mut parts = value.split('/');
+    let valid_token = |part: &str| {
+        !part.is_empty()
+            && part.bytes().all(|byte| {
+                byte.is_ascii_alphanumeric()
+                    || matches!(
+                        byte,
+                        b'!' | b'#' | b'$' | b'&' | b'^' | b'_' | b'.' | b'+' | b'-' | b'*'
+                    )
+            })
+    };
+    if !parts.next().is_some_and(valid_token)
+        || !parts.next().is_some_and(valid_token)
+        || parts.next().is_some()
+    {
+        return Err(CollabError::validation("invalid media MIME type"));
+    }
+    Ok(())
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -727,7 +746,7 @@ pub enum CollabOp {
     },
     SetMediaManifest {
         item_id: ItemId,
-        manifest: Option<MediaManifest>,
+        manifest: Option<Box<MediaManifest>>,
     },
     SetLink {
         item_id: ItemId,
@@ -1043,7 +1062,10 @@ mod base64_bytes {
 
 #[cfg(test)]
 mod tests {
-    use super::{CollabOp, Crop, Geometry, ItemKind, MediaAsset, MediaManifest, OperationBatch};
+    use super::{
+        validate_mime, CollabOp, Crop, Geometry, ItemKind, MediaAsset, MediaManifest,
+        OperationBatch,
+    };
 
     #[test]
     fn rejects_non_finite_geometry_and_invalid_crop() {
@@ -1091,6 +1113,15 @@ mod tests {
             local: None,
         };
         assert!(manifest.validate().is_err());
+    }
+
+    #[test]
+    fn mime_types_cannot_inject_native_response_headers() {
+        assert!(validate_mime("image/png").is_ok());
+        assert!(validate_mime("video/*").is_ok());
+        assert!(validate_mime("image/png\r\nX-Evil: yes").is_err());
+        assert!(validate_mime("image/png\u{7}").is_err());
+        assert!(validate_mime("image/png/extra").is_err());
     }
 
     #[test]

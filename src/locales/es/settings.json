@@ -673,5 +673,59 @@
     "title": "Indexación",
     "subtitle": "Los brutos se cortan primero en planos y luego se analiza cada plano. Los ajustes que no cambian nada en los resultados ya están activos.",
     "cutTitle": "División en planos"
+  },
+  "collab": {
+    "device": {
+      "title": "Este dispositivo",
+      "subtitle": "Su clave pública te identifica ante tus colaboradores. La clave privada nunca sale de esta máquina.",
+      "failed": "Identidad ilegible: {{error}}",
+      "ready": "La identidad nativa protegida está lista.",
+      "unavailable": "La colaboración nativa no está disponible.",
+      "unnamed": "Dispositivo NetsuBoard", "current": "este dispositivo", "revoke": "Revocar este dispositivo"
+    },
+    "friends": {
+      "title": "Amigos",
+      "subtitle": "Discord no entrega su lista de amigos a las aplicaciones. Añade a alguien con su identificador de NetsuBoard.",
+      "yourHandle": "Tu identificador: @{{handle}}",
+      "placeholder": "Identificador de NetsuBoard",
+      "add": "Añadir",
+      "accept": "Aceptar",
+      "remove": "Quitar",
+      "awaiting": "Pendiente",
+      "empty": "Aún no hay amigos.",
+      "status": {
+        "sent": "Solicitud enviada.",
+        "linked": "Ya sois amigos.",
+        "pending": "Solicitud ya enviada.",
+        "already": "Ya es tu amigo.",
+        "self": "Eres tú.",
+        "unknown": "No se encontró a nadie con ese identificador. Debe haber abierto NetsuBoard una vez, con sesión iniciada.",
+        "error": "No se pudo enviar."
+      }
+    },
+    "invites": {
+      "title": "Invitaciones",
+      "join": "Unirse",
+      "sharedBoard": "Tablero compartido"
+    },
+    "projects": {
+      "title": "Proyectos compartidos", "members": "{{count}} miembro(s)", "rotation": "rotación de clave pendiente",
+      "add": "Añadir a escenas", "added": "En escenas", "failed": "No se pudo añadir esta escena",
+      "role": { "owner": "Propietario", "editor": "Puede editar", "viewer": "Solo lectura" }
+    },
+    "activity": {
+      "title": "Actividad colaborativa",
+      "changed": "{{count}} personas modificaron un tablero mientras no estabas. Abre su escena para recuperar los cambios.",
+      "media": "{{count}} personas esperan un medio original. Abre la escena y mantente en línea para transferirlo.",
+      "key": "{{count}} miembros nuevos esperan acceso seguro. Abre la escena para entregar la clave del proyecto.",
+      "dismiss": "Ocultar"
+    },
+    "peers": {
+      "title": "Conexiones",
+      "subtitle": "Dispositivos de tus amigos autorizados a conectarse al tuyo. «Probar» abre una conexión cifrada real.",
+      "test": "Probar",
+      "direct": "Conexión directa",
+      "relayed": "A través de un relé"
+    }
   }
 }

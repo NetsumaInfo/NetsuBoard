@@ -673,5 +673,59 @@
     "title": "Indizierung",
     "subtitle": "Das Rohmaterial wird zuerst in Einstellungen zerlegt, dann wird jede Einstellung analysiert. Was an den Ergebnissen nichts ändert, ist bereits aktiv.",
     "cutTitle": "Einstellungserkennung"
+  },
+  "collab": {
+    "device": {
+      "title": "Dieses Gerät",
+      "subtitle": "Sein öffentlicher Schlüssel weist dich gegenüber deinen Mitarbeitenden aus. Der private Schlüssel verlässt diesen Rechner nie.",
+      "failed": "Identität nicht lesbar: {{error}}",
+      "ready": "Geschützte native Identität ist bereit.",
+      "unavailable": "Native Zusammenarbeit ist nicht verfügbar.",
+      "unnamed": "NetsuBoard-Gerät", "current": "dieses Gerät", "revoke": "Dieses Gerät widerrufen"
+    },
+    "friends": {
+      "title": "Freunde",
+      "subtitle": "Discord gibt seine Freundesliste nicht an Anwendungen weiter. Füge jemanden über die NetsuBoard-Kennung hinzu.",
+      "yourHandle": "Deine Kennung: @{{handle}}",
+      "placeholder": "NetsuBoard-Kennung",
+      "add": "Hinzufügen",
+      "accept": "Annehmen",
+      "remove": "Entfernen",
+      "awaiting": "Ausstehend",
+      "empty": "Noch keine Freunde.",
+      "status": {
+        "sent": "Anfrage gesendet.",
+        "linked": "Ihr seid jetzt Freunde.",
+        "pending": "Anfrage bereits gesendet.",
+        "already": "Bereits befreundet.",
+        "self": "Das bist du.",
+        "unknown": "Niemand mit dieser Kennung gefunden. Die Person muss NetsuBoard einmal angemeldet geöffnet haben.",
+        "error": "Senden fehlgeschlagen."
+      }
+    },
+    "invites": {
+      "title": "Einladungen",
+      "join": "Beitreten",
+      "sharedBoard": "Geteiltes Board"
+    },
+    "projects": {
+      "title": "Geteilte Projekte", "members": "{{count}} Mitglied(er)", "rotation": "Schlüsselrotation ausstehend",
+      "add": "Zu Szenen hinzufügen", "added": "In Szenen", "failed": "Szene konnte nicht hinzugefügt werden",
+      "role": { "owner": "Eigentümer", "editor": "Darf bearbeiten", "viewer": "Nur ansehen" }
+    },
+    "activity": {
+      "title": "Zusammenarbeitsaktivität",
+      "changed": "{{count}} Personen haben ein Board in deiner Abwesenheit geändert. Öffne seine Szene, um die Änderungen abzurufen.",
+      "media": "{{count}} Personen warten auf ein Originalmedium. Öffne die Szene und bleibe online, um es zu übertragen.",
+      "key": "{{count}} neue Mitglieder warten auf sicheren Zugriff. Öffne die Szene, um den Projektschlüssel zu übertragen.",
+      "dismiss": "Ausblenden"
+    },
+    "peers": {
+      "title": "Verbindungen",
+      "subtitle": "Geräte deiner Freunde, die sich mit deinem verbinden dürfen. „Testen“ öffnet eine echte verschlüsselte Verbindung.",
+      "test": "Testen",
+      "direct": "Direkte Verbindung",
+      "relayed": "Über ein Relay"
+    }
   }
 }

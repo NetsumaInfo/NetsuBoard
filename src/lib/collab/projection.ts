@@ -115,7 +115,7 @@ export function decodeStroke(stroke: Stroke): DrawShape | null {
   }
 }
 
-function nativeToBoard(item: NativeItem, z: number): BoardItem {
+function nativeToBoard(item: NativeItem, z: number, mediaUrl: (hash: string) => string): BoardItem {
   const { geometry } = item;
   const board: BoardItem = {
     id: item.itemId,
@@ -129,6 +129,8 @@ function nativeToBoard(item: NativeItem, z: number): BoardItem {
     rotation: geometry.rotation,
     z,
   };
+  if (item.media?.primary.contentHash) board.src = mediaUrl(item.media.primary.contentHash);
+  else if (item.media?.primary.remoteUrl) board.src = item.media.primary.remoteUrl;
   if (geometry.naturalWidth !== undefined) board.natW = geometry.naturalWidth;
   if (geometry.naturalHeight !== undefined) board.natH = geometry.naturalHeight;
   if (geometry.detached) board.detached = true;
@@ -197,16 +199,21 @@ function nativeToBoard(item: NativeItem, z: number): BoardItem {
         : undefined,
       sourceUrl: previous.asset.sourceUrl,
     };
+    if (previous.asset.contentHash) board.prevMedia.src = mediaUrl(previous.asset.contentHash);
+    else if (previous.asset.remoteUrl) board.prevMedia.src = previous.asset.remoteUrl;
   }
   if (item.media?.local?.kind) {
     const local = item.media.local;
-    board.localMedia = {
-      kind: local.kind,
+    const boardLocal: NonNullable<BoardItem["localMedia"]> = {
+      kind: local.kind!,
       ref: assetRef(local.asset),
       src: "",
       natW: local.naturalWidth,
       natH: local.naturalHeight,
     };
+    if (local.asset.contentHash) boardLocal.src = mediaUrl(local.asset.contentHash);
+    else if (local.asset.remoteUrl) boardLocal.src = local.asset.remoteUrl;
+    board.localMedia = boardLocal;
   }
   if (item.link) {
     board.link = {
@@ -234,7 +241,7 @@ function nativeToBoard(item: NativeItem, z: number): BoardItem {
 }
 
 /** Total projection: an empty authoritative project always replaces the renderer with an empty board. */
-export function projectBoard(project: NativeProject): BoardItem[] {
+export function projectBoard(project: NativeProject, mediaUrl: (hash: string) => string = () => ""): BoardItem[] {
   const byId = new Map(project.items.filter((item) => !item.deleted).map((item) => [item.itemId, item]));
   const drawings = [
     ...project.strokes.map(decodeStroke).filter((shape): shape is DrawShape => shape !== null),
@@ -244,7 +251,7 @@ export function projectBoard(project: NativeProject): BoardItem[] {
   project.order.forEach((id, z) => {
     const native = byId.get(id);
     if (!native) return;
-    const board = nativeToBoard(native, z);
+    const board = nativeToBoard(native, z, mediaUrl);
     if (board.kind === "draw") board.shapes = drawings;
     output.push(board);
   });

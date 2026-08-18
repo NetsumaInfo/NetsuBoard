@@ -673,5 +673,59 @@
     "title": "Indexing",
     "subtitle": "Rushes are first cut into shots, then each shot is analysed. Settings that change nothing in the results are already on.",
     "cutTitle": "Shot detection"
+  },
+  "collab": {
+    "device": {
+      "title": "This device",
+      "subtitle": "Its public key identifies you to your collaborators. The private key never leaves this machine.",
+      "failed": "Identity unreadable: {{error}}",
+      "ready": "Protected native identity is ready.",
+      "unavailable": "Native collaboration is unavailable.",
+      "unnamed": "NetsuBoard device", "current": "this device", "revoke": "Revoke this device"
+    },
+    "friends": {
+      "title": "Friends",
+      "subtitle": "Discord does not hand its friend list to applications. Add someone by their NetsuBoard ID.",
+      "yourHandle": "Your ID: @{{handle}}",
+      "placeholder": "NetsuBoard ID",
+      "add": "Add",
+      "accept": "Accept",
+      "remove": "Remove",
+      "awaiting": "Pending",
+      "empty": "No friends yet.",
+      "status": {
+        "sent": "Request sent.",
+        "linked": "You are now friends.",
+        "pending": "Request already sent.",
+        "already": "Already a friend.",
+        "self": "That is you.",
+        "unknown": "No one found with that ID. They must have opened NetsuBoard once, signed in.",
+        "error": "Could not send."
+      }
+    },
+    "invites": {
+      "title": "Invitations",
+      "join": "Join",
+      "sharedBoard": "Shared board"
+    },
+    "projects": {
+      "title": "Shared projects", "members": "{{count}} member(s)", "rotation": "key rotation pending",
+      "add": "Add to scenes", "added": "In scenes", "failed": "Could not add this scene",
+      "role": { "owner": "Owner", "editor": "Can edit", "viewer": "View only" }
+    },
+    "activity": {
+      "title": "Collaboration activity",
+      "changed": "{{count}} people changed a board while you were away. Open its scene to retrieve the changes.",
+      "media": "{{count}} people are waiting for original media. Open the scene and stay online to transfer it.",
+      "key": "{{count}} new member(s) are waiting for secure access. Open the scene to deliver the project key.",
+      "dismiss": "Dismiss"
+    },
+    "peers": {
+      "title": "Connections",
+      "subtitle": "Your friends' devices allowed to connect to yours. \"Test\" opens a real encrypted connection.",
+      "test": "Test",
+      "direct": "Direct connection",
+      "relayed": "Through a relay"
+    }
   }
 }

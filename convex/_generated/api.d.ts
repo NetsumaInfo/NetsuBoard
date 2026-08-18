@@ -11,8 +11,13 @@
 import type * as access from "../access.js";
 import type * as auth from "../auth.js";
 import type * as bugs from "../bugs.js";
+import type * as devices from "../devices.js";
 import type * as discord from "../discord.js";
+import type * as heads from "../heads.js";
 import type * as http from "../http.js";
+import type * as media from "../media.js";
+import type * as projects from "../projects.js";
+import type * as social from "../social.js";
 
 import type {
   ApiFromModules,
@@ -24,8 +29,13 @@ declare const fullApi: ApiFromModules<{
   access: typeof access;
   auth: typeof auth;
   bugs: typeof bugs;
+  devices: typeof devices;
   discord: typeof discord;
+  heads: typeof heads;
   http: typeof http;
+  media: typeof media;
+  projects: typeof projects;
+  social: typeof social;
 }>;
 
 /**

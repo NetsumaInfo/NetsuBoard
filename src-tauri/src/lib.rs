@@ -1,15 +1,29 @@
 // Coquille Tauri NetsuRush : fenêtre + plugins + spawn du service Node "core".
 
 use std::io::Write;
-use std::process::{Child, Command, Stdio};
 use std::path::{Path, PathBuf};
-use std::sync::{atomic::{AtomicBool, Ordering}, Mutex};
+use std::process::{Child, Command, Stdio};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
 use std::thread;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Manager, RunEvent};
+use tauri::{AppHandle, Emitter as _, Manager, RunEvent};
 
+mod collab;
 mod player;
 mod state;
+
+use collab::commands::{
+    collab_configure_auth, collab_device_forget, collab_device_identity, collab_head_discard_stale,
+    collab_invite_cancel, collab_invite_respond, collab_media_grant_known, collab_media_import,
+    collab_media_resolve, collab_member_remove, collab_member_set_role, collab_project_abort,
+    collab_project_apply, collab_project_close, collab_project_create, collab_project_delete,
+    collab_project_flush_checkpoint, collab_project_invite, collab_project_leave,
+    collab_project_open, collab_project_projection, collab_project_redo, collab_project_status,
+    collab_project_undo,
+};
 
 // Handle du process core, gardé en état managé → tué à la fermeture (RunEvent::Exit).
 struct CoreProcess(Mutex<Option<Child>>);
@@ -57,7 +71,9 @@ fn nr_core_port() -> u16 {
 fn core_log_path() -> PathBuf {
     let home = std::env::var_os("NR_HOME")
         .map(PathBuf::from)
-        .or_else(|| std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("NetsuRush")))
+        .or_else(|| {
+            std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("NetsuRush"))
+        })
         .unwrap_or_else(std::env::temp_dir);
     home.join("logs").join("core.log")
 }
@@ -67,10 +83,17 @@ fn open_core_log() -> Option<std::fs::File> {
     std::fs::create_dir_all(path.parent()?).ok()?;
     // Rotation la plus simple qui tienne : au-delà du plafond on repart d'un fichier vide. Le
     // diagnostic utile est toujours la session en cours, jamais l'historique.
-    if std::fs::metadata(&path).map(|meta| meta.len() > CORE_LOG_MAX).unwrap_or(false) {
+    if std::fs::metadata(&path)
+        .map(|meta| meta.len() > CORE_LOG_MAX)
+        .unwrap_or(false)
+    {
         let _ = std::fs::remove_file(&path);
     }
-    std::fs::OpenOptions::new().create(true).append(true).open(&path).ok()
+    std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .ok()
 }
 
 fn log_core(line: &str) {
@@ -104,11 +127,12 @@ fn release_file_lock(resource: &Path) -> Result<(), String> {
     use windows::core::{PCWSTR, PWSTR};
     use windows::Win32::Foundation::{CloseHandle, ERROR_MORE_DATA, ERROR_SUCCESS};
     use windows::Win32::System::RestartManager::{
-        CCH_RM_SESSION_KEY, RM_PROCESS_INFO, RmAddFilter, RmEndSession, RmForceShutdown,
-        RmGetList, RmNoShutdown, RmRegisterResources, RmShutdown, RmStartSession,
+        RmAddFilter, RmEndSession, RmForceShutdown, RmGetList, RmNoShutdown, RmRegisterResources,
+        RmShutdown, RmStartSession, CCH_RM_SESSION_KEY, RM_PROCESS_INFO,
     };
     use windows::Win32::System::Threading::{
-        OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
+        OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32,
+        PROCESS_QUERY_LIMITED_INFORMATION,
     };
 
     if !resource.exists() {
@@ -160,31 +184,38 @@ fn release_file_lock(resource: &Path) -> Result<(), String> {
             return Err(format!("Verrou non relu ({})", listed.0));
         }
     }
-    let target = resource.canonicalize().unwrap_or_else(|_| resource.to_path_buf());
+    let target = resource
+        .canonicalize()
+        .unwrap_or_else(|_| resource.to_path_buf());
     let mut target_found = false;
     for process in processes.iter().take(count as usize) {
         let same_binary = unsafe {
-            OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process.Process.dwProcessId)
-                .ok()
-                .map(|handle| {
-                    let mut image = vec![0u16; 32_768];
-                    let mut length = image.len() as u32;
-                    let queried = QueryFullProcessImageNameW(
-                        handle,
-                        PROCESS_NAME_WIN32,
-                        PWSTR(image.as_mut_ptr()),
-                        &mut length,
-                    )
-                    .is_ok();
-                    let _ = CloseHandle(handle);
-                    queried && PathBuf::from(std::ffi::OsString::from_wide(&image[..length as usize]))
+            OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION,
+                false,
+                process.Process.dwProcessId,
+            )
+            .ok()
+            .map(|handle| {
+                let mut image = vec![0u16; 32_768];
+                let mut length = image.len() as u32;
+                let queried = QueryFullProcessImageNameW(
+                    handle,
+                    PROCESS_NAME_WIN32,
+                    PWSTR(image.as_mut_ptr()),
+                    &mut length,
+                )
+                .is_ok();
+                let _ = CloseHandle(handle);
+                queried
+                    && PathBuf::from(std::ffi::OsString::from_wide(&image[..length as usize]))
                         .canonicalize()
                         .unwrap_or_default()
                         .as_os_str()
                         .to_string_lossy()
                         .eq_ignore_ascii_case(&target.as_os_str().to_string_lossy())
-                })
-                .unwrap_or(false)
+            })
+            .unwrap_or(false)
         };
         if same_binary {
             target_found = true;
@@ -346,10 +377,16 @@ fn disable_tracking_prevention(window: &tauri::WebviewWindow) {
     use windows_core::Interface;
 
     let _ = window.with_webview(|webview| unsafe {
-        let Ok(core) = webview.controller().CoreWebView2() else { return };
-        let Ok(wv13) = core.cast::<ICoreWebView2_13>() else { return };
+        let Ok(core) = webview.controller().CoreWebView2() else {
+            return;
+        };
+        let Ok(wv13) = core.cast::<ICoreWebView2_13>() else {
+            return;
+        };
         let Ok(profile) = wv13.Profile() else { return };
-        let Ok(p3) = profile.cast::<ICoreWebView2Profile3>() else { return };
+        let Ok(p3) = profile.cast::<ICoreWebView2Profile3>() else {
+            return;
+        };
         let _ = p3.SetPreferredTrackingPreventionLevel(COREWEBVIEW2_TRACKING_PREVENTION_LEVEL_NONE);
     });
 }
@@ -461,9 +498,13 @@ fn nr_attach_file_paths(app: AppHandle, label: String) -> bool {
                     return Ok(()); // message d'un autre émetteur
                 };
                 let paths = dropped_paths(&args);
+                let grants: Vec<String> = paths
+                    .iter()
+                    .map(|path| collab::blobs::issue_trusted_grant(path).unwrap_or_default())
+                    .collect();
                 let _ = emitter.emit(
                     "nr://file-paths",
-                    serde_json::json!({ "id": id, "paths": paths }),
+                    serde_json::json!({ "id": id, "paths": paths, "grants": grants }),
                 );
                 Ok(())
             })),
@@ -471,7 +512,11 @@ fn nr_attach_file_paths(app: AppHandle, label: String) -> bool {
         );
     });
     if attached.is_err() {
-        app.state::<FilePathBridge>().0.lock().unwrap().remove(&label);
+        app.state::<FilePathBridge>()
+            .0
+            .lock()
+            .unwrap()
+            .remove(&label);
         return false;
     }
     true
@@ -482,6 +527,62 @@ fn nr_attach_file_paths(app: AppHandle, label: String) -> bool {
 #[tauri::command]
 fn nr_attach_file_paths(_app: AppHandle, _label: String) -> bool {
     false
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TrustedFileSelection {
+    path: String,
+    grant: String,
+}
+
+/// Opens the OS picker inside Rust and returns a one-use import capability beside every path.
+#[tauri::command]
+async fn nr_pick_trusted_files(
+    app: AppHandle,
+    kind: String,
+    multiple: bool,
+) -> Result<Vec<TrustedFileSelection>, String> {
+    use tauri_plugin_dialog::DialogExt as _;
+
+    let mut dialog = app.dialog().file();
+    dialog = match kind.as_str() {
+        "video" => dialog.add_filter(
+            "Video",
+            &[
+                "mp4", "mov", "mkv", "avi", "m4v", "mxf", "webm", "wmv", "flv", "ts", "m2ts",
+                "mpg", "mpeg",
+            ],
+        ),
+        "image" => dialog.add_filter(
+            "Image",
+            &[
+                "jpg", "jpeg", "png", "tif", "tiff", "bmp", "webp", "gif", "dpx", "exr",
+            ],
+        ),
+        "any" => dialog,
+        _ => return Err("invalid native file picker kind".into()),
+    };
+    let selected = if multiple {
+        dialog.blocking_pick_files().unwrap_or_default()
+    } else {
+        dialog.blocking_pick_file().into_iter().collect()
+    };
+    selected
+        .into_iter()
+        .map(|file| {
+            let path = file
+                .into_path()
+                .map_err(|error| format!("native file path: {error}"))?;
+            let path = path
+                .to_str()
+                .ok_or_else(|| "native file path is not valid Unicode".to_string())?
+                .to_owned();
+            let grant =
+                collab::blobs::issue_trusted_grant(&path).map_err(|error| error.to_string())?;
+            Ok(TrustedFileSelection { path, grant })
+        })
+        .collect()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -525,6 +626,9 @@ pub fn run() {
     }
 
     builder = builder
+        .register_uri_scheme_protocol("collab", |_context, request| {
+            collab::blobs::protocol_response(request)
+        })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
@@ -533,9 +637,35 @@ pub fn run() {
         .manage(CoreProcess(Mutex::new(None)))
         .manage(FilePathBridge(Mutex::new(std::collections::HashSet::new())))
         .manage(state::AppState::new())
+        .manage(collab::service::CollabService::spawn())
         .invoke_handler(tauri::generate_handler![
             nr_attach_file_paths,
+            nr_pick_trusted_files,
             nr_core_port,
+            collab_configure_auth,
+            collab_device_identity,
+            collab_project_open,
+            collab_project_create,
+            collab_project_abort,
+            collab_project_flush_checkpoint,
+            collab_project_invite,
+            collab_invite_respond,
+            collab_invite_cancel,
+            collab_member_set_role,
+            collab_member_remove,
+            collab_project_leave,
+            collab_project_delete,
+            collab_head_discard_stale,
+            collab_device_forget,
+            collab_media_grant_known,
+            collab_media_import,
+            collab_media_resolve,
+            collab_project_close,
+            collab_project_apply,
+            collab_project_projection,
+            collab_project_status,
+            collab_project_undo,
+            collab_project_redo,
             player::commands::control::player_load,
             player::commands::control::player_load_at,
             player::commands::control::player_claim,
@@ -579,6 +709,17 @@ pub fn run() {
             player::commands::media::player_get_frame_preview
         ])
         .setup(|app| {
+            let collab_app = app.handle().clone();
+            app.state::<collab::service::CollabService>()
+                .attach_change_sink(move |project_id, revision| {
+                    let _ = collab_app.emit(
+                        "nb-collab-changed",
+                        serde_json::json!({
+                            "projectId": project_id,
+                            "revision": revision,
+                        }),
+                    );
+                });
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -642,8 +783,13 @@ fn spawn_core(_app: &AppHandle) -> Option<Child> {
     let port = pick_core_port();
     CORE_PORT.store(port, Ordering::Release);
     let mut command = Command::new("node");
-    command.arg(&server).stdin(Stdio::piped()).env("NR_CORE_PORT", port.to_string());
-    if let Some(exe) = app_exe { command.env("NETSURUSH_APP_EXE", exe); }
+    command
+        .arg(&server)
+        .stdin(Stdio::piped())
+        .env("NR_CORE_PORT", port.to_string());
+    if let Some(exe) = app_exe {
+        command.env("NETSURUSH_APP_EXE", exe);
+    }
     match command.spawn() {
         Ok(child) => {
             eprintln!("[netsurush] core spawné: {}", server.display());
@@ -714,13 +860,19 @@ fn spawn_core(app: &AppHandle) -> Option<Child> {
         .env("NR_CORE_PORT", port.to_string())
         .env("NETSURUSH_PY_DIR", strip(&py_dir))
         .env("NR_RESOURCE_DIR", strip(&res_root))
-        .env("NETSURUSH_APP_EXE", strip(&std::env::current_exe().unwrap_or_default()))
+        .env(
+            "NETSURUSH_APP_EXE",
+            strip(&std::env::current_exe().unwrap_or_default()),
+        )
         .env("NODE_ENV", "production")
         .creation_flags(0x0800_0000)
         .spawn()
     {
         Ok(child) => {
-            log_core(&format!("service de fond lancé (pid {}, port {port})", child.id()));
+            log_core(&format!(
+                "service de fond lancé (pid {}, port {port})",
+                child.id()
+            ));
             Some(child)
         }
         Err(e) => {

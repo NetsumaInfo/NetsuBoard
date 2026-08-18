@@ -37,7 +37,7 @@ tauri-plugin-process = "2"
 base64 = "0.22"
 lazy_static = "1.5"
 libloading = "0.8"
-# Collaborative device identity (docs/collab.md). The Ed25519 key IS the future iroh identity — the
+# Collaborative device identity (docs/collab.md). The Ed25519 key IS the iroh identity — the
 # same 32 secret bytes — so it is generated once and never regenerated. The X25519 key is a SEPARATE
 # exchange key: no key material is derived from the Ed25519 identity.
 ed25519-dalek = "2.1"
@@ -52,15 +52,16 @@ zeroize = "1.8"
 iroh = "1"
 # `sync` only, for a one-shot async initialiser. Tasks run on `tauri::async_runtime`, which already
 # is a tokio runtime — a second runtime here would deadlock the endpoint.
-tokio = { version = "1.53", features = ["sync"] }
+tokio = { version = "1.53", features = ["sync", "rt", "macros", "time"] }
 loro = "1.13.9"
-hpke = "0.14.0"
+hpke = { version = "0.14.0", default-features = false, features = ["alloc", "getrandom", "x25519", "chacha"] }
 chacha20poly1305 = "0.11.0"
 hkdf = "0.13.0"
 sha2 = "0.11.0"
 blake3 = "1.8.6"
 rand_core = { version = "0.6", features = ["getrandom"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 # Windows : accès COM bas niveau au WebView2 (désactivation de la Tracking Prevention,
 # sinon le lecteur YouTube embarqué casse → « Vidéo non disponible »). Versions alignées sur
 # celles que Tauri tire déjà (webview2-com 0.38 / windows-core 0.61) → zéro doublon de crate.
@@ -79,4 +80,5 @@ windows = { version = "0.61", features = [
   # DPAPI (CryptProtectData/CryptUnprotectData): at-rest protection of the collaborative key ring,
   # scoped to the current Windows account. No extra crate, so nothing more to package.
   "Win32_Security_Cryptography",
+  "Win32_Storage_FileSystem",
 ] }

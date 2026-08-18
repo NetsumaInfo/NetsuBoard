@@ -94,7 +94,9 @@ pub struct LoopState {
 
 #[tauri::command]
 pub fn player_set_loop_file(state: State<'_, AppState>, enabled: bool) -> Result<(), String> {
-    with_player(&state, "Player not initialized", |p| p.set_loop_file(enabled))
+    with_player(&state, "Player not initialized", |p| {
+        p.set_loop_file(enabled)
+    })
 }
 
 #[tauri::command]

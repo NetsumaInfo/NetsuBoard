@@ -3,6 +3,8 @@ use std::path::Path;
 
 use super::error::CollabError;
 
+pub type RosterCache = Option<(Vec<u8>, Vec<u8>)>;
+
 const STORE_SCHEMA_VERSION: i64 = 1;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -75,6 +77,83 @@ impl ProjectStore {
         transaction.commit().map_err(storage)
     }
 
+    pub fn next_sequence(&self) -> Result<u64, CollabError> {
+        read_u64_meta(&self.connection, "local_sequence")?
+            .unwrap_or(0)
+            .checked_add(1)
+            .ok_or_else(|| CollabError::storage("outbox sequence exhausted"))
+    }
+
+    pub fn publication_base(&self) -> Result<Vec<u8>, CollabError> {
+        read_blob_meta(&self.connection, "publication_base").map(|value| value.unwrap_or_default())
+    }
+
+    pub fn set_publication_base(&mut self, version: &[u8]) -> Result<(), CollabError> {
+        write_blob_meta(&self.connection, "publication_base", version)
+    }
+
+    pub fn checkpoint_generation(&self) -> Result<u64, CollabError> {
+        Ok(read_u64_meta(&self.connection, "checkpoint_generation")?.unwrap_or(0))
+    }
+
+    pub fn local_checkpoint(&self) -> Result<Option<Vec<u8>>, CollabError> {
+        self.connection
+            .query_row(
+                "SELECT snapshot FROM checkpoint WHERE singleton = 1",
+                [],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(storage)
+    }
+
+    pub fn save_checkpoint(
+        &mut self,
+        generation: u64,
+        version: &[u8],
+        snapshot: &[u8],
+    ) -> Result<(), CollabError> {
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(storage)?;
+        transaction
+            .execute(
+                "INSERT INTO checkpoint(singleton, generation, version_vector, snapshot)
+                 VALUES (1, ?1, ?2, ?3)
+                 ON CONFLICT(singleton) DO UPDATE SET
+                   generation = excluded.generation,
+                   version_vector = excluded.version_vector,
+                   snapshot = excluded.snapshot",
+                params![to_sql_u64(generation)?, version, snapshot],
+            )
+            .map_err(storage)?;
+        write_u64_meta(&transaction, "checkpoint_generation", generation)?;
+        transaction.commit().map_err(storage)
+    }
+
+    pub fn latest_pending(&self) -> Result<Option<DurableEnvelope>, CollabError> {
+        self.connection
+            .query_row(
+                "SELECT sequence, header, ciphertext, signature, base_version
+                 FROM outbox WHERE published = 0 ORDER BY sequence DESC LIMIT 1",
+                [],
+                |row| {
+                    let sequence: i64 = row.get(0)?;
+                    Ok(DurableEnvelope {
+                        sequence: sequence as u64,
+                        header: row.get(1)?,
+                        ciphertext: row.get(2)?,
+                        signature: row.get(3)?,
+                        base_version: row.get(4)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(storage)
+    }
+
+    #[cfg(test)]
     pub fn pending_outbox(&self) -> Result<Vec<DurableEnvelope>, CollabError> {
         let mut statement = self
             .connection
@@ -107,6 +186,7 @@ impl ProjectStore {
         rows.collect::<Result<Vec<_>, _>>().map_err(storage)
     }
 
+    #[cfg(test)]
     pub fn mark_published(&mut self, sequence: u64) -> Result<(), CollabError> {
         let changed = self
             .connection
@@ -119,6 +199,55 @@ impl ProjectStore {
             return Err(CollabError::validation("unknown outbox sequence"));
         }
         Ok(())
+    }
+
+    pub fn confirm_through(
+        &mut self,
+        sequence: u64,
+        publication_base: &[u8],
+    ) -> Result<(), CollabError> {
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(storage)?;
+        let changed = transaction
+            .execute(
+                "UPDATE outbox SET published = 1 WHERE published = 0 AND sequence <= ?1",
+                params![to_sql_u64(sequence)?],
+            )
+            .map_err(storage)?;
+        if changed == 0 {
+            return Err(CollabError::validation("unknown pending outbox sequence"));
+        }
+        write_blob_meta(&transaction, "publication_base", publication_base)?;
+        transaction
+            .execute("DELETE FROM outbox WHERE published = 1", [])
+            .map_err(storage)?;
+        transaction.commit().map_err(storage)
+    }
+
+    pub fn cache_roster(&mut self, body: &[u8], signature: &[u8]) -> Result<(), CollabError> {
+        self.connection
+            .execute(
+                "INSERT INTO roster_cache(singleton, fetched_at, body, mac)
+                 VALUES (1, unixepoch(), ?1, ?2)
+                 ON CONFLICT(singleton) DO UPDATE SET
+                   fetched_at = excluded.fetched_at, body = excluded.body, mac = excluded.mac",
+                params![body, signature],
+            )
+            .map_err(storage)?;
+        Ok(())
+    }
+
+    pub fn roster_cache(&self) -> Result<RosterCache, CollabError> {
+        self.connection
+            .query_row(
+                "SELECT body, mac FROM roster_cache WHERE singleton = 1",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(storage)
     }
 }
 
@@ -218,6 +347,28 @@ fn write_u64_meta(connection: &Connection, key: &str, value: u64) -> Result<(), 
             "INSERT INTO meta(key, value) VALUES (?1, ?2)
              ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             params![key, value.to_le_bytes().as_slice()],
+        )
+        .map_err(storage)?;
+    Ok(())
+}
+
+fn read_blob_meta(connection: &Connection, key: &str) -> Result<Option<Vec<u8>>, CollabError> {
+    connection
+        .query_row(
+            "SELECT value FROM meta WHERE key = ?1",
+            params![key],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(storage)
+}
+
+fn write_blob_meta(connection: &Connection, key: &str, value: &[u8]) -> Result<(), CollabError> {
+    connection
+        .execute(
+            "INSERT INTO meta(key, value) VALUES (?1, ?2)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            params![key, value],
         )
         .map_err(storage)?;
     Ok(())
