@@ -4,10 +4,15 @@
     "version": "0.5.0",
     "date": "2026-08-27",
     "title": {
-      "fr": "Le partage tient debout",
-      "en": "Sharing stands on its own"
+      "fr": "Collaboration de moodboards de projet",
+      "en": "Project moodboard collaboration"
     },
     "changes": [
+      {
+        "kind": "feature",
+        "fr": "Nouveauté majeure : la collaboration de moodboards de projet. Partagez un board avec 2 à 10 personnes ; le document, les modifications et les médias se synchronisent entre pairs par un lien chiffré, avec invitations et reprise hors ligne.",
+        "en": "Major new feature: project moodboard collaboration. Share a board with 2 to 10 people; the document, edits and media sync peer-to-peer over an encrypted link, with invitations and offline recovery."
+      },
       {
         "kind": "feature",
         "fr": "Un panneau d’état sur un board partagé : qui est là, avec son avatar et sa pastille de présence, qui attend encore la clé, et ce qui reste à envoyer. La présence est celle qu’on a vraiment observée — « vu il y a 5 min » plutôt qu’un « hors ligne » qu’aucune machine ne peut affirmer.",
