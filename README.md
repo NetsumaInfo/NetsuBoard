@@ -23,6 +23,7 @@ It is built to sit next to a busy NLE, so the whole runtime is deliberately smal
 | **Online media** | YouTube plays as a plain `<video>` through a `yt-dlp` relay, so trim and looping behave like a local file; generic pages exposing OpenGraph or HTML5 video can be linked or downloaded |
 | **Turbo upscale** | GPU upscaling through the ffmpeg `libplacebo` filter (Vulkan): ArtCNN and Anime4K GLSL shaders for animation, `lanczossharp` for live action. No neural runtime, no weights |
 | **Projects** | Scenes stored internally, plus `.netsu` project files — a SQLite container with content-addressed media and a companion `my-project.medias/` folder |
+| **Collaboration** | A board can be shared with friends: one authoritative CRDT document, edits and media travelling peer to peer over an encrypted link, and a status panel showing who is present and what is still owed. The server is used for recovery and membership, never as a live relay for the document |
 | **Detached board** | A second frameless, always-on-top window rendering the board bare, or the same thing in place when the main window is pinned |
 | **Appearance** | Switchable palettes, custom themes, image/GIF/video wallpapers with crop, blur and translucency |
 | **Languages** | French, English, Spanish, German, Japanese, Chinese |
@@ -76,7 +77,7 @@ The installed app provisions its runtime on first launch (`scripts/setup.ps1`): 
 
 ## Project status
 
-NetsuBoard is the reference board of [NetsuRush](https://github.com/NetsumaInfo/NetsuRush), a larger post-production hub, shipped as its own far lighter application, and it keeps that board, the `.netsu` format and the shader upscaler. The two repositories are separate — separate code, releases and configuration — and the only runtime tie is the ffmpeg archive, hosted as a NetsuRush release asset. The board being one feature in two products, a change made to it on one side is carried over to the other **by hand**; nothing synchronises on its own.
+NetsuBoard is the reference board of [NetsuRush](https://github.com/NetsumaInfo/NetsuRush), a larger post-production hub, shipped as its own far lighter application, and it keeps that board, the `.netsu` format and the shader upscaler. The two repositories are separate — separate code, releases and configuration — and the only runtime tie is the ffmpeg archive, hosted as a NetsuRush release asset. Since 0.5.0 they no longer share a data directory either: NetsuBoard keeps its scenes and media under `~/.netsuboard` and copies an existing NetsuRush library over once, on first launch, leaving the original untouched. The board being one feature in two products, a change made to it on one side is carried over to the other **by hand**; nothing synchronises on its own.
 
 **The split is not finished**: the working tree still carries a large amount of inherited NetsuRush code the app never reaches — the Resolve and Adobe bridges, the timeline modules, the optimiser, the venv plumbing of a Python sidecar that no longer exists. It is not documented here and it is not part of the product. Some of the inherited Node suites fail for the same reason; they are quarantined by name in [`.github/workflows/ci.yml`](.github/workflows/ci.yml), and the blocking job runs everything else. See [AGENTS.md](AGENTS.md) for the current state.
 

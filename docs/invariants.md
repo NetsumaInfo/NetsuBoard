@@ -160,11 +160,23 @@ Bug report (`components/settings/console/` → `bug:report` → `core/bugreport.
 - **Attachments**: cumulative adding (a bare `<input file>` replaced the selection on every open), drag-and-drop, **Ctrl+V paste**, removal by thumbnail. **Limits come from the service** (`bug:status` → `maxAttachments`/`maxAttachmentMB`), not from renderer constants. `input.value` is cleared after each pick, otherwise re-picking the **same** file fires no event.
 - **A "Download" button** always writes the full report locally, even when sending fails — without it, everything the tester just wrote is lost exactly when the app is misbehaving.
 
+## Data directory
+
+- **NetsuBoard owns its home and shares none of it.** `core/config.js` resolves `DATA_DIR` to
+  `NR_HOME`, else `~/.netsuboard`; `identity.rs#board_data_dir` resolves the same root, and the two
+  must never drift — Rust authorises a media import against the scene library the core wrote, so a
+  different root means Rust reads an empty directory and refuses every media as unauthorised.
+  Temporary directories (`netsuboard-session`, `netsuboard-proxies`) and the log directory
+  (`%LOCALAPPDATA%\NetsuBoard`) follow the same rule.
+- It used to be `~/.netsurush`: the scene library, the asset store, the thumbnail cache and the
+  session cache were shared with NetsuRush, `core/server.js` purged the other application's session
+  cache on startup, and a sweep on either side could take the other's board media. `migrateLegacyHome`
+  copies the old library over ONCE, on first launch, and only when `NR_HOME` is unset — never moves
+  it, so NetsuRush keeps everything. Scenes and assets only: thumbnails rebuild themselves and
+  copying them would double the heaviest directory for nothing.
+
 ## Known violations left by the NetsuRush split
 
 These are **defects**, documented so they are not mistaken for design. Each needs a code change.
 
-- `core/config.js` still names its temporary directories `netsurush-session` and `netsurush-proxies`, and `core/server.js` calls `sessionCache.resetSync()` at startup. With both applications installed, starting one **purges the other's session cache**.
-- `src-tauri/src/lib.rs` still resolves its log directory to `%LOCALAPPDATA%\NetsuRush`, whereas `core/config.js` resolves `NR_HOME` to `%LOCALAPPDATA%\NetsuBoard`.
-- `core/config.js` hard-codes `DATA_DIR` to `~/.netsurush`, so the **scene library, the app asset store and the thumbnail cache are shared with NetsuRush** (`reference/reference.db`, `reference/assets`, `thumbs`) even though `NR_HOME` is not. Both applications therefore list each other's scenes, and `Settings › Storage` frees a thumbnail cache the other one also uses — harmless in effect, since thumbnails are rebuilt on demand, but not intended. The consequence that does bite: a NetsuRush project's `.netsu` is recorded in *its* `NR_HOME`, so `core/boardStorage.js` cannot see that sidecar and reports its leftover assets as a sole copy instead of a duplicate. That is the conservative direction — nothing is deleted — but it under-reports what is freeable.
 - `core/shaderUpscale.js` still imports `importToMediaPool` from `core/resolve.js`.
