@@ -45,9 +45,10 @@ function assetSrc(filePath: string): string | null {
 // une autre instance, une session de dev ou un logiciel tiers ne doit pas laisser l'app sans
 // backend). Elle seule connaît le sien → on le lui demande. Hors Tauri (navigateur), on balaie la
 // plage jusqu'à trouver un /healthz qui se déclare NetsuBoard.
-// Plage 8760-8779, la même que `core/server.js` et DISJOINTE de celle de NetsuRush (8730-8749) :
-// les deux applications tournent côte à côte.
-const CORE_PORT_FIRST = 8760;
+// Plage 43117-43136, la même que `core/server.js` et DISJOINTE de celle de NetsuRush (8730-8749) :
+// les deux applications tournent côte à côte. Base non assignée par l'IANA, sous la plage éphémère
+// de Windows, loin des ports de développement qu'un serveur local tiers occupe facilement.
+const CORE_PORT_FIRST = 43117;
 const CORE_PORT_SPAN = 20;
 const FIXED_BASE: string | null =
   (typeof window !== "undefined" && (window as unknown as { __NR_CORE__?: string }).__NR_CORE__) || null;
@@ -441,7 +442,10 @@ const reference: RefApi = {
   loadScene: (id) => call("reference:loadScene", [id]),
   saveScene: (scene) => call("reference:saveScene", [scene]),
   deleteScene: (id) => call("reference:deleteScene", [id]),
-  saveAsset: (bytes, ext) => call("reference:saveAsset", [{ __b64: abToB64(bytes) }, ext]),
+  saveAsset: (bytes, ext, options) => call("reference:saveAsset", [{ __b64: abToB64(bytes) }, ext, options || {}]),
+  collabPreview: (srcPath) => call("reference:collabPreview", [srcPath]),
+  locateMedia: (refs, projectPath) => call("reference:locateMedia", [refs, projectPath]),
+  ytDuration: (id) => call("reference:ytDuration", [id]),
   fetchAsset: (url, options) => call("reference:fetchAsset", [url, options || {}]),
   resolveMedia: (url, options) => call("reference:resolveMedia", [url, options || {}]),
   upscaleItem: (opts) => call("reference:upscaleItem", [opts]),
@@ -471,6 +475,11 @@ const reference: RefApi = {
   saveProjectAs: (opts) => call("netsu:saveProjectAs", [opts]),
   closeProject: (filePath) => call("netsu:closeProject", [filePath]),
   recentProjects: (type) => call("netsu:recents", [type]),
+  linkSource: (filePath, sourceSceneId) => call("netsu:linkSource", [filePath, sourceSceneId]),
+  storageAudit: (opts) => call("storage:audit", [opts || {}]),
+  storageFree: (opts) => call("storage:free", [opts]),
+  storageMoveOrphans: (opts) => call("storage:moveOrphans", [opts]),
+  storageArchiveScene: (opts) => call("storage:archiveScene", [opts]),
   forgetProject: (filePath) => call("netsu:forget", [filePath]),
   deleteProject: (filePath) => call("netsu:deleteProject", [filePath]),
   // No-op : aucune garde de fermeture (l'autosave protège déjà le board). Conservé pour l'API.

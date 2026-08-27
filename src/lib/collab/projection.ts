@@ -1,4 +1,6 @@
 import type { BoardItem, DrawShape, ItemKind } from "@/components/reference/referenceShared";
+// `embeds.ts` ne dépend que du modèle (aucun pont natif) : importable ici sans traîner le bridge.
+import { embedSrc } from "@/components/reference/embeds";
 import type {
   Appearance,
   BoardPalette,
@@ -42,12 +44,33 @@ export type NativeProject = {
   order: string[];
   strokes: Stroke[];
   shapes: VectorShape[];
+  /** Content hashes already present in the local blob store — the native side is the authority. */
+  localHashes?: string[];
 };
 
 function assetRef(asset: MediaAsset): string {
   if (asset.remoteUrl) return asset.remoteUrl;
   if (asset.youtubeId) return asset.youtubeId;
   return asset.contentHash ? `collab:${asset.contentHash}` : "";
+}
+
+/**
+ * Adresse d'affichage d'un média projeté. Un média HASHÉ est servi par le protocole natif (le
+ * renderer ne peut pas la calculer) ; tout le reste suit la règle ordinaire du board — et c'est
+ * elle qui manquait : sans `src`, un lecteur YouTube ou une carte embed arrivait vide chez le
+ * destinataire, donc sans lecture, sans boucle et sans in/out.
+ */
+function displayFor(
+  kind: ItemKind,
+  ref: string,
+  asset: MediaAsset | undefined,
+  mediaUrl: (hash: string) => string,
+): string {
+  if (asset?.contentHash) return mediaUrl(asset.contentHash);
+  if (kind === "youtube") return ref;
+  if (kind === "embed") return embedSrc(ref);
+  if (asset?.remoteUrl) return asset.remoteUrl;
+  return "";
 }
 
 function shapeAnchor(anchor: VectorShape["startAnchor"]): DrawShape["a1"] {
@@ -129,8 +152,10 @@ function nativeToBoard(item: NativeItem, z: number, mediaUrl: (hash: string) => 
     rotation: geometry.rotation,
     z,
   };
-  if (item.media?.primary.contentHash) board.src = mediaUrl(item.media.primary.contentHash);
-  else if (item.media?.primary.remoteUrl) board.src = item.media.primary.remoteUrl;
+  board.src = displayFor(item.kind, board.ref, item.media?.primary, mediaUrl);
+  // Le type déclaré par le document : une adresse par empreinte ne porte pas d'extension, et sans
+  // lui un GIF partagé n'est plus reconnu comme animé (« Tout figer » ne l'arrêtait pas).
+  if (item.media?.primary.mime) board.mime = item.media.primary.mime;
   if (geometry.naturalWidth !== undefined) board.natW = geometry.naturalWidth;
   if (geometry.naturalHeight !== undefined) board.natH = geometry.naturalHeight;
   if (geometry.detached) board.detached = true;
@@ -199,8 +224,9 @@ function nativeToBoard(item: NativeItem, z: number, mediaUrl: (hash: string) => 
         : undefined,
       sourceUrl: previous.asset.sourceUrl,
     };
-    if (previous.asset.contentHash) board.prevMedia.src = mediaUrl(previous.asset.contentHash);
-    else if (previous.asset.remoteUrl) board.prevMedia.src = previous.asset.remoteUrl;
+    board.prevMedia.src = displayFor(
+      previous.kind ?? item.kind, board.prevMedia.ref, previous.asset, mediaUrl,
+    );
   }
   if (item.media?.local?.kind) {
     const local = item.media.local;
@@ -211,8 +237,7 @@ function nativeToBoard(item: NativeItem, z: number, mediaUrl: (hash: string) => 
       natW: local.naturalWidth,
       natH: local.naturalHeight,
     };
-    if (local.asset.contentHash) boardLocal.src = mediaUrl(local.asset.contentHash);
-    else if (local.asset.remoteUrl) boardLocal.src = local.asset.remoteUrl;
+    boardLocal.src = displayFor(local.kind!, boardLocal.ref, local.asset, mediaUrl);
     board.localMedia = boardLocal;
   }
   if (item.link) {

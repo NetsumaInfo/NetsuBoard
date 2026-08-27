@@ -11,6 +11,7 @@
     "flipV": "Miroir vertical",
     "crop": "Rogner",
     "openLink": "Ouvrir le lien",
+    "reloadMedia": "Recharger le média",
     "download": "Télécharger",
     "restoreDownload": "Revenir au fichier téléchargé",
     "zoomIn": "Zoomer",
@@ -133,6 +134,10 @@
     "factor": "Facteur",
     "denoise": "Débruitage",
     "downloadOnline": "Télécharger les vidéos en ligne",
+    "copyLocal": "Copier les médias locaux dans le projet",
+    "copyLocalOn": "Copier",
+    "copyLocalOff": "Référencer",
+    "copyLocalMax": "Plafond vidéo (Mo)",
     "embedSwitch": "Bascule vers le lecteur",
     "embedSwitchKeep": "Garder le fichier",
     "embedSwitchDrop": "Supprimer le fichier",
@@ -238,7 +243,12 @@
     "pinnedAllPlaced": "Tout est posé.",
     "pinnedBarHint": "Glisser pour poser ou déplacer, clic pour retirer.",
     "pinnedRemove": "Retirer {{label}} de la barre",
-    "barButtons": "Barre d'outils"
+    "barButtons": "Barre d'outils",
+    "assetSweep": "Médias inutilisés",
+    "assetSweepHint": "Supprime les fichiers qu'aucune scène ne référence. Rien de ce que portent tes boards n'est touché.",
+    "assetSweepAction": "Nettoyer",
+    "assetSweepDone": "{{count}} fichier(s) retiré(s), {{mb}} Mo libérés.",
+    "assetSweepFailed": "Le nettoyage a échoué."
   },
   "inspector": {
     "ytPlayer": "Lecteur YouTube",
@@ -320,7 +330,8 @@
     "kindItem": "Élément du board",
     "chooseFile": "Choisir un fichier…",
     "targetItem": "Item cible",
-    "remove": "Retirer le lien"
+    "remove": "Retirer le lien",
+    "sharedFile": "Ce fichier appartient au board partagé : il n'a pas d'emplacement sur ce disque."
   },
   "font": {
     "label": "Police",
@@ -494,6 +505,7 @@
     "hideFromList": "Masquer de la liste",
     "deleteScene": "Supprimer la scène",
     "modified": "Modifié {{date}}",
+    "sharedBoard": "Partagé",
     "dropMedia": "Glisser-déposer des médias",
     "dropHint": "Images et vidéos acceptées",
     "or": "ou",
@@ -510,7 +522,19 @@
     "deleteProject": "Supprimer complètement",
     "deleteProjectTitle": "Supprimer « {{name}} » ?",
     "deleteProjectWarning": "Le fichier .netsu et son dossier .medias seront supprimés définitivement. Les rushs externes ne seront pas touchés.",
-    "projectMissing": "Fichier introuvable"
+    "projectMissing": "Fichier introuvable",
+    "invites": {
+      "body": "t'invite sur un board partagé",
+      "join": "Rejoindre",
+      "decline": "Refuser",
+      "later": "Plus tard",
+      "failed": "Impossible de rejoindre ce board"
+    },
+    "cardStatus": {
+      "key": "Clé attendue",
+      "media": "Média demandé",
+      "changed": "Modifié"
+    }
   },
   "item": {
     "doubleClickEdit": "Double-clic pour éditer…",
@@ -522,6 +546,7 @@
     "retryMedia": "Réessayer",
     "notBundled": "{{size}} · non embarqué",
     "relocate": "Relocaliser",
+    "reloadMedia": "Retélécharger",
     "downloading": "Téléchargement…",
     "mediaFallback": "média",
     "interactiveActive": "Interactif — clic ailleurs pour déplacer",
@@ -738,6 +763,8 @@
     "reading": "Lecture de {{count}} fichiers…",
     "importing": "Import de {{name}}…",
     "done": "{{count}} médias importés",
+    "copyFailed": "Copie de « {{name}} » impossible : le média sera perdu à la fermeture de l'app",
+    "copyFailedBatch": "{{count}} copies impossibles (dont « {{name}} ») : ces médias seront perdus à la fermeture de l'app",
     "folderTruncated": "Dossier trop grand : {{count}} premiers médias importés",
     "fetching": "Récupération du média…",
     "linkDone": "Média importé",
@@ -756,13 +783,17 @@
     "signedOut": "Connecte ton compte Discord dans les Paramètres.",
     "noFriends": "Ajoute d'abord des amis dans Paramètres › Compte.",
     "invited": "{{n}} invitation(s) envoyée(s).",
-    "notice": "Le board devient collaboratif. Les personnes invitées le rejoignent depuis leurs Paramètres.",
+    "notice": "Le board devient collaboratif. Les personnes invitées reçoivent l'invitation sur leur écran d'accueil.",
     "close": "Fermer",
     "create": "Créer et inviter",
     "invite": "Inviter",
-    "fileBacked": "Enregistre d’abord ce board dans la bibliothèque de scènes avant de le partager.",
+    "fileBacked": "Ce board est ouvert depuis un fichier .netsu. Un projet collaboratif vit dans la bibliothèque de scènes.",
     "saveAsBlocked": "Un projet collaboratif reste piloté par sa scène partagée. Utilise l’export pour créer une copie locale.",
-    "role": { "owner": "Propriétaire", "editor": "Peut modifier", "viewer": "Lecture seule" },
+    "role": {
+      "owner": "Propriétaire",
+      "editor": "Peut modifier",
+      "viewer": "Lecture seule"
+    },
     "rotationPending": "La révocation est enregistrée. Les nouvelles publications attendent qu’un appareil du propriétaire termine la rotation de clé.",
     "staleHead": {
       "title": "Branche de récupération obsolète",
@@ -772,13 +803,48 @@
       "confirmTitle": "Abandonner cette branche ?",
       "confirmWarning": "Les modifications publiées uniquement par cet appareil seront perdues définitivement. Continue seulement si cet appareil ne peut plus se reconnecter."
     },
-    "status": { "pending": "synchronisation en attente", "rotation": "rotation de clé en attente" },
-    "members": { "remove": "Retirer du projet", "pending": "Invitation en attente", "cancelInvite": "Annuler l’invitation" },
+    "status": {
+      "pending": "synchronisation en attente",
+      "rotation": "rotation de clé en attente"
+    },
+    "members": {
+      "remove": "Retirer du projet",
+      "pending": "Invitation en attente",
+      "cancelInvite": "Annuler l’invitation"
+    },
     "lifecycle": {
-      "leave": "Quitter le projet", "delete": "Supprimer le projet",
-      "leaveTitle": "Quitter ce projet ?", "deleteTitle": "Supprimer ce projet ?",
+      "leave": "Quitter le projet",
+      "delete": "Supprimer le projet",
+      "leaveTitle": "Quitter ce projet ?",
+      "deleteTitle": "Supprimer ce projet ?",
       "leaveWarning": "Tu garderas ce que ton appareil a déjà reçu, mais tu ne pourras plus synchroniser ce projet.",
       "deleteWarning": "Le rendez-vous, les invitations et les sauvegardes chiffrées seront supprimés pour tous les membres. Cette action est irréversible."
+    },
+    "noScene": "Enregistre d'abord ce board dans la bibliothèque de scènes.",
+    "willAdopt": "Ce board sera copié dans la bibliothèque de scènes. Le fichier .netsu reste sur ton disque.",
+    "failed": "Le partage a échoué.",
+    "sync": {
+      "queued": "Des modifications attendent ici. Elles partiront toutes seules dès qu'un appareil sera joignable.",
+      "upToDate": "Tout est synchronisé.",
+      "peers": "{{count}} appareil(s) joignable(s)"
+    },
+    "mediaMissing": "{{count}} média(s) introuvable(s) sur le disque : {{names}}. Ils sont marqués sur le board — retrouve-les (dossier déplacé ?) via leur carte, puis repartage.",
+    "panel": {
+      "title": "État du partage",
+      "online": "{{count}} en ligne",
+      "alone": "Personne d’autre pour l’instant.",
+      "hereNow": "En ligne",
+      "neverSeen": "Pas encore joint",
+      "seenMinutes": "Vu il y a {{count}} min",
+      "seenHours": "Vu il y a {{count}} h",
+      "seenDays": "Vu il y a {{count}} j",
+      "invited": "Invitation en attente",
+      "unknownMember": "Membre",
+      "queued": "Des modifications attendent ici. Elles partiront seules dès qu’un appareil sera joignable.",
+      "upToDate": "Tout est synchronisé.",
+      "rotation": "Rotation de clé en attente : les nouvelles publications attendent un appareil du propriétaire.",
+      "waitingKey": "{{count}} membre(s) attendent la clé. Reste en ligne pour la leur transmettre.",
+      "nobodyReachable": "Personne n’est joignable pour l’instant : tes modifications partiront à leur retour."
     }
   }
 }

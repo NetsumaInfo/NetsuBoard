@@ -44,4 +44,82 @@ describe("collaboration projection", () => {
       colorFormat: "oklch", paletteLayout: "grid",
     });
   });
+
+  // Un média hashé est servi par le protocole natif ; tout le reste garde la règle d'affichage du
+  // board. Sans `src`, un lecteur YouTube et une carte embed arrivaient VIDES chez le destinataire —
+  // donc sans lecture, sans boucle et sans in/out, alors que le document, lui, portait tout.
+  it("gives a shared YouTube item the playable source its player needs", () => {
+    const project: NativeProject = {
+      revision: 4,
+      order: ["yt"],
+      items: [{
+        itemId: "yt",
+        kind: "youtube",
+        geometry,
+        media: { primary: { youtubeId: "dQw4w9WgXcQ", displayName: "YouTube", mime: "video/youtube", size: 0 } },
+        trim: { start: 12, end: 30, duration: 240 },
+      }],
+      strokes: [],
+      shapes: [],
+    };
+    expect(projectBoard(project)[0]).toMatchObject({
+      ref: "dQw4w9WgXcQ",
+      src: "dQw4w9WgXcQ",
+      trimIn: 12,
+      trimOut: 30,
+      dur: 240,
+    });
+  });
+
+  it("rebuilds the iframe address of a shared embed card", () => {
+    const project: NativeProject = {
+      revision: 5,
+      order: ["card"],
+      items: [{
+        itemId: "card",
+        kind: "embed",
+        geometry,
+        media: {
+          primary: {
+            remoteUrl: "https://vimeo.com/76979871",
+            displayName: "76979871", mime: "video/*", size: 0,
+          },
+        },
+      }],
+      strokes: [],
+      shapes: [],
+    };
+    const [card] = projectBoard(project);
+    expect(card.ref).toBe("https://vimeo.com/76979871");
+    expect(card.src).toContain("player.vimeo.com");
+  });
+
+  it("addresses a hashed media through the native protocol, previous and local variants included", () => {
+    const project: NativeProject = {
+      revision: 6,
+      order: ["shot"],
+      items: [{
+        itemId: "shot",
+        kind: "image",
+        geometry,
+        media: {
+          primary: { contentHash: "aaa", displayName: "a.png", mime: "image/png", size: 10 },
+          previous: {
+            kind: "image",
+            asset: { contentHash: "bbb", displayName: "b.png", mime: "image/png", size: 10 },
+          },
+          local: {
+            kind: "video",
+            asset: { contentHash: "ccc", displayName: "c.mp4", mime: "video/mp4", size: 10 },
+          },
+        },
+      }],
+      strokes: [],
+      shapes: [],
+    };
+    const [shot] = projectBoard(project, (hash) => `native://${hash}`);
+    expect(shot.src).toBe("native://aaa");
+    expect(shot.prevMedia?.src).toBe("native://bbb");
+    expect(shot.localMedia?.src).toBe("native://ccc");
+  });
 });

@@ -42,7 +42,9 @@ const HOST = "127.0.0.1";
 const FIXED_PORT = Number(process.env.NR_CORE_PORT) || 0;
 // Plage DISJOINTE de celle de NetsuRush (8730-8749) : les deux applications tournent côte à côte, et
 // un balayage qui démarre sur la même base ferait tomber le core de l'une sur le port de l'autre.
-const PORT_FIRST = 8760;
+// Base 43117 : non assignée par l'IANA, sous la plage éphémère de Windows (49152+), loin des ports
+// de développement (8000-9000) qu'un serveur local tiers occupe facilement.
+const PORT_FIRST = 43117;
 const PORT_SPAN = 20;
 
 const rpc = createRpc();
@@ -123,7 +125,7 @@ function publishPort(port) {
 function onListening() {
   activePort = /** @type {any} */ (server.address())?.port || activePort;
   publishPort(activePort);
-  console.log(`NetsuRush core: http://${HOST}:${activePort} (${rpc.channels.length} canaux)`);
+  console.log(`NetsuBoard core: http://${HOST}:${activePort} (${rpc.channels.length} canaux)`);
   // Chauffe la sonde d'encodeurs en arrière-plan : NetsuCut récupère ensuite immédiatement le bon
   // moteur NVENC/AMF/QSV (ou son repli CPU) au premier survol.
   void getCapabilities()

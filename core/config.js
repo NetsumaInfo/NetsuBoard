@@ -30,7 +30,7 @@ const WALLPAPER_DIR = path.join(NR_HOME, 'wallpapers');
 // accélèrent une opération en cours (frames/mattes Roto, tests pleine résolution, WAV de travail),
 // mais n'ont aucune valeur au prochain lancement. La coquille Tauri et le core le suppriment tous
 // les deux à la fermeture ; le boot le remet aussi à zéro après un crash ou une extinction forcée.
-const SESSION_CACHE_ROOT = path.join(os.tmpdir(), 'netsurush-session');
+const SESSION_CACHE_ROOT = path.join(os.tmpdir(), 'netsuboard-session');
 const VOICE_DIR = path.join(SESSION_CACHE_ROOT, 'voice');
 const UPSCALE_TEST_DIR = path.join(SESSION_CACHE_ROOT, 'processing-tests');
 const ROTO_DIR = path.join(SESSION_CACHE_ROOT, 'roto');
@@ -237,10 +237,55 @@ function ytCookiesFile() {
 // Compat : premier candidat. Les appelants qui enchaînent les tentatives lisent la liste.
 const COOKIES_BROWSER = cookieBrowserCandidates()[0] || null;
 
-// Vignettes = minuscules mais COÛTEUSES à régénérer (seek+décode par plan, des centaines par rush)
-// → cache PERSISTANT dans ~/.netsurush (comme la DB des plans). os.tmpdir() était nettoyé par
-// Windows (Storage Sense/Disk Cleanup) → vignettes régénérées à chaque session.
-const DATA_DIR = path.join(os.homedir(), '.netsurush');
+// Dossier de données de NetsuBoard. PERSISTANT (et non os.tmpdir(), que Windows nettoie via
+// Storage Sense) : les vignettes sont minuscules mais coûteuses à régénérer.
+//
+// Il portait `.netsurush` — NetsuBoard vivait donc littéralement chez NetsuRush : même bibliothèque
+// de scènes, même magasin d'assets, mêmes vignettes, même cache de session (que NetsuBoard EFFACE
+// au démarrage, sous le nez de l'autre application si elle tourne). Les deux se marchaient dessus,
+// et le ménage de l'une pouvait emporter les médias d'un board de l'autre.
+//
+// `NR_HOME` fait autorité quand il est posé — c'est ce que lit déjà la coquille Rust
+// (`identity.rs#home_dir`), et ce qui permet aux tests de s'isoler.
+const DATA_DIR = process.env.NR_HOME
+  ? path.resolve(process.env.NR_HOME)
+  : path.join(os.homedir(), '.netsuboard');
+
+// Ancien emplacement, conservé pour la reprise au premier lancement (cf. `migrateLegacyHome`).
+const LEGACY_DATA_DIR = path.join(os.homedir(), '.netsurush');
+
+/**
+ * Reprend la bibliothèque de l'ancien emplacement, UNE fois, par COPIE.
+ *
+ * Copie et non déplacement : NetsuRush continue de tourner sur cette machine et garde ses boards
+ * intacts. Les deux applications divergent à partir de là, ce qui est le but — c'est ce partage qui
+ * faisait qu'un nettoyage d'un côté emportait les médias de l'autre.
+ *
+ * Seules les SCÈNES et leurs assets sont repris, plus les réglages. Les vignettes ne le sont pas :
+ * elles se régénèrent, et les recopier doublerait le poste le plus lourd pour rien.
+ */
+function migrateLegacyHome() {
+  if (process.env.NR_HOME) return; // racine imposée (test, installation portable) : rien à reprendre
+  try {
+    if (fs.existsSync(path.join(DATA_DIR, 'reference'))) return; // déjà fait
+    if (!fs.existsSync(path.join(LEGACY_DATA_DIR, 'reference'))) return; // rien à reprendre
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.cpSync(path.join(LEGACY_DATA_DIR, 'reference'), path.join(DATA_DIR, 'reference'), {
+      recursive: true,
+      errorOnExist: false,
+      force: false,
+    });
+    const config = path.join(LEGACY_DATA_DIR, 'nr.config.json');
+    const destConfig = path.join(DATA_DIR, 'nr.config.json');
+    if (fs.existsSync(config) && !fs.existsSync(destConfig)) fs.copyFileSync(config, destConfig);
+    console.log(`core: bibliothèque reprise depuis ${LEGACY_DATA_DIR} (copie, l'original est intact)`);
+  } catch (error) {
+    // Une reprise ratée laisse une bibliothèque VIDE, pas une bibliothèque cassée : l'application
+    // démarre, et l'ancien dossier reste entier pour une reprise manuelle.
+    console.warn('core: reprise de la bibliothèque impossible', String(error));
+  }
+}
+migrateLegacyHome();
 
 // Types de cache gérés par Paramètres › Stockage. Source unique : l'index latéral (cacheIndex),
 // les politiques (cachePolicy) et l'UI s'y adossent.
@@ -252,7 +297,7 @@ const CACHE_KINDS = ['thumb', 'indexThumbs', 'proxy', 'voice', 'upscaleTest', 'r
 // Défauts historiques conservés quand aucun dossier n'est choisi : proxies jetables dans os.tmpdir(),
 // vignettes persistantes sous ~/.netsurush.
 const DEFAULT_THUMB_DIR = path.join(DATA_DIR, 'thumbs');
-const DEFAULT_PROXY_DIR = path.join(os.tmpdir(), 'netsurush-proxies');
+const DEFAULT_PROXY_DIR = path.join(os.tmpdir(), 'netsuboard-proxies');
 function resolveCacheDirs(root) {
   return root
     ? { thumb: path.join(root, 'thumbs'), proxy: path.join(root, 'proxies') }
@@ -268,7 +313,7 @@ function markCacheRoot(root) {
   try {
     const resolved = path.resolve(root);
     fs.mkdirSync(resolved, { recursive: true });
-    fs.writeFileSync(path.join(resolved, '.netsurush-cache-root'), resolved, 'utf8');
+    fs.writeFileSync(path.join(resolved, '.netsuboard-cache-root'), resolved, 'utf8');
   } catch (_) {}
 }
 

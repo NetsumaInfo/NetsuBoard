@@ -34,8 +34,12 @@ export function useUpscale() {
 
   const [settings, setSettings] = useState<UpSettings>(() => {
     const saved = readPersistedObject(SETTINGS_KEY, DEFAULT_SETTINGS);
-    if (saved.shader === "anime4k") return { ...saved, shader: "anime4k_aa_hq" };
-    if (saved.shader === "artcnn_quality") return { ...saved, shader: "artcnn_c4f32" };
+    // Anime4K est parti du sélecteur : le renvoyer vers `anime4k_aa_hq` visait une entrée elle aussi
+    // absente. Comme dans boardPrefs, les ids retirés retombent sur l'ArtCNN le plus proche
+    // (B+B = restauration douce → DN).
+    if (saved.shader === "anime4k_bb_hq") return { ...saved, shader: "artcnn_c4f32_dn" };
+    if (saved.shader.startsWith("anime4k")) return { ...saved, shader: "artcnn_c4f32" };
+    if (saved.shader === "artcnn_quality") return { ...saved, shader: "artcnn_c4f32_ds" };
     // RTX VSR n'existe qu'en ×2 : une échelle héritée d'un autre shader ferait échouer le job au
     // lancement, alors que le sélecteur, lui, verrouille déjà le facteur.
     if (isRtxShader(saved.shader) && saved.scale !== 2) return { ...saved, scale: 2 };

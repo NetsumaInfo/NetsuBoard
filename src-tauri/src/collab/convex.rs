@@ -292,12 +292,42 @@ impl ConvexClient {
                 message,
             ));
         }
-        serde_json::from_value(
-            body.get("value").cloned().ok_or_else(|| {
-                CollabError::new(CollabErrorCode::Network, "missing Convex value")
-            })?,
-        )
-        .map_err(|_| CollabError::new(CollabErrorCode::Network, "unexpected Convex response shape"))
+        let mut value = body.get("value").cloned().ok_or_else(|| {
+            CollabError::new(CollabErrorCode::Network, "missing Convex value")
+        })?;
+        normalize_numbers(&mut value);
+        serde_json::from_value(value)
+        // serde names the offending field and the type it got. Dropping it left every mismatch —
+        // a renamed field, a number that arrived as a float, a null — looking identical.
+        .map_err(|error| {
+            CollabError::new(
+                CollabErrorCode::Network,
+                format!("unexpected Convex response shape: {error}"),
+            )
+        })
+    }
+}
+
+/// Convex encodes every JavaScript number as a float, so an epoch, a size or a timestamp arrives as
+/// `0.0` and serde refuses it for a `u32` or a `u64`. Whole floats are folded back to integers here,
+/// once, at the transport boundary — the alternative is a custom deserializer on every numeric field
+/// of every struct, and one forgotten field is an error nobody can read.
+///
+/// Fractional values are left alone: they are genuinely floats and must keep their precision.
+fn normalize_numbers(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Number(number) => {
+            if let Some(float) = number.as_f64() {
+                if float.fract() == 0.0 && float.abs() <= i64::MAX as f64 {
+                    *value = serde_json::Value::Number((float as i64).into());
+                }
+            }
+        }
+        serde_json::Value::Array(items) => items.iter_mut().for_each(normalize_numbers),
+        serde_json::Value::Object(fields) => {
+            fields.values_mut().for_each(normalize_numbers);
+        }
+        _ => {}
     }
 }
 

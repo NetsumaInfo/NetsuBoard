@@ -6,6 +6,7 @@
 import { nr, type NetsuEmbed, type NetsuLevel, type NetsuQuality } from "@/lib/bridge";
 import i18n from "@/i18n";
 import { comboFromEvent, isCompleteCombo, type ShortcutMap } from "@/lib/shortcuts";
+import { collabMediaSrc } from "@/lib/collab/currentProject";
 import { embedSrc } from "./embeds";
 import type { ColorFormat } from "./colorFormat";
 
@@ -259,6 +260,11 @@ export interface BoardItem {
   // Lien d'origine d'un média EXTRAIT (yt-dlp/gallery-dl depuis un post social) → permet de
   // rebasculer l'item en carte embed ancrée (et inversement de re-télécharger depuis l'embed).
   sourceUrl?: string;
+  // Type du média quand le localisateur ne le dit pas. Un board PARTAGÉ adresse ses médias par
+  // empreinte (`http://collab.localhost/<projet>/<hash>`) : plus d'extension, donc plus moyen de
+  // reconnaître un GIF — que « Tout figer » doit pourtant arrêter comme les autres animations.
+  // Renseigné par la projection collaborative ; absent sur un board local, où l'extension suffit.
+  mime?: string;
   // Sauvegarde du média AVANT upscale → permet de revenir en arrière (non destructif : l'upscale
   // ne supprime plus l'ancien fichier). Présent ⇒ l'item a été upscalé et peut être restauré.
   // Aussi réutilisé par la séquence pour MÉMORISER le média d'origine (vidéo/YouTube) → bouton « revenir
@@ -480,6 +486,20 @@ export function isRemoteRef(ref: string): boolean {
   return /^(https?:|data:|blob:)/i.test(ref);
 }
 
+/**
+ * Média d'un board partagé. Ses octets vivent dans le magasin de la coquille et se servent par le
+ * protocole `collab.localhost` — le service core ne sait NI les lire, NI les couper, NI en tirer une
+ * affiche. Un `collab:` n'est donc ni un lien distant ni un fichier : il ne va jamais au core.
+ */
+export function isCollabRef(ref: string): boolean {
+  return /^collab:/i.test(ref);
+}
+
+/** Le core peut-il ouvrir ce localisateur comme un fichier ? (proxy, affiche, frames, upscale) */
+export function isCoreFileRef(ref: string | undefined): boolean {
+  return !!ref && !isRemoteRef(ref) && !isCollabRef(ref);
+}
+
 // z-index max / min d'une liste d'items (plan d'empilement). SOURCE UNIQUE du calcul (ajout d'item,
 // duplication, fusion en séquence, premier/arrière-plan). Liste vide → 0.
 export function topZ(items: { z: number }[]): number {
@@ -581,6 +601,10 @@ export function displaySrc(kind: ItemKind, ref: string): string {
   if (kind === "embed") return embedSrc(ref);
   if (!ref) return "";
   if (isRemoteRef(ref)) return ref;
+  // Un média de board partagé n'est pas un fichier : ses octets vivent dans le magasin de blobs et
+  // sont servis par le protocole natif, à une adresse qui dépend du projet ouvert. Le passer au
+  // core rendrait une adresse morte, que la reprise prendrait pour un fichier disparu.
+  if (isCollabRef(ref)) return collabMediaSrc(ref);
   // Vidéo locale : mp4/mov/webm lisibles tels quels ; mkv & co passent par /stream copy, un remux
   // ffmpeg en direct — celui-là ne peut pas sortir du serveur HTTP, il n'existe pas comme fichier.
   if (kind === "video" && !playsNatively(ref)) return nr.streamUrl(ref, 0, "copy");

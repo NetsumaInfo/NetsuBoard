@@ -11,7 +11,8 @@
     "system": "System",
     "updates": "Updates",
     "report": "Report",
-    "about": "About"
+    "about": "About",
+    "discord": "Discord"
   },
   "about": {
     "tagline": "Infinite reference board: images, video, social media, notes and drawing.",
@@ -34,7 +35,10 @@
     "subtitle": "The Discord account connected to NetsuBoard.",
     "none": "No account connected.",
     "discordUser": "Discord user",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "unreachable": "Server unreachable.",
+    "unreachableHint": "Check your connection. A firewall or a corporate network can block NetsuBoard.",
+    "retry": "Retry"
   },
   "playback": {
     "title": "Previews and thumbnails",
@@ -241,7 +245,13 @@
     "history": "What's new by version",
     "whatsNew": "What's new in version {{version}}",
     "gotIt": "Let's go",
-    "reportSubject": "Update to v{{version}} failed"
+    "reportSubject": "Update to v{{version}} failed",
+    "kind": {
+      "feature": "New",
+      "fix": "Fixes",
+      "improvement": "Improvements",
+      "performance": "Performance"
+    }
   },
   "compatibility": {
     "title": "This PC's compatibility",
@@ -462,6 +472,8 @@
     "showBoardHint": "Can reveal a client's name.",
     "showItems": "Item count",
     "showElapsed": "Time elapsed",
+    "showLinks": "Clickable card",
+    "showLinksHint": "The art opens the Discord server, the first line the repository.",
     "itemsLine": "{{count}} item(s)",
     "custom": "Custom text",
     "customHelp": "Replaces the automatic lines. {board} and {items} get substituted.",
@@ -469,6 +481,43 @@
     "state": "Second line"
   },
   "storage": {
+    "title": "Board storage",
+    "intro": "The app keeps media of its own: pasted images, media fetched from a link, extracted frames, upscale results. Saving a .netsu project files those bytes in its companion folder — the store then holds only a duplicate, which can be freed without losing anything.",
+    "disk": "{{free}} free of {{total}}",
+    "scanning": "Scanning storage…",
+    "failed": "Operation failed",
+    "freedNotice": "Freed {{size}} ({{count}} files)",
+    "movedNotice": "Moved {{size}} ({{count}} files)",
+    "movedPartly": "{{count}} files moved, {{failed}} failed (left in place)",
+    "archivedNotice": "Board saved to “{{name}}”: its media now live in the project folder",
+    "settling": "{{count}} still being written",
+    "settlingHint": "A file written moments ago may belong to an import the board has not placed yet. It will be judged on the next pass.",
+    "safe": {
+      "title": "Safe to free",
+      "hint": "Checked file by file: these bytes are rebuildable, or already exist inside a project folder.",
+      "caches": "Display caches",
+      "cachesHint": "Thumbnails and proxies. The app rebuilds them on demand.",
+      "duplicated": "Media already filed in a project ({{count}})",
+      "duplicatedHint": "Their bytes are in a project's companion folder, for example “{{project}}”.",
+      "duplicatedNone": "No duplicate found yet.",
+      "action": "Free up"
+    },
+    "sole": {
+      "title": "Save these somewhere first",
+      "hint": "These media exist nowhere else. Nothing here deletes them: save them first and they move to the section above.",
+      "empty": "Nothing at risk: everything the app keeps also exists elsewhere.",
+      "untitled": "Untitled board",
+      "sceneCount": "{{count}} media the app is the only holder of · {{size}}",
+      "shared": "Shared board",
+      "sharedHint": "A shared board has no project version: its document is authoritative and collaboration handles its media.",
+      "openBoard": "Board open",
+      "openBoardHint": "This board is open: use “Save as…” from its toolbar.",
+      "archive": "Save as project…",
+      "orphans": "Media no board asks for",
+      "orphansHint": "{{count}} files · {{size}}. Nothing displays them any more, but this is the only copy.",
+      "move": "Move to a folder…"
+    },
+    "footnote": "Media you added from your own disk are never involved: the app only touches files it wrote itself.",
     "empty": "No cache yet.",
     "emptyHint": "Thumbnails and previews get indexed as you browse footage.",
     "diskFree": "{{free}} free of {{total}}",
@@ -681,13 +730,15 @@
       "failed": "Identity unreadable: {{error}}",
       "ready": "Protected native identity is ready.",
       "unavailable": "Native collaboration is unavailable.",
-      "unnamed": "NetsuBoard device", "current": "this device", "revoke": "Revoke this device"
+      "unnamed": "NetsuBoard device",
+      "current": "this device",
+      "revoke": "Revoke this device"
     },
     "friends": {
       "title": "Friends",
-      "subtitle": "Add someone with their Discord ID, Discord username, or NetsuBoard ID.",
-      "yourHandle": "Your NetsuBoard ID: @{{handle}}",
-      "placeholder": "Discord ID or username, or NetsuBoard ID",
+      "subtitle": "Add by Discord username or NetsuBoard handle.",
+      "yourHandle": "You: @{{handle}}",
+      "placeholder": "Discord username or NetsuBoard handle",
       "add": "Add",
       "accept": "Accept",
       "remove": "Remove",
@@ -695,14 +746,16 @@
       "empty": "No friends yet.",
       "status": {
         "sent": "Request sent.",
-        "linked": "You are now friends.",
-        "pending": "Request already sent.",
+        "linked": "You are friends.",
+        "pending": "Already sent.",
         "already": "Already a friend.",
         "self": "That is you.",
-        "unknown": "No one found. They must have opened NetsuBoard once while signed in.",
-        "ambiguous": "That identifier matches more than one person. Use their Discord ID.",
-        "error": "Could not send."
-      }
+        "unknown": "Invalid identifier.",
+        "ambiguous": "Several people match. Use their Discord ID.",
+        "error": "Failed.",
+        "invited": "Invitation sent."
+      },
+      "notYetJoined": "Not signed up yet"
     },
     "invites": {
       "title": "Invitations",
@@ -710,9 +763,23 @@
       "sharedBoard": "Shared board"
     },
     "projects": {
-      "title": "Shared projects", "members": "{{count}} member(s)", "rotation": "key rotation pending",
-      "add": "Add to scenes", "added": "In scenes", "failed": "Could not add this scene",
-      "role": { "owner": "Owner", "editor": "Can edit", "viewer": "View only" }
+      "title": "Shared projects",
+      "members": "{{count}} member(s)",
+      "rotation": "key rotation pending",
+      "add": "Add to scenes",
+      "failed": "Could not add this scene",
+      "role": {
+        "owner": "Owner",
+        "editor": "Can edit",
+        "viewer": "View only"
+      },
+      "unnamed": "Board from {{date}}",
+      "delete": "Delete",
+      "leave": "Leave",
+      "confirmDelete": "Delete for everyone?",
+      "confirmLeave": "Leave this board?",
+      "subtitle": "The boards shared with your account. The ones on this machine open from the home screen.",
+      "absent": "{{count}} board(s) not on this machine"
     },
     "activity": {
       "title": "Collaboration activity",

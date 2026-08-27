@@ -8,7 +8,7 @@ import {
   flushCheckpoint,
   openProject,
 } from "./client";
-import { importBoardAssets } from "./media";
+import { importBoardAssets, UnreadableMediaError } from "./media";
 import { diffBoard } from "./operations";
 
 export async function createCollaborativeProject(
@@ -22,8 +22,14 @@ export async function createCollaborativeProject(
   const session = await openProject(projectId, sceneId, "owner");
   try {
     if (items.length) {
-      const resolver = await importBoardAssets(projectId, items);
-      const operations = diffBoard([], items, resolver);
+      const assets = await importBoardAssets(projectId, items);
+      // Publishing is the one moment a media enters the shared document. A board that goes out
+      // amputated stays amputated for everyone, including its author, so a file that cannot be read
+      // stops the share here with its name and its cause instead of being quietly left behind.
+      if (assets.missing.length) {
+        throw new UnreadableMediaError(assets.missing);
+      }
+      const operations = diffBoard([], items, assets.resolve);
       if (operations.length) await applyOperations(projectId, operations);
     }
     // This is the publication boundary: the scene is not marked collaborative until a sealed,

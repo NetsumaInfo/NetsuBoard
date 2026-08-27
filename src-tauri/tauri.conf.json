@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "NetsuBoard",
-  "version": "0.4.6",
+  "version": "0.5.0",
   "identifier": "com.netsuboard.app",
   "build": {
     "frontendDist": "../dist",
@@ -24,7 +24,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' asset: http://asset.localhost http://collab.localhost data: blob: https:; media-src 'self' asset: http://asset.localhost http://collab.localhost http://127.0.0.1:* data: blob: https:; frame-src https:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* http://localhost:1430 ws://localhost:1430 https:; worker-src 'self' blob:",
+      "csp": "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://www.youtube.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' asset: http://asset.localhost http://collab.localhost http://127.0.0.1:* data: blob: https:; media-src 'self' asset: http://asset.localhost http://collab.localhost http://127.0.0.1:* data: blob: https:; frame-src https:; connect-src 'self' ipc: http://ipc.localhost asset: http://asset.localhost http://127.0.0.1:* http://localhost:1430 ws://localhost:1430 https: wss://*.convex.cloud; worker-src 'self' blob:",
       "assetProtocol": {
         "enable": true,
         "scope": ["**"]

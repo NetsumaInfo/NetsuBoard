@@ -4,6 +4,7 @@
 
 import { create } from "zustand";
 import i18n from "@/i18n";
+import type { MemberPresence } from "@/lib/collab/client";
 import {
   type BoardItem,
   type BoardView,
@@ -76,6 +77,8 @@ export interface BoardState {
   collabRotationRequired: boolean;
   collabPeerCandidates: number;
   collabOfflineQueued: boolean;
+  // Présence OBSERVÉE des autres membres (cf. service.rs#member_presence). Vide hors board partagé.
+  collabMembers: MemberPresence[];
   items: BoardItem[];
   // Frame VIVANTE des séquences en lecture, hors du document. Elle vivait dans `items`, donc chaque
   // frame de chaque séquence recréait le tableau ENTIER : sur un board de plusieurs centaines de
@@ -273,6 +276,7 @@ export const useBoard = create<BoardState>((set, get) => ({
   collabRotationRequired: false,
   collabPeerCandidates: 0,
   collabOfflineQueued: false,
+  collabMembers: [],
   items: [],
   view: INITIAL_VIEW,
   background: readBg(),
@@ -842,6 +846,7 @@ export const useBoard = create<BoardState>((set, get) => ({
       collabKeyEpoch: 0,
       collabRotationRequired: false,
       collabPeerCandidates: 0,
+      collabMembers: [],
       collabOfflineQueued: false,
       items: scene.items,
       seqFrames: {},   // positions vivantes de la scène précédente : jamais reportées sur la nouvelle

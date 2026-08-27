@@ -125,8 +125,13 @@ function Shell() {
               Réduire, elle se lisait comme un contrôle de fenêtre et voisinait le bouton Fermer.
               Absente tant qu'aucune version n'attend — cf. UpdateButton.
               `shrink-0` : les contrôles de fenêtre ne se compriment JAMAIS, c'est la marque qui cède
-              en premier — une fenêtre étroite doit rester fermable. */}
-          <div className="ml-auto flex shrink-0 items-center">
+              en premier — une fenêtre étroite doit rester fermable.
+              `data-no-drag` : la barre est une région de titre traitée par Windows (app-region), et
+              une région de titre AVALE le stylet et le doigt — l'OS y voit un déplacement de fenêtre,
+              jamais un appui. La souris s'en sortait, la tablette non ; les commandes en sont donc
+              exclues en bloc, y compris la mise à jour, que ses propres enfants portent l'attribut
+              ou pas. */}
+          <div className="ml-auto flex shrink-0 items-center" data-no-drag>
             <UpdateButton variant="icon" />
             {!pinned && <HeaderLinks />}
             <WindowControls withUpdate={false} />

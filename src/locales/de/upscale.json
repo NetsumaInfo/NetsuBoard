@@ -357,7 +357,6 @@
     "artcnn_c4f32": "Anime — bestes Verhältnis aus Geschwindigkeit und Qualität.",
     "artcnn_c4f16": "Anime — am schnellsten.",
     "artcnn_quality": "Anime — entrauscht und schärft.",
-    "anime4k": "Anime — leichtgewichtig, gut für beschädigte Quellen.",
     "lanczos": "Realfilm/allgemein — ohne KI, sofort."
   },
   "shaderHint": {
@@ -369,8 +368,6 @@
     "artcnn_c4f16": "Anime — am schnellsten.",
     "artcnn_c4f16_ds": "Schnell — entrauscht, schärft.",
     "artcnn_c4f16_dn": "Schnell — entrauscht, glättet.",
-    "anime4k_aa_hq": "Anime — maximal wahrnehmbar.",
-    "anime4k_bb_hq": "Anime — sanfte Restaurierung.",
     "rtx_vsr": "Realfilm und Anime — festes 2×, NVIDIA.",
     "lanczos": "Realfilm — ohne KI, sofort."
   },

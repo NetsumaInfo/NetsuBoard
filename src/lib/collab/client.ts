@@ -12,12 +12,22 @@ export type ProjectSession = {
   keyEpoch: number;
   leaseId: string;
 };
+export type MemberPresence = {
+  userId: string;
+  devices: number;
+  /** Milliseconds since this machine last reached one of their devices; absent = never reached. */
+  lastSeenMs?: number | null;
+  canWrite: boolean;
+  /** False while no device of theirs holds the current key: a member who cannot read yet. */
+  hasKey: boolean;
+};
 export type ProjectStatus = {
   role: ProjectRole;
   keyEpoch: number;
   rotationRequired: boolean;
   peerCandidates: number;
   offlineQueued: boolean;
+  members?: MemberPresence[];
 };
 export type ImportedMedia = { hash: string; name: string; mime: string; size: number };
 export type MediaResolution = { status: "available" | "waiting" | "removed"; hash: string };
@@ -28,17 +38,33 @@ export type CollabFailure = {
 };
 
 export function collabErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "string" && error.trim()) return error;
   if (error instanceof Error && error.message.trim()) return error.message;
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string" && message.trim()) return message;
+  if (typeof error === "object" && error !== null) {
+    // A rejection reaches us in three shapes: an Error, a Convex error carrying `data`, and a plain
+    // object from the Tauri boundary. Reading only `message` turned the other two into
+    // "[object Object]" on screen, which hides the one thing the user needs.
+    for (const key of ["message", "data", "error"] as const) {
+      const value = (error as Record<string, unknown>)[key];
+      if (typeof value === "string" && value.trim()) return value;
+      if (typeof value === "object" && value !== null) {
+        const nested = (value as { message?: unknown }).message;
+        if (typeof nested === "string" && nested.trim()) return nested;
+      }
+    }
   }
   return fallback;
 }
 
+// The dynamic import is resolved ONCE and shared. Re-entering it per call meant one module
+// resolution per IPC — and there is one per pointer frame during a drag — while two calls issued
+// concurrently could race on it, the loser failing for no reason of its own.
+let invokePromise: Promise<typeof import("@tauri-apps/api/core")["invoke"]> | null = null;
+
 async function invoker() {
   if (!("__TAURI_INTERNALS__" in window)) throw new Error("collaboration requires the desktop app");
-  return (await import("@tauri-apps/api/core")).invoke;
+  invokePromise ??= import("@tauri-apps/api/core").then((module) => module.invoke);
+  return invokePromise;
 }
 
 export async function configureAuth(
@@ -136,6 +162,15 @@ export async function resolveMedia(
   return (await invoker())<MediaResolution>("collab_media_resolve", {
     request: { projectId, asset },
   });
+}
+
+/**
+ * Disk path of a shared media's bytes, or null while they are still travelling. The Node service
+ * only knows files, so this is what lets a shared board be exported to a `.netsu` with its media
+ * instead of a document full of placeholders.
+ */
+export async function mediaPath(projectId: string, hash: string): Promise<string | null> {
+  return (await invoker())<string | null>("collab_media_path", { projectId, hash });
 }
 
 export function mediaUrl(projectId: string, hash: string): string {

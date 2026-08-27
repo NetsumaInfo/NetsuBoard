@@ -37,6 +37,7 @@ const compatibility = require('./compatibility'); // matériel + runtimes IA/enc
 const { cacheIndex } = require("./cacheIndex"); // index latéral fichier de cache → rush source
 const { createCacheAdmin } = require("./cacheAdmin"); // Paramètres › Stockage : mesure + purge ciblée
 const { createCachePolicy } = require("./cachePolicy"); // auto-purge par type (quota LRU + âge)
+const { createBoardStorage } = require("./boardStorage"); // Paramètres › Stockage : double vs copie unique
 const logbus = require("./logbus"); // journal centralisé (core + sidecars python) → SSE `console:log`
 const { createDiscordRpc } = require("./discordRpc"); // Rich Presence Discord (client IPC maison, named pipe)
 const bugreport = require("./bugreport"); // envoi d'un rapport de bug → webhook Discord (Console)
@@ -74,6 +75,9 @@ function createRpc() {
   const cacheAdmin = createCacheAdmin({ cacheIndex: cacheIdx, broadcast });
   const cachePolicy = createCachePolicy({ cacheIndex: cacheIdx, admin: cacheAdmin, broadcast });
   cachePolicy.boot();   // auto-purge + contrôle des seuils, différés et non bloquants
+  // Paramètres › Stockage du board : sépare le double d'un média déjà rangé dans un projet de la
+  // copie dont l'app est seule dépositaire (cf. core/boardStorage.js).
+  const boardStorage = createBoardStorage({ refStore, netsu });
   let lastTestFrameKey = null;
 
   /** Applique un déclencheur de cache de session. Le renderer signale uniquement un événement
@@ -287,10 +291,13 @@ function createRpc() {
     "reference:saveScene": ([scene]) => refStore.saveScene(scene),
     "reference:deleteScene": ([id]) => refStore.deleteScene(id),
     // bytes arrive en base64 (transport JSON) → Buffer pour refStore.
-    "reference:saveAsset": ([bytes, ext]) => {
+    "reference:saveAsset": ([bytes, ext, options]) => {
       const buf = bytes && bytes.__b64 ? Buffer.from(bytes.__b64, "base64") : bytes;
-      return refStore.saveAsset(buf, ext);
+      return refStore.saveAsset(buf, ext, options || {});
     },
+    // Aperçu JPEG léger d'un média local → asset de l'app (partagé aux pairs avant l'original).
+    "reference:collabPreview": ([srcPath]) => refStore.collabPreview(srcPath),
+    "reference:ytDuration": ([id]) => require("./ytstream").videoDuration(id),
     // Télécharge un média distant côté core (sans CORS) puis le persiste en asset disque.
     "reference:fetchAsset": ([url, options]) => refStore.fetchAsset(url, options || {}),
     // Résout le vrai média de N'IMPORTE quel lien (fichier direct ou page via OpenGraph) → asset.
@@ -341,7 +348,21 @@ function createRpc() {
     "netsu:saveProject": ([filePath, scene]) => netsu.saveProject(refStore, filePath, scene),
     "netsu:saveProjectAs": ([opts]) => netsu.saveProjectAs(refStore, opts || {}),
     "netsu:closeProject": ([filePath]) => netsu.closeProject(filePath),
+    // --- Paramètres › Stockage : mesurer, libérer, mettre à l'abri ---
+    // Le renderer ne désigne jamais un fichier à supprimer : il demande une PORTÉE et joint les
+    // localisateurs du board affiché (travail non encore enregistré). Le core recalcule lui-même ce
+    // qui entre dans cette portée, à l'instant de l'écriture.
+    "reference:locateMedia": ([refs, projectPath]) =>
+      boardStorage.locateMedia({ refs, projectPath }),
+    "storage:audit": ([opts]) => boardStorage.audit(opts || {}),
+    "storage:free": ([opts]) => boardStorage.free(opts || {}),
+    "storage:moveOrphans": ([opts]) => boardStorage.moveOrphans(opts || {}),
+    "storage:archiveScene": ([opts]) => boardStorage.archiveScene(opts || {}),
+
     "netsu:recents": ([type]) => netsu.recentProjects(refStore, type),
+    // Rattache l'entrée récente d'un .netsu à la scène interne issue de sa conversion (partage) :
+    // l'accueil peut alors masquer la carte fichier tant que la scène partagée liée existe.
+    "netsu:linkSource": ([filePath, sourceSceneId]) => netsu.linkSourceScene(filePath, sourceSceneId),
     "netsu:forget": ([filePath]) => netsu.forgetProject(filePath),
     "netsu:deleteProject": ([filePath]) => netsu.deleteProject(filePath),
   };

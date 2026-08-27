@@ -1,5 +1,116 @@
 [
   {
+    "id": "netsuboard-0.5.0",
+    "version": "0.5.0",
+    "date": "2026-08-27",
+    "title": {
+      "fr": "Le partage tient debout",
+      "en": "Sharing stands on its own"
+    },
+    "changes": [
+      {
+        "kind": "feature",
+        "fr": "Un panneau d’état sur un board partagé : qui est là, avec son avatar et sa pastille de présence, qui attend encore la clé, et ce qui reste à envoyer. La présence est celle qu’on a vraiment observée — « vu il y a 5 min » plutôt qu’un « hors ligne » qu’aucune machine ne peut affirmer.",
+        "en": "A status panel on a shared board: who is here, with their avatar and presence dot, who is still waiting for the key, and what is left to send. Presence is what was actually observed — “seen 5 min ago” rather than an “offline” no machine can assert."
+      },
+      {
+        "kind": "feature",
+        "fr": "Les invitations arrivent sur l’écran d’accueil : rejoindre, refuser ou remettre à plus tard, sans passer par les paramètres. Rejoindre ouvre le board directement.",
+        "en": "Invitations arrive on the home screen: join, decline or postpone, without going through the settings. Joining opens the board directly."
+      },
+      {
+        "kind": "feature",
+        "fr": "La carte d’un board partagé porte son propre état : le badge devient ambre et dit en un mot ce qu’il attend — une clé, un média, ou une modification faite pendant votre absence.",
+        "en": "A shared board’s card carries its own state: the badge turns amber and names in one word what it is waiting for — a key, a media file, or a change made while you were away."
+      },
+      {
+        "kind": "feature",
+        "fr": "Paramètres › Compte liste enfin les projets partagés de façon lisible : nom, rôle, et de quoi supprimer ou quitter directement. Ceux qui ne sont pas sur cette machine sont repliés derrière une seule ligne.",
+        "en": "Account settings finally lists shared projects readably: name, role, and the means to delete or leave right there. Those not on this machine are folded behind a single line."
+      },
+      {
+        "kind": "fix",
+        "fr": "Les séquences d’images, l’export en PNG, l’export en SVG et la copie d’un média fonctionnent sur un board partagé. Ils échouaient en silence, ou produisaient une image vide en annonçant une réussite.",
+        "en": "Image sequences, PNG export, SVG export and copying a media all work on a shared board. They failed silently, or produced an empty image while reporting success."
+      },
+      {
+        "kind": "fix",
+        "fr": "Exporter un board partagé en .netsu embarque ses vrais médias. Le fichier partait entièrement composé de cases « à relocaliser », en affichant « Exporté ».",
+        "en": "Exporting a shared board to .netsu now carries its real media. The file used to go out made entirely of “relocate” placeholders while announcing “Exported”."
+      },
+      {
+        "kind": "fix",
+        "fr": "Une vidéo YouTube partagée se lit, avec ses points d’entrée et de sortie. Le lecteur arrivait sans source et le voile « préparation » ne partait jamais.",
+        "en": "A shared YouTube video plays, with its in and out points. The player arrived with no source and the “preparing” veil never lifted."
+      },
+      {
+        "kind": "fix",
+        "fr": "L’extraction de palette lit les couleurs d’un média partagé.",
+        "en": "Palette extraction reads the colours of a shared media."
+      },
+      {
+        "kind": "fix",
+        "fr": "Une image de plus de 8 Mo arrive entière. Au-delà, elle était tronquée sans erreur : un GIF s’affichait cassé ou sautait au noir en rebouclant.",
+        "en": "An image above 8 MB arrives whole. Past that size it was truncated with no error: a GIF showed broken or flashed black when looping."
+      },
+      {
+        "kind": "fix",
+        "fr": "Annuler une suppression, modifier un trait de dessin ou poser un point de sortie ne fait plus tomber tout le lot en silence. Trois symptômes différents, une seule cause : le document refusait la réapparition d’un objet supprimé.",
+        "en": "Undoing a deletion, editing a pen stroke or setting an out point no longer drops the whole batch in silence. Three different symptoms, one cause: the document refused a deleted object coming back."
+      },
+      {
+        "kind": "fix",
+        "fr": "Partager un projet ouvert depuis un fichier ne crée plus une deuxième carte identique sur l’accueil, et accepter deux fois la même invitation ne crée plus deux boards.",
+        "en": "Sharing a project opened from a file no longer creates a second identical card on the home screen, and accepting the same invitation twice no longer creates two boards."
+      },
+      {
+        "kind": "fix",
+        "fr": "Un média dont le dossier a bougé est retrouvé tout seul à l’ouverture et avant un partage — ses octets vivent souvent encore ailleurs, et le nom du fichier suffit à les reconnaître.",
+        "en": "A media whose folder moved is found again on open and before sharing — its bytes usually still live elsewhere, and the file name is enough to recognise them."
+      },
+      {
+        "kind": "performance",
+        "fr": "Rejoindre un board partagé ne sature plus une petite machine : les aperçus arrivent d’abord, puis les originaux, images en tête et du plus léger au plus lourd, un ou deux à la fois selon le processeur.",
+        "en": "Joining a shared board no longer saturates a small machine: previews arrive first, then originals, images ahead and lightest first, one or two at a time depending on the processor."
+      },
+      {
+        "kind": "performance",
+        "fr": "Les transferts entre postes passent par une connexion unique et des blocs seize fois plus gros, et le document ne se réécrit plus sur disque à chaque geste.",
+        "en": "Transfers between machines use a single connection and blocks sixteen times larger, and the document no longer rewrites itself to disk on every gesture."
+      },
+      {
+        "kind": "performance",
+        "fr": "La durée d’une vidéo YouTube est connue immédiatement : elle est lue en même temps que le flux, au lieu d’attendre que le lecteur ait parcouru le fichier. C’est ce qui rendait les points d’entrée et de sortie inutilisables pendant de longues secondes.",
+        "en": "A YouTube video’s duration is known immediately: it is read alongside the stream instead of waiting for the player to walk the file. That is what made in and out points unusable for long seconds."
+      },
+      {
+        "kind": "performance",
+        "fr": "Plus de tempête d’erreurs à l’ouverture d’un board partagé : l’application sait désormais quels médias sont déjà sur ce disque et n’en réclame aucun qui ne l’est pas.",
+        "en": "No more error storm when opening a shared board: the application now knows which media are already on this disk and asks for none that are not."
+      },
+      {
+        "kind": "improvement",
+        "fr": "NetsuBoard a enfin son propre dossier de données. Il partageait celui de NetsuRush — mêmes scènes, mêmes médias, mêmes vignettes — et le ménage de l’une pouvait emporter les fichiers de l’autre. Votre bibliothèque est recopiée au premier lancement ; celle de NetsuRush reste intacte.",
+        "en": "NetsuBoard finally has its own data folder. It shared NetsuRush’s — same scenes, same media, same thumbnails — and a cleanup on one side could take the other’s files. Your library is copied over on first launch; NetsuRush’s stays untouched."
+      },
+      {
+        "kind": "improvement",
+        "fr": "Paramètres › Stockage sépare ce qui est libérable sans risque de ce dont l’application est seule dépositaire, et propose de mettre ce dernier à l’abri avant quoi que ce soit.",
+        "en": "Settings › Storage separates what is safe to free from what the application alone holds, and offers to put the latter somewhere safe first."
+      },
+      {
+        "kind": "improvement",
+        "fr": "Le service interne écoute sur un port qu’aucun autre logiciel ne revendique, au lieu de se placer au milieu des ports de développement.",
+        "en": "The internal service listens on a port no other software claims, instead of sitting among the development ports."
+      },
+      {
+        "kind": "improvement",
+        "fr": "Les messages d’erreur du partage sont lisibles : ils nomment les fichiers concernés au lieu d’afficher un mur de chemins, ou « [object Object] ».",
+        "en": "Sharing error messages are readable: they name the files involved instead of printing a wall of paths, or “[object Object]”."
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.4.6",
     "version": "0.4.6",
     "date": "2026-08-17",

@@ -65,14 +65,26 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_pair", ["userId", "friendId"]),
 
+  // A request may be addressed to an account that has not signed in here yet. `toUserId` is then
+  // empty and the identifier the sender typed is kept instead; the request binds itself the moment
+  // that person first publishes a profile. Without this, adding someone would require them to open
+  // NetsuBoard first, which is exactly backwards — an invitation is what makes them open it.
   friendRequests: defineTable({
     fromUserId: v.string(),
-    toUserId: v.string(),
+    toUserId: v.string(), // "" while pending
+    toDiscordId: v.optional(v.string()),
+    toDiscordUsername: v.optional(v.string()),
+    toHandle: v.optional(v.string()),
+    // Exactly what the sender typed, for the pending row shown in their list.
+    toLabel: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_to", ["toUserId"])
     .index("by_from", ["fromUserId"])
-    .index("by_pair", ["fromUserId", "toUserId"]),
+    .index("by_pair", ["fromUserId", "toUserId"])
+    .index("by_pending_discord_id", ["toDiscordId"])
+    .index("by_pending_discord_username", ["toDiscordUsername"])
+    .index("by_pending_handle", ["toHandle"]),
 
   // Devices authorised to take part. `exchangePublic` is the X25519 half that will receive wrapped
   // project keys; the secret never leaves the machine. `deviceId` is the Ed25519 public key, which

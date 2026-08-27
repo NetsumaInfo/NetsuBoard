@@ -210,6 +210,20 @@ pub(crate) fn collab_dir() -> PathBuf {
     home_dir().join("collab")
 }
 
+/// Where the core actually keeps scenes and board assets — the same root as `core/config.js`.
+///
+/// It used to point at `~/.netsurush`, mirroring a hard-coded default on the Node side: NetsuBoard
+/// then shared its scene library and asset store with NetsuRush, and a cleanup on either side could
+/// take the other's board media with it. Both now resolve `NR_HOME`, else the NetsuBoard home, so
+/// this function and `core/config.js#DATA_DIR` cannot drift apart. Resolving the library anywhere
+/// else means Rust looks in an empty directory, finds no scene, and refuses every media.
+pub(crate) fn board_data_dir() -> PathBuf {
+    if let Some(home) = std::env::var_os("NR_DATA_DIR") {
+        return PathBuf::from(home);
+    }
+    home_dir()
+}
+
 fn ring_path() -> PathBuf {
     collab_dir().join("device-identity.json")
 }

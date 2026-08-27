@@ -193,6 +193,32 @@ pub async fn collab_media_grant_known(
     service.grant_known_media(project_id, path).await
 }
 
+/// Chemin sur disque des octets d'un média du projet OUVERT, ou `None` s'ils n'y sont pas encore.
+///
+/// Le service Node ne connaît que des fichiers : sans ce chemin, exporter un board partagé en
+/// `.netsu` écrivait un document dont TOUS les médias étaient des placeholders — en annonçant que
+/// l'export avait réussi. Ce sont les mêmes conditions que le protocole d'affichage : projet sous
+/// bail et empreinte référencée par le document courant. Le renderer peut déjà lire ces octets par
+/// ce protocole, connaître leur chemin ne lui ouvre donc rien de plus.
+#[tauri::command]
+pub async fn collab_media_path(
+    project_id: String,
+    hash: String,
+) -> Result<Option<String>, CollabError> {
+    let authorised = super::doc::open_media_hashes(&project_id)
+        .map_err(|error| CollabError::validation(error.to_string()))?
+        .is_some_and(|hashes| hashes.contains(&hash));
+    if !authorised {
+        return Err(CollabError::validation(
+            "media is not part of the open project",
+        ));
+    }
+    let path = super::blobs::path_for(&hash).map_err(|error| CollabError::validation(error.to_string()))?;
+    Ok(path
+        .is_file()
+        .then(|| path.to_string_lossy().into_owned()))
+}
+
 #[tauri::command]
 pub async fn collab_media_resolve(
     service: State<'_, CollabService>,

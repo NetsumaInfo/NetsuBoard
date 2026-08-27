@@ -15,7 +15,7 @@ use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex, OnceLock};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use iroh::endpoint::presets;
 use iroh::{Endpoint, EndpointAddr, EndpointId, SecretKey};
@@ -66,11 +66,15 @@ pub struct SyncResult {
     pub relayed: bool,
 }
 
+// Ces quatre verrous se REPRENNENT après une panique au lieu de dégrader en silence : sinon une
+// seule panique sous l'un d'eux refusait ensuite tous les pairs, tous les rôles et toute mise à
+// jour d'allowlist — la collaboration morte pour la session, sans un message.
 fn is_allowed(peer: &EndpointId) -> bool {
     ALLOWED
         .lock()
-        .map(|guard| guard.as_ref().is_some_and(|set| set.contains(peer)))
-        .unwrap_or(false)
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .as_ref()
+        .is_some_and(|set| set.contains(peer))
 }
 
 /// Replaces the allowlist with the devices of the accounts this user actually collaborates with.
@@ -86,9 +90,7 @@ pub fn set_allowlist(ids: &[String]) -> usize {
         }
     }
     let count = set.len();
-    if let Ok(mut guard) = ALLOWED.lock() {
-        *guard = Some(set);
-    }
+    *ALLOWED.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(set);
     count
 }
 
@@ -110,9 +112,9 @@ pub fn replace_project_peers(projects: &[(String, Vec<(String, bool)>)]) -> usiz
         count += project.len();
         all.insert(project_id.clone(), project);
     }
-    if let Ok(mut guard) = PROJECT_PEERS.lock() {
-        *guard = Some(all);
-    }
+    *PROJECT_PEERS
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(all);
     count
 }
 
@@ -120,8 +122,9 @@ pub fn replace_project_peers(projects: &[(String, Vec<(String, bool)>)]) -> usiz
 fn project_role(project_id: &str, peer: &EndpointId) -> Option<bool> {
     PROJECT_PEERS
         .lock()
-        .ok()
-        .and_then(|guard| guard.as_ref()?.get(project_id)?.get(peer).copied())
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .as_ref()
+        .and_then(|projects| projects.get(project_id)?.get(peer).copied())
 }
 
 async fn write_frame(send: &mut iroh::endpoint::SendStream, bytes: &[u8]) -> Result<(), String> {
@@ -283,10 +286,10 @@ async fn accept_loop(endpoint: Endpoint) {
                 return;
             }
             if connection.alpn() == super::blobs::ALPN_BLOB {
-                let served = tokio::time::timeout(EXCHANGE_TIMEOUT, serve_blob(&connection)).await;
-                if let Err(reason) =
-                    served.unwrap_or_else(|_| Err("media exchange timed out".into()))
-                {
+                // No whole-connection deadline here: a connection now serves MANY chunk requests,
+                // and a 30 s ceiling would cut every large transfer off. serve_blob bounds each
+                // request — and the idle wait between requests — with EXCHANGE_TIMEOUT itself.
+                if let Err(reason) = serve_blob(&connection).await {
                     connection.close(3u32.into(), reason.as_bytes());
                 }
                 return;
@@ -364,33 +367,102 @@ async fn sync_inner(project_id: &str, id: &str) -> Result<SyncResult, String> {
     })
 }
 
-pub async fn sync(project_id: &str, id: &str) -> Result<SyncResult, String> {
-    tokio::time::timeout(EXCHANGE_TIMEOUT, sync_inner(project_id, id))
-        .await
-        .map_err(|_| "document exchange timed out".to_string())?
+/// Last time a document exchange with a peer SUCCEEDED, by endpoint id.
+///
+/// This is presence as actually observed, not a heartbeat: the only honest thing this machine can
+/// say about someone else is when it last reached them. Nothing is broadcast for it and no extra
+/// traffic is created — the exchanges already happen.
+static LAST_SEEN: Mutex<Option<std::collections::HashMap<String, Instant>>> = Mutex::new(None);
+
+/// Milliseconds since the last successful exchange with each endpoint that has ever answered.
+pub fn peer_last_seen() -> std::collections::HashMap<String, u64> {
+    let now = Instant::now();
+    LAST_SEEN
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .as_ref()
+        .map(|seen| {
+            seen.iter()
+                .map(|(id, at)| (id.clone(), now.duration_since(*at).as_millis() as u64))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
-/// Serves one media slice only when both the peer membership and the current project manifest
-/// authorise it. A content hash learned in an unrelated project is not a cross-project capability.
-async fn serve_blob(connection: &iroh::endpoint::Connection) -> Result<(), String> {
-    let (mut send, mut recv) = connection
-        .accept_bi()
+fn note_seen(id: &str) {
+    let mut guard = LAST_SEEN
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    guard
+        .get_or_insert_with(std::collections::HashMap::new)
+        .insert(id.to_owned(), Instant::now());
+}
+
+pub async fn sync(project_id: &str, id: &str) -> Result<SyncResult, String> {
+    let result = tokio::time::timeout(EXCHANGE_TIMEOUT, sync_inner(project_id, id))
         .await
-        .map_err(|err| format!("stream: {err}"))?;
-    let project_id = String::from_utf8(read_bounded_frame(&mut recv, 256).await?)
+        .map_err(|_| "document exchange timed out".to_string())?;
+    if result.is_ok() {
+        note_seen(id);
+    }
+    result
+}
+
+/// Serves media requests for the lifetime of one connection. Each request is one bi-stream with the
+/// same frame layout as always — (project, hash, offset) in, (total, chunk hash, chunk) out — so a
+/// peer that still opens one connection per chunk is served identically. A resuming downloader
+/// keeps the connection and opens the next stream on it, paying one QUIC handshake per media
+/// instead of one per chunk.
+async fn serve_blob(connection: &iroh::endpoint::Connection) -> Result<(), String> {
+    // The authorising hash set costs a full projection rebuild. It is cached for the connection
+    // and recomputed only when a requested hash is missing from it, so a hash removed from the
+    // document mid-transfer is refused after one recomputation, never served from a stale cache.
+    let mut authorized: Option<(String, HashSet<String>)> = None;
+    loop {
+        let Ok(accepted) = tokio::time::timeout(EXCHANGE_TIMEOUT, connection.accept_bi()).await
+        else {
+            return Ok(()); // idle peer: nothing owed, drop the connection
+        };
+        let Ok((mut send, mut recv)) = accepted else {
+            return Ok(()); // peer closed the connection: a finished transfer, not an error
+        };
+        let served = tokio::time::timeout(
+            EXCHANGE_TIMEOUT,
+            serve_blob_request(connection, &mut send, &mut recv, &mut authorized),
+        )
+        .await;
+        served.unwrap_or_else(|_| Err("media exchange timed out".into()))?;
+    }
+}
+
+/// One media slice, only when both the peer membership and the current project manifest authorise
+/// it. A content hash learned in an unrelated project is not a cross-project capability.
+async fn serve_blob_request(
+    connection: &iroh::endpoint::Connection,
+    send: &mut iroh::endpoint::SendStream,
+    recv: &mut iroh::endpoint::RecvStream,
+    authorized: &mut Option<(String, HashSet<String>)>,
+) -> Result<(), String> {
+    let project_id = String::from_utf8(read_bounded_frame(recv, 256).await?)
         .map_err(|_| "malformed project id".to_string())?;
     if project_role(&project_id, &connection.remote_id()).is_none() {
         return Err("peer is not a member of this project".into());
     }
-    let hash = String::from_utf8(read_bounded_frame(&mut recv, 64).await?)
+    let hash = String::from_utf8(read_bounded_frame(recv, 64).await?)
         .map_err(|_| "malformed hash".to_string())?;
-    if !super::doc::media_hashes(&project_id)
-        .map_err(|err| err.to_string())?
-        .contains(&hash)
-    {
-        return Err("media is not referenced by this project".into());
+    let cached = matches!(
+        authorized,
+        Some((project, hashes)) if *project == project_id && hashes.contains(&hash)
+    );
+    if !cached {
+        let hashes = super::doc::media_hashes(&project_id).map_err(|err| err.to_string())?;
+        let allowed = hashes.contains(&hash);
+        *authorized = Some((project_id.clone(), hashes));
+        if !allowed {
+            return Err("media is not referenced by this project".into());
+        }
     }
-    let offset_bytes = read_bounded_frame(&mut recv, 8).await?;
+    let offset_bytes = read_bounded_frame(recv, 8).await?;
     let offset = u64::from_le_bytes(
         offset_bytes
             .as_slice()
@@ -399,61 +471,25 @@ async fn serve_blob(connection: &iroh::endpoint::Connection) -> Result<(), Strin
     );
 
     let total = super::blobs::size_of(&hash).map_err(|err| err.to_string())?;
-    write_frame(&mut send, &total.to_le_bytes()).await?;
+    write_frame(send, &total.to_le_bytes()).await?;
     let chunk = super::blobs::read_at(&hash, offset, super::blobs::TRANSFER_CHUNK)
         .map_err(|err| err.to_string())?;
-    write_frame(&mut send, blake3::hash(&chunk).as_bytes()).await?;
-    write_frame(&mut send, &chunk).await?;
+    write_frame(send, blake3::hash(&chunk).as_bytes()).await?;
+    write_frame(send, &chunk).await?;
     let _ = send.finish();
     Ok(())
 }
 
-/// Downloads one media from a peer, resuming where an interrupted attempt stopped.
-///
-/// The transfer is verified against its hash before the file takes its final name, so a relay, a
-/// peer or a damaged disk cannot substitute other bytes. Once received, this machine can serve it
-/// in turn — every receiver becomes a provider.
+/// One chunk over an already-established connection: opens one bi-stream, asks for `offset`,
+/// verifies the chunk against its own hash, appends it to the partial file, and returns how many
+/// bytes this machine now holds.
 async fn fetch_blob_chunk(
+    connection: &iroh::endpoint::Connection,
     project_id: &str,
-    id: &str,
     hash: &str,
+    offset: u64,
     expected_size: u64,
-) -> Result<Option<u64>, String> {
-    let peer: EndpointId = id
-        .parse()
-        .map_err(|_| "malformed endpoint id".to_string())?;
-    if !is_allowed(&peer) {
-        return Err("peer is not in the allowlist".into());
-    }
-    if super::blobs::has(hash) {
-        let actual = super::blobs::size_of(hash).map_err(|err| err.to_string())?;
-        return if actual == expected_size {
-            Ok(Some(actual))
-        } else {
-            Err("local media size does not match its manifest".into())
-        };
-    }
-    if project_role(project_id, &peer).is_none() {
-        return Err("peer is not a member of this project".into());
-    }
-    if !super::doc::media_hashes(project_id)
-        .map_err(|err| err.to_string())?
-        .contains(hash)
-    {
-        return Err("media is not referenced by this project".into());
-    }
-    let endpoint = endpoint().await?;
-    let mut offset = super::blobs::partial_len(hash);
-    if offset >= expected_size {
-        match super::blobs::finish(hash, expected_size) {
-            Ok(()) => return Ok(Some(expected_size)),
-            Err(_) => offset = 0,
-        }
-    }
-    let connection = endpoint
-        .connect(EndpointAddr::from(peer), super::blobs::ALPN_BLOB)
-        .await
-        .map_err(|err| format!("connect: {err}"))?;
+) -> Result<u64, String> {
     let (mut send, mut recv) = connection
         .open_bi()
         .await
@@ -475,37 +511,103 @@ async fn fetch_blob_chunk(
     }
     let chunk_hash = read_bounded_frame(&mut recv, 32).await?;
     let chunk = read_frame(&mut recv).await?;
-    connection.close(0u32.into(), b"done");
     if chunk.is_empty() {
         return Err("the peer sent nothing".into());
     }
     if chunk_hash.as_slice() != blake3::hash(&chunk).as_bytes() {
         return Err("peer media chunk hash does not verify".into());
     }
-    let have = super::blobs::append(hash, &chunk, expected_size).map_err(|err| err.to_string())?;
-    if have >= total {
-        super::blobs::finish(hash, expected_size).map_err(|err| err.to_string())?;
-        Ok(Some(total))
-    } else {
-        Ok(None)
-    }
+    super::blobs::append(hash, &chunk, expected_size).map_err(|err| err.to_string())
 }
 
+/// Downloads one media from a peer, resuming where an interrupted attempt stopped.
+///
+/// The transfer is verified against its hash before the file takes its final name, so a relay, a
+/// peer or a damaged disk cannot substitute other bytes. Once received, this machine can serve it
+/// in turn — every receiver becomes a provider.
+///
+/// One connection carries the whole media: chunks are requested over successive streams on it,
+/// each under its own `EXCHANGE_TIMEOUT`, instead of paying a QUIC connect/handshake/close cycle
+/// per chunk. A peer that still closes after one chunk (the previous protocol) just causes a
+/// reconnect and the transfer continues.
 pub async fn fetch_blob(
     project_id: &str,
     id: &str,
     hash: &str,
     expected_size: u64,
 ) -> Result<u64, String> {
+    let peer: EndpointId = id
+        .parse()
+        .map_err(|_| "malformed endpoint id".to_string())?;
+    if !is_allowed(&peer) {
+        return Err("peer is not in the allowlist".into());
+    }
+    if super::blobs::has(hash) {
+        let actual = super::blobs::size_of(hash).map_err(|err| err.to_string())?;
+        return if actual == expected_size {
+            Ok(actual)
+        } else {
+            Err("local media size does not match its manifest".into())
+        };
+    }
+    if project_role(project_id, &peer).is_none() {
+        return Err("peer is not a member of this project".into());
+    }
+    if !super::doc::media_hashes(project_id)
+        .map_err(|err| err.to_string())?
+        .contains(hash)
+    {
+        return Err("media is not referenced by this project".into());
+    }
+    let endpoint = endpoint().await?;
+    let mut offset = super::blobs::partial_len(hash);
+    if offset >= expected_size {
+        match super::blobs::finish(hash, expected_size) {
+            Ok(()) => return Ok(expected_size),
+            Err(_) => offset = 0,
+        }
+    }
+    let mut connection: Option<iroh::endpoint::Connection> = None;
     loop {
-        let result = tokio::time::timeout(
+        let (conn, fresh) = match connection.take() {
+            Some(conn) => (conn, false),
+            None => {
+                let conn = tokio::time::timeout(
+                    EXCHANGE_TIMEOUT,
+                    endpoint.connect(EndpointAddr::from(peer), super::blobs::ALPN_BLOB),
+                )
+                .await
+                .map_err(|_| "media exchange timed out".to_string())?
+                .map_err(|err| format!("connect: {err}"))?;
+                (conn, true)
+            }
+        };
+        let attempt = tokio::time::timeout(
             EXCHANGE_TIMEOUT,
-            fetch_blob_chunk(project_id, id, hash, expected_size),
+            fetch_blob_chunk(&conn, project_id, hash, offset, expected_size),
         )
         .await
-        .map_err(|_| "media exchange timed out".to_string())??;
-        if let Some(total) = result {
-            return Ok(total);
+        .unwrap_or_else(|_| Err("media exchange timed out".into()));
+        match attempt {
+            Ok(have) => {
+                if have >= expected_size {
+                    conn.close(0u32.into(), b"done");
+                    super::blobs::finish(hash, expected_size).map_err(|err| err.to_string())?;
+                    return Ok(expected_size);
+                }
+                offset = have;
+                connection = Some(conn);
+            }
+            Err(error) => {
+                conn.close(0u32.into(), b"done");
+                if fresh {
+                    // A fresh connection that cannot deliver a single chunk is a real failure;
+                    // retrying here would loop forever against a dead or refusing peer.
+                    return Err(error);
+                }
+                // Reused connection refused the next stream — a peer on the one-chunk-per-
+                // connection protocol, or a path change. Reconnect and resume from the partial.
+            }
         }
     }
 }

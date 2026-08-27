@@ -59,7 +59,7 @@ Tauri's **WebView2 decodes HEVC** through `<video>` — verified `canPlayType('v
 
 `core/shaderUpscale.js` runs the ffmpeg `libplacebo` filter (Vulkan): one ffmpeg command per job, progress over `-progress pipe`. **No Python, no neural runtime, no weights.**
 
-- Shader ids map either to a custom `.glsl` file (`custom_shader_path`) or to a built-in libplacebo scaler. Animation uses the ArtCNN and Anime4K GLSL networks; live action uses `lanczossharp`.
+- Shader ids map either to a custom `.glsl` file (`custom_shader_path`) or to a built-in libplacebo scaler. Animation uses the ArtCNN GLSL networks; live action uses `lanczossharp`.
 - The ArtCNN suffixes are **distinct weights, not a post-filter**: `_DS` doubles while denoising and sharpening, `_DN` doubles while denoising and softening. They do not combine with the neutral variant of the same network.
 - `libplacebo` handles colour management itself — do **not** reintroduce the swscale workaround an AI path would need.
 - **An animated GIF keeps its frames.** `runShaderGif` shades the whole stream, then re-quantises it through `palettegen`/`paletteuse` (the GIF muxer only takes palettised frames, the filter outputs `yuv444p`). The still-image path writes `-frames:v 1` and therefore still refuses a GIF: sending one there returns a first frame, not a GIF.
@@ -166,4 +166,5 @@ These are **defects**, documented so they are not mistaken for design. Each need
 
 - `core/config.js` still names its temporary directories `netsurush-session` and `netsurush-proxies`, and `core/server.js` calls `sessionCache.resetSync()` at startup. With both applications installed, starting one **purges the other's session cache**.
 - `src-tauri/src/lib.rs` still resolves its log directory to `%LOCALAPPDATA%\NetsuRush`, whereas `core/config.js` resolves `NR_HOME` to `%LOCALAPPDATA%\NetsuBoard`.
+- `core/config.js` hard-codes `DATA_DIR` to `~/.netsurush`, so the **scene library, the app asset store and the thumbnail cache are shared with NetsuRush** (`reference/reference.db`, `reference/assets`, `thumbs`) even though `NR_HOME` is not. Both applications therefore list each other's scenes, and `Settings › Storage` frees a thumbnail cache the other one also uses — harmless in effect, since thumbnails are rebuilt on demand, but not intended. The consequence that does bite: a NetsuRush project's `.netsu` is recorded in *its* `NR_HOME`, so `core/boardStorage.js` cannot see that sidecar and reports its leftover assets as a sole copy instead of a duplicate. That is the conservative direction — nothing is deleted — but it under-reports what is freeable.
 - `core/shaderUpscale.js` still imports `importToMediaPool` from `core/resolve.js`.

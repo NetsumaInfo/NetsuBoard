@@ -11,6 +11,7 @@
     "flipV": "上下反転",
     "crop": "トリミング",
     "openLink": "リンクを開く",
+    "reloadMedia": "メディアを再読み込み",
     "download": "ダウンロード",
     "restoreDownload": "ダウンロード済みファイルに戻す",
     "zoomIn": "拡大",
@@ -133,6 +134,10 @@
     "factor": "倍率",
     "denoise": "ノイズ除去",
     "downloadOnline": "オンライン動画をダウンロード",
+    "copyLocal": "ローカルメディアをプロジェクトにコピー",
+    "copyLocalOn": "コピー",
+    "copyLocalOff": "参照",
+    "copyLocalMax": "動画の上限 (MB)",
     "embedSwitch": "プレーヤーへの切り替え",
     "embedSwitchKeep": "ファイルを保持",
     "embedSwitchDrop": "ファイルを削除",
@@ -238,7 +243,12 @@
     "pinnedAllPlaced": "すべて配置済み。",
     "pinnedBarHint": "ドラッグで配置・移動、クリックで削除。",
     "pinnedRemove": "{{label}} をバーから削除",
-    "barButtons": "ツールバー"
+    "barButtons": "ツールバー",
+    "assetSweep": "未使用のメディア",
+    "assetSweepHint": "どのシーンも参照していないファイルを削除します。ボードの内容には触れません。",
+    "assetSweepAction": "クリーンアップ",
+    "assetSweepDone": "{{count}} 件削除、{{mb}} MB 解放。",
+    "assetSweepFailed": "クリーンアップに失敗しました。"
   },
   "inspector": {
     "ytPlayer": "YouTube プレーヤー",
@@ -320,7 +330,8 @@
     "kindItem": "ボードのアイテム",
     "chooseFile": "ファイルを選択…",
     "targetItem": "リンク先のアイテム",
-    "remove": "リンクを削除"
+    "remove": "リンクを削除",
+    "sharedFile": "このファイルは共有ボードのものです。このディスク上に場所がありません。"
   },
   "font": {
     "label": "フォント",
@@ -494,6 +505,7 @@
     "hideFromList": "一覧から隠す",
     "deleteScene": "シーンを削除",
     "modified": "更新 {{date}}",
+    "sharedBoard": "共有",
     "dropMedia": "メディアをドラッグ＆ドロップ",
     "dropHint": "画像と動画に対応",
     "or": "または",
@@ -510,7 +522,19 @@
     "deleteProject": "完全に削除",
     "deleteProjectTitle": "「{{name}}」を削除しますか？",
     "deleteProjectWarning": ".netsu ファイルと .medias フォルダーは完全に削除されます。外部のソースメディアは削除されません。",
-    "projectMissing": "ファイルが見つかりません"
+    "projectMissing": "ファイルが見つかりません",
+    "invites": {
+      "body": "共有ボードに招待しています",
+      "join": "参加",
+      "decline": "辞退",
+      "later": "後で",
+      "failed": "このボードに参加できませんでした"
+    },
+    "cardStatus": {
+      "key": "鍵待ち",
+      "media": "メディア待ち",
+      "changed": "更新あり"
+    }
   },
   "item": {
     "doubleClickEdit": "ダブルクリックで編集…",
@@ -522,6 +546,7 @@
     "retryMedia": "再試行",
     "notBundled": "{{size}} · 未同梱",
     "relocate": "場所を指定",
+    "reloadMedia": "再ダウンロード",
     "downloading": "ダウンロード中…",
     "mediaFallback": "メディア",
     "interactiveActive": "操作中 — 他をクリックで移動",
@@ -738,6 +763,8 @@
     "reading": "{{count}} 件のファイルを読み込み中…",
     "importing": "{{name}} をインポート中…",
     "done": "{{count}} 件のメディアを読み込みました",
+    "copyFailed": "「{{name}}」をコピーできませんでした。このメディアはアプリを閉じると失われます",
+    "copyFailedBatch": "{{count}} 件のコピーに失敗しました（「{{name}}」など）。これらのメディアはアプリを閉じると失われます",
     "folderTruncated": "フォルダーが大きすぎます：先頭 {{count}} 件を読み込みました",
     "fetching": "メディアを取得中…",
     "linkDone": "メディアをインポートしました",
@@ -756,13 +783,17 @@
     "signedOut": "設定で Discord アカウントを接続してください。",
     "noFriends": "先に「設定 › アカウント」でフレンドを追加してください。",
     "invited": "{{n}} 件の招待を送信しました。",
-    "notice": "ボードが共同編集になります。招待された人は設定から参加します。",
+    "notice": "ボードは共同編集になります。招待された人はホーム画面で招待を受け取ります。",
     "close": "閉じる",
     "create": "作成して招待",
     "invite": "招待",
-    "fileBacked": "共有する前に、このボードをシーンライブラリへ保存してください。",
+    "fileBacked": "このボードは .netsu ファイルから開かれています。共同編集プロジェクトはシーンライブラリに置かれます。",
     "saveAsBlocked": "共同プロジェクトは共有シーンが管理します。ローカルコピーは書き出しで作成してください。",
-    "role": { "owner": "所有者", "editor": "編集可", "viewer": "閲覧のみ" },
+    "role": {
+      "owner": "所有者",
+      "editor": "編集可",
+      "viewer": "閲覧のみ"
+    },
     "rotationPending": "取り消しは記録済みです。所有者の端末が鍵のローテーションを完了するまで新しい公開は待機します。",
     "staleHead": {
       "title": "古い復旧ブランチ",
@@ -772,13 +803,48 @@
       "confirmTitle": "このブランチを破棄しますか？",
       "confirmWarning": "このデバイスだけが公開した変更は完全に失われます。そのデバイスが再接続できない場合にのみ続行してください。"
     },
-    "status": { "pending": "同期を保留中", "rotation": "鍵のローテーション待ち" },
-    "members": { "remove": "プロジェクトから削除", "pending": "招待を保留中", "cancelInvite": "招待を取り消す" },
+    "status": {
+      "pending": "同期を保留中",
+      "rotation": "鍵のローテーション待ち"
+    },
+    "members": {
+      "remove": "プロジェクトから削除",
+      "pending": "招待を保留中",
+      "cancelInvite": "招待を取り消す"
+    },
     "lifecycle": {
-      "leave": "プロジェクトを退出", "delete": "プロジェクトを削除",
-      "leaveTitle": "このプロジェクトを退出しますか？", "deleteTitle": "このプロジェクトを削除しますか？",
+      "leave": "プロジェクトを退出",
+      "delete": "プロジェクトを削除",
+      "leaveTitle": "このプロジェクトを退出しますか？",
+      "deleteTitle": "このプロジェクトを削除しますか？",
       "leaveWarning": "この端末が受信済みの内容は残りますが、以後このプロジェクトを同期できません。",
       "deleteWarning": "接続情報、招待、暗号化された復旧コピーが全メンバー分削除されます。元に戻せません。"
+    },
+    "noScene": "先にこのボードをシーンライブラリに保存してください。",
+    "willAdopt": "このボードはシーンライブラリにコピーされます。.netsu ファイルはディスクに残ります。",
+    "failed": "共有に失敗しました。",
+    "sync": {
+      "queued": "送信待ちの変更があります。端末に接続でき次第、自動的に送信されます。",
+      "upToDate": "すべて同期済みです。",
+      "peers": "接続可能な端末 {{count}} 台"
+    },
+    "mediaMissing": "ディスク上に見つからないメディアが {{count}} 件：{{names}}。ボード上でマークされています — カードから復元（フォルダーを移動した？）して、もう一度共有してください。",
+    "panel": {
+      "title": "共有の状態",
+      "online": "{{count}} 人がオンライン",
+      "alone": "まだ他に誰もいません。",
+      "hereNow": "オンライン",
+      "neverSeen": "未接続",
+      "seenMinutes": "{{count}} 分前に確認",
+      "seenHours": "{{count}} 時間前に確認",
+      "seenDays": "{{count}} 日前に確認",
+      "invited": "招待の返答待ち",
+      "unknownMember": "メンバー",
+      "queued": "送信待ちの変更があります。端末に接続でき次第、自動的に送信されます。",
+      "upToDate": "すべて同期済みです。",
+      "rotation": "鍵のローテーション待ち：新しい公開は所有者の端末を待っています。",
+      "waitingKey": "{{count}} 人が鍵を待っています。オンラインのままにして渡してください。",
+      "nobodyReachable": "現在つながる相手がいません。相手が戻り次第、変更が送信されます。"
     }
   }
 }

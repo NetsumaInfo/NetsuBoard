@@ -154,8 +154,123 @@ export const syncDiscordProfile = internalMutation({
     };
     if (existing) await ctx.db.patch(existing._id, row);
     else await ctx.db.insert("profiles", row);
+    // Anyone who added this account before it ever signed in here now has a real request.
+    await bindPendingRequests(ctx, args.userId, {
+      handle,
+      discordId: args.discordId,
+      discordUsername,
+    });
   },
 });
+
+/** Caps the sender, exactly like a resolved request: a pending row is still a row. */
+async function requestPending(
+  ctx: MutationCtx,
+  fromUserId: string,
+  label: string,
+  classified: { discordId: string | null; discordUsername: string | null; handle: string },
+) {
+  if (!classified.discordId && !classified.discordUsername && !validText(classified.handle, 64)) {
+    return { status: "unknown" as const };
+  }
+  const outgoing = await ctx.db
+    .query("friendRequests")
+    .withIndex("by_from", (q) => q.eq("fromUserId", fromUserId))
+    .take(MAX_PENDING_REQUESTS);
+  if (outgoing.length >= MAX_PENDING_REQUESTS) throw new Error("friend request limit reached");
+  const duplicate = outgoing.find(
+    (row) =>
+      !row.toUserId &&
+      ((classified.discordId && row.toDiscordId === classified.discordId) ||
+        (classified.discordUsername && row.toDiscordUsername === classified.discordUsername) ||
+        (classified.handle && row.toHandle === classified.handle)),
+  );
+  if (duplicate) return { status: "pending" as const };
+
+  await ctx.db.insert("friendRequests", {
+    fromUserId,
+    toUserId: "",
+    toDiscordId: classified.discordId ?? undefined,
+    toDiscordUsername: classified.discordUsername ?? undefined,
+    toHandle: validText(classified.handle, 64) ? classified.handle : undefined,
+    toLabel: label.slice(0, 128),
+    createdAt: Date.now(),
+  });
+  return { status: "invited" as const };
+}
+
+/**
+ * Binds every request that was addressed to this identity before it existed here.
+ *
+ * Called right after a profile is published. A request that meanwhile crossed one coming the other
+ * way is accepted immediately, and a request whose sender is now already a friend is dropped:
+ * neither should survive as a pending row nobody can act on.
+ */
+async function bindPendingRequests(
+  ctx: MutationCtx,
+  userId: string,
+  profile: { handle: string; discordId?: string; discordUsername?: string },
+) {
+  const candidates = [];
+  if (profile.discordId) {
+    candidates.push(
+      ...(await ctx.db
+        .query("friendRequests")
+        .withIndex("by_pending_discord_id", (q) => q.eq("toDiscordId", profile.discordId))
+        .take(MAX_PENDING_REQUESTS)),
+    );
+  }
+  if (profile.discordUsername) {
+    candidates.push(
+      ...(await ctx.db
+        .query("friendRequests")
+        .withIndex("by_pending_discord_username", (q) =>
+          q.eq("toDiscordUsername", profile.discordUsername),
+        )
+        .take(MAX_PENDING_REQUESTS)),
+    );
+  }
+  candidates.push(
+    ...(await ctx.db
+      .query("friendRequests")
+      .withIndex("by_pending_handle", (q) => q.eq("toHandle", profile.handle))
+      .take(MAX_PENDING_REQUESTS)),
+  );
+
+  const seen = new Set<string>();
+  for (const row of candidates) {
+    if (row.toUserId || seen.has(row._id)) continue;
+    seen.add(row._id);
+    if (row.fromUserId === userId) {
+      await ctx.db.delete(row._id);
+      continue;
+    }
+    const already = await ctx.db
+      .query("friends")
+      .withIndex("by_pair", (q) => q.eq("userId", userId).eq("friendId", row.fromUserId))
+      .unique();
+    if (already) {
+      await ctx.db.delete(row._id);
+      continue;
+    }
+    const mirrored = await ctx.db
+      .query("friendRequests")
+      .withIndex("by_pair", (q) => q.eq("fromUserId", userId).eq("toUserId", row.fromUserId))
+      .unique();
+    if (mirrored) {
+      await link(ctx, userId, row.fromUserId);
+      await ctx.db.delete(mirrored._id);
+      await ctx.db.delete(row._id);
+      continue;
+    }
+    await ctx.db.patch(row._id, {
+      toUserId: userId,
+      toDiscordId: undefined,
+      toDiscordUsername: undefined,
+      toHandle: undefined,
+    });
+  }
+}
 
 /**
  * Publishes the caller's server-authenticated public fields so others can find them by a unique
@@ -200,6 +315,11 @@ export const upsertProfile = mutation({
     };
     if (existing) await ctx.db.patch(existing._id, row);
     else await ctx.db.insert("profiles", row);
+    await bindPendingRequests(ctx, user._id, {
+      handle: normalized,
+      discordId: existing?.discordId,
+      discordUsername: existing?.discordUsername,
+    });
     return { handle: normalized };
   },
 });
@@ -239,10 +359,23 @@ export const listSocial = query({
         })),
       ),
       outgoing: await Promise.all(
-        outgoingRows.map(async (row) => ({
-          requestId: row._id,
-          ...(await publicProfile(ctx, row.toUserId)),
-        })),
+        outgoingRows.map(async (row) =>
+          row.toUserId
+            ? { requestId: row._id, pending: false, ...(await publicProfile(ctx, row.toUserId)) }
+            : {
+                requestId: row._id,
+                // Nobody to resolve yet. ONE label — the identifier that was typed — because the
+                // handle, the Discord username and the label are the same string at this point, and
+                // printing all three showed the same pseudonym twice. Name and avatar arrive with
+                // the account, the moment it signs in.
+                pending: true,
+                userId: "",
+                handle: "",
+                discordUsername: null,
+                name: row.toLabel ?? row.toHandle ?? "",
+                image: null,
+              },
+        ),
       ),
     };
   },
@@ -290,7 +423,13 @@ export const sendRequest = mutation({
     const targetIds = uniqueProfileIds(matches);
     if (targetIds.length > 1) return { status: "ambiguous" as const };
     const target = matches.find((profile) => profile?.userId === targetIds[0]);
-    if (!target) return { status: "unknown" as const };
+    if (!target) {
+      // Nobody with that identifier has published a profile here yet. The request WAITS instead of
+      // failing: requiring the other person to open NetsuBoard before they can be added is
+      // backwards, since the invitation is usually what makes them open it. `upsertProfile` binds
+      // this row the moment they sign in.
+      return await requestPending(ctx, user._id, identifier.trim(), classified);
+    }
     if (target.userId === user._id) return { status: "self" as const };
 
     const already = await ctx.db

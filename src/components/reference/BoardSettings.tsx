@@ -7,9 +7,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Grid2x2, Square, X, Star } from "lucide-react";
+import { Grid2x2, Square, X, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { nr } from "@/lib/bridge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { UP_SCALES } from "@/components/upscale/upscaleShared";
@@ -210,6 +212,31 @@ export function BoardSettings({ tab, onCapturingChange }: {
   onCapturingChange?: (capturing: boolean) => void;
 }) {
   const { t } = useTranslation("reference");
+  const [sweeping, setSweeping] = useState(false);
+  const [sweepResult, setSweepResult] = useState<string | null>(null);
+
+  async function sweep() {
+    setSweeping(true);
+    setSweepResult(null);
+    try {
+      // No grace: the user asked for it now, and every file a scene still references is kept
+      // regardless — the sweep works from the scene list, not from file age.
+      const result = await nr.reference?.sweepAssets({ graceMs: 0 });
+      setSweepResult(
+        result?.ok
+          ? t("settings.assetSweepDone", {
+              count: result.removed,
+              mb: Math.max(1, Math.round(result.bytes / 1048576)),
+            })
+          : result?.error || t("settings.assetSweepFailed"),
+      );
+    } catch (error) {
+      setSweepResult(error instanceof Error ? error.message : String(error));
+    } finally {
+      setSweeping(false);
+    }
+  }
+
   // Raccourcis INHÉRENTS (non rebindables : gestes souris/molette, event navigateur, directionnels).
   const FIXED_SHORTCUTS: { keys: string[]; desc: string }[] = [
     { keys: ["Ctrl", "V"], desc: t("settings.gesturePaste") },
@@ -712,6 +739,23 @@ export function BoardSettings({ tab, onCapturingChange }: {
         </>)}
 
         {tab === "media" && (<>
+        {/* Ménage des médias. Le core balaie déjà au démarrage, mais avec 14 jours de grâce — le
+            délai qui protège l'historique d'annulation. Ce bouton fait le même travail SANS grâce,
+            à un moment où l'utilisateur sait ce qu'il fait : rien de ce que porte une scène n'est
+            touché, seuls disparaissent les fichiers que plus aucune scène ne référence. */}
+        <section className="flex flex-col gap-2">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.assetSweep")}</h3>
+          <p className="-mt-1.5 text-[11px] leading-snug text-muted-foreground">{t("settings.assetSweepHint")}</p>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" disabled={sweeping} onClick={() => void sweep()}>
+              <Trash2 className="size-3.5" /> {t("settings.assetSweepAction")}
+            </Button>
+            {sweepResult && <span className="text-[11px] text-muted-foreground">{sweepResult}</span>}
+          </div>
+        </section>
+
+        <Separator />
+
         {/* Taille de pose : côté max (px board) d'un média fraîchement posé */}
         <section className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold text-foreground">{t("settings.placeSize")}</h3>
@@ -850,6 +894,28 @@ export function BoardSettings({ tab, onCapturingChange }: {
               {prefs.autoDownloadOnline ? t("settings.auto") : t("settings.manual")}
             </Seg>
           </div>
+          {/* Médias LOCAUX copiés dans le dossier compagnon du projet. Sans ça, un projet ne garde
+              qu'un pointeur vers le fichier d'origine : renommé, effacé ou resté sur l'autre machine,
+              la case est vide. L'original n'est jamais déplacé — c'est une copie. */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-muted-foreground">{t("settings.copyLocal")}</span>
+            <Seg active={prefs.copyLocalIntoProject} onClick={() => setPrefs({ copyLocalIntoProject: !prefs.copyLocalIntoProject })}>
+              {prefs.copyLocalIntoProject ? t("settings.copyLocalOn") : t("settings.copyLocalOff")}
+            </Seg>
+          </div>
+          {/* Le plafond ne vise que les VIDÉOS : une image passe toujours. Il est ce qui rend la copie
+              tenable par défaut — un board porte des boucles de quelques Mo, pas des rushes de 12 Go. */}
+          {prefs.copyLocalIntoProject && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-muted-foreground">{t("settings.copyLocalMax")}</span>
+              <NumberSpin
+                value={prefs.copyLocalMaxMB}
+                min={0} max={65536} step={64}
+                ariaLabel={t("settings.copyLocalMax")}
+                onCommit={(v) => setPrefs({ copyLocalMaxMB: v })}
+              />
+            </div>
+          )}
           {/* Repasser un média en lecteur/carte embed : garder le fichier (aller-retour instantané)
               ou le supprimer (disque libéré, prochain retour = nouveau téléchargement). */}
           <div className="flex items-center justify-between gap-3">

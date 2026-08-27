@@ -32,6 +32,11 @@ import { useBoard } from "./useReferenceBoard";
 // LAZY, and mounted only while open: this dialog pulls `convex/react`, which must stay out of the
 // entry chunk of an app that opens without a backend — and its hooks would throw outside the Convex
 // provider, which does not exist when no deployment is configured.
+// Pastille d'état d'un board partagé. Lazy comme le dialogue : la chaîne convex/react ne doit pas
+// entrer dans le bundle de démarrage (cf. src/lib/convexEnv.ts).
+const CollabStatus = lazy(() =>
+  import("./CollabStatus").then((module) => ({ default: module.CollabStatus })),
+);
 const CollaborationDialog = lazy(() =>
   import("./CollaborationDialog").then((module) => ({ default: module.CollaborationDialog })),
 );
@@ -131,6 +136,7 @@ export function Toolbar({
   const readOnly = useBoard((s) => s.collabProjectId !== null && s.collabRole === "viewer");
   const rotationRequired = useBoard((s) => s.collabRotationRequired);
   const syncQueued = useBoard((s) => s.collabOfflineQueued);
+  const shared = useBoard((s) => s.collabProjectId !== null);
 
   // Choisir un autre outil/ajout quitte le mode dessin (revient au curseur normal).
   const leaveDraw = () => { if (useBoard.getState().drawMode) setDrawMode(false); };
@@ -337,9 +343,20 @@ export function Toolbar({
           <span className="truncate font-medium text-foreground">{sceneName}</span>
         )}
         {dirty && <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-label={t("toolbar.unsaved")} />}
+        {/* Board partagé : qui est là et ce qui reste à faire, sous une pastille. Elle remplace les
+            mentions en texte, qui disaient l'état sans jamais dire QUI ni quoi faire. */}
+        {shared && convexConfigured && (
+          <Suspense fallback={null}>
+            <CollabStatus />
+          </Suspense>
+        )}
         {readOnly && <span className="shrink-0">· {t("collab.role.viewer")}</span>}
-        {rotationRequired && <span className="shrink-0 text-amber-500">· {t("collab.status.rotation")}</span>}
-        {!rotationRequired && syncQueued && <span className="shrink-0">· {t("collab.status.pending")}</span>}
+        {shared && !convexConfigured && rotationRequired && (
+          <span className="shrink-0 text-amber-500">· {t("collab.status.rotation")}</span>
+        )}
+        {shared && !convexConfigured && !rotationRequired && syncQueued && (
+          <span className="shrink-0">· {t("collab.status.pending")}</span>
+        )}
         {notice && (
           <span className={cn("truncate", notice.kind === "error" ? "text-destructive" : "text-[var(--color-ok)]")}>
             · {notice.text}

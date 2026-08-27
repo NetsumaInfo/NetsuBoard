@@ -67,7 +67,7 @@ découpés, dossier compagnon `<projet>.medias/`), écriture incrémentale, gril
 **Fenêtre détachée** — seconde fenêtre Tauri frameless toujours au-dessus, board nu, toutes les
 actions au menu contextuel ; épinglage en place équivalent sans seconde fenêtre.
 
-**Upscale Turbo** — shaders GLSL exécutés par ffmpeg `libplacebo` : ArtCNN et Anime4K pour
+**Upscale Turbo** — shaders GLSL exécutés par ffmpeg `libplacebo` : ArtCNN pour
 l'animation, `lanczossharp` pour le réel.
 
 **Apparence** — palettes livrées, thèmes personnalisés, fonds d'écran image/GIF/vidéo avec recadrage,

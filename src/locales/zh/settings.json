@@ -11,7 +11,8 @@
     "system": "系统",
     "updates": "更新",
     "report": "反馈",
-    "about": "关于"
+    "about": "关于",
+    "discord": "Discord"
   },
   "about": {
     "tagline": "无限参考画板：图片、视频、社交媒体、便笺与绘制。",
@@ -34,7 +35,10 @@
     "subtitle": "已连接到 NetsuBoard 的 Discord 账号。",
     "none": "未连接任何账号。",
     "discordUser": "Discord 用户",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "unreachable": "无法连接服务器。",
+    "unreachableHint": "请检查网络。防火墙或企业网络可能会拦截 NetsuBoard。",
+    "retry": "重试"
   },
   "playback": {
     "title": "预览和缩略图",
@@ -241,7 +245,13 @@
     "history": "各版本新内容",
     "whatsNew": "版本 {{version}} 的新内容",
     "gotIt": "开始使用",
-    "reportSubject": "更新到 v{{version}} 失败"
+    "reportSubject": "更新到 v{{version}} 失败",
+    "kind": {
+      "feature": "新功能",
+      "fix": "修复",
+      "improvement": "改进",
+      "performance": "性能"
+    }
   },
   "compatibility": {
     "title": "此电脑的兼容性",
@@ -462,6 +472,8 @@
     "showBoardHint": "可能泄露客户名称。",
     "showItems": "元素数量",
     "showElapsed": "已用时间",
+    "showLinks": "可点击的卡片",
+    "showLinksHint": "图片打开 Discord 服务器，第一行打开仓库。",
     "itemsLine": "{{count}} 个元素",
     "custom": "自定义文本",
     "customHelp": "替换自动生成的行。{board} 和 {items} 会被替换。",
@@ -469,6 +481,43 @@
     "state": "第二行"
   },
   "storage": {
+    "title": "板面存储",
+    "intro": "应用会保存自己的媒体：粘贴的图片、从链接获取的媒体、抽取的帧、放大结果。保存 .netsu 项目会把这些字节归入其伴随文件夹——此时存储中只剩一份副本，可以毫无损失地释放。",
+    "disk": "{{total}} 中可用 {{free}}",
+    "scanning": "正在分析存储…",
+    "failed": "操作失败",
+    "freedNotice": "已释放 {{size}}（{{count}} 个文件）",
+    "movedNotice": "已移动 {{size}}（{{count}} 个文件）",
+    "movedPartly": "已移动 {{count}} 个文件，{{failed}} 个失败（保留原处）",
+    "archivedNotice": "板面已保存为“{{name}}”：其媒体现在位于项目文件夹中",
+    "settling": "{{count}} 个正在写入",
+    "settlingHint": "刚写入的文件可能属于板面尚未放置的导入。下次检查时再判定。",
+    "safe": {
+      "title": "可安全释放",
+      "hint": "逐个文件核对过：这些字节可以重新生成，或已存在于某个项目文件夹中。",
+      "caches": "显示缓存",
+      "cachesHint": "缩略图与代理文件。应用会按需重新生成。",
+      "duplicated": "已归入项目的媒体（{{count}} 个）",
+      "duplicatedHint": "其字节位于某个项目的伴随文件夹中，例如“{{project}}”。",
+      "duplicatedNone": "目前未发现副本。",
+      "action": "释放"
+    },
+    "sole": {
+      "title": "请先妥善保存",
+      "hint": "这些媒体别处没有。这里不提供删除：先保存，它们就会移到上方那一节。",
+      "empty": "没有风险：应用保存的一切在别处也存在。",
+      "untitled": "未命名板面",
+      "sceneCount": "仅由应用保管的媒体 {{count}} 个 · {{size}}",
+      "shared": "共享板面",
+      "sharedHint": "共享板面没有项目版本：其文档为准，媒体由协作管理。",
+      "openBoard": "板面已打开",
+      "openBoardHint": "该板面已打开：请使用其工具栏中的“另存为…”。",
+      "archive": "保存为项目…",
+      "orphans": "没有板面需要的媒体",
+      "orphansHint": "{{count}} 个文件 · {{size}}。已无处显示，但这是唯一的副本。",
+      "move": "移动到文件夹…"
+    },
+    "footnote": "你从自己磁盘添加的媒体绝不受影响：应用只处理它自己写入的文件。",
     "empty": "暂无缓存。",
     "emptyHint": "浏览素材时会逐步建立缩略图和预览。",
     "diskFree": "可用 {{free}}，共 {{total}}",
@@ -681,13 +730,15 @@
       "failed": "身份无法读取：{{error}}",
       "ready": "受保护的本机身份已就绪。",
       "unavailable": "本机协作不可用。",
-      "unnamed": "NetsuBoard 设备", "current": "此设备", "revoke": "撤销此设备"
+      "unnamed": "NetsuBoard 设备",
+      "current": "此设备",
+      "revoke": "撤销此设备"
     },
     "friends": {
       "title": "好友",
-      "subtitle": "可使用 Discord ID、Discord 用户名或 NetsuBoard ID 添加好友。",
-      "yourHandle": "你的 NetsuBoard ID：@{{handle}}",
-      "placeholder": "Discord ID、用户名或 NetsuBoard ID",
+      "subtitle": "用 Discord 用户名或 NetsuBoard 标识添加。",
+      "yourHandle": "你：@{{handle}}",
+      "placeholder": "Discord 用户名或 NetsuBoard 标识",
       "add": "添加",
       "accept": "接受",
       "remove": "移除",
@@ -695,14 +746,16 @@
       "empty": "暂无好友。",
       "status": {
         "sent": "请求已发送。",
-        "linked": "你们已成为好友。",
-        "pending": "请求已发送过。",
-        "already": "已经是好友。",
+        "linked": "你们已是好友。",
+        "pending": "已发送过。",
+        "already": "已是好友。",
         "self": "这是你自己。",
-        "unknown": "未找到该用户。对方需要登录并打开过一次 NetsuBoard。",
-        "ambiguous": "该标识对应多名用户。请使用对方的 Discord ID。",
-        "error": "发送失败。"
-      }
+        "unknown": "标识符无效。",
+        "ambiguous": "匹配到多人。请使用其 Discord ID。",
+        "error": "失败。",
+        "invited": "邀请已发送。"
+      },
+      "notYetJoined": "尚未注册"
     },
     "invites": {
       "title": "邀请",
@@ -710,9 +763,23 @@
       "sharedBoard": "共享看板"
     },
     "projects": {
-      "title": "共享项目", "members": "{{count}} 位成员", "rotation": "等待密钥轮换",
-      "add": "添加到场景", "added": "已在场景中", "failed": "无法添加此场景",
-      "role": { "owner": "所有者", "editor": "可编辑", "viewer": "仅查看" }
+      "title": "共享项目",
+      "members": "{{count}} 位成员",
+      "rotation": "等待密钥轮换",
+      "add": "添加到场景",
+      "failed": "无法添加此场景",
+      "role": {
+        "owner": "所有者",
+        "editor": "可编辑",
+        "viewer": "仅查看"
+      },
+      "unnamed": "{{date}} 的看板",
+      "delete": "删除",
+      "leave": "退出",
+      "confirmDelete": "为所有成员删除？",
+      "confirmLeave": "退出此看板？",
+      "subtitle": "与你的账户共享的看板。本机上的看板可从主屏幕打开。",
+      "absent": "{{count}} 个不在本机的看板"
     },
     "activity": {
       "title": "协作动态",

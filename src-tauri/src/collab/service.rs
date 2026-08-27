@@ -141,6 +141,23 @@ pub struct ProjectStatus {
     pub rotation_required: bool,
     pub peer_candidates: usize,
     pub offline_queued: bool,
+    /// Un membre par personne, sans le compte courant. La présence est ce que cette machine a
+    /// OBSERVÉ — la dernière fois qu'elle a joint l'appareil — jamais une déclaration reçue.
+    pub members: Vec<MemberPresence>,
+}
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MemberPresence {
+    pub user_id: String,
+    pub devices: usize,
+    /// Millisecondes depuis le dernier échange réussi avec l'un de ses appareils. Absent = jamais
+    /// joint depuis le démarrage de l'application, ce qui n'est pas la même chose qu'absent.
+    pub last_seen_ms: Option<u64>,
+    pub can_write: bool,
+    /// Faux tant qu'aucun appareil de cette personne n'a reçu la clé courante : elle est membre,
+    /// mais ne peut encore rien lire.
+    pub has_key: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -607,6 +624,34 @@ fn checked_project<'a>(
         .ok_or_else(|| CollabError::new(CollabErrorCode::Unavailable, "project is not open"))
 }
 
+/// Regroupe les appareils du roster PAR PERSONNE et y joint ce que cette machine a observé.
+///
+/// La présence d'une personne est celle du plus récemment joint de ses appareils : quelqu'un qui
+/// travaille sur son portable est en ligne, même si sa tour est éteinte.
+fn member_presence(roster: &CachedRoster) -> Vec<MemberPresence> {
+    let seen = super::net::peer_last_seen();
+    let mut by_user: std::collections::BTreeMap<String, MemberPresence> =
+        std::collections::BTreeMap::new();
+    for device in roster.devices.iter().filter(|d| !d.is_current_account) {
+        let entry = by_user
+            .entry(device.user_id.clone())
+            .or_insert_with(|| MemberPresence {
+                user_id: device.user_id.clone(),
+                devices: 0,
+                last_seen_ms: None,
+                can_write: false,
+                has_key: false,
+            });
+        entry.devices += 1;
+        entry.can_write |= device.can_write;
+        entry.has_key |= device.has_current_envelope;
+        if let Some(age) = seen.get(&device.endpoint_id) {
+            entry.last_seen_ms = Some(entry.last_seen_ms.map_or(*age, |best| best.min(*age)));
+        }
+    }
+    by_user.into_values().collect()
+}
+
 fn doc_error(error: doc::DocError) -> CollabError {
     let code = match error {
         doc::DocError::Schema(_) | doc::DocError::Protocol(_) => CollabErrorCode::ReadOnly,
@@ -673,12 +718,25 @@ fn read_cached_roster(store: &ProjectStore) -> Result<Option<CachedRoster>, Coll
         .map_err(|error| CollabError::new(CollabErrorCode::Corrupt, error.to_string()))
 }
 
+// The one authorization failure that actually means the account lost the project. Every other
+// authorization failure — an expired token, a mutation refused while a key rotation is in flight —
+// is transient, and demoting the OWNER of a board to a read-only viewer on one of those made the
+// board unusable until the app was restarted.
+const NOT_A_MEMBER: &str = "this account is no longer a project member";
+
+fn lost_membership(error: &CollabError) -> bool {
+    error.code == CollabErrorCode::Authorization && error.message == NOT_A_MEMBER
+}
+
 async fn load_roster(
     client: Option<&ConvexClient>,
     project_id: &ProjectId,
     store: &mut ProjectStore,
     test_role: ProjectRole,
 ) -> Result<CachedRoster, CollabError> {
+    // Kept so the caller learns WHY the roster is missing. One sentence for "no client", "the
+    // network refused" and "never opened online" sent every failure to the same dead end.
+    let mut network_failure: Option<String> = None;
     if let Some(client) = client {
         let roster = client
             .query::<_, Option<CachedRoster>>(
@@ -699,11 +757,11 @@ async fn load_roster(
             Ok(None) => {
                 return Err(CollabError::new(
                     CollabErrorCode::Authorization,
-                    "this account is no longer a project member",
+                    NOT_A_MEMBER,
                 ))
             }
             Err(error) if error.code != CollabErrorCode::Network => return Err(error),
-            Err(_) => {}
+            Err(error) => network_failure = Some(error.message),
         }
     }
     if let Some(roster) = read_cached_roster(store)? {
@@ -719,10 +777,20 @@ async fn load_roster(
             devices: Vec::new(),
         });
     }
-    Err(CollabError::new(
-        CollabErrorCode::Unavailable,
-        "project has never been opened online on this device",
-    ))
+    Err(match network_failure {
+        Some(cause) => CollabError::new(
+            CollabErrorCode::Network,
+            format!("the project could not be reached: {cause}"),
+        ),
+        None if client.is_none() => CollabError::new(
+            CollabErrorCode::Unavailable,
+            "this device is not connected to the account; sign in again",
+        ),
+        None => CollabError::new(
+            CollabErrorCode::Unavailable,
+            "project has never been opened online on this device",
+        ),
+    })
 }
 
 fn roster_allows_peer_write(roster: &CachedRoster, peer_id: &str) -> bool {
@@ -1289,6 +1357,21 @@ fn enqueue_current_state(
     Ok(true)
 }
 
+/// Operations that can change which media hashes the document references. Everything else —
+/// geometry, text, strokes, appearance, ordering — leaves the retained set exactly as it was.
+fn batch_touches_media(ops: &[doc::Op]) -> bool {
+    ops.iter().any(|op| {
+        matches!(
+            op,
+            doc::Op::AddItem { .. }
+                | doc::Op::DeleteItem { .. }
+                | doc::Op::SetMediaManifest { .. }
+                | doc::Op::SetLink { .. }
+                | doc::Op::SetSequence { .. }
+        )
+    })
+}
+
 fn refresh_media_retention(project_id: &ProjectId) -> Result<(), CollabError> {
     let hashes = doc::media_hashes(project_id.as_str()).map_err(doc_error)?;
     super::blobs::record_project_pins(project_id, &hashes)
@@ -1409,10 +1492,13 @@ async fn run_actor(
                                     project.first_unpublished.get_or_insert_with(Instant::now);
                                 }
                             }
-                            Err(error) if error.code == CollabErrorCode::Authorization => {
+                            Err(error) if lost_membership(&error) => {
                                 project.role = ProjectRole::Viewer;
                                 project.roster.devices.clear();
                                 project.roster.access.role = ProjectRole::Viewer;
+                            }
+                            Err(error) if error.code == CollabErrorCode::Authorization => {
+                                eprintln!("[collab] security refresh refused, role kept: {error}");
                             }
                             Err(error) if error.code == CollabErrorCode::Network => {}
                             Err(error) => return Err(error),
@@ -1477,6 +1563,9 @@ async fn run_actor(
                     for update in store.local_updates()? {
                         doc::merge(project_id.as_str(), &update).map_err(doc_error)?;
                     }
+                    // The snapshot cache write is throttled; the replay above may have left it
+                    // pending. Persist it now so an idle project starts warm next time.
+                    doc::flush(project_id.as_str()).map_err(doc_error)?;
                     let mut roster =
                         load_roster(convex.as_ref(), &project_id, &mut store, request.role).await?;
                     let rotation_will_advance = roster.access.role == ProjectRole::Owner
@@ -1633,10 +1722,9 @@ async fn run_actor(
                     }
                     debug_assert!(key_epoch > 0);
                     let base_version = project.store.publication_base()?;
-                    let update = doc::prepare_update(parsed.as_str(), batch.protocol, &batch.ops)
-                        .map_err(doc_error)?;
-                    let head_delta = doc::head_delta_with(parsed.as_str(), &base_version, &update)
-                        .map_err(doc_error)?;
+                    let (update, head_delta) =
+                        doc::prepare_batch(parsed.as_str(), batch.protocol, &batch.ops, &base_version)
+                            .map_err(doc_error)?;
                     let sequence = project.store.next_sequence()?;
                     let sealed = crypto::seal(
                         parsed.as_str(),
@@ -1660,8 +1748,13 @@ async fn run_actor(
                 if result.is_ok() {
                     if let Ok(parsed) = ProjectId::parse(&project_id) {
                         if let Some(project) = active.get_mut(&parsed) {
-                            if let Err(error) = refresh_media_retention(&parsed) {
-                                eprintln!("[collab] media retention update failed: {error}");
+                            // Rebuilding the projection to collect media hashes is O(document);
+                            // a geometry/text/stroke batch cannot change the referenced set, so a
+                            // drag no longer pays it on every 150 ms flush.
+                            if batch_touches_media(&batch.ops) {
+                                if let Err(error) = refresh_media_retention(&parsed) {
+                                    eprintln!("[collab] media retention update failed: {error}");
+                                }
                             }
                             let now = Instant::now();
                             let delay = publication_debounce(&mut project.first_unpublished, now);
@@ -1679,12 +1772,14 @@ async fn run_actor(
                                 .filter(|device| !device.is_current_account)
                                 .map(|device| device.endpoint_id.clone())
                                 .collect();
-                            let sync_project = project_id.clone();
-                            tauri::async_runtime::spawn(async move {
-                                for peer in peers {
+                            // One task per peer: an unreachable peer burns its own 30 s timeout
+                            // without holding the delta back from the peers that are online.
+                            for peer in peers {
+                                let sync_project = project_id.clone();
+                                tauri::async_runtime::spawn(async move {
                                     let _ = super::net::sync(&sync_project, &peer).await;
-                                }
-                            });
+                                });
+                            }
                         }
                     }
                 }
@@ -1693,7 +1788,12 @@ async fn run_actor(
             Command::Projection { project_id, reply } => {
                 let result = (|| {
                     let (parsed, _) = checked_project(&active, &project_id)?;
-                    doc::projection(parsed.as_str()).map_err(doc_error)
+                    let mut projection = doc::projection(parsed.as_str()).map_err(doc_error)?;
+                    projection.local_hashes = doc::projection_media_hashes(&projection)
+                        .into_iter()
+                        .filter(|hash| super::blobs::has(hash))
+                        .collect();
+                    Ok(projection)
                 })();
                 let _ = reply.send(result);
             }
@@ -1711,6 +1811,7 @@ async fn run_actor(
                             .filter(|device| !device.is_current_account)
                             .count(),
                         offline_queued: project.store.latest_pending()?.is_some(),
+                        members: member_presence(&project.roster),
                     })
                 })();
                 let _ = reply.send(result);
@@ -1829,10 +1930,7 @@ async fn run_actor(
                 let Some(project) = active.get_mut(&parsed) else {
                     continue;
                 };
-                if matches!(
-                    result.as_ref().err().map(|error| error.code),
-                    Some(CollabErrorCode::Authorization)
-                ) {
+                if result.as_ref().err().is_some_and(lost_membership) {
                     project.role = ProjectRole::Viewer;
                     project.roster.access.role = ProjectRole::Viewer;
                     project.roster.devices.clear();

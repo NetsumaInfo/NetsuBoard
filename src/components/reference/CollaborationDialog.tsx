@@ -14,15 +14,21 @@ import { AlertTriangle, LogOut, Trash2, UserRound, Users } from "lucide-react";
 import { api } from "@/lib/convexApi";
 import { createCollaborativeProject } from "@/lib/collab/session";
 import {
+  abortProject,
   cancelInvite,
+  collabErrorMessage,
   deleteProject,
   discardStaleHead,
   inviteMembers,
   leaveProject,
+  projectStatus,
   removeMember,
   setMemberRole,
+  type ProjectStatus,
 } from "@/lib/collab/client";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
+import { UnreadableMediaError } from "@/lib/collab/media";
+import { prepareShareMedia } from "./boardMediaActions";
 import { useBoard } from "./useReferenceBoard";
 import { useScenePersistence } from "./useScenePersistence";
 import {
@@ -94,6 +100,28 @@ export function CollaborationDialog({
     open && projectId && effectiveRole === "owner" ? { projectId, now: queryNow } : "skip",
   ) as StaleHead[] | undefined;
 
+  // The document syncs by itself — queued edits leave the moment a peer or the relay is reachable.
+  // This line only makes that visible: what is waiting, and that nobody has to send anything.
+  const [sync, setSync] = useState<ProjectStatus | null>(null);
+  useEffect(() => {
+    if (!open || !projectId) {
+      setSync(null);
+      return;
+    }
+    let cancelled = false;
+    const read = () => {
+      void projectStatus(projectId)
+        .then((status) => { if (!cancelled) setSync(status); })
+        .catch(() => undefined);
+    };
+    read();
+    const timer = window.setInterval(read, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [open, projectId]);
+
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [invited, setInvited] = useState<number | null>(null);
@@ -101,6 +129,10 @@ export function CollaborationDialog({
   const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor");
   const [confirmLifecycle, setConfirmLifecycle] = useState<"leave" | "delete" | null>(null);
   const [confirmStaleHead, setConfirmStaleHead] = useState<string | null>(null);
+
+  // A board opened from a .netsu is CONVERTED into the library on the way in, not refused. The only
+  // true blocker is a board that was never saved at all: there is nothing to convert.
+  const blocker = projectId || sceneId || filePath ? null : "noScene";
 
   function toggle(userId: string) {
     setPicked((current) =>
@@ -113,23 +145,58 @@ export function CollaborationDialog({
     setBusy(true);
     setError(null);
     try {
-      if ((filePath || !sceneId) && !projectId) throw new Error(t("collab.fileBacked"));
+      if (blocker) throw new Error(t(`collab.${blocker}`));
       if (projectId) {
         if (!(await refreshNativeCollaborationAuth())) throw new Error(t("collab.signedOut"));
         const { results } = await inviteMembers(projectId, picked, inviteRole);
         setInvited(results.filter((entry) =>
           entry.status === "invited" || entry.status === "refreshed").length);
       } else {
+        const before = {
+          sceneId: useBoard.getState().sceneId,
+          filePath: useBoard.getState().filePath,
+        };
+        // Un board converti traîne souvent des chemins absolus morts (dossier compagnon déplacé ou
+        // vidé). Avant que la publication ne juge : chemins soignés quand les octets vivent
+        // ailleurs, retéléchargement depuis le lien d'origine sinon, marquage du reste. Fait AVANT
+        // l'adoption : la scène stockée — celle contre laquelle le natif autorise les imports — ne
+        // doit connaître que des chemins vivants.
+        await prepareShareMedia().catch(() => undefined);
         const source = useBoard.getState().items;
-        const created = await createCollaborativeProject(source, sceneId!);
-        await persistence.bindCollaboration(created.projectId);
+        const adoption = await persistence.adoptIntoLibrary();
+        let created: { projectId: string } | null = null;
+        try {
+          created = await createCollaborativeProject(source, adoption.sceneId!);
+          if (adoption.adopted) persistence.completeAdoption(adoption.sceneId!);
+          await persistence.bindCollaboration(created.projectId);
+        } catch (failure) {
+          // Undo the library copy and put the board back on its file, otherwise every failed attempt
+          // leaves another identical board on the home screen — and one of them owns no document.
+          // A project created a moment ago and bound to nothing is dropped with it.
+          if (created) await abortProject(created.projectId).catch(() => undefined);
+          if (adoption.adopted) await persistence.abortAdoption(before);
+          throw failure;
+        }
+        // The board IS shared from here on. An invitation that fails is retried on the next open of
+        // this dialog; undoing the project underneath it would throw away a published board.
         const { results } = await inviteMembers(created.projectId, picked, inviteRole);
         setInvited(results.filter((entry) =>
           entry.status === "invited" || entry.status === "refreshed").length);
       }
       setPicked([]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      // Des médias illisibles après tous les recours automatiques : le mur de chemins absolus et
+      // d'erreurs OS ne dit rien d'actionnable. On nomme les fichiers, le board porte les cartes
+      // manquantes avec leurs gestes de récupération.
+      if (err instanceof UnreadableMediaError) {
+        const names = err.unresolved
+          .slice(0, 3)
+          .map((entry) => entry.ref.split(/[\\/]/).pop() || entry.ref)
+          .join(" · ");
+        setError(t("collab.mediaMissing", { count: err.unresolved.length, names }));
+      } else {
+        setError(collabErrorMessage(err, t("collab.failed")));
+      }
     } finally {
       setBusy(false);
     }
@@ -143,7 +210,7 @@ export function CollaborationDialog({
       if (!(await refreshNativeCollaborationAuth())) throw new Error(t("collab.signedOut"));
       await action();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(collabErrorMessage(err, t("collab.failed")));
     } finally {
       setBusy(false);
     }
@@ -227,6 +294,19 @@ export function CollaborationDialog({
           </div>
         ) : current ? (
           <div className="space-y-3">
+            {sync && (
+              <p
+                className={
+                  sync.offlineQueued
+                    ? "rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs"
+                    : "text-xs text-muted-foreground"
+                }
+              >
+                {sync.offlineQueued ? t("collab.sync.queued") : t("collab.sync.upToDate")}
+                {" · "}
+                {t("collab.sync.peers", { count: sync.peerCandidates })}
+              </p>
+            )}
             {current.rotationRequired && (
               <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
                 {t("collab.rotationPending")}
@@ -396,6 +476,10 @@ export function CollaborationDialog({
         </div>}
 
         {invited !== null && <p className="text-xs text-muted-foreground">{t("collab.invited", { n: invited })}</p>}
+        {blocker && <p className="text-xs text-destructive">{t(`collab.${blocker}`)}</p>}
+        {!blocker && !projectId && filePath && (
+          <p className="text-xs text-muted-foreground">{t("collab.willAdopt")}</p>
+        )}
         {error && <p className="text-xs text-destructive">{error}</p>}
         <p className="text-xs text-muted-foreground">{t("collab.notice")}</p>
 
@@ -403,7 +487,7 @@ export function CollaborationDialog({
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             {t("collab.close")}
           </Button>
-          <Button size="sm" disabled={busy || !picked.length || (!!projectId && effectiveRole !== "owner") || !!confirmLifecycle || !!confirmStaleHead} onClick={() => void submit()}>
+          <Button size="sm" disabled={busy || !!blocker || !picked.length || (!!projectId && effectiveRole !== "owner") || !!confirmLifecycle || !!confirmStaleHead} onClick={() => void submit()}>
             {busy ? <Spinner className="size-3.5" /> : <Users className="size-3.5" />} {t(projectId ? "collab.invite" : "collab.create")}
           </Button>
         </DialogFooter>

@@ -59,6 +59,9 @@ export type MediaAsset = {
   mime: string;
   size: number;
   sourceUrl?: string;
+  // Small JPEG rendition stored as its own blob; peers fetch it before the original.
+  previewHash?: string;
+  previewSize?: number;
 };
 export type MediaVariant = {
   kind?: ItemKind;

@@ -30,9 +30,15 @@ const GRACE: Duration = Duration::from_secs(30 * 24 * 60 * 60);
 /// transfer unless it has made no progress for a full day.
 const PART_TTL: Duration = Duration::from_secs(24 * 60 * 60);
 
-/// Bounded so a peer cannot ask this machine to allocate arbitrarily; larger media stream in chunks.
-pub const TRANSFER_CHUNK: usize = 256 * 1024;
+/// Bounded so a peer cannot ask this machine to allocate arbitrarily; larger media stream in
+/// chunks. Each chunk costs one stream round trip, so the size balances per-request latency
+/// against the memory both ends hold at once — 4 MiB keeps a video transfer request-bound no more
+/// than 1/16th as often as the previous 256 KiB while staying far under `MAX_FRAME`.
+pub const TRANSFER_CHUNK: usize = 4 * 1024 * 1024;
 const PROTOCOL_CHUNK: u64 = 8 * 1024 * 1024;
+/// Plafond d'UNE réponse construite en mémoire. Une image doit arriver entière (un `<img>` ne sait
+/// pas redemander la suite), mais pas au prix d'un tampon arbitraire dans le processus d'interface.
+const MAX_INLINE_RESPONSE: u64 = 96 * 1024 * 1024;
 const IMPORT_GRANT_TTL: Duration = Duration::from_secs(15 * 60);
 const MAX_IMAGE_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 const MAX_VIDEO_BYTES: u64 = 256 * 1024 * 1024 * 1024;
@@ -90,7 +96,11 @@ struct ImportGrant {
 }
 
 fn canonical_regular_file(source: &Path) -> Result<PathBuf, BlobError> {
-    let source_meta = fs::symlink_metadata(source).map_err(|err| BlobError::Io(err.to_string()))?;
+    // The path is part of the error. "file not found" without it cannot be told apart from a
+    // locator the renderer never resolved, an asset swept from under a still-open board, or a
+    // session cache another application purged.
+    let source_meta = fs::symlink_metadata(source)
+        .map_err(|err| BlobError::Io(format!("{err} — {}", source.display())))?;
     if source_meta.file_type().is_symlink() || !source_meta.is_file() {
         return Err(BlobError::Io("media source must be a regular file".into()));
     }
@@ -146,6 +156,17 @@ fn same_path(left: &Path, right: &Path) -> bool {
 }
 
 fn collect_scene_refs(value: &serde_json::Value, output: &mut Vec<String>) {
+    // A collaborative scene deliberately stores no items: the Loro document is authoritative and a
+    // second writable copy would diverge. Its media locators are kept beside them so a shared board
+    // can still authorise the import of a file it already holds.
+    if let Some(media) = value.get("media").and_then(serde_json::Value::as_array) {
+        output.extend(
+            media
+                .iter()
+                .filter_map(serde_json::Value::as_str)
+                .map(str::to_owned),
+        );
+    }
     let Some(items) = value.get("items").and_then(serde_json::Value::as_array) else {
         return;
     };
@@ -177,7 +198,7 @@ fn scene_data(scene_id: &str) -> Result<Option<serde_json::Value>, BlobError> {
     if scene_id.is_empty() || scene_id.len() > 128 || scene_id.chars().any(char::is_control) {
         return Err(BlobError::Io("invalid scene id".into()));
     }
-    let reference_dir = super::identity::home_dir().join("reference");
+    let reference_dir = super::identity::board_data_dir().join("reference");
     let database = reference_dir.join("reference.db");
     if database.exists() {
         let connection = rusqlite::Connection::open_with_flags(
@@ -223,14 +244,20 @@ pub fn issue_known_grant(
 ) -> Result<String, BlobError> {
     let canonical = canonical_regular_file(Path::new(source))?;
     let owned_root =
-        fs::canonicalize(super::identity::home_dir().join("reference").join("assets")).ok();
+        fs::canonicalize(super::identity::board_data_dir().join("reference").join("assets")).ok();
     let owned = owned_root
         .as_ref()
         .is_some_and(|root| canonical.starts_with(root) && canonical.as_path() != root.as_path());
     let mut referenced = false;
+    // Counted so a refusal can say WHICH of the three failures happened: the scene was not found,
+    // the scene holds no reference at all, or it holds references and none matches this file.
+    let mut scene_found = false;
+    let mut reference_count = 0usize;
     if let Some(scene) = scene_data(scene_id)? {
+        scene_found = true;
         let mut references = Vec::new();
         collect_scene_refs(&scene, &mut references);
+        reference_count = references.len();
         referenced = references.iter().any(|reference| {
             canonical_regular_file(Path::new(reference))
                 .map(|candidate| same_path(&canonical, &candidate))
@@ -238,9 +265,14 @@ pub fn issue_known_grant(
         });
     }
     if !owned && !referenced {
-        return Err(BlobError::Io(
-            "media path was not authorised by a picker, trusted drop, or saved scene".into(),
-        ));
+        let name = canonical
+            .file_name()
+            .map(|value| value.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "?".into());
+        return Err(BlobError::Io(format!(
+            "media \"{name}\" is not authorised: scene {scene_id} {} with {reference_count} reference(s)",
+            if scene_found { "was found" } else { "was NOT found" },
+        )));
     }
     issue_grant(canonical, Some(project_id.as_str()))
 }
@@ -425,17 +457,25 @@ pub fn was_collected(hash: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Reads a slice for a peer's request.
+/// Reads a slice for a peer's request, or for the renderer protocol.
+///
+/// `read_to_end` on a bounded view, NOT a single `read`: `Read::read` is allowed to return fewer
+/// bytes than the buffer holds, and it always does past a certain size. Capping the buffer at
+/// `PROTOCOL_CHUNK` on top of that made an answer announce a `Content-Length` it then failed to
+/// deliver — a truncated body under a full-size header, which a webview drops as a network error
+/// rather than rendering. The cap belongs to the RANGE decision (`default_range`), not here.
 pub fn read_at(hash: &str, offset: u64, len: usize) -> Result<Vec<u8>, BlobError> {
+    if len as u64 > MAX_INLINE_RESPONSE {
+        return Err(BlobError::Io("requested slice is too large".into()));
+    }
     let path = path_for(hash)?;
     let mut file = fs::File::open(&path).map_err(|_| BlobError::NotFound)?;
     file.seek(SeekFrom::Start(offset))
         .map_err(|err| BlobError::Io(err.to_string()))?;
-    let mut buffer = vec![0u8; len.min(PROTOCOL_CHUNK as usize)];
-    let read = file
-        .read(&mut buffer)
+    let mut buffer = Vec::with_capacity(len);
+    std::io::Read::take(&mut file, len as u64)
+        .read_to_end(&mut buffer)
         .map_err(|err| BlobError::Io(err.to_string()))?;
-    buffer.truncate(read);
     Ok(buffer)
 }
 
@@ -502,6 +542,22 @@ fn requested_range(value: Option<&tauri::http::HeaderValue>, total: u64) -> Opti
     (end >= start).then_some((start, end))
 }
 
+/// Tranche servie quand le client n'a demandé AUCUNE plage.
+///
+/// Ne borner d'office n'a de sens que pour un lecteur qui sait réclamer la suite : un `<video>` le
+/// fait, un `<img>` non — il émet une requête simple et prend le corps rendu pour le fichier entier.
+/// Une image de plus de `PROTOCOL_CHUNK` arrivait donc tronquée, c'est-à-dire cassée ou figée sur
+/// ses premières lignes, sans la moindre erreur.
+fn default_range(mime: &str, total: u64) -> Option<(u64, u64)> {
+    let streamable = mime.starts_with("video/") || mime.starts_with("audio/");
+    // Un média temporel réclame la suite tout seul : on lui sert une première tranche. Une image,
+    // non — elle prend le corps rendu pour le fichier entier — donc elle part entière tant qu'elle
+    // tient dans la réponse. Au-delà, la borne revient : le processus d'interface ne construit pas
+    // un tampon d'un gigaoctet, et une image de cette taille reste un cas pathologique.
+    let cap = if streamable { PROTOCOL_CHUNK } else { MAX_INLINE_RESPONSE };
+    (total > cap).then_some((0, cap.min(total) - 1))
+}
+
 /// Opaque media protocol. The URL contains only a project id and content hash; no filesystem path
 /// ever crosses IPC. Project membership is enforced before iroh acquisition, and the protocol also
 /// verifies that the currently open document references the requested hash.
@@ -553,8 +609,13 @@ pub fn protocol_response(request: tauri::http::Request<Vec<u8>>) -> tauri::http:
         _ => return protocol_error(tauri::http::StatusCode::NOT_FOUND, "media is incomplete"),
     };
     let explicit_range = request.headers().get(tauri::http::header::RANGE);
+    // Sans en-tête `Range`, servir d'office une première tranche n'a de sens que pour un lecteur
+    // qui sait RÉCLAMER LA SUITE : un `<video>` le fait, un `<img>` non — il émet une requête
+    // simple et prend le corps qu'on lui donne pour le fichier entier. Une image de plus de 8 Mio
+    // arrivait donc tronquée à 8 Mio, c'est-à-dire cassée ou figée sur ses premières lignes, sans
+    // la moindre erreur. La borne ne s'applique plus qu'aux médias temporels.
     let range = requested_range(explicit_range, total)
-        .or_else(|| (total > PROTOCOL_CHUNK).then_some((0, PROTOCOL_CHUNK.min(total) - 1)));
+        .or_else(|| default_range(&info.mime, total));
     let (start, end, status) = match range {
         Some((start, end)) => (start, end, tauri::http::StatusCode::PARTIAL_CONTENT),
         None => (0, total.saturating_sub(1), tauri::http::StatusCode::OK),
@@ -820,7 +881,7 @@ fn gc(pinned: &std::collections::HashSet<String>) -> Result<usize, BlobError> {
 mod path_tests {
     use super::{
         collection_due, consume_import_grant, issue_trusted_grant, path_for, renderer_origin,
-        requested_range, GRACE, PROTOCOL_CHUNK,
+        default_range, requested_range, GRACE, MAX_INLINE_RESPONSE, PROTOCOL_CHUNK,
     };
     use crate::collab::ids::{OpaqueToken, ProjectId};
     use std::fs;
@@ -845,6 +906,29 @@ mod path_tests {
             requested_range(Some(&open), PROTOCOL_CHUNK * 2),
             Some((2, PROTOCOL_CHUNK + 1))
         );
+    }
+
+    #[test]
+    fn an_image_larger_than_a_chunk_is_served_whole() {
+        // Un `<img>` n'envoie pas de `Range` et ne sait pas en redemander : lui rendre une première
+        // tranche revient à lui livrer un fichier tronqué, sans erreur. Seuls les médias temporels,
+        // qui réclament la suite d'eux-mêmes, sont bornés d'office.
+        let big = PROTOCOL_CHUNK * 3;
+        assert_eq!(default_range("image/gif", big), None);
+        assert_eq!(default_range("image/png", big), None);
+        assert_eq!(default_range("application/pdf", big), None);
+        // Passé le plafond de réponse, la borne revient même pour une image : le corps annoncé doit
+        // rester un corps que ce processus sait construire.
+        assert_eq!(
+            default_range("image/png", MAX_INLINE_RESPONSE * 2),
+            Some((0, MAX_INLINE_RESPONSE - 1))
+        );
+        assert_eq!(
+            default_range("video/mp4", big),
+            Some((0, PROTOCOL_CHUNK - 1))
+        );
+        // Sous la borne, personne n'est tronqué de toute façon.
+        assert_eq!(default_range("video/mp4", 1024), None);
     }
 
     #[test]

@@ -16,16 +16,57 @@ import type {
 
 export type AssetResolver = (ref: string, item: BoardItem) => MediaAsset | null;
 
-function same(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+// Structural equality over the plain-data values the facet builders produce. The previous
+// `JSON.stringify` pair serialized every facet of every item on every 150 ms flush — O(board) of
+// string building to compare two objects that are usually identical. Matches stringify semantics
+// where it matters: a property holding `undefined` counts as absent, and NaN equals NaN.
+export function same(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (typeof left === "number" && typeof right === "number") {
+    return Number.isNaN(left) && Number.isNaN(right);
+  }
+  if (typeof left !== "object" || typeof right !== "object" || left === null || right === null) {
+    return false;
+  }
+  const leftIsArray = Array.isArray(left);
+  if (leftIsArray !== Array.isArray(right)) return false;
+  if (leftIsArray) {
+    const l = left as unknown[];
+    const r = right as unknown[];
+    if (l.length !== r.length) return false;
+    for (let index = 0; index < l.length; index += 1) {
+      if (!same(l[index], r[index])) return false;
+    }
+    return true;
+  }
+  const l = left as Record<string, unknown>;
+  const r = right as Record<string, unknown>;
+  for (const key in l) {
+    if (l[key] !== undefined && !same(l[key], r[key])) return false;
+  }
+  for (const key in r) {
+    if (r[key] !== undefined && l[key] === undefined) return false;
+  }
+  return true;
+}
+
+/// Rust refuses a non-positive width or height, and it is right to: a shared document must not
+/// carry a rectangle nobody can draw. But some board items legitimately have no size — the drawing
+/// layer is a board-wide singleton whose content is its strokes, and an item can reach here before
+/// it has ever been measured. Those get a minimal box instead of failing the whole share; their
+/// real size is recomputed on the other side from the media or the strokes they carry.
+const MIN_SIDE = 1;
+
+function side(value: number | undefined): number {
+  return Number.isFinite(value) && (value as number) > 0 ? (value as number) : MIN_SIDE;
 }
 
 function geometry(item: BoardItem): Geometry {
   return {
-    x: item.x,
-    y: item.y,
-    width: item.w,
-    height: item.h,
+    x: Number.isFinite(item.x) ? item.x : 0,
+    y: Number.isFinite(item.y) ? item.y : 0,
+    width: side(item.w),
+    height: side(item.h),
     rotation: item.rotation,
     naturalWidth: item.natW,
     naturalHeight: item.natH,
@@ -79,6 +120,14 @@ function playback(item: BoardItem): Playback {
     sequenceIn: item.seqIn,
     sequenceOut: item.seqOut,
   };
+}
+
+// Playback POSITION is local, as the document contract states: which frame a sequence is showing
+// and whether it is currently running follow the person watching. Comparing them published one
+// operation per displayed frame and dragged every other member's view along with it.
+function playbackSettings(item: BoardItem) {
+  const { frame: _frame, sequencePlaying: _playing, ...settings } = playback(item);
+  return settings;
 }
 
 function palette(item: BoardItem): BoardPalette {
@@ -184,9 +233,18 @@ function crop(item: BoardItem) {
 }
 
 function trim(item: BoardItem) {
-  return item.trimIn !== undefined && item.trimOut !== undefined
-    ? { start: item.trimIn, end: item.trimOut, duration: item.dur }
-    : null;
+  if (item.trimIn === undefined || item.trimOut === undefined) return null;
+  // Le document REFUSE une sortie au-delà de la durée du média, et un lot rejeté l'est en ENTIER :
+  // une borne posée avant que la durée exacte ne soit connue (elle s'affine au chargement) suffisait
+  // alors à faire tomber le partage complet, donc à publier un board qui semblait réinitialisé.
+  // Une sortie qui dépasse le média n'a de toute façon pas de sens : elle vaut la fin du média.
+  // Les DEUX bornes sont ramenées dans le média : une durée révisée à la baisse (elle s'affine au
+  // chargement, et deux sources l'écrivent désormais) laissait sinon une ENTRÉE hors bornes, que le
+  // document refuse tout autant — donc le même lot entier perdu.
+  const limit = item.dur;
+  const start = limit !== undefined && item.trimIn > limit ? limit : item.trimIn;
+  const end = limit !== undefined && item.trimOut > limit ? limit : item.trimOut;
+  return { start, end: Math.max(start, end), duration: limit };
 }
 
 export function diffText(itemId: string, previous: string, next: string): CollabOp[] {
@@ -263,6 +321,13 @@ function vectorShape(shape: DrawShape): VectorShape {
   };
 }
 
+// Items whose `ref` could not be turned into a shareable asset during the last diff. The document
+// can only hold a content hash, a remote URL or a YouTube id — never a local path — so an item in
+// this set travels without its media. Erasing the media it already carries would turn a transient
+// import failure into permanent data loss, so the diff simply emits nothing for it and the caller
+// is told which items were affected.
+const unresolved = new Set<string>();
+
 function addItemOps(item: BoardItem, resolveAsset: AssetResolver): CollabOp[] {
   const ops: CollabOp[] = [
     { type: "addItem", itemId: item.id, kind: item.kind, geometry: geometry(item) },
@@ -275,6 +340,7 @@ function addItemOps(item: BoardItem, resolveAsset: AssetResolver): CollabOp[] {
   if (trim(item)) ops.push({ type: "setTrim", itemId: item.id, trim: trim(item) });
   const manifest = mediaManifest(item, resolveAsset);
   if (manifest) ops.push({ type: "setMediaManifest", itemId: item.id, manifest });
+  else if (item.ref) unresolved.add(item.id);
   if (item.link) ops.push({ type: "setLink", itemId: item.id, link: link(item) });
   if (item.embed) ops.push({ type: "setEmbed", itemId: item.id, embed: embed(item) });
   if (item.frames?.length) {
@@ -283,6 +349,8 @@ function addItemOps(item: BoardItem, resolveAsset: AssetResolver): CollabOp[] {
       .filter((frame): frame is MediaAsset => frame !== null);
     if (frames.length === item.frames.length) {
       ops.push({ type: "setSequence", itemId: item.id, sequence: { frames } });
+    } else {
+      unresolved.add(item.id);
     }
   }
   if (item.kind === "palette") ops.push({ type: "setPalette", itemId: item.id, palette: palette(item) });
@@ -333,9 +401,24 @@ function diffDraw(previous: DrawShape[], next: DrawShape[]): CollabOp[] {
   return ops;
 }
 
+// The board stacks with `z`, not with the position of the item in the array: bring-to-front only
+// rewrites `z` and leaves the array untouched. Diffing the raw array order therefore transmitted
+// nothing, and the projection — which numbers `z` from the document order — flattened the stack
+// back on the next read. Both sides are compared in render order instead.
+function stackOrder(items: BoardItem[]): BoardItem[] {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((left, right) => ((left.item.z ?? 0) - (right.item.z ?? 0)) || (left.index - right.index))
+    .map((entry) => entry.item);
+}
+
 function reorderOps(previous: BoardItem[], next: BoardItem[]): CollabOp[] {
-  const current = previous.map((item) => item.id).filter((id) => next.some((item) => item.id === id));
-  const desired = next.map((item) => item.id).filter((id) => previous.some((item) => item.id === id));
+  // Set membership, not `some`: the previous pair of linear scans made every flush O(n²) even when
+  // nothing moved.
+  const nextIds = new Set(next.map((item) => item.id));
+  const previousIds = new Set(previous.map((item) => item.id));
+  const current = previous.map((item) => item.id).filter((id) => nextIds.has(id));
+  const desired = next.map((item) => item.id).filter((id) => previousIds.has(id));
   const ops: CollabOp[] = [];
   for (let index = 0; index < desired.length; index += 1) {
     if (current[index] === desired[index]) continue;
@@ -349,11 +432,19 @@ function reorderOps(previous: BoardItem[], next: BoardItem[]): CollabOp[] {
   return ops;
 }
 
+/** Item ids the last `diffBoard` could not give a shareable media to. Read it right after. */
+export function unresolvedMediaItems(): string[] {
+  return [...unresolved];
+}
+
 export function diffBoard(
   previous: BoardItem[],
   next: BoardItem[],
   resolveAsset: AssetResolver = () => null,
 ): CollabOp[] {
+  unresolved.clear();
+  previous = stackOrder(previous);
+  next = stackOrder(next);
   const before = new Map(previous.map((item) => [item.id, item]));
   const after = new Map(next.map((item) => [item.id, item]));
   const ops: CollabOp[] = [];
@@ -363,15 +454,26 @@ export function diffBoard(
       ops.push(...addItemOps(item, resolveAsset));
       continue;
     }
+    // The store patches immutably: an untouched item keeps its object identity between flushes,
+    // and the projection reconciler preserves it too. Nothing to compare facet by facet.
+    if (old === item) continue;
     if (!same(geometry(old), geometry(item))) ops.push({ type: "setGeometry", itemId: item.id, geometry: geometry(item) });
     if (!same(appearance(old), appearance(item))) ops.push({ type: "setAppearance", itemId: item.id, appearance: appearance(item) });
     if (!same(textStyle(old), textStyle(item))) ops.push({ type: "setTextStyle", itemId: item.id, style: textStyle(item) });
     if (!same(frameStyle(old), frameStyle(item))) ops.push({ type: "setFrameStyle", itemId: item.id, frame: frameStyle(item) });
-    if (!same(playback(old), playback(item))) ops.push({ type: "setPlayback", itemId: item.id, playback: playback(item) });
+    if (!same(playbackSettings(old), playbackSettings(item))) {
+      ops.push({ type: "setPlayback", itemId: item.id, playback: playback(item) });
+    }
     if (!same(crop(old), crop(item))) ops.push({ type: "setCrop", itemId: item.id, crop: crop(item) });
     if (!same(trim(old), trim(item))) ops.push({ type: "setTrim", itemId: item.id, trim: trim(item) });
     if (!same(mediaIdentity(old), mediaIdentity(item))) {
-      ops.push({ type: "setMediaManifest", itemId: item.id, manifest: mediaManifest(item, resolveAsset) });
+      const manifest = mediaManifest(item, resolveAsset);
+      // `manifest: null` is the operation that clears an item's media. It is only legitimate when
+      // the item really has no media left; emitting it because an import failed is what made a
+      // media the board still displays disappear from the document for good.
+      if (manifest) ops.push({ type: "setMediaManifest", itemId: item.id, manifest });
+      else if (!item.ref) ops.push({ type: "setMediaManifest", itemId: item.id, manifest: null });
+      else unresolved.add(item.id);
     }
     if (!same(link(old), link(item))) ops.push({ type: "setLink", itemId: item.id, link: link(item) });
     if (!same(embed(old), embed(item))) ops.push({ type: "setEmbed", itemId: item.id, embed: embed(item) });
@@ -379,11 +481,14 @@ export function diffBoard(
       const frames = (item.frames ?? [])
         .map((ref) => resolveAsset(ref, item) ?? automaticAsset(ref, item))
         .filter((frame): frame is MediaAsset => frame !== null);
-      ops.push({
-        type: "setSequence",
-        itemId: item.id,
-        sequence: frames.length === (item.frames?.length ?? 0) && frames.length ? { frames } : null,
-      });
+      // Same rule as the manifest: only an emptied sequence clears the sequence.
+      if (frames.length && frames.length === item.frames?.length) {
+        ops.push({ type: "setSequence", itemId: item.id, sequence: { frames } });
+      } else if (!item.frames?.length) {
+        ops.push({ type: "setSequence", itemId: item.id, sequence: null });
+      } else {
+        unresolved.add(item.id);
+      }
     }
     if (item.kind === "palette" && !same(palette(old), palette(item))) {
       ops.push({ type: "setPalette", itemId: item.id, palette: palette(item) });

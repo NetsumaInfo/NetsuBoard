@@ -9,7 +9,7 @@
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, Info, LayoutDashboard, LifeBuoy, Palette, Terminal, UserRound, X } from "lucide-react";
+import { Download, HardDrive, Info, LayoutDashboard, LifeBuoy, MessageCircle, Palette, Terminal, UserRound, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { markConsoleSeen, subscribeErrorCount } from "@/lib/appConsole";
@@ -18,6 +18,7 @@ import { ConsolePanel } from "./console/ConsolePanel";
 import { UpdateSettings } from "./UpdateSettings";
 import { BugReportForm } from "./console/BugReportForm";
 import { InterfacePanel } from "./InterfacePanel";
+import { StoragePanel } from "./StoragePanel";
 import { DiscordSettings } from "./DiscordSettings";
 import { AboutPanel } from "./AboutPanel";
 import { useSettingsUi, type SettingsSection } from "./useSettingsUi";
@@ -33,8 +34,11 @@ const SECTIONS: { id: SettingsSection; icon: typeof Palette; labelKey: string }[
   // « Compte » en tête, comme dans NetsuRush : c'est la seule porte vers la connexion Discord une
   // fois le gate passé, et l'écran de connexion promet précisément de la trouver ici.
   { id: "account", icon: UserRound, labelKey: "settings:nav.account" },
+  { id: "discord", icon: MessageCircle, labelKey: "settings:nav.discord" },
   { id: "board", icon: LayoutDashboard, labelKey: "reference:settings.navBoard" },
   { id: "interface", icon: Palette, labelKey: "settings:nav.interface" },
+  // « Stockage » avant la console : c'est un réglage du produit, pas un outil de diagnostic.
+  { id: "storage", icon: HardDrive, labelKey: "settings:nav.storage" },
   { id: "console", icon: Terminal, labelKey: "settings:tab.system.console" },
   // « Signaler » vit juste après la Console : c'est là qu'on arrive après avoir lu ce qui a cassé,
   // et le formulaire joint précisément ce journal.
@@ -154,18 +158,17 @@ export function AppSettings() {
 
             <div className={cn("flex min-h-0 flex-1 flex-col overflow-y-auto", section === "board" ? "p-4" : "p-5")}>
               {section === "account" && (
-                <>
-                  <Suspense fallback={<div className="grid flex-1 place-items-center"><Spinner className="size-5 text-muted-foreground" /></div>}>
-                    <AccountPanel />
-                  </Suspense>
-                  {/* HORS du Suspense de la page Compte : la présence ne dépend d'aucun compte ni de
-                      Convex (named pipe locale), elle ne doit donc pas attendre le chunk Better Auth
-                      — ni disparaître sur une installation sans déploiement. */}
-                  <DiscordSettings />
-                </>
+                <Suspense fallback={<div className="grid flex-1 place-items-center"><Spinner className="size-5 text-muted-foreground" /></div>}>
+                  <AccountPanel />
+                </Suspense>
               )}
+              {/* Page à part : la présence ne dépend d'aucun compte ni de Convex (named pipe
+                  locale). Elle n'a donc pas à attendre le chunk Better Auth, ni à disparaître sur
+                  une installation sans déploiement — et elle n'a rien à voir avec le compte lui-même. */}
+              {section === "discord" && <DiscordSettings />}
               {section === "board" && <BoardSettings tab={boardTab} onCapturingChange={setCapturing} />}
               {section === "interface" && <InterfacePanel />}
+              {section === "storage" && <StoragePanel />}
               {section === "console" && <ConsolePanel />}
               {section === "report" && <BugReportForm />}
               {section === "updates" && <UpdateSettings />}

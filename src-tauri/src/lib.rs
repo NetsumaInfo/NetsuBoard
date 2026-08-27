@@ -1,4 +1,4 @@
-// Coquille Tauri NetsuRush : fenêtre + plugins + spawn du service Node "core".
+// Coquille Tauri NetsuBoard : fenêtre + plugins + spawn du service Node "core".
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -18,6 +18,7 @@ mod state;
 use collab::commands::{
     collab_configure_auth, collab_device_forget, collab_device_identity, collab_head_discard_stale,
     collab_invite_cancel, collab_invite_respond, collab_media_grant_known, collab_media_import,
+    collab_media_path,
     collab_media_resolve, collab_member_remove, collab_member_set_role, collab_project_abort,
     collab_project_apply, collab_project_close, collab_project_create, collab_project_delete,
     collab_project_flush_checkpoint, collab_project_invite, collab_project_leave,
@@ -44,10 +45,11 @@ const CORE_LOG_MAX: u64 = 2 * 1024 * 1024;
 // lancement et le renderer le lui demande (`nr_core_port`). Le choix est refait à chaque spawn : si
 // le port est pris entre-temps, le redémarrage du watchdog en prend un autre tout seul.
 //
-// La plage part de 8760, comme `core/server.js` lancé seul, et NON de 8730 : cette dernière est
-// celle de NetsuRush, qui tourne côte à côte. Balayer la même base faisait tomber le core d'une
-// application sur le port de l'autre.
-const CORE_PORT_FIRST: u16 = 8760;
+// La plage part de 43117, comme `core/server.js` lancé seul : une base non assignée par l'IANA,
+// sous la plage éphémère de Windows (49152+), où aucun logiciel courant n'écoute — l'ancienne base
+// 8760 vivait au milieu des ports de développement (8000-9000) que n'importe quel serveur local
+// peut occuper. Elle reste DISJOINTE de celle de NetsuRush (8730-8749), qui tourne côte à côte.
+const CORE_PORT_FIRST: u16 = 43117;
 const CORE_PORT_SPAN: u16 = 20;
 static CORE_PORT: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(CORE_PORT_FIRST);
 
@@ -72,7 +74,7 @@ fn core_log_path() -> PathBuf {
     let home = std::env::var_os("NR_HOME")
         .map(PathBuf::from)
         .or_else(|| {
-            std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("NetsuRush"))
+            std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("NetsuBoard"))
         })
         .unwrap_or_else(std::env::temp_dir);
     home.join("logs").join("core.log")
@@ -101,9 +103,9 @@ fn log_core(line: &str) {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    eprintln!("[netsurush] {line}");
+    eprintln!("[netsuboard] {line}");
     if let Some(mut file) = open_core_log() {
-        let _ = writeln!(file, "[netsurush {stamp}] {line}");
+        let _ = writeln!(file, "[netsuboard {stamp}] {line}");
     }
 }
 
@@ -286,7 +288,7 @@ fn stop_core(app: &AppHandle) {
     }
     // Filet de sécurité si Node a crashé ou dépassé le délai. Cette racine ne contient jamais de
     // sortie utilisateur, uniquement des fichiers de travail de la session.
-    let _ = std::fs::remove_dir_all(std::env::temp_dir().join("netsurush-session"));
+    let _ = std::fs::remove_dir_all(std::env::temp_dir().join("netsuboard-session"));
 }
 
 // Le core Node est un service séparé : un crash (DLL/sidecar, antivirus, mémoire) ne doit pas
@@ -591,7 +593,7 @@ pub fn run() {
         match release_file_lock(&resource) {
             Ok(()) => std::process::exit(0),
             Err(error) => {
-                eprintln!("[netsurush] {error}");
+                eprintln!("[netsuboard] {error}");
                 std::process::exit(1);
             }
         }
@@ -659,6 +661,7 @@ pub fn run() {
             collab_device_forget,
             collab_media_grant_known,
             collab_media_import,
+            collab_media_path,
             collab_media_resolve,
             collab_project_close,
             collab_project_apply,
@@ -776,7 +779,7 @@ fn spawn_core(_app: &AppHandle) -> Option<Child> {
         .join("core")
         .join("server.js");
     if !server.exists() {
-        eprintln!("[netsurush] core introuvable: {}", server.display());
+        eprintln!("[netsuboard] core introuvable: {}", server.display());
         return None;
     }
     let app_exe = std::env::current_exe().ok();
@@ -792,11 +795,11 @@ fn spawn_core(_app: &AppHandle) -> Option<Child> {
     }
     match command.spawn() {
         Ok(child) => {
-            eprintln!("[netsurush] core spawné: {}", server.display());
+            eprintln!("[netsuboard] core spawné: {}", server.display());
             Some(child)
         }
         Err(e) => {
-            eprintln!("[netsurush] échec spawn core (node dans le PATH ?): {e}");
+            eprintln!("[netsuboard] échec spawn core (node dans le PATH ?): {e}");
             None
         }
     }
@@ -804,7 +807,7 @@ fn spawn_core(_app: &AppHandle) -> Option<Child> {
 
 // RELEASE : node.exe portable bundlé (resources/bin) + core bundlé (resources/core). Les sidecars
 // python lisent leurs scripts via NETSURUSH_PY_DIR ; config.js localise le runtime provisionné
-// (venv/ffmpeg/poids) via nr.config.json dans %LOCALAPPDATA%\NetsuRush (écrit au 1er lancement).
+// (venv/ffmpeg/poids) via nr.config.json dans %LOCALAPPDATA%\NetsuBoard (écrit au 1er lancement).
 #[cfg(not(debug_assertions))]
 fn spawn_core(app: &AppHandle) -> Option<Child> {
     let res = match app.path().resource_dir() {

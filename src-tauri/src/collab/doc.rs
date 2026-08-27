@@ -12,6 +12,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 use loro::{ExportMode, LoroDoc, LoroMap, LoroMovableList, LoroValue, VersionVector};
 use serde::de::DeserializeOwned;
@@ -123,13 +124,33 @@ pub struct ProjectProjection {
     pub order: Vec<String>,
     pub strokes: Vec<Stroke>,
     pub shapes: Vec<VectorShape>,
+    /// Content hashes whose bytes are already in the local blob store. The document layer cannot
+    /// know this — the service fills it before the projection crosses to the renderer, which uses
+    /// it to paint a placeholder instead of pointing an `<img>`/`<video>` at a blob that would 404.
+    pub local_hashes: Vec<String>,
 }
+
+/// The on-disk `.loro` snapshot is a warm-start cache, not the durability layer: every accepted
+/// edit is already committed to the project's SQLite store before `commit_update` runs, and opening
+/// a project replays that store on top of whatever snapshot exists. Rewriting the full snapshot on
+/// every 150 ms batch therefore buys nothing — it is throttled to this interval and flushed on
+/// close (and after the open-time replay).
+const SNAPSHOT_INTERVAL: Duration = Duration::from_secs(2);
 
 struct Project {
     doc: LoroDoc,
+    /// Validation replica. A batch is applied here first, so an invalid operation rolls the whole
+    /// batch back without ever touching `doc` — and without exporting/importing a full snapshot on
+    /// every batch, which is what the previous per-batch shadow rebuild cost. Kept converged with
+    /// `doc` by importing the same updates; rebuilt from a snapshot only when a partial batch
+    /// poisoned it (rare: an invalid batch).
+    shadow: LoroDoc,
     undo: loro::UndoManager,
     revision: u64,
     path: PathBuf,
+    /// Snapshot write pending: the in-memory document is ahead of the `.loro` file.
+    dirty: bool,
+    last_save: Instant,
     /// A newer schema is readable but frozen: writing would produce a document its own author
     /// could no longer open.
     read_only: bool,
@@ -221,24 +242,78 @@ fn open(project_id: &str) -> Result<Project, DocError> {
     }
 
     let undo = loro::UndoManager::new(&doc);
+    let shadow = fork_of(&doc)?;
     Ok(Project {
         doc,
+        shadow,
         undo,
         revision: 0,
         path,
+        dirty: false,
+        last_save: Instant::now(),
         read_only,
     })
 }
 
+/// A second in-memory replica of `doc`, with the same peer id so operations born on it remain
+/// attributable to this device once imported back.
+fn fork_of(doc: &LoroDoc) -> Result<LoroDoc, DocError> {
+    let snapshot = doc
+        .export(ExportMode::Snapshot)
+        .map_err(|err| DocError::Loro(err.to_string()))?;
+    let fork = LoroDoc::new();
+    fork.import(&snapshot)?;
+    fork.set_peer_id(doc.peer_id())?;
+    Ok(fork)
+}
+
+/// Brings the shadow up to date with `doc` by importing only what it misses. If the shadow is
+/// AHEAD of `doc` — a prepared batch was never committed because a later step failed — it holds
+/// operations the product decided to reject, so it is rebuilt instead of reconciled.
+fn sync_shadow(project: &mut Project) -> Result<(), DocError> {
+    let delta = project
+        .doc
+        .export(ExportMode::updates(&project.shadow.oplog_vv()))
+        .map_err(|err| DocError::Loro(err.to_string()))?;
+    project.shadow.import(&delta)?;
+    if project.shadow.oplog_vv() != project.doc.oplog_vv() {
+        project.shadow = fork_of(&project.doc)?;
+    }
+    Ok(())
+}
+
 /// Atomic replace: a crash mid-write leaves the previous snapshot intact rather than a truncated
 /// file that would fail to import on the next start.
-fn save(project: &Project) -> Result<(), DocError> {
+fn write_snapshot(project: &mut Project) -> Result<(), DocError> {
     let bytes = project
         .doc
         .export(ExportMode::Snapshot)
         .map_err(|err| DocError::Loro(err.to_string()))?;
     super::ids::atomic_write(&project.path, &bytes).map_err(|err| DocError::Io(err.to_string()))?;
+    project.dirty = false;
+    project.last_save = Instant::now();
     Ok(())
+}
+
+/// See `SNAPSHOT_INTERVAL`: the SQLite store already holds the durable copy, so the snapshot cache
+/// is rewritten at most every interval instead of on every commit.
+fn save(project: &mut Project) -> Result<(), DocError> {
+    if project.last_save.elapsed() >= SNAPSHOT_INTERVAL {
+        return write_snapshot(project);
+    }
+    project.dirty = true;
+    Ok(())
+}
+
+/// Writes the pending snapshot, if any. Called after the open-time store replay and before a
+/// project leaves memory, so a quiet project does not keep a stale cache forever.
+pub fn flush(project_id: &str) -> Result<(), DocError> {
+    with_project(project_id, false, |project| {
+        if project.dirty {
+            write_snapshot(project)?;
+        }
+        Ok(())
+    })
 }
 
 fn items(doc: &LoroDoc) -> LoroMap {
@@ -253,6 +328,20 @@ fn order(doc: &LoroDoc) -> LoroMovableList {
 ///
 /// Ids are never reused, so a late operation that arrives after a deletion cannot resurrect an item:
 /// it is refused here instead of writing into a container the projection already filters out.
+/// Une entrée présente dans une map est-elle une PIERRE TOMBALE ?
+///
+/// Supprimer ne retire pas l'entrée, ça lève ce drapeau. Refuser tout id déjà présent revenait donc
+/// à refuser la RÉAPPARITION d'un objet supprimé — ce qui est exactement ce qu'une annulation
+/// demande, l'historique du board restituant les ids d'origine. Et un lot rejeté l'est en ENTIER :
+/// un seul Ctrl+Z après une suppression faisait tomber tout le lot, l'annulation était perdue et
+/// une notice d'erreur restait collée. Un id VIVANT reste refusé : celui-là est une vraie collision.
+fn is_tombstoned(entry: &LoroMap) -> bool {
+    matches!(
+        entry.get(KEY_DELETED).and_then(|value| value.into_value().ok()),
+        Some(LoroValue::Bool(true))
+    )
+}
+
 fn live_item(doc: &LoroDoc, id: &str) -> Result<LoroMap, DocError> {
     let item = items(doc)
         .get(id)
@@ -402,6 +491,7 @@ fn project_projection_from_doc(
             doc.get_map(ROOT_SHAPES),
             doc.get_movable_list(ROOT_SHAPE_ORDER),
         )?,
+        local_hashes: Vec::new(),
     })
 }
 
@@ -413,15 +503,25 @@ fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
             geometry,
         } => {
             let id = item_id.as_str();
-            if items(doc).get(id).is_some() {
-                return Err(DocError::Rejected(format!("item {id} already exists")));
+            let existing = items(doc)
+                .get(id)
+                .and_then(|value| value.into_container().ok())
+                .and_then(|container| container.into_map().ok());
+            if let Some(entry) = &existing {
+                if !is_tombstoned(entry) {
+                    return Err(DocError::Rejected(format!("item {id} already exists")));
+                }
             }
             let item = items(doc).ensure_mergeable_map(id)?;
             item.insert("kind", json(kind)?.trim_matches('"'))?;
             item.insert("geometry", json(geometry)?)?;
             item.insert(KEY_DELETED, false)?;
             let list = order(doc);
-            list.insert(list.len(), id)?;
+            // Un item ressuscité a quitté l'ordre à sa suppression ; un id qui y serait resté ne
+            // doit pas y figurer deux fois.
+            if index_in_order(&list, id).is_none() {
+                list.insert(list.len(), id)?;
+            }
         }
         // Delete wins over move: the tombstone stays and the id leaves the order. A concurrent move
         // may put the id back, which is why the projection filters tombstones as well.
@@ -517,17 +617,33 @@ fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
         }
         // A finished stroke is one immutable value, not a list of points: one operation instead of
         // thousands. Erasing part of a stroke deletes it and adds the remaining segments as new ones.
+        // A stroke holds no editable field of its own, so CHANGING one (its colour, width, opacity,
+        // or the item it belongs to) is expressed as a delete followed by an add on the same id,
+        // usually inside a single batch. Deleting only raises the tombstone — the entry stays — so
+        // refusing every id already present rejected the whole batch, and with it any edit made to
+        // an existing pen stroke on a shared board. A LIVE id is still refused: that one is a
+        // genuine collision. Re-adding over a tombstone revives the entry with the new value.
         CollabOp::AddStroke(stroke_value) => {
             let id = stroke_value.stroke_id.as_str();
             let strokes = doc.get_map(ROOT_STROKES);
-            if strokes.get(id).is_some() {
-                return Err(DocError::Rejected(format!("stroke {id} already exists")));
+            let existing = strokes
+                .get(id)
+                .and_then(|value| value.into_container().ok())
+                .and_then(|container| container.into_map().ok());
+            if let Some(entry) = &existing {
+                if !is_tombstoned(entry) {
+                    return Err(DocError::Rejected(format!("stroke {id} already exists")));
+                }
             }
             let stroke = strokes.ensure_mergeable_map(id)?;
             stroke.insert("data", json(stroke_value)?)?;
             stroke.insert(KEY_DELETED, false)?;
             let list = doc.get_movable_list(ROOT_STROKE_ORDER);
-            list.insert(list.len(), id)?;
+            // A revived stroke was taken out of the order when it was deleted; a stroke that
+            // somehow kept its slot must not be listed twice.
+            if index_in_order(&list, id).is_none() {
+                list.insert(list.len(), id)?;
+            }
         }
         CollabOp::DeleteStroke { stroke_id } => {
             let id = stroke_id.as_str();
@@ -546,20 +662,14 @@ fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
         CollabOp::UpsertShape(shape_value) => {
             let id = shape_value.shape_id.as_str();
             let shapes = doc.get_map(ROOT_SHAPES);
-            let existed = shapes.get(id).is_some();
             let shape = shapes.ensure_mergeable_map(id)?;
-            if matches!(
-                shape
-                    .get(KEY_DELETED)
-                    .and_then(|value| value.into_value().ok()),
-                Some(LoroValue::Bool(true))
-            ) {
-                return Err(DocError::Rejected(format!("shape {id} is deleted")));
-            }
+            let revived = is_tombstoned(&shape);
             shape.insert("data", json(shape_value)?)?;
             shape.insert(KEY_DELETED, false)?;
-            if !existed {
-                let list = doc.get_movable_list(ROOT_SHAPE_ORDER);
+            let list = doc.get_movable_list(ROOT_SHAPE_ORDER);
+            // Une forme supprimée a quitté l'ordre : la ré-poser la remet dans la pile. Sinon
+            // (simple mise à jour), l'ordre est déjà juste et la toucher la ferait remonter.
+            if revived || index_in_order(&list, id).is_none() {
                 list.insert(list.len(), id)?;
             }
         }
@@ -604,55 +714,59 @@ fn apply_batch_to_doc(doc: &LoroDoc, ops: &[Op]) -> Result<Vec<u8>, DocError> {
     Ok(update)
 }
 
-/// Builds and validates a delta against a shadow document without changing the live document.
-/// The service persists this exact delta and its sealed outbox envelope in one SQLite transaction
-/// before calling `commit_update`, so a crash cannot leave visible work without a recoverable head.
-pub fn prepare_update(project_id: &str, protocol: u32, ops: &[Op]) -> Result<Vec<u8>, DocError> {
+/// Builds and validates a batch against the persistent shadow replica without changing the live
+/// document, and returns `(update, head_delta)`:
+///
+/// - `update`: exactly the batch's operations, exported from the live document's version — what
+///   `commit_update` will import;
+/// - `head_delta`: everything past `base_version` once the batch is applied — the payload the
+///   sealed outbox envelope carries.
+///
+/// The service persists both in one SQLite transaction before calling `commit_update`, so a crash
+/// cannot leave visible work without a recoverable head. The shadow makes this O(batch), not
+/// O(document): the previous implementation exported and re-imported two full snapshots per 150 ms
+/// batch, which dominated every drag on a large board.
+pub fn prepare_batch(
+    project_id: &str,
+    protocol: u32,
+    ops: &[Op],
+    base_version: &[u8],
+) -> Result<(Vec<u8>, Vec<u8>), DocError> {
     if protocol != OP_PROTOCOL_VERSION {
         return Err(DocError::Protocol(protocol));
     }
-    with_project(project_id, true, |project| {
-        let snapshot = project
-            .doc
-            .export(ExportMode::Snapshot)
-            .map_err(|error| DocError::Loro(error.to_string()))?;
-        let candidate = LoroDoc::new();
-        candidate.import(&snapshot)?;
-        candidate.set_peer_id(project.doc.peer_id())?;
-        OperationBatch::v1(ops.to_vec())
-            .validate()
-            .map_err(|error| DocError::Rejected(error.to_string()))?;
-        for operation in ops {
-            apply_one(&candidate, operation)?;
-        }
-        candidate.commit();
-        candidate
-            .export(ExportMode::updates(&project.doc.oplog_vv()))
-            .map_err(|error| DocError::Loro(error.to_string()))
-    })
-}
-
-pub fn head_delta_with(
-    project_id: &str,
-    base_version: &[u8],
-    candidate_update: &[u8],
-) -> Result<Vec<u8>, DocError> {
     let base = if base_version.is_empty() {
         VersionVector::default()
     } else {
         VersionVector::decode(base_version).map_err(|error| DocError::Loro(error.to_string()))?
     };
-    with_project(project_id, false, |project| {
-        let snapshot = project
-            .doc
-            .export(ExportMode::Snapshot)
+    with_project(project_id, true, |project| {
+        OperationBatch::v1(ops.to_vec())
+            .validate()
+            .map_err(|error| DocError::Rejected(error.to_string()))?;
+        sync_shadow(project)?;
+        let before = project.doc.oplog_vv();
+        let applied = (|| {
+            for operation in ops {
+                apply_one(&project.shadow, operation)?;
+            }
+            Ok(())
+        })();
+        if let Err(error) = applied {
+            // A partial batch poisoned the shadow; the live document never saw any of it.
+            project.shadow = fork_of(&project.doc)?;
+            return Err(error);
+        }
+        project.shadow.commit();
+        let update = project
+            .shadow
+            .export(ExportMode::updates(&before))
             .map_err(|error| DocError::Loro(error.to_string()))?;
-        let candidate = LoroDoc::new();
-        candidate.import(&snapshot)?;
-        candidate.import(candidate_update)?;
-        candidate
+        let head_delta = project
+            .shadow
             .export(ExportMode::updates(&base))
-            .map_err(|error| DocError::Loro(error.to_string()))
+            .map_err(|error| DocError::Loro(error.to_string()))?;
+        Ok((update, head_delta))
     })
 }
 
@@ -773,12 +887,18 @@ pub fn projection(project_id: &str) -> Result<ProjectProjection, DocError> {
     })
 }
 
-fn projection_media_hashes(projection: &ProjectProjection) -> std::collections::HashSet<String> {
+pub(crate) fn projection_media_hashes(
+    projection: &ProjectProjection,
+) -> std::collections::HashSet<String> {
     fn add_asset(
         hashes: &mut std::collections::HashSet<String>,
         asset: &crate::collab::ops::MediaAsset,
     ) {
         if let Some(hash) = &asset.content_hash {
+            hashes.insert(hash.clone());
+        }
+        // The preview is its own blob: authorised, pinned, and served exactly like the original.
+        if let Some(hash) = &asset.preview_hash {
             hashes.insert(hash.clone());
         }
     }
@@ -863,10 +983,16 @@ pub fn close(project_id: &str) -> Result<bool, DocError> {
     let mut guard = PROJECTS
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
-    Ok(guard
-        .get_or_insert_with(HashMap::new)
-        .remove(project_id)
-        .is_some())
+    let removed = guard.get_or_insert_with(HashMap::new).remove(project_id);
+    // Last chance to persist the throttled snapshot cache. Failure is not data loss — the SQLite
+    // store replays on the next open — so it must not block closing the project.
+    if let Some(mut project) = removed {
+        if project.dirty {
+            let _ = write_snapshot(&mut project);
+        }
+        return Ok(true);
+    }
+    Ok(false)
 }
 
 #[cfg(test)]
@@ -877,6 +1003,35 @@ mod path_tests {
     };
     use crate::collab::ops::{Geometry, ItemKind};
     use loro::{ExportMode, LoroDoc, LoroValue};
+
+    /// Annuler une suppression restitue les ids d'ORIGINE : l'historique du board n'est pas celui du
+    /// document. Refuser tout id déjà présent revenait à refuser cette réapparition — et un lot
+    /// rejeté l'est en entier, donc le premier Ctrl+Z après une suppression perdait tout le lot.
+    #[test]
+    fn deleting_then_re_adding_the_same_id_is_accepted() {
+        let doc = LoroDoc::new();
+        let add = || Op::AddItem {
+            item_id: "item-a".into(),
+            kind: ItemKind::Image,
+            geometry: geometry(1.0),
+        };
+        apply_batch_to_doc(&doc, &[add()]).expect("premier ajout");
+        apply_batch_to_doc(
+            &doc,
+            &[Op::DeleteItem { item_id: "item-a".into() }],
+        )
+        .expect("suppression");
+
+        // Ctrl+Z : le même id revient.
+        apply_batch_to_doc(&doc, &[add()]).expect("l'annulation doit être acceptée");
+        let projection = project_projection_from_doc(&doc, 0).expect("projection");
+        assert_eq!(projection.items.len(), 1);
+        // Une seule occurrence dans l'ordre : ressusciter ne doit pas empiler l'id deux fois.
+        assert_eq!(projection.order, vec!["item-a".to_string()]);
+
+        // Un id VIVANT reste une vraie collision.
+        assert!(apply_batch_to_doc(&doc, &[add()]).is_err());
+    }
 
     fn geometry(x: f64) -> Geometry {
         Geometry {

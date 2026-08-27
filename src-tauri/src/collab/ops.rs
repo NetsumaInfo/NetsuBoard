@@ -315,7 +315,17 @@ pub struct MediaAsset {
     pub size: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source_url: Option<String>,
+    /// Small JPEG rendition of the original, stored as its own blob. Peers fetch it first, so a
+    /// heavy original shows SOMETHING within one small transfer instead of a placeholder.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview_hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview_size: Option<u64>,
 }
+
+/// A preview is a thumbnail, not a second media: anything past this is refused so a writer cannot
+/// smuggle a full-size file under the label.
+const MAX_PREVIEW_BYTES: u64 = 2 * 1024 * 1024;
 
 impl MediaAsset {
     pub fn validate(&self) -> Result<(), CollabError> {
@@ -326,6 +336,25 @@ impl MediaAsset {
             _ => {
                 return Err(CollabError::validation(
                     "media asset needs exactly one hash, remote URL, or YouTube id",
+                ))
+            }
+        }
+        match (&self.preview_hash, self.preview_size) {
+            (None, None) => {}
+            (Some(hash), Some(size)) => {
+                if self.content_hash.is_none() {
+                    return Err(CollabError::validation(
+                        "a preview only accompanies a hashed media",
+                    ));
+                }
+                validate_hash(hash)?;
+                if size == 0 || size > MAX_PREVIEW_BYTES {
+                    return Err(CollabError::validation("invalid media preview size"));
+                }
+            }
+            _ => {
+                return Err(CollabError::validation(
+                    "a media preview needs both its hash and its size",
                 ))
             }
         }
@@ -1108,11 +1137,39 @@ mod tests {
                 mime: "video/quicktime".into(),
                 size: 12,
                 source_url: None,
+                preview_hash: None,
+                preview_size: None,
             },
             previous: None,
             local: None,
         };
         assert!(manifest.validate().is_err());
+    }
+
+    #[test]
+    fn media_previews_require_hash_size_and_a_hashed_original() {
+        let asset = |preview_hash: Option<&str>, preview_size: Option<u64>| MediaAsset {
+            content_hash: Some("a".repeat(64)),
+            remote_url: None,
+            youtube_id: None,
+            display_name: "clip.mp4".into(),
+            mime: "video/mp4".into(),
+            size: 1024,
+            source_url: None,
+            preview_hash: preview_hash.map(str::to_owned),
+            preview_size,
+        };
+        let hash = "b".repeat(64);
+        assert!(asset(Some(&hash), Some(48_000)).validate().is_ok());
+        assert!(asset(Some(&hash), None).validate().is_err());
+        assert!(asset(None, Some(48_000)).validate().is_err());
+        assert!(asset(Some("nope"), Some(48_000)).validate().is_err());
+        assert!(asset(Some(&hash), Some(0)).validate().is_err());
+        assert!(asset(Some(&hash), Some(64 * 1024 * 1024)).validate().is_err());
+        let mut remote = asset(Some(&hash), Some(48_000));
+        remote.content_hash = None;
+        remote.remote_url = Some("https://example.com/clip.mp4".into());
+        assert!(remote.validate().is_err());
     }
 
     #[test]

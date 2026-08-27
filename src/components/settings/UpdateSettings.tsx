@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import { useUpdater } from "@/store/updater";
 import { UpdateStatusLine } from "@/components/updates/UpdateStatusLine";
 import { ErrorReportButton } from "@/components/common/ErrorReportButton";
-import releases from "@/data/releases.json";
+import { releases } from "@/data/releases";
+import { ReleaseNotes } from "@/components/updates/ReleaseNotes";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -109,9 +110,7 @@ export function UpdateSettings() {
                 <Badge variant="outline">v{release.version}</Badge>
                 <span className="ml-auto text-xs text-muted-foreground">{release.date}</span>
               </div>
-              <ul className="list-disc space-y-1 pl-4 text-xs text-muted-foreground">
-                {release.highlights[language].map((highlight) => <li key={highlight}>{highlight}</li>)}
-              </ul>
+              <ReleaseNotes release={release} compact />
             </Card>
           ))}
         </div>

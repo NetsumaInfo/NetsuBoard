@@ -41,6 +41,12 @@ authority for its items: it saves the scene binding and view metadata while the 
 shared items. `Save As` is blocked because duplicating a scene id without defining a new collaboration
 project would create two local names for one remote truth. Explicit export remains available.
 
+Sharing a file-backed board converts it into a library scene; the `.netsu` stays on disk as a frozen
+export. The file's recents entry is linked to that scene (`sourceSceneId`), and the home screen hides
+the file card while the linked scene is collaborative — otherwise the board shows twice with nothing
+relating the two cards, and the file card is the wrong one to edit. Leaving or deleting the project
+removes the scene and the file card returns.
+
 ## Document and operation contract
 
 The document format and the renderer-to-native operation protocol are independently versioned at
@@ -69,6 +75,65 @@ are local Loro history actions and cannot undo another member's action.
 Drag previews, selection, pan/zoom, active tools, in-progress strokes, and playback position remain
 local in V1. Geometry is published after the committed gesture, not on every pointer frame. Shared
 cursors and presence are intentionally not claimed by this version.
+
+### Renderer bridge
+
+The Zustand board is a render cache; the Loro document is authoritative. Four rules keep the two from
+fighting each other, and breaking any of them makes the board unusable rather than merely wrong:
+
+- **Local edits are coalesced.** Board mutations are batched over a 150 ms window and leave as one
+  operation batch. One batch per pointer frame saturates the outbox and the publication debounce.
+- **A local apply never triggers a projection reload.** The native side announces every apply,
+  including this window's own; the announcement carrying the revision the local apply just returned
+  is consumed, not acted on. Rebuilding the board from the document mid-gesture destroys the item
+  objects the gesture holds.
+- **A projection never touches selection beyond dead references.** Selection, edit target, crop
+  target, and shape selection belong to the user; only ids that no longer exist are dropped. A
+  projection that arrives while a local batch is pending is held until the batch has left, then
+  re-read.
+- **A pending batch belongs to the project the board was on.** Leaving a shared board — home
+  screen, another scene, a solo board — replaces the renderer's items in the same store. Diffing
+  those against what the project last sent produces a deletion of the entire document, so a batch
+  whose project is no longer the board's project is dropped instead of sent.
+- **Stacking is diffed on `z`, not on array position.** Bring-to-front rewrites `z` and leaves the
+  array untouched; the document order is the render order, and the projection numbers `z` from it.
+- **The projection rebuilds a display address, it does not only forward one.** A hashed media is
+  addressed through the native protocol, which the renderer cannot compute; everything else follows
+  the board's ordinary rule — a YouTube item plays its id, an embed card its rebuilt iframe URL.
+  Forwarding only the hashed case left those two arriving with an empty `src`: no playback, no loop
+  and no in/out at the recipient, while the document itself carried all three. Previous and local
+  media variants take the same path.
+- **A shared media carries its declared type.** Addressing by fingerprint drops the file extension,
+  so the type stated by the document is the only thing left that identifies an animated image; the
+  freeze control needs it to stop a shared GIF the way it stops a local one. The type also decides
+  how the media protocol answers a request with no `Range`: only a video or audio blob is capped at
+  a first chunk, because only those ask for the rest. An `<img>` issues one plain request and takes
+  whatever body it gets for the whole file, so an image above the cap arrived truncated — broken or
+  frozen on its first rows, with no error anywhere.
+- **A stroke holds no editable field, so editing one is a delete plus an add on the same id.** The
+  document keeps a tombstone rather than removing the entry, so the add must be allowed to revive
+  it; refusing every id already present rejected the whole batch, which is how any change to an
+  existing pen stroke on a shared board silently failed and left the toolbar stuck on "sync
+  pending". A LIVE id is still refused — that one is a genuine collision.
+- **`collab:<hash>` is not a path, and no feature may hand it to the core.** The Node service only
+  knows files on disk; a shared media exists only as bytes in the blob store. Palette extraction is
+  the worked example: its file route is skipped for such a ref, and the pixels are read over the
+  native blob protocol, which does grant CORS to the renderer's own origin — the on-screen element
+  is loaded without `crossOrigin` and taints the canvas, so that protocol is the only readable
+  route. Any feature that resolves a ref against the disk needs the same guard (`isCoreFileRef`),
+  and a feature that cannot work on a shared media must be withheld at its ENTRY POINT rather than
+  refused at the bottom of its chain — an upscale offered, configured, then rejected is worse than
+  one not offered.
+- **One registry answers "where is this shared media", for display and for the disk.** The
+  projection names a display address for each item's own media, but not for what it does not
+  enumerate — a sequence's frames, the strip under the player, the off-DOM renderer behind image
+  and SVG export, the clipboard. Those read `displaySrc`, which resolves a `collab:` ref through
+  `lib/collab/currentProject.ts`; before it did, every one of them silently produced blank frames,
+  a tainted canvas, or an export that failed whole. The same registry hands the core real file
+  paths when a shared board is exported to a `.netsu`, which otherwise wrote a document made
+  entirely of "relocate" placeholders while reporting success. A media still travelling has no
+  path: its item is passed through untouched, so the core reports it missing — recoverable —
+  rather than silently emptied.
 
 ## Local durability and offline recovery
 
@@ -171,24 +236,69 @@ observe connection metadata and ciphertext sizes, not document or media plaintex
 ## Media
 
 The CRDT stores a manifest, never an absolute path or object URL. A local asset manifest contains a
-lowercase BLAKE3 hash, safe display name, MIME type, and byte length. Remote links, embeds, and YouTube
-items synchronize their URL/id metadata and are fetched independently.
+lowercase BLAKE3 hash, safe display name, MIME type, and byte length — and may carry the hash and
+size of a small JPEG preview (2 MiB cap, refused without a hashed original), rendered by the owner's
+ffmpeg thumbnailer at import and stored as its own blob. Remote links, embeds, and YouTube items
+synchronize their URL/id metadata and are fetched independently.
 
 Local bytes live in Rust's separate `collab/blobs` store. Import is authorized by a random 256-bit,
 one-use, fifteen-minute grant created only by the native file picker or a trusted WebView2 OS drop.
 The recovery path for an already saved scene accepts only a canonical regular file found in that scene
 or the application-owned reference asset directory. Canonicalization occurs before confinement and
-rejects links. Images are capped at 2 GiB and videos at 256 GiB.
+rejects links. Images are capped at 2 GiB and videos at 256 GiB. That check reads the scene **as
+stored**, so the board is written to the scene library immediately before a project is created;
+otherwise a file the board displays but the saved scene does not yet mention is refused.
 
-Transfers are requested on demand over the project-authorized iroh connection. They resume from the
-partial length, use 256 KiB chunks with per-chunk BLAKE3 verification, enforce the declared final size,
-then verify the full hash before atomic promotion. HTTP range playback is served only through
+A collaborative scene stores no items — the document is authoritative — so it stores the durable
+locators of the board's local media beside them, and the grant check reads that list too. Without it
+a shared board can never accept another local file: the stored scene mentions nothing. The list is
+rewritten before every batch leaves, so a file dropped on the board is authorised by the time its
+bytes are asked for.
+
+Before any of that, dead paths are healed. A library scene keeps absolute paths, so a companion
+folder that moved or was emptied leaves references to files that no longer exist — while the bytes
+usually still live elsewhere, and the file name carries their content fingerprint (`<slug>-<md5:12>`
+from adoption, `<md5>` in the asset store). The core relocates by name alone — the open project's
+companion folder first, then the asset store, then every known project's companion — reading zero
+bytes; the import recomputes the true content hash anyway, so a name collision can at worst expose
+another of the user's own media, never corrupt a document. The board heals on scene open and again
+right before sharing (so the stored scene, the one grants are checked against, only knows living
+paths), and a failed import retries once at the relocated address. Right before sharing, a path that
+stays dead but keeps its online origin is re-downloaded from it (the typical case: media grabbed
+from a website, companion folder gone since), and whatever remains dead after that is marked missing
+on the board so the recovery gestures — folder relocation in particular — take over.
+
+A media that still cannot be read stops the publication with a localized message naming the files;
+the wall of absolute paths and OS errors is gone. The document carries a
+hash, a remote URL or a YouTube id and nothing else, so an item whose import failed would enter the
+shared board stripped of its media, for everyone including its author. During editing the same failure
+is not fatal: the diff refuses to emit the manifest or sequence operation that would clear the media,
+the document keeps what it already holds, and the unreadable files are reported instead.
+
+Transfers are requested on demand over the project-authorized iroh connection. One connection
+carries the whole media: chunks are requested over successive streams on it, each bounded by its
+own timeout. They resume from the partial length, use 4 MiB chunks with per-chunk BLAKE3
+verification, enforce the declared final size, then verify the full hash before atomic promotion. HTTP range playback is served only through
 `http://collab.localhost/<project>/<hash>` after the active native lease proves the project is open
 and its document references that hash. The protocol rejects non-Tauri/non-development browser
 origins and never emits wildcard CORS.
 
-The board projection appears before media downloads. Up to four missing assets resolve in the
-background. A video original therefore does not block notes, links, geometry, or other collaborators.
+A `collab:<hash>` locator is served by the shell's own protocol and is **neither a remote link nor a
+file the core service can open**. Any board code asking "is this local?" must exclude it
+(`isCoreFileRef`): handing it to the core yields a dead address, which the local retry reads as a
+disappeared file, which marks the item missing, which sends the auto-recovery to re-download its
+source page. Cutting a trimmed clip, building a still, extracting frames and upscaling all stay
+unavailable on a shared media, and its bytes are refreshed by the collaborative resolver alone.
+
+The board projection appears before media downloads, and it carries the set of content hashes whose
+bytes are already in the local blob store: the renderer paints a placeholder for anything absent
+instead of pointing an element at a blob URL that would 404 (one media error per element on a fresh
+join). Previews resolve in a batch of their own (four at a time) before any original, so an image
+paints low-res within one small transfer while the heavy file follows; a video keeps its placeholder
+until poster support exists. Originals resolve images first, then the rest by ascending size, two at
+a time — one on machines with four cores or fewer, whose disk, CPU, and decoder saturate together —
+and each media repaints as its bytes land. A video original therefore does not block notes, links,
+geometry, or other collaborators.
 Failed P2P attempts create at most one media-request notification per project/hash/hour from that
 device; Convex coalesces at most 64 hashes into one requester/project row. Other members are told to
 open the scene and stay online.
@@ -260,15 +370,49 @@ document, imports existing board items and assets, then forces the initial encry
 scene becomes collaborative only after that checkpoint and the owner envelope are recoverable. A
 failure before this boundary calls the empty-project rollback.
 
+The toolbar of a shared board carries a status pill: who is there, and what is still owed. Presence
+is what this machine has OBSERVED — the last time it successfully exchanged with one of that
+person's devices — never a claim received from them. Nothing is broadcast for it and no extra
+traffic is created, since those exchanges happen anyway; a person is shown by their most recently
+reached device, so someone working on a laptop is present even with their desktop off. Beyond 90
+seconds the panel stops saying "online" and says when they were last seen, because "offline" is
+something this machine cannot honestly assert: an unreachable peer may simply be unreachable from
+here. The same panel names what is pending and who can clear it — queued edits, a key rotation, a
+member still waiting for the key. "Everything is in sync" is claimed only when someone could
+actually have received: with nobody reachable the work is waiting here whatever the local outbox
+says, and saying otherwise let the user believe the others already had their edits.
+
+On the home screen, a shared board's card carries that state itself: the "Shared" badge turns amber
+and names in one or two words what the board is waiting for — key, media, or a change made while
+away. Only invitations, which need a real decision, still appear as a floating card. A notice with
+no matching local scene has nowhere to land and stays in Account settings, which keeps the durable
+copy.
+
 Convex keeps one consolidated activity row per recipient/project. Repeat edits by the same actor do
 not cause repeat inbox writes until the row is cleared; another actor is added to the same row. On the
 next authenticated launch, the app shows a transient localized toast unless that project is already
 open, and keeps the durable message in Account settings until dismissed. Media requests use the same
 row with distinct wording that asks a holder to open the scene and remain online.
 
+Invitations and activity also surface as pop-up cards on the home screen — join, decline, or later
+(snoozed for the session; Account settings keeps the durable copy). Joining from the card creates the
+linked scene (never a duplicate) and opens the board directly. An activity card appears only for a
+project whose linked scene exists locally, since opening it is the answer; the collaboration dialog
+additionally shows the sync line — queued edits leave on their own as soon as a device is reachable,
+nobody sends anything by hand.
+
 Accepting an invitation marks the same row as key-provisioning-needed for existing writers. An
 already-running app reacts to that single backend change by refreshing its native roster and wrapping
 the current project key for every missing proved device; there is no project polling loop.
+
+Accepting creates at most one local scene per project — a re-invitation (after a leave, or a stale
+invite from an old build) never mints a second identical board on the home screen. The account
+settings list names each project by its linked scene, or by its creation date when no scene links it,
+and offers delete (owner) or leave (member) directly on the row: a project an old build left behind
+has no scene to open, so the board dialog could never reach it. Deleting or leaving also removes the
+linked scene, and resets the open board if it was projecting that very document. Projects with no
+scene on this machine are collapsed behind one count line — expanding gives each its add and delete
+controls — and a row only mentions the role when it is not owner, and the rotation when pending.
 
 Leaving closes the native project, removes local retention pins, deletes the caller's envelopes,
 pending uploads, request and inbox rows, and forces rotation. Deleting a project is owner-only and
