@@ -17,7 +17,12 @@ if (!signature) throw new Error(`Signature vide : ${signaturePath}`);
 
 const repository = process.env.GITHUB_REPOSITORY || "NetsumaInfo/NetsuBoard";
 const tag = process.env.GITHUB_REF_NAME || `v${pkg.version}`;
-const notes = release?.highlights?.fr?.join("\n") || `NetsuBoard ${pkg.version}`;
+// Recent releases classify each line by kind, while older entries keep a flat highlights list.
+// Keep the updater manifest useful for both shapes instead of silently shipping a generic note for
+// every classified release (the in-app history already consumes both forms through releaseLines()).
+const notes = release?.changes?.map((change) => change.fr).join("\n")
+  || release?.highlights?.fr?.join("\n")
+  || `NetsuBoard ${pkg.version}`;
 const manifest = {
   version: pkg.version,
   notes,
