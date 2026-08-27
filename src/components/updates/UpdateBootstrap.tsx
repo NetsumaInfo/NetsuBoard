@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import releases from "@/data/releases.json";
+import { releases } from "@/data/releases";
+import { ReleaseNotes } from "./ReleaseNotes";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // What is new in the INSTALLED version, shown once after an update. Looking for a newer version does
 // NOT live here: that belongs to `UpdateButton` (see the store), which is also mounted on the setup
-// screens where this dialog does not exist.
+// screens where this dialog does not exist. The content itself is `ReleaseNotes`, shared with the
+// history in the settings so both classify a release the same way.
+
 export function UpdateBootstrap() {
   const { t, i18n } = useTranslation("settings");
   const language = i18n.language.startsWith("fr") ? "fr" : "en";
@@ -21,9 +24,10 @@ export function UpdateBootstrap() {
   }
 
   if (!latest) return null;
+
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) close(); else setOpen(true); }}>
-      {/* Une version chargée peut aligner une dizaine de nouveautés : la fenêtre est plus large, et
+      {/* Une version chargée peut aligner une vingtaine de nouveautés : la fenêtre est plus large, et
           bornée à la hauteur de l'écran avec la LISTE pour seule zone qui défile. En laissant la
           boîte grandir, le bouton finissait sous le bord de la fenêtre — sans issue au clavier non
           plus, puisqu'il n'y a rien d'autre à atteindre. */}
@@ -32,9 +36,11 @@ export function UpdateBootstrap() {
           <DialogTitle>{t("updates.whatsNew", { version: latest.version })}</DialogTitle>
           <DialogDescription>{latest.title[language]}</DialogDescription>
         </DialogHeader>
-        <ul className="min-h-0 list-disc space-y-2 overflow-y-auto pr-1 pl-5 text-sm text-muted-foreground">
-          {latest.highlights[language].map((highlight) => <li key={highlight}>{highlight}</li>)}
-        </ul>
+
+        <div className="min-h-0 overflow-y-auto pr-1">
+          <ReleaseNotes release={latest} />
+        </div>
+
         <DialogFooter><Button onClick={close}>{t("updates.gotIt")}</Button></DialogFooter>
       </DialogContent>
     </Dialog>

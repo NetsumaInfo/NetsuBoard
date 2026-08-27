@@ -59,7 +59,7 @@ Tauri's **WebView2 decodes HEVC** through `<video>` — verified `canPlayType('v
 
 `core/shaderUpscale.js` runs the ffmpeg `libplacebo` filter (Vulkan): one ffmpeg command per job, progress over `-progress pipe`. **No Python, no neural runtime, no weights.**
 
-- Shader ids map either to a custom `.glsl` file (`custom_shader_path`) or to a built-in libplacebo scaler. Animation uses the ArtCNN and Anime4K GLSL networks; live action uses `lanczossharp`.
+- Shader ids map either to a custom `.glsl` file (`custom_shader_path`) or to a built-in libplacebo scaler. Animation uses the ArtCNN GLSL networks; live action uses `lanczossharp`.
 - The ArtCNN suffixes are **distinct weights, not a post-filter**: `_DS` doubles while denoising and sharpening, `_DN` doubles while denoising and softening. They do not combine with the neutral variant of the same network.
 - `libplacebo` handles colour management itself — do **not** reintroduce the swscale workaround an AI path would need.
 - **An animated GIF keeps its frames.** `runShaderGif` shades the whole stream, then re-quantises it through `palettegen`/`paletteuse` (the GIF muxer only takes palettised frames, the filter outputs `yuv444p`). The still-image path writes `-frames:v 1` and therefore still refuses a GIF: sending one there returns a first frame, not a GIF.
@@ -111,6 +111,30 @@ A board carries hundreds of media, many of them animated. Four rules keep it usa
 
 Reverse playback (`playMode: "pingpong"`) steps `currentTime` on a `BACKSTEP_MS` budget rather than every animation frame: each write forces a decode from the previous keyframe, and one board can hold dozens of them.
 
+## Collaborative boards
+
+- **Rust is the sole collaborative authority.** Renderers submit typed operations and render total
+  projections. They never persist or export Loro state, keys, raw peer endpoints, or recipient lists.
+- **Acknowledgement means durable local recovery.** The Loro update, monotonic sequence, and exact
+  sealed outbox entry commit in one SQLite transaction before network publication.
+- **A checkpoint absorbs published heads only.** Compaction runs in a temporary document and commits
+  by checkpoint-epoch plus head-revision CAS. Exporting the live document into a checkpoint can lose a
+  concurrent offline branch.
+- **Membership, key possession, and transport identity are separate checks.** Every Convex write checks
+  the current role; every P2P update checks the EndpointId and project writer roster; every payload is
+  signed and encrypted. A key alone never grants write access.
+- **Rotation is pending until committed.** A removal, writer downgrade, or device revocation blocks new
+  publication until the owner has stored the next epoch envelope for every current proved device and
+  Convex advances the epoch.
+- **Media manifests never carry local paths or object URLs.** Local bytes use BLAKE3 ids and enter only
+  through native one-use grants. The custom `collab` protocol serves a hash only while an open document
+  references it.
+- **Media retention begins at last unpin.** Current project references are pinned. The thirty-day grace
+  marker is created when the final pin disappears; a blob's original modification time is irrelevant.
+- **Collaborative scenes do not use solo autosave as item authority.** Scene persistence stores the
+  project binding and view metadata; Loro stores shared items. Save As is blocked, explicit export is
+  allowed.
+
 ## Preferences shared across origins
 
 `core/prefs.js` + `src/hooks/useSharedPrefs.ts`, tested by `test/shared-prefs.test.cjs`. `localStorage` is **per origin** — the Tauri window and the detached board window each had their own copy, so a setting changed in one did not exist in the other.
@@ -136,10 +160,23 @@ Bug report (`components/settings/console/` → `bug:report` → `core/bugreport.
 - **Attachments**: cumulative adding (a bare `<input file>` replaced the selection on every open), drag-and-drop, **Ctrl+V paste**, removal by thumbnail. **Limits come from the service** (`bug:status` → `maxAttachments`/`maxAttachmentMB`), not from renderer constants. `input.value` is cleared after each pick, otherwise re-picking the **same** file fires no event.
 - **A "Download" button** always writes the full report locally, even when sending fails — without it, everything the tester just wrote is lost exactly when the app is misbehaving.
 
+## Data directory
+
+- **NetsuBoard owns its home and shares none of it.** `core/config.js` resolves `DATA_DIR` to
+  `NR_HOME`, else `~/.netsuboard`; `identity.rs#board_data_dir` resolves the same root, and the two
+  must never drift — Rust authorises a media import against the scene library the core wrote, so a
+  different root means Rust reads an empty directory and refuses every media as unauthorised.
+  Temporary directories (`netsuboard-session`, `netsuboard-proxies`) and the log directory
+  (`%LOCALAPPDATA%\NetsuBoard`) follow the same rule.
+- It used to be `~/.netsurush`: the scene library, the asset store, the thumbnail cache and the
+  session cache were shared with NetsuRush, `core/server.js` purged the other application's session
+  cache on startup, and a sweep on either side could take the other's board media. `migrateLegacyHome`
+  copies the old library over ONCE, on first launch, and only when `NR_HOME` is unset — never moves
+  it, so NetsuRush keeps everything. Scenes and assets only: thumbnails rebuild themselves and
+  copying them would double the heaviest directory for nothing.
+
 ## Known violations left by the NetsuRush split
 
 These are **defects**, documented so they are not mistaken for design. Each needs a code change.
 
-- `core/config.js` still names its temporary directories `netsurush-session` and `netsurush-proxies`, and `core/server.js` calls `sessionCache.resetSync()` at startup. With both applications installed, starting one **purges the other's session cache**.
-- `src-tauri/src/lib.rs` still resolves its log directory to `%LOCALAPPDATA%\NetsuRush`, whereas `core/config.js` resolves `NR_HOME` to `%LOCALAPPDATA%\NetsuBoard`.
 - `core/shaderUpscale.js` still imports `importToMediaPool` from `core/resolve.js`.

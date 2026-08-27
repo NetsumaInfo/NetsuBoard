@@ -122,7 +122,11 @@ impl MpvLib {
             }
         }
 
-        search_dirs.push(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources").join("windows"));
+        search_dirs.push(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("resources")
+                .join("windows"),
+        );
 
         // Try system search first (PATH, system dirs)
         for name in &lib_names {

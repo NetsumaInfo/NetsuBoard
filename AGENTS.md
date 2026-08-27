@@ -56,6 +56,8 @@ What is still inherited and **live**: the Resolve bridge cut down to `resolve:st
 | Setup, branch and PR rules | `CONTRIBUTING.md` |
 | Product vision, scope, risks | `docs/prd.md` |
 | Runtime layout, IPC, UI system, theming | `docs/architecture.md` |
+| Local-first collaboration, recovery, media, and cost controls | `docs/collab.md` |
+| Collaboration acceptance evidence and live checklist | `docs/collab-acceptance.md` |
 | Rules that break correctness if violated | `docs/invariants.md` |
 | Per-module notes (board, `.netsu`, upscale) | `docs/modules.md` |
 | Packaging, first-run setup, updates, bug relay | `docs/distribution.md` |

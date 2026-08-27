@@ -18,12 +18,13 @@ import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
 import { useBoard } from "./useReferenceBoard";
-import { useBoardIngest } from "./useBoardIngest";
+import { useBoardIngest, pastedSourceUrl } from "./useBoardIngest";
 import { useBoardCulling } from "./useBoardCulling";
 import { BoardItem } from "./BoardItem";
 import { DrawLayer } from "./DrawLayer";
 import { DrawToolbar } from "./DrawToolbar";
 import {
+  type BoardItem as Item,
   type BoardView,
   ZOOM_MIN,
   ZOOM_MAX,
@@ -74,7 +75,7 @@ function SnapGuides({ view }: { view: BoardView }) {
 }
 
 export interface BoardHandle {
-  addFiles: (files: FileList | File[], at?: { x: number; y: number }) => void;
+  addFiles: (files: FileList | File[], at?: { x: number; y: number }, extra?: Partial<Item>) => void;
   addVideoUrl: (url: string, opts?: { allowGenericEmbed?: boolean }) => boolean;
   addUrl: (url: string, opts?: { allowGenericEmbed?: boolean }) => Promise<boolean>;
   addPath: (path: string, title?: string) => void;
@@ -750,6 +751,10 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         const dirs = Array.from(e.dataTransfer.items ?? [])
           .map((it) => ({ entry: it.webkitGetAsEntry?.(), file: it.getAsFile?.() ?? null }))
           .filter((d): d is { entry: FileSystemDirectoryEntry; file: File | null } => !!d.entry && d.entry.isDirectory);
+        // Un glisser depuis un navigateur porte le lien du média À CÔTÉ de ses octets : lu ici, avec
+        // le reste du DataTransfer, sinon il a disparu au premier `await`.
+        const dropSource = pastedSourceUrl(e.dataTransfer);
+        const dropExtra = dropSource ? { sourceUrl: dropSource } : undefined;
         const r = rect();
         const dropAt = screenToBoard(useBoard.getState().view, e.clientX - (r?.left ?? 0), e.clientY - (r?.top ?? 0));
         if (dirs.length) {
@@ -757,11 +762,11 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
           const files = dropped.filter((f) => f.type || f.size);
           void (async () => {
             for (const dir of dirs) await ingest.addDroppedEntry(dir.entry, dir.file, dropAt);
-            if (files.length) ingest.addFiles(files, dropAt);
+            if (files.length) ingest.addFiles(files, dropAt, dropExtra);
           })();
           return;
         }
-        if (dropped.length) ingest.addFiles(dropped, dropAt);
+        if (dropped.length) ingest.addFiles(dropped, dropAt, dropExtra);
         else void ingest.addPaste(e.dataTransfer);
       }}
       className={cn(

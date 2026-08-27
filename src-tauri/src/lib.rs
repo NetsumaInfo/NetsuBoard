@@ -1,15 +1,30 @@
-// Coquille Tauri NetsuRush : fenêtre + plugins + spawn du service Node "core".
+// Coquille Tauri NetsuBoard : fenêtre + plugins + spawn du service Node "core".
 
 use std::io::Write;
-use std::process::{Child, Command, Stdio};
 use std::path::{Path, PathBuf};
-use std::sync::{atomic::{AtomicBool, Ordering}, Mutex};
+use std::process::{Child, Command, Stdio};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
 use std::thread;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Manager, RunEvent};
+use tauri::{AppHandle, Emitter as _, Manager, RunEvent};
 
+mod collab;
 mod player;
 mod state;
+
+use collab::commands::{
+    collab_configure_auth, collab_device_forget, collab_device_identity, collab_head_discard_stale,
+    collab_invite_cancel, collab_invite_respond, collab_media_grant_known, collab_media_import,
+    collab_media_path,
+    collab_media_resolve, collab_member_remove, collab_member_set_role, collab_project_abort,
+    collab_project_apply, collab_project_close, collab_project_create, collab_project_delete,
+    collab_project_flush_checkpoint, collab_project_invite, collab_project_leave,
+    collab_project_open, collab_project_projection, collab_project_redo, collab_project_status,
+    collab_project_undo,
+};
 
 // Handle du process core, gardé en état managé → tué à la fermeture (RunEvent::Exit).
 struct CoreProcess(Mutex<Option<Child>>);
@@ -30,10 +45,11 @@ const CORE_LOG_MAX: u64 = 2 * 1024 * 1024;
 // lancement et le renderer le lui demande (`nr_core_port`). Le choix est refait à chaque spawn : si
 // le port est pris entre-temps, le redémarrage du watchdog en prend un autre tout seul.
 //
-// La plage part de 8760, comme `core/server.js` lancé seul, et NON de 8730 : cette dernière est
-// celle de NetsuRush, qui tourne côte à côte. Balayer la même base faisait tomber le core d'une
-// application sur le port de l'autre.
-const CORE_PORT_FIRST: u16 = 8760;
+// La plage part de 43117, comme `core/server.js` lancé seul : une base non assignée par l'IANA,
+// sous la plage éphémère de Windows (49152+), où aucun logiciel courant n'écoute — l'ancienne base
+// 8760 vivait au milieu des ports de développement (8000-9000) que n'importe quel serveur local
+// peut occuper. Elle reste DISJOINTE de celle de NetsuRush (8730-8749), qui tourne côte à côte.
+const CORE_PORT_FIRST: u16 = 43117;
 const CORE_PORT_SPAN: u16 = 20;
 static CORE_PORT: std::sync::atomic::AtomicU16 = std::sync::atomic::AtomicU16::new(CORE_PORT_FIRST);
 
@@ -57,7 +73,9 @@ fn nr_core_port() -> u16 {
 fn core_log_path() -> PathBuf {
     let home = std::env::var_os("NR_HOME")
         .map(PathBuf::from)
-        .or_else(|| std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("NetsuRush")))
+        .or_else(|| {
+            std::env::var_os("LOCALAPPDATA").map(|dir| PathBuf::from(dir).join("NetsuBoard"))
+        })
         .unwrap_or_else(std::env::temp_dir);
     home.join("logs").join("core.log")
 }
@@ -67,10 +85,17 @@ fn open_core_log() -> Option<std::fs::File> {
     std::fs::create_dir_all(path.parent()?).ok()?;
     // Rotation la plus simple qui tienne : au-delà du plafond on repart d'un fichier vide. Le
     // diagnostic utile est toujours la session en cours, jamais l'historique.
-    if std::fs::metadata(&path).map(|meta| meta.len() > CORE_LOG_MAX).unwrap_or(false) {
+    if std::fs::metadata(&path)
+        .map(|meta| meta.len() > CORE_LOG_MAX)
+        .unwrap_or(false)
+    {
         let _ = std::fs::remove_file(&path);
     }
-    std::fs::OpenOptions::new().create(true).append(true).open(&path).ok()
+    std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .ok()
 }
 
 fn log_core(line: &str) {
@@ -78,9 +103,9 @@ fn log_core(line: &str) {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    eprintln!("[netsurush] {line}");
+    eprintln!("[netsuboard] {line}");
     if let Some(mut file) = open_core_log() {
-        let _ = writeln!(file, "[netsurush {stamp}] {line}");
+        let _ = writeln!(file, "[netsuboard {stamp}] {line}");
     }
 }
 
@@ -104,11 +129,12 @@ fn release_file_lock(resource: &Path) -> Result<(), String> {
     use windows::core::{PCWSTR, PWSTR};
     use windows::Win32::Foundation::{CloseHandle, ERROR_MORE_DATA, ERROR_SUCCESS};
     use windows::Win32::System::RestartManager::{
-        CCH_RM_SESSION_KEY, RM_PROCESS_INFO, RmAddFilter, RmEndSession, RmForceShutdown,
-        RmGetList, RmNoShutdown, RmRegisterResources, RmShutdown, RmStartSession,
+        RmAddFilter, RmEndSession, RmForceShutdown, RmGetList, RmNoShutdown, RmRegisterResources,
+        RmShutdown, RmStartSession, CCH_RM_SESSION_KEY, RM_PROCESS_INFO,
     };
     use windows::Win32::System::Threading::{
-        OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
+        OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32,
+        PROCESS_QUERY_LIMITED_INFORMATION,
     };
 
     if !resource.exists() {
@@ -160,31 +186,38 @@ fn release_file_lock(resource: &Path) -> Result<(), String> {
             return Err(format!("Verrou non relu ({})", listed.0));
         }
     }
-    let target = resource.canonicalize().unwrap_or_else(|_| resource.to_path_buf());
+    let target = resource
+        .canonicalize()
+        .unwrap_or_else(|_| resource.to_path_buf());
     let mut target_found = false;
     for process in processes.iter().take(count as usize) {
         let same_binary = unsafe {
-            OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process.Process.dwProcessId)
-                .ok()
-                .map(|handle| {
-                    let mut image = vec![0u16; 32_768];
-                    let mut length = image.len() as u32;
-                    let queried = QueryFullProcessImageNameW(
-                        handle,
-                        PROCESS_NAME_WIN32,
-                        PWSTR(image.as_mut_ptr()),
-                        &mut length,
-                    )
-                    .is_ok();
-                    let _ = CloseHandle(handle);
-                    queried && PathBuf::from(std::ffi::OsString::from_wide(&image[..length as usize]))
+            OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION,
+                false,
+                process.Process.dwProcessId,
+            )
+            .ok()
+            .map(|handle| {
+                let mut image = vec![0u16; 32_768];
+                let mut length = image.len() as u32;
+                let queried = QueryFullProcessImageNameW(
+                    handle,
+                    PROCESS_NAME_WIN32,
+                    PWSTR(image.as_mut_ptr()),
+                    &mut length,
+                )
+                .is_ok();
+                let _ = CloseHandle(handle);
+                queried
+                    && PathBuf::from(std::ffi::OsString::from_wide(&image[..length as usize]))
                         .canonicalize()
                         .unwrap_or_default()
                         .as_os_str()
                         .to_string_lossy()
                         .eq_ignore_ascii_case(&target.as_os_str().to_string_lossy())
-                })
-                .unwrap_or(false)
+            })
+            .unwrap_or(false)
         };
         if same_binary {
             target_found = true;
@@ -255,7 +288,7 @@ fn stop_core(app: &AppHandle) {
     }
     // Filet de sécurité si Node a crashé ou dépassé le délai. Cette racine ne contient jamais de
     // sortie utilisateur, uniquement des fichiers de travail de la session.
-    let _ = std::fs::remove_dir_all(std::env::temp_dir().join("netsurush-session"));
+    let _ = std::fs::remove_dir_all(std::env::temp_dir().join("netsuboard-session"));
 }
 
 // Le core Node est un service séparé : un crash (DLL/sidecar, antivirus, mémoire) ne doit pas
@@ -346,10 +379,16 @@ fn disable_tracking_prevention(window: &tauri::WebviewWindow) {
     use windows_core::Interface;
 
     let _ = window.with_webview(|webview| unsafe {
-        let Ok(core) = webview.controller().CoreWebView2() else { return };
-        let Ok(wv13) = core.cast::<ICoreWebView2_13>() else { return };
+        let Ok(core) = webview.controller().CoreWebView2() else {
+            return;
+        };
+        let Ok(wv13) = core.cast::<ICoreWebView2_13>() else {
+            return;
+        };
         let Ok(profile) = wv13.Profile() else { return };
-        let Ok(p3) = profile.cast::<ICoreWebView2Profile3>() else { return };
+        let Ok(p3) = profile.cast::<ICoreWebView2Profile3>() else {
+            return;
+        };
         let _ = p3.SetPreferredTrackingPreventionLevel(COREWEBVIEW2_TRACKING_PREVENTION_LEVEL_NONE);
     });
 }
@@ -461,9 +500,13 @@ fn nr_attach_file_paths(app: AppHandle, label: String) -> bool {
                     return Ok(()); // message d'un autre émetteur
                 };
                 let paths = dropped_paths(&args);
+                let grants: Vec<String> = paths
+                    .iter()
+                    .map(|path| collab::blobs::issue_trusted_grant(path).unwrap_or_default())
+                    .collect();
                 let _ = emitter.emit(
                     "nr://file-paths",
-                    serde_json::json!({ "id": id, "paths": paths }),
+                    serde_json::json!({ "id": id, "paths": paths, "grants": grants }),
                 );
                 Ok(())
             })),
@@ -471,7 +514,11 @@ fn nr_attach_file_paths(app: AppHandle, label: String) -> bool {
         );
     });
     if attached.is_err() {
-        app.state::<FilePathBridge>().0.lock().unwrap().remove(&label);
+        app.state::<FilePathBridge>()
+            .0
+            .lock()
+            .unwrap()
+            .remove(&label);
         return false;
     }
     true
@@ -484,13 +531,69 @@ fn nr_attach_file_paths(_app: AppHandle, _label: String) -> bool {
     false
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TrustedFileSelection {
+    path: String,
+    grant: String,
+}
+
+/// Opens the OS picker inside Rust and returns a one-use import capability beside every path.
+#[tauri::command]
+async fn nr_pick_trusted_files(
+    app: AppHandle,
+    kind: String,
+    multiple: bool,
+) -> Result<Vec<TrustedFileSelection>, String> {
+    use tauri_plugin_dialog::DialogExt as _;
+
+    let mut dialog = app.dialog().file();
+    dialog = match kind.as_str() {
+        "video" => dialog.add_filter(
+            "Video",
+            &[
+                "mp4", "mov", "mkv", "avi", "m4v", "mxf", "webm", "wmv", "flv", "ts", "m2ts",
+                "mpg", "mpeg",
+            ],
+        ),
+        "image" => dialog.add_filter(
+            "Image",
+            &[
+                "jpg", "jpeg", "png", "tif", "tiff", "bmp", "webp", "gif", "dpx", "exr",
+            ],
+        ),
+        "any" => dialog,
+        _ => return Err("invalid native file picker kind".into()),
+    };
+    let selected = if multiple {
+        dialog.blocking_pick_files().unwrap_or_default()
+    } else {
+        dialog.blocking_pick_file().into_iter().collect()
+    };
+    selected
+        .into_iter()
+        .map(|file| {
+            let path = file
+                .into_path()
+                .map_err(|error| format!("native file path: {error}"))?;
+            let path = path
+                .to_str()
+                .ok_or_else(|| "native file path is not valid Unicode".to_string())?
+                .to_owned();
+            let grant =
+                collab::blobs::issue_trusted_grant(&path).map_err(|error| error.to_string())?;
+            Ok(TrustedFileSelection { path, grant })
+        })
+        .collect()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     if let Some(resource) = release_lock_arg() {
         match release_file_lock(&resource) {
             Ok(()) => std::process::exit(0),
             Err(error) => {
-                eprintln!("[netsurush] {error}");
+                eprintln!("[netsuboard] {error}");
                 std::process::exit(1);
             }
         }
@@ -525,6 +628,9 @@ pub fn run() {
     }
 
     builder = builder
+        .register_uri_scheme_protocol("collab", |_context, request| {
+            collab::blobs::protocol_response(request)
+        })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_deep_link::init())
@@ -533,9 +639,36 @@ pub fn run() {
         .manage(CoreProcess(Mutex::new(None)))
         .manage(FilePathBridge(Mutex::new(std::collections::HashSet::new())))
         .manage(state::AppState::new())
+        .manage(collab::service::CollabService::spawn())
         .invoke_handler(tauri::generate_handler![
             nr_attach_file_paths,
+            nr_pick_trusted_files,
             nr_core_port,
+            collab_configure_auth,
+            collab_device_identity,
+            collab_project_open,
+            collab_project_create,
+            collab_project_abort,
+            collab_project_flush_checkpoint,
+            collab_project_invite,
+            collab_invite_respond,
+            collab_invite_cancel,
+            collab_member_set_role,
+            collab_member_remove,
+            collab_project_leave,
+            collab_project_delete,
+            collab_head_discard_stale,
+            collab_device_forget,
+            collab_media_grant_known,
+            collab_media_import,
+            collab_media_path,
+            collab_media_resolve,
+            collab_project_close,
+            collab_project_apply,
+            collab_project_projection,
+            collab_project_status,
+            collab_project_undo,
+            collab_project_redo,
             player::commands::control::player_load,
             player::commands::control::player_load_at,
             player::commands::control::player_claim,
@@ -579,6 +712,17 @@ pub fn run() {
             player::commands::media::player_get_frame_preview
         ])
         .setup(|app| {
+            let collab_app = app.handle().clone();
+            app.state::<collab::service::CollabService>()
+                .attach_change_sink(move |project_id, revision| {
+                    let _ = collab_app.emit(
+                        "nb-collab-changed",
+                        serde_json::json!({
+                            "projectId": project_id,
+                            "revision": revision,
+                        }),
+                    );
+                });
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -635,22 +779,27 @@ fn spawn_core(_app: &AppHandle) -> Option<Child> {
         .join("core")
         .join("server.js");
     if !server.exists() {
-        eprintln!("[netsurush] core introuvable: {}", server.display());
+        eprintln!("[netsuboard] core introuvable: {}", server.display());
         return None;
     }
     let app_exe = std::env::current_exe().ok();
     let port = pick_core_port();
     CORE_PORT.store(port, Ordering::Release);
     let mut command = Command::new("node");
-    command.arg(&server).stdin(Stdio::piped()).env("NR_CORE_PORT", port.to_string());
-    if let Some(exe) = app_exe { command.env("NETSURUSH_APP_EXE", exe); }
+    command
+        .arg(&server)
+        .stdin(Stdio::piped())
+        .env("NR_CORE_PORT", port.to_string());
+    if let Some(exe) = app_exe {
+        command.env("NETSURUSH_APP_EXE", exe);
+    }
     match command.spawn() {
         Ok(child) => {
-            eprintln!("[netsurush] core spawné: {}", server.display());
+            eprintln!("[netsuboard] core spawné: {}", server.display());
             Some(child)
         }
         Err(e) => {
-            eprintln!("[netsurush] échec spawn core (node dans le PATH ?): {e}");
+            eprintln!("[netsuboard] échec spawn core (node dans le PATH ?): {e}");
             None
         }
     }
@@ -658,7 +807,7 @@ fn spawn_core(_app: &AppHandle) -> Option<Child> {
 
 // RELEASE : node.exe portable bundlé (resources/bin) + core bundlé (resources/core). Les sidecars
 // python lisent leurs scripts via NETSURUSH_PY_DIR ; config.js localise le runtime provisionné
-// (venv/ffmpeg/poids) via nr.config.json dans %LOCALAPPDATA%\NetsuRush (écrit au 1er lancement).
+// (venv/ffmpeg/poids) via nr.config.json dans %LOCALAPPDATA%\NetsuBoard (écrit au 1er lancement).
 #[cfg(not(debug_assertions))]
 fn spawn_core(app: &AppHandle) -> Option<Child> {
     let res = match app.path().resource_dir() {
@@ -714,13 +863,19 @@ fn spawn_core(app: &AppHandle) -> Option<Child> {
         .env("NR_CORE_PORT", port.to_string())
         .env("NETSURUSH_PY_DIR", strip(&py_dir))
         .env("NR_RESOURCE_DIR", strip(&res_root))
-        .env("NETSURUSH_APP_EXE", strip(&std::env::current_exe().unwrap_or_default()))
+        .env(
+            "NETSURUSH_APP_EXE",
+            strip(&std::env::current_exe().unwrap_or_default()),
+        )
         .env("NODE_ENV", "production")
         .creation_flags(0x0800_0000)
         .spawn()
     {
         Ok(child) => {
-            log_core(&format!("service de fond lancé (pid {}, port {port})", child.id()));
+            log_core(&format!(
+                "service de fond lancé (pid {}, port {port})",
+                child.id()
+            ));
             Some(child)
         }
         Err(e) => {

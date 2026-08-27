@@ -194,7 +194,7 @@ function attach(b) {
     try { emit('core', 'error', `Exception non attrapée — ${fmt(err)}`); } catch (_) {}
     setTimeout(() => process.exit(1), 150);
   });
-  emit('system', 'log', 'Console NetsuRush démarrée.');
+  emit('system', 'log', 'Console NetsuBoard démarrée.');
 }
 
 function snapshot() { return logs.slice(); }

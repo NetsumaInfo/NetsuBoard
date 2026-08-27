@@ -11,7 +11,8 @@
     "system": "Système",
     "updates": "Mises à jour",
     "report": "Signaler",
-    "about": "À propos"
+    "about": "À propos",
+    "discord": "Discord"
   },
   "about": {
     "tagline": "Board de référence infinie : images, vidéos, réseaux sociaux, notes et dessin.",
@@ -34,7 +35,10 @@
     "subtitle": "Le compte Discord connecté à NetsuBoard.",
     "none": "Aucun compte connecté.",
     "discordUser": "Utilisateur Discord",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "unreachable": "Serveur injoignable.",
+    "unreachableHint": "Vérifie ta connexion. Un pare-feu ou un réseau d'entreprise peut bloquer NetsuBoard.",
+    "retry": "Réessayer"
   },
   "playback": {
     "title": "Lecture et miniatures",
@@ -241,7 +245,13 @@
     "history": "Nouveautés par version",
     "whatsNew": "Nouveautés de la version {{version}}",
     "gotIt": "C'est parti",
-    "reportSubject": "Échec de la mise à jour vers la v{{version}}"
+    "reportSubject": "Échec de la mise à jour vers la v{{version}}",
+    "kind": {
+      "feature": "Nouveautés",
+      "fix": "Corrections",
+      "improvement": "Améliorations",
+      "performance": "Performances"
+    }
   },
   "compatibility": {
     "title": "Compatibilité de ce PC",
@@ -462,6 +472,8 @@
     "showBoardHint": "Peut révéler un nom de client.",
     "showItems": "Nombre d'éléments",
     "showElapsed": "Temps écoulé",
+    "showLinks": "Carte cliquable",
+    "showLinksHint": "L’image ouvre le serveur Discord, la première ligne le dépôt.",
     "itemsLine": "{{count}} élément(s)",
     "custom": "Textes personnalisés",
     "customHelp": "Remplacent les lignes automatiques. {board} et {items} sont substitués.",
@@ -469,6 +481,43 @@
     "state": "Seconde ligne"
   },
   "storage": {
+    "title": "Stockage du board",
+    "intro": "L'application garde des médias pour elle : image collée, média récupéré d'un lien, frames extraites, résultat d'un upscale. Enregistrer un projet .netsu range ces octets dans son dossier compagnon — le magasin n'en garde alors qu'un double, libérable sans rien perdre.",
+    "disk": "{{free}} libres sur {{total}}",
+    "scanning": "Analyse du stockage…",
+    "failed": "Opération impossible",
+    "freedNotice": "{{size}} libérés ({{count}} fichiers)",
+    "movedNotice": "{{size}} déplacés ({{count}} fichiers)",
+    "movedPartly": "{{count}} fichiers déplacés, {{failed}} en échec (laissés en place)",
+    "archivedNotice": "Board enregistré dans « {{name}} » : ses médias sont désormais dans le dossier du projet",
+    "settling": "{{count}} en cours d'écriture",
+    "settlingHint": "Un fichier écrit à l'instant peut appartenir à un import que le board n'a pas encore posé. Il sera jugé au prochain passage.",
+    "safe": {
+      "title": "Libérable sans risque",
+      "hint": "Vérifié fichier par fichier : ces octets se refabriquent, ou existent déjà dans le dossier d'un projet.",
+      "caches": "Caches d'affichage",
+      "cachesHint": "Vignettes et proxies. L'application les refabrique à la demande.",
+      "duplicated": "Médias déjà rangés dans un projet ({{count}})",
+      "duplicatedHint": "Leurs octets sont dans le dossier compagnon d'un projet, par exemple « {{project}} ».",
+      "duplicatedNone": "Aucun double détecté pour l'instant.",
+      "action": "Libérer"
+    },
+    "sole": {
+      "title": "À mettre à l'abri d'abord",
+      "hint": "Ces médias n'existent nulle part ailleurs. Aucun bouton ne les supprime : enregistrez-les d'abord, ils passeront alors dans la section du dessus.",
+      "empty": "Rien à mettre à l'abri : tout ce que garde l'application existe ailleurs.",
+      "untitled": "Board sans titre",
+      "sceneCount": "{{count}} médias dont l'application est seule dépositaire · {{size}}",
+      "shared": "Board partagé",
+      "sharedHint": "Un board partagé n'a pas de version « projet » : son document fait foi et la collaboration gère ses médias.",
+      "openBoard": "Board ouvert",
+      "openBoardHint": "Ce board est ouvert : utilisez « Enregistrer sous… » depuis la barre d'outils.",
+      "archive": "Enregistrer en projet…",
+      "orphans": "Médias qu'aucun board ne réclame",
+      "orphansHint": "{{count}} fichiers · {{size}}. Plus rien ne les affiche, mais cette copie est la seule.",
+      "move": "Déplacer vers un dossier…"
+    },
+    "footnote": "Les médias que vous avez ajoutés depuis votre disque ne sont jamais concernés : l'application ne touche qu'aux fichiers qu'elle a écrits elle-même.",
     "empty": "Aucun cache pour l'instant.",
     "emptyHint": "Les vignettes et aperçus s'indexent au fil de la navigation dans les rushs.",
     "diskFree": "{{free}} libres sur {{total}}",
@@ -673,5 +722,78 @@
     "title": "Indexation",
     "subtitle": "Les rush sont d'abord découpés en plans, puis chaque plan est analysé. Les réglages qui ne changent rien aux résultats sont déjà actifs.",
     "cutTitle": "Découpe en plans"
+  },
+  "collab": {
+    "device": {
+      "title": "Cet appareil",
+      "subtitle": "Sa clé publique sert à t'identifier auprès de tes collaborateurs. La clé privée ne quitte jamais cette machine.",
+      "failed": "Identité illisible : {{error}}",
+      "ready": "Identité native protégée et prête.",
+      "unavailable": "La collaboration native n’est pas disponible.",
+      "unnamed": "Appareil NetsuBoard",
+      "current": "cet appareil",
+      "revoke": "Révoquer cet appareil"
+    },
+    "friends": {
+      "title": "Amis",
+      "subtitle": "Ajoute par pseudo Discord ou identifiant NetsuBoard.",
+      "yourHandle": "Toi : @{{handle}}",
+      "placeholder": "Pseudo Discord ou identifiant NetsuBoard",
+      "add": "Ajouter",
+      "accept": "Accepter",
+      "remove": "Retirer",
+      "awaiting": "En attente",
+      "empty": "Aucun ami pour l'instant.",
+      "status": {
+        "sent": "Demande envoyée.",
+        "linked": "Vous êtes amis.",
+        "pending": "Déjà envoyée.",
+        "already": "Déjà ami.",
+        "self": "C'est toi.",
+        "unknown": "Identifiant invalide.",
+        "ambiguous": "Plusieurs personnes correspondent. Utilise son ID Discord.",
+        "error": "Échec.",
+        "invited": "Invitation envoyée."
+      },
+      "notYetJoined": "Pas encore inscrit"
+    },
+    "invites": {
+      "title": "Invitations",
+      "join": "Rejoindre",
+      "sharedBoard": "Board partagé"
+    },
+    "projects": {
+      "title": "Projets partagés",
+      "members": "{{count}} membre(s)",
+      "rotation": "rotation de clé en attente",
+      "add": "Ajouter aux scènes",
+      "failed": "Impossible d’ajouter cette scène",
+      "role": {
+        "owner": "Propriétaire",
+        "editor": "Peut modifier",
+        "viewer": "Lecture seule"
+      },
+      "unnamed": "Board du {{date}}",
+      "delete": "Supprimer",
+      "leave": "Quitter",
+      "confirmDelete": "Supprimer pour tous ?",
+      "confirmLeave": "Quitter ce board ?",
+      "subtitle": "Les boards partagés avec ton compte. Ceux de cette machine s'ouvrent depuis l'accueil.",
+      "absent": "{{count}} board(s) absent(s) de cette machine"
+    },
+    "activity": {
+      "title": "Activité collaborative",
+      "changed": "{{count}} personne(s) ont modifié un board pendant ton absence. Ouvre sa scène pour récupérer les changements.",
+      "media": "{{count}} personne(s) attendent un média original. Ouvre la scène et reste en ligne pour le transmettre.",
+      "key": "{{count}} nouveau(x) membre(s) attendent l’accès chiffré. Ouvre la scène pour transmettre la clé du projet.",
+      "dismiss": "Masquer"
+    },
+    "peers": {
+      "title": "Connexions",
+      "subtitle": "Appareils de tes amis autorisés à se connecter au tien. « Tester » ouvre une vraie connexion chiffrée.",
+      "test": "Tester",
+      "direct": "Connexion directe",
+      "relayed": "Via relais"
+    }
   }
 }

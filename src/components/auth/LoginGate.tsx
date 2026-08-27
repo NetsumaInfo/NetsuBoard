@@ -8,6 +8,7 @@ import { authWasSkipped, persistAuthSkip } from "@/lib/authBypass";
 import { LoginScreen } from "./LoginScreen";
 import { NoAccessScreen } from "./NoAccessScreen";
 import { GateFrame } from "./GateFrame";
+import { useDiscordProfile } from "@/components/settings/useDiscordProfile";
 
 type AccessResult = {
   authenticated: boolean;
@@ -48,6 +49,9 @@ export function LoginGate({ children }: { children: ReactNode }) {
 function LoginGateInner({ children, onSkip }: { children: ReactNode; onSkip: () => void }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const access = useQuery(api.access.getAccess) as AccessResult | undefined;
+  // The server-observed Discord id/username must be searchable after an authenticated app start,
+  // without requiring the user to visit Account settings first. The hook cache also feeds settings.
+  useDiscordProfile(isAuthenticated && Boolean(access?.hasAccess));
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
   const [timedOut, setTimedOut] = useState(false);
 

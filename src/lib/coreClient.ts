@@ -6,6 +6,7 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { NrApi, RefApi, PowerApi } from "./bridge";
 import i18n from "@/i18n";
+import { rememberImportGrants } from "@/lib/collab/importGrants";
 import { logError } from "@/lib/appLog";
 import { readPreviewSettings } from "@/lib/previewSettings";
 import { beginHeavyCall, isHeavyChannel } from "@/lib/busyBus";
@@ -44,9 +45,10 @@ function assetSrc(filePath: string): string | null {
 // une autre instance, une session de dev ou un logiciel tiers ne doit pas laisser l'app sans
 // backend). Elle seule connaît le sien → on le lui demande. Hors Tauri (navigateur), on balaie la
 // plage jusqu'à trouver un /healthz qui se déclare NetsuBoard.
-// Plage 8760-8779, la même que `core/server.js` et DISJOINTE de celle de NetsuRush (8730-8749) :
-// les deux applications tournent côte à côte.
-const CORE_PORT_FIRST = 8760;
+// Plage 43117-43136, la même que `core/server.js` et DISJOINTE de celle de NetsuRush (8730-8749) :
+// les deux applications tournent côte à côte. Base non assignée par l'IANA, sous la plage éphémère
+// de Windows, loin des ports de développement qu'un serveur local tiers occupe facilement.
+const CORE_PORT_FIRST = 43117;
 const CORE_PORT_SPAN = 20;
 const FIXED_BASE: string | null =
   (typeof window !== "undefined" && (window as unknown as { __NR_CORE__?: string }).__NR_CORE__) || null;
@@ -129,7 +131,11 @@ async function ensurePathBridge(): Promise<boolean> {
         import("@tauri-apps/api/core"),
         import("@tauri-apps/api/window"),
       ]);
-      await listen<{ id: number; paths: string[] }>("nr://file-paths", (e) => {
+      await listen<{ id: number; paths: string[]; grants?: string[] }>("nr://file-paths", (e) => {
+        rememberImportGrants((e.payload.paths || []).map((path, index) => ({
+          path,
+          grant: e.payload.grants?.[index] ?? "",
+        })));
         const done = pathWaiters.get(e.payload.id);
         if (done) { pathWaiters.delete(e.payload.id); done(e.payload.paths || []); }
       });
@@ -288,6 +294,22 @@ async function dlgOpen(opts: Record<string, unknown>): Promise<string | string[]
   const { open } = await import("@tauri-apps/plugin-dialog");
   return (await open(opts)) as string | string[] | null;
 }
+
+async function trustedFileOpen(
+  kind: "video" | "image" | "any",
+  multiple: boolean,
+): Promise<string | string[] | null> {
+  if (!isTauri) return null;
+  const { invoke } = await import("@tauri-apps/api/core");
+  const selected = await invoke<Array<{ path: string; grant: string }>>("nr_pick_trusted_files", {
+    kind,
+    multiple,
+  });
+  if (!selected.length) return null;
+  rememberImportGrants(selected);
+  const paths = selected.map((entry) => entry.path);
+  return multiple ? paths : paths[0];
+}
 async function dlgSave(defaultPath?: string): Promise<string | null> {
   if (!isTauri) return null;
   const { save } = await import("@tauri-apps/plugin-dialog");
@@ -420,7 +442,10 @@ const reference: RefApi = {
   loadScene: (id) => call("reference:loadScene", [id]),
   saveScene: (scene) => call("reference:saveScene", [scene]),
   deleteScene: (id) => call("reference:deleteScene", [id]),
-  saveAsset: (bytes, ext) => call("reference:saveAsset", [{ __b64: abToB64(bytes) }, ext]),
+  saveAsset: (bytes, ext, options) => call("reference:saveAsset", [{ __b64: abToB64(bytes) }, ext, options || {}]),
+  collabPreview: (srcPath) => call("reference:collabPreview", [srcPath]),
+  locateMedia: (refs, projectPath) => call("reference:locateMedia", [refs, projectPath]),
+  ytDuration: (id) => call("reference:ytDuration", [id]),
   fetchAsset: (url, options) => call("reference:fetchAsset", [url, options || {}]),
   resolveMedia: (url, options) => call("reference:resolveMedia", [url, options || {}]),
   upscaleItem: (opts) => call("reference:upscaleItem", [opts]),
@@ -450,6 +475,11 @@ const reference: RefApi = {
   saveProjectAs: (opts) => call("netsu:saveProjectAs", [opts]),
   closeProject: (filePath) => call("netsu:closeProject", [filePath]),
   recentProjects: (type) => call("netsu:recents", [type]),
+  linkSource: (filePath, sourceSceneId) => call("netsu:linkSource", [filePath, sourceSceneId]),
+  storageAudit: (opts) => call("storage:audit", [opts || {}]),
+  storageFree: (opts) => call("storage:free", [opts]),
+  storageMoveOrphans: (opts) => call("storage:moveOrphans", [opts]),
+  storageArchiveScene: (opts) => call("storage:archiveScene", [opts]),
   forgetProject: (filePath) => call("netsu:forget", [filePath]),
   deleteProject: (filePath) => call("netsu:deleteProject", [filePath]),
   // No-op : aucune garde de fermeture (l'autosave protège déjà le board). Conservé pour l'API.
@@ -608,15 +638,15 @@ export function makeCoreClient(): NrApi {
     chooseFiles: () =>
       isRemote
         ? requestParentFiles(true, VIDEO_EXT)
-        : (dlgOpen({ multiple: true, filters: [{ name: i18n.t("common:fileType.video"), extensions: VIDEO_EXT }] }) as Promise<string[] | null>),
+        : (trustedFileOpen("video", true) as Promise<string[] | null>),
     chooseImages: () =>
       isRemote
         ? requestParentFiles(true, IMAGE_EXT)
-        : (dlgOpen({ multiple: true, filters: [{ name: i18n.t("common:fileType.image"), extensions: IMAGE_EXT }] }) as Promise<string[] | null>),
+        : (trustedFileOpen("image", true) as Promise<string[] | null>),
     chooseAnyFile: () =>
       isRemote
         ? requestParentFiles(false, []).then((a) => (a && a[0]) || null)
-        : (dlgOpen({ multiple: false }) as Promise<string | null>),
+        : (trustedFileOpen("any", false) as Promise<string | null>),
     pathsForFiles: (files) => resolveFilePaths(files),
     warmFilePaths: () => { void ensurePathBridge(); },
     saveFile: (defaultName) => dlgSave(defaultName),

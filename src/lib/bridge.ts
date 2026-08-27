@@ -143,9 +143,10 @@ export type ShaderModel =
   | "artcnn_r16f96" | "artcnn_r8f64"
   | "artcnn_c4f32" | "artcnn_c4f32_ds" | "artcnn_c4f32_dn"
   | "artcnn_c4f16" | "artcnn_c4f16_ds" | "artcnn_c4f16_dn"
-  | "anime4k_aa_hq" | "anime4k_bb_hq" | "rtx_vsr" | "lanczos"
-  // Valeurs persistées historiques : toujours acceptées par le core, mais retirées du sélecteur.
-  | "artcnn_quality" | "anime4k";
+  | "rtx_vsr" | "lanczos"
+  // Valeurs persistées historiques : toujours résolues par le core (elles retombent sur ArtCNN),
+  // mais retirées du sélecteur. Anime4K n'est plus livré du tout.
+  | "artcnn_quality" | "anime4k" | "anime4k_aa_hq" | "anime4k_bb_hq";
 
 export interface UpscaleShaderOpts extends ProcessExportOpts {
   input: string;
@@ -400,6 +401,7 @@ export interface DiscordPrefs {
   showBoard: boolean;   // nom du board — off par défaut (un nom peut trahir un client)
   showItems: boolean;   // « 12 références » : combien le board en porte
   showElapsed: boolean; // « 12:34 écoulées » depuis l'ouverture de l'app
+  showLinks: boolean;    // l'art ouvre le serveur, la premiere ligne le depot
   detailsTpl: string;
   stateTpl: string;
 }
@@ -407,9 +409,12 @@ export interface DiscordPrefs {
 // rejetée), d'où les champs optionnels — l'aperçu doit refléter cette omission.
 export interface DiscordActivity {
   details?: string;
+  // Une url PAR CHAMP : c'est ce qui rend la carte cliquable sur le profil, et le seul
+  // mecanisme qui marche — les boutons ne s'affichent jamais a leur proprietaire.
+  details_url?: string;
   state?: string;
   timestamps?: { start?: number }; // secondes Unix
-  assets?: { large_image?: string; large_text?: string };
+  assets?: { large_image?: string; large_text?: string; large_url?: string; small_url?: string };
 }
 export interface DiscordState {
   enabled: boolean;
@@ -426,22 +431,79 @@ export interface DiscordState {
 
 // ---- Board de référence (mood-board) -------------------------------------
 // Les items/vue transitent en `unknown` (frontière IPC) ; le module renderer les re-type.
+// État du stockage du board (Paramètres › Stockage). Trois natures, jamais confondues : un cache se
+// refabrique, un double d'un média déjà rangé dans un projet se libère, une copie unique se met à
+// l'abri AVANT de disparaître.
+export interface StorageAssetSample {
+  name: string;
+  bytes: number;
+  /** Projet .netsu dont le dossier compagnon détient déjà ces octets. */
+  project?: string;
+}
+export interface StorageHolderScene {
+  id: string;
+  name: string;
+  collaborative: boolean;
+  files: number;
+  bytes: number;
+  /** Part dont ce magasin est le SEUL dépositaire — ce qui disparaîtrait avec lui. */
+  soleFiles: number;
+  soleBytes: number;
+}
+export interface StorageAudit {
+  ok: boolean;
+  error?: string;
+  disk?: { free: number; total: number } | null;
+  caches?: { kind: "thumb" | "proxy"; dir: string; bytes: number }[];
+  assets?: {
+    dir: string;
+    freeable: { files: number; bytes: number; entries: StorageAssetSample[] };
+    orphans: { files: number; bytes: number; entries: StorageAssetSample[] };
+    held: { files: number; bytes: number; scenes: StorageHolderScene[] };
+    /** Fichiers trop récents pour être jugés (import en cours). */
+    settling: number;
+  };
+}
+
 export interface RefSceneMeta {
   id: string;
   name: string;
   updatedAt: number;
+  collaboration?: { projectId: string } | null;
 }
 export interface RefSceneIn {
   id?: string;
   name: string;
   items: unknown[];
   view?: unknown;
+  collaboration?: { projectId: string } | null;
+  // Durable locators of the board's local media, independent of `items`. A collaborative scene
+  // stores no items — the document is authoritative — yet the shell authorises a local file import
+  // against the STORED scene, so without this list nothing can enter a shared board.
+  media?: string[];
+  // Read-only layout of a collaborative board: enough to draw its home-screen thumbnail, never
+  // enough to be a second editable copy.
+  preview?: ScenePreviewItem[];
+}
+export interface ScenePreviewItem {
+  id: string;
+  kind: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  z: number;
+  rotation: number;
+  ref?: string;
 }
 export interface RefSceneOut {
   id: string;
   name: string;
   items: unknown[];
   view: unknown | null;
+  collaboration?: { projectId: string } | null;
+  media?: string[];
+  preview?: ScenePreviewItem[];
   updatedAt: number;
 }
 // ---- Partage « .netsu » (board → conteneur SQLite type-routé) ----
@@ -486,7 +548,12 @@ export interface NetsuWeight {
 // `retain` = localisateurs que le board peut encore réclamer sans qu'ils soient posés : médias
 // retenus par l'historique d'annulation. Le core les met à l'abri de son ménage de fin
 // d'enregistrement — sans quoi supprimer un item effacerait ses octets avant le Ctrl+Z suivant.
-export interface NetsuScene { name: string; items: unknown[]; view?: unknown; retain?: string[] }
+// `adoptLocal` / `adoptLocalMax` = politique de copie des médias LOCAUX dans le dossier compagnon du
+// projet (octets ; le plafond ne vise que les vidéos). Absents ⇒ le core référence sans copier.
+export interface NetsuScene {
+  name: string; items: unknown[]; view?: unknown; retain?: string[];
+  adoptLocal?: boolean; adoptLocalMax?: number;
+}
 export interface NetsuImportResult {
   ok: boolean;
   scene?: { name: string; items: unknown[]; view: unknown | null };
@@ -539,7 +606,18 @@ export interface RefApi {
   loadScene(id: string): Promise<RefSceneOut | null>;
   saveScene(scene: RefSceneIn): Promise<{ ok: boolean; id?: string; updatedAt?: number; error?: string }>;
   deleteScene(id: string): Promise<{ ok: boolean; error?: string }>;
-  saveAsset(bytes: ArrayBuffer, ext: string): Promise<{ ok: boolean; path?: string; error?: string }>;
+  // `projectPath` : board lié à un .netsu → l'asset va dans son dossier compagnon (même politique
+  // que fetchAsset/resolveMedia) ; sans lui, magasin global de l'app.
+  saveAsset(bytes: ArrayBuffer, ext: string, options?: { projectPath?: string; title?: string }): Promise<{ ok: boolean; path?: string; error?: string }>;
+  // Aperçu JPEG 360p d'un média local, écrit en asset de l'app — la collaboration l'envoie aux
+  // pairs avant l'original.
+  collabPreview(srcPath: string): Promise<{ ok: boolean; path?: string; error?: string }>;
+  /** Chemins morts → chemins vivants de mêmes octets (empreinte portée par le nom). Aucune écriture.
+      `dead` : ceux qui manquent et qu'aucune source n'a rendus. */
+  locateMedia(refs: string[], projectPath?: string): Promise<{ ok: boolean; moves: Record<string, string>; dead: string[] }>;
+  /** Durée d'une vidéo YouTube en secondes, ou null. Borne le sélecteur de portée sans attendre
+      que le lecteur ait lu l'index du conteneur. */
+  ytDuration(id: string): Promise<number | null>;
   fetchAsset(url: string, options?: { projectPath?: string; title?: string }): Promise<{ ok: boolean; path?: string; kind?: "image" | "video"; error?: string }>;
   // Résout le vrai média de N'IMPORTE quel lien (fichier direct, ou page web via OpenGraph) → asset
   // disque. Catch-all générique : GIF (giphy/tenor), imgur, articles, CDN sans extension propre.
@@ -597,6 +675,8 @@ export interface RefApi {
   saveProjectAs(opts: { scene: NetsuScene; destPath: string; fromPath?: string | null; sourceSceneId?: string | null }): Promise<NetsuProjectSave>;
   closeProject(filePath: string): Promise<{ ok: boolean; closed?: boolean }>;
   recentProjects(type?: string): Promise<NetsuRecent[]>;
+  // Rattache l'entrée récente d'un .netsu à la scène née de sa conversion en board partagé.
+  linkSource(filePath: string, sourceSceneId: string): Promise<NetsuRecent[]>;
   forgetProject(filePath: string): Promise<NetsuRecent[]>;
   deleteProject(filePath: string): Promise<{ ok: boolean; projectRemoved?: boolean; mediaRemoved?: boolean; recents: NetsuRecent[]; error?: string }>;
   setDirty(unsaved: boolean): void;
@@ -605,6 +685,15 @@ export interface RefApi {
   setAlwaysOnTop(on: boolean): void;
   push(payload: unknown): void;
   onPush(cb: (payload: unknown) => void): () => void;
+  // Paramètres › Stockage. `liveRefs` = localisateurs du board affiché : un média posé mais pas
+  // encore enregistré n'est référencé par aucune scène et passerait pour un orphelin.
+  storageAudit(opts?: { liveRefs?: string[] }): Promise<StorageAudit>;
+  // Portée, jamais des chemins : le core recalcule ce qui est libérable au moment de l'écriture.
+  storageFree(opts: { caches?: boolean; assets?: boolean; liveRefs?: string[] }): Promise<{ ok: boolean; bytes: number; files: number; error?: string }>;
+  // Déplace les orphelins hors du magasin : copie, vérification, retrait.
+  storageMoveOrphans(opts: { destDir: string; liveRefs?: string[] }): Promise<{ ok: boolean; bytes: number; files: number; failed?: string[]; error?: string }>;
+  // Écrit une scène de la bibliothèque en projet .netsu : ses médias rejoignent le dossier compagnon.
+  storageArchiveScene(opts: { sceneId: string; destPath: string }): Promise<NetsuProjectSave>;
 }
 
 // ---- Collections (bibliothèque de plans gardés) --------------------------
@@ -919,6 +1008,7 @@ const MOCK_DISCORD_PREFS: DiscordPrefs = {
   showBoard: false,
   showItems: true,
   showElapsed: true,
+  showLinks: true,
   detailsTpl: "",
   stateTpl: "",
 };
@@ -1040,12 +1130,15 @@ const mock: NrApi = {
         const o = read();
         const id = scene.id || Math.random().toString(36).slice(2, 10);
         const updatedAt = Date.now();
-        o[id] = { id, name: scene.name, items: scene.items, view: scene.view ?? null, updatedAt };
+        o[id] = { id, name: scene.name, items: scene.items, view: scene.view ?? null, collaboration: scene.collaboration ?? null, media: scene.media ?? [], preview: scene.preview ?? [], updatedAt };
         write(o);
         return { ok: true, id, updatedAt };
       },
       deleteScene: async (id: string) => { const o = read(); delete o[id]; write(o); return { ok: true }; },
       saveAsset: async () => ({ ok: false, error: "mock" }),
+      collabPreview: async () => ({ ok: false, error: "mock" }),
+      locateMedia: async () => ({ ok: true, moves: {}, dead: [] }),
+      ytDuration: async () => null,
       fetchAsset: async () => ({ ok: false, error: "mock" }),
       resolveMedia: async (_url, _options) => ({ ok: false, error: "mock" }),
       upscaleItem: async () => ({ ok: false, error: "mock" }),
@@ -1074,6 +1167,11 @@ const mock: NrApi = {
       saveProjectAs: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       closeProject: async () => ({ ok: true, closed: false }),
       recentProjects: async () => [],
+      linkSource: async () => [],
+      storageAudit: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      storageFree: async () => ({ ok: false, bytes: 0, files: 0, error: i18n.t("common:mock.appUnavailable") }),
+      storageMoveOrphans: async () => ({ ok: false, bytes: 0, files: 0, error: i18n.t("common:mock.appUnavailable") }),
+      storageArchiveScene: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       forgetProject: async () => [],
       deleteProject: async () => ({ ok: false, recents: [], error: i18n.t("common:mock.appUnavailable") }),
       setDirty: () => {},

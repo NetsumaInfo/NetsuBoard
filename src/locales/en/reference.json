@@ -11,6 +11,7 @@
     "flipV": "Flip vertical",
     "crop": "Crop",
     "openLink": "Open link",
+    "reloadMedia": "Reload media",
     "download": "Download",
     "restoreDownload": "Back to downloaded file",
     "zoomIn": "Zoom in",
@@ -133,6 +134,10 @@
     "factor": "Factor",
     "denoise": "Denoise",
     "downloadOnline": "Download online videos",
+    "copyLocal": "Copy local media into the project",
+    "copyLocalOn": "Copy",
+    "copyLocalOff": "Reference",
+    "copyLocalMax": "Video cap (MB)",
     "embedSwitch": "Switch back to player",
     "embedSwitchKeep": "Keep the file",
     "embedSwitchDrop": "Delete the file",
@@ -238,7 +243,12 @@
     "pinnedAllPlaced": "Everything is placed.",
     "pinnedBarHint": "Drag to place or move, click to remove.",
     "pinnedRemove": "Remove {{label}} from the bar",
-    "barButtons": "Toolbar"
+    "barButtons": "Toolbar",
+    "assetSweep": "Unused media",
+    "assetSweepHint": "Removes files no scene references. Nothing your boards hold is touched.",
+    "assetSweepAction": "Clean up",
+    "assetSweepDone": "{{count}} file(s) removed, {{mb}} MB freed.",
+    "assetSweepFailed": "Cleanup failed."
   },
   "inspector": {
     "ytPlayer": "YouTube player",
@@ -320,7 +330,8 @@
     "kindItem": "Board item",
     "chooseFile": "Choose a file…",
     "targetItem": "Target item",
-    "remove": "Remove link"
+    "remove": "Remove link",
+    "sharedFile": "This file belongs to the shared board: it has no location on this disk."
   },
   "font": {
     "label": "Font",
@@ -494,6 +505,7 @@
     "hideFromList": "Hide from list",
     "deleteScene": "Delete scene",
     "modified": "Modified {{date}}",
+    "sharedBoard": "Shared",
     "dropMedia": "Drag and drop media",
     "dropHint": "Images and videos accepted",
     "or": "or",
@@ -510,14 +522,31 @@
     "deleteProject": "Delete completely",
     "deleteProjectTitle": "Delete “{{name}}”?",
     "deleteProjectWarning": "The .netsu file and its .medias folder will be permanently deleted. External source media will not be touched.",
-    "projectMissing": "File not found"
+    "projectMissing": "File not found",
+    "invites": {
+      "body": "invites you to a shared board",
+      "join": "Join",
+      "decline": "Decline",
+      "later": "Later",
+      "failed": "Could not join this board"
+    },
+    "cardStatus": {
+      "key": "Key needed",
+      "media": "Media wanted",
+      "changed": "Changed"
+    }
   },
   "item": {
     "doubleClickEdit": "Double-click to edit…",
     "frameDefault": "Frame",
     "missingMedia": "Missing media",
+    "mediaWaiting": "Waiting for a device that holds this media",
+    "mediaRemoved": "Media removed from the project",
+    "mediaSize": "{{size}}",
+    "retryMedia": "Try again",
     "notBundled": "{{size}} · not bundled",
     "relocate": "Relocate",
+    "reloadMedia": "Re-download",
     "downloading": "Downloading…",
     "mediaFallback": "media",
     "interactiveActive": "Interactive — click elsewhere to move",
@@ -734,6 +763,8 @@
     "reading": "Reading {{count}} files…",
     "importing": "Importing {{name}}…",
     "done": "{{count}} media imported",
+    "copyFailed": "Could not copy “{{name}}”: this media will be lost when the app closes",
+    "copyFailedBatch": "{{count}} copies failed (including “{{name}}”): these media will be lost when the app closes",
     "folderTruncated": "Folder too large: first {{count}} media imported",
     "fetching": "Fetching the media…",
     "linkDone": "Media imported",
@@ -744,5 +775,76 @@
     "off": "Take the mouse back",
     "warning": "Clicks and wheel will go to the application underneath, and the window stays on top. To take control back: give it focus again (Alt+Tab).",
     "dontAskAgain": "Don't ask again"
+  },
+  "collab": {
+    "menu": "Collaborate",
+    "title": "Collaborate",
+    "subtitle": "Pick the friends to invite to this project.",
+    "signedOut": "Connect your Discord account in Settings.",
+    "noFriends": "Add friends first in Settings › Account.",
+    "invited": "{{n}} invitation(s) sent.",
+    "notice": "The board becomes collaborative. Invited people receive the invitation on their home screen.",
+    "close": "Close",
+    "create": "Create and invite",
+    "invite": "Invite",
+    "fileBacked": "This board is open from a .netsu file. A collaborative project lives in the scene library.",
+    "saveAsBlocked": "A collaborative project remains owned by its shared scene. Use export to create a local copy.",
+    "role": {
+      "owner": "Owner",
+      "editor": "Can edit",
+      "viewer": "View only"
+    },
+    "rotationPending": "The revocation is recorded. New publications wait for an owner device to finish key rotation.",
+    "staleHead": {
+      "title": "Stale recovery branch",
+      "warning": "A device has not merged this branch for more than 30 days.",
+      "detail": "{{days}} days · {{size}} encrypted",
+      "discard": "Discard",
+      "confirmTitle": "Discard this branch?",
+      "confirmWarning": "Changes published only by this device will be lost permanently. Continue only if that device can no longer reconnect."
+    },
+    "status": {
+      "pending": "sync pending",
+      "rotation": "key rotation pending"
+    },
+    "members": {
+      "remove": "Remove from project",
+      "pending": "Invitation pending",
+      "cancelInvite": "Cancel invitation"
+    },
+    "lifecycle": {
+      "leave": "Leave project",
+      "delete": "Delete project",
+      "leaveTitle": "Leave this project?",
+      "deleteTitle": "Delete this project?",
+      "leaveWarning": "You keep what this device already received, but can no longer sync this project.",
+      "deleteWarning": "Rendezvous data, invitations, and encrypted recovery copies will be deleted for every member. This cannot be undone."
+    },
+    "noScene": "Save this board to the scene library first.",
+    "willAdopt": "This board will be copied into the scene library. The .netsu file stays on your disk.",
+    "failed": "Sharing failed.",
+    "sync": {
+      "queued": "Changes are waiting here. They will leave on their own as soon as a device is reachable.",
+      "upToDate": "Everything is in sync.",
+      "peers": "{{count}} reachable device(s)"
+    },
+    "mediaMissing": "{{count}} media file(s) missing from disk: {{names}}. They are marked on the board — recover them (moved folder?) from their card, then share again.",
+    "panel": {
+      "title": "Sharing status",
+      "online": "{{count}} online",
+      "alone": "Nobody else yet.",
+      "hereNow": "Online",
+      "neverSeen": "Not reached yet",
+      "seenMinutes": "Seen {{count}} min ago",
+      "seenHours": "Seen {{count}} h ago",
+      "seenDays": "Seen {{count}} d ago",
+      "invited": "Invitation pending",
+      "unknownMember": "Member",
+      "queued": "Changes are waiting here. They will leave on their own as soon as a device is reachable.",
+      "upToDate": "Everything is in sync.",
+      "rotation": "Key rotation pending: new publications wait for one of the owner’s devices.",
+      "waitingKey": "{{count}} member(s) waiting for the key. Stay online to pass it on.",
+      "nobodyReachable": "Nobody is reachable right now: your changes will go out when they return."
+    }
   }
 }

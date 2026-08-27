@@ -108,7 +108,9 @@ pub fn player_is_visible(state: State<'_, AppState>) -> Result<bool, String> {
 /// Current detached player window rect (screen px) as (x, y, w, h).
 /// Used as the drag anchor by the overlay top bar.
 #[tauri::command]
-pub fn player_get_detached_rect(state: State<'_, AppState>) -> Result<(i32, i32, i32, i32), String> {
+pub fn player_get_detached_rect(
+    state: State<'_, AppState>,
+) -> Result<(i32, i32, i32, i32), String> {
     with_child_window(&state, |cw| {
         cw.get_window_rect()
             .ok_or_else(|| "no detached window rect".to_string())

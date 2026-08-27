@@ -357,7 +357,6 @@
     "artcnn_c4f32": "Anime — best speed/quality balance.",
     "artcnn_c4f16": "Anime — fastest.",
     "artcnn_quality": "Anime — denoises and sharpens.",
-    "anime4k": "Anime — lightweight, good for damaged sources.",
     "lanczos": "Live action/general — no AI, instant."
   },
   "shaderHint": {
@@ -369,8 +368,6 @@
     "artcnn_c4f16": "Anime — fastest.",
     "artcnn_c4f16_ds": "Fast — denoise, sharpen.",
     "artcnn_c4f16_dn": "Fast — denoise, soften.",
-    "anime4k_aa_hq": "Anime — max perceptual.",
-    "anime4k_bb_hq": "Anime — soft restoration.",
     "rtx_vsr": "Live action and anime — fixed 2×, NVIDIA.",
     "lanczos": "Live action — no AI, instant."
   },

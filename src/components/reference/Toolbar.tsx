@@ -7,13 +7,13 @@
 // chacune) ; `compact` est la version épinglée, qui choisit en plus son bord. Épingler, détacher et
 // rattacher n'en font jamais partie : ce sont les sorties du format.
 
-import { useState, type RefObject } from "react";
+import { lazy, Suspense, useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ImagePlus, Type, Frame, Pencil, ZoomIn, ZoomOut, Maximize, FilePlus2,
   Save, SaveAll, FileCheck2, FolderOpen, Share2, PictureInPicture2, Minimize2, Pin, PinOff, Play, Pause,
   Settings2, Home, Undo2, Redo2, RotateCw, Magnet, Package, ImageDown, SwatchBook,
-  MousePointer2, MousePointerBan, Pipette, LayoutGrid,
+  MousePointer2, MousePointerBan, Pipette, LayoutGrid, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,20 @@ import {
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { convexConfigured } from "@/lib/convexEnv";
 import { useBoard } from "./useReferenceBoard";
+
+// LAZY, and mounted only while open: this dialog pulls `convex/react`, which must stay out of the
+// entry chunk of an app that opens without a backend — and its hooks would throw outside the Convex
+// provider, which does not exist when no deployment is configured.
+// Pastille d'état d'un board partagé. Lazy comme le dialogue : la chaîne convex/react ne doit pas
+// entrer dans le bundle de démarrage (cf. src/lib/convexEnv.ts).
+const CollabStatus = lazy(() =>
+  import("./CollabStatus").then((module) => ({ default: module.CollabStatus })),
+);
+const CollaborationDialog = lazy(() =>
+  import("./CollaborationDialog").then((module) => ({ default: module.CollaborationDialog })),
+);
 import { fileLabel } from "./useScenePersistence";
 import { recoverAllOnlineMedia, recoverableOnlineItems } from "./boardMediaActions";
 import { ExportImageDialog } from "./ExportImageDialog";
@@ -110,6 +123,7 @@ export function Toolbar({
   const canRedo = useBoard((s) => s.future.length > 0);
   const [recovering, setRecovering] = useState(false);
   const [imgExport, setImgExport] = useState(false);
+  const [collab, setCollab] = useState(false);
   const mouseThrough = useBoard((s) => s.mouseThrough);
   const prefs = useBoard((s) => s.prefs);
   const askOpen = useBoard((s) => s.mouseThroughAsk);
@@ -119,6 +133,10 @@ export function Toolbar({
   const hasItems = items.some((i) => i.kind !== "draw");
   const snap = useBoard((s) => s.prefs.snap);
   const setPrefs = useBoard((s) => s.setPrefs);
+  const readOnly = useBoard((s) => s.collabProjectId !== null && s.collabRole === "viewer");
+  const rotationRequired = useBoard((s) => s.collabRotationRequired);
+  const syncQueued = useBoard((s) => s.collabOfflineQueued);
+  const shared = useBoard((s) => s.collabProjectId !== null);
 
   // Choisir un autre outil/ajout quitte le mode dessin (revient au curseur normal).
   const leaveDraw = () => { if (useBoard.getState().drawMode) setDrawMode(false); };
@@ -144,21 +162,22 @@ export function Toolbar({
 
   // Boutons adressables par les deux barres : une seule définition, jamais deux à garder d'accord.
   const B: Record<PinnedButtonId, React.ReactNode> = {
-    text: <IconBtn icon={Type} label={t("toolbar.addText")} action="addText" onClick={() => { leaveDraw(); board.current?.addText(); }} />,
-    frame: <IconBtn icon={Frame} label={t("toolbar.addFrame")} action="addFrame" onClick={() => { leaveDraw(); board.current?.addFrame(); }} />,
+    text: <IconBtn icon={Type} label={t("toolbar.addText")} action="addText" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addText(); }} />,
+    frame: <IconBtn icon={Frame} label={t("toolbar.addFrame")} action="addFrame" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addFrame(); }} />,
     draw: (
       <IconBtn
         icon={Pencil}
         label={drawMode ? t("toolbar.exitDraw") : t("toolbar.draw")}
         action="toggleDraw"
         active={drawMode}
+        disabled={readOnly}
         onClick={() => setDrawMode(!drawMode)}
       />
     ),
     // Générateur de palettes : son état vit dans le store, le panneau survit aux rendus de la barre.
-    palette: <IconBtn icon={SwatchBook} label={t("palette.studio.open")} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />,
-    extractPalette: <IconBtn icon={Pipette} label={t("shortcut.extractPalette")} action="extractPalette" onClick={() => void extractPaletteToBoard()} />,
-    tidy: <IconBtn icon={LayoutGrid} label={t("shortcut.arrangeDefault")} action="arrangeDefault" onClick={tidySelection} />,
+    palette: <IconBtn icon={SwatchBook} label={t("palette.studio.open")} disabled={readOnly} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />,
+    extractPalette: <IconBtn icon={Pipette} label={t("shortcut.extractPalette")} action="extractPalette" disabled={readOnly} onClick={() => void extractPaletteToBoard()} />,
+    tidy: <IconBtn icon={LayoutGrid} label={t("shortcut.arrangeDefault")} action="arrangeDefault" disabled={readOnly} onClick={tidySelection} />,
     // Aimant : accrochage bords/centres/coins. Alt le suspend le temps d'un geste, ce bouton l'éteint.
     snap: <IconBtn icon={Magnet} label={snap ? t("toolbar.snapOff") : t("toolbar.snapOn")} active={snap} onClick={() => setPrefs({ snap: !snap })} />,
     zoomOut: <IconBtn icon={ZoomOut} label={t("actions.zoomOut")} action="zoomOut" onClick={() => board.current?.zoomBy(0.8)} />,
@@ -172,8 +191,8 @@ export function Toolbar({
         onClick={toggleFrozen}
       />
     ),
-    undo: <IconBtn icon={Undo2} label={t("actions.undo")} action="undo" onClick={undo} disabled={!canUndo} />,
-    redo: <IconBtn icon={Redo2} label={t("actions.redo")} action="redo" onClick={redo} disabled={!canRedo} />,
+    undo: <IconBtn icon={Undo2} label={t("actions.undo")} action="undo" onClick={undo} disabled={readOnly || !canUndo} />,
+    redo: <IconBtn icon={Redo2} label={t("actions.redo")} action="redo" onClick={redo} disabled={readOnly || !canRedo} />,
     mouseThrough: (
       <IconBtn
         icon={mouseThrough ? MousePointer2 : MousePointerBan}
@@ -208,6 +227,14 @@ export function Toolbar({
           <DropdownMenuItem disabled={!hasItems} onClick={() => setImgExport(true)}>
             <ImageDown /> {t("exportImage.menu")}
           </DropdownMenuItem>
+          {/* Partager À QUELQU'UN, et non un fichier : le projet devient collaboratif et les amis
+              choisis reçoivent une invitation dans leur application. Sans déploiement Convex il n'y
+              a ni compte ni amis : l'entrée disparaît plutôt que de mener à une impasse. */}
+          {convexConfigured && (
+            <DropdownMenuItem onClick={() => setCollab(true)}>
+              <Users /> {t("collab.menu")}
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     ),
@@ -231,6 +258,11 @@ export function Toolbar({
   const dialogs = (
     <>
       <ExportImageDialog open={imgExport} onOpenChange={setImgExport} />
+      {collab && (
+        <Suspense fallback={null}>
+          <CollaborationDialog open onOpenChange={setCollab} />
+        </Suspense>
+      )}
       <MouseThroughDialog open={askOpen} onOpenChange={setAskOpen} />
     </>
   );
@@ -311,6 +343,20 @@ export function Toolbar({
           <span className="truncate font-medium text-foreground">{sceneName}</span>
         )}
         {dirty && <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-label={t("toolbar.unsaved")} />}
+        {/* Board partagé : qui est là et ce qui reste à faire, sous une pastille. Elle remplace les
+            mentions en texte, qui disaient l'état sans jamais dire QUI ni quoi faire. */}
+        {shared && convexConfigured && (
+          <Suspense fallback={null}>
+            <CollabStatus />
+          </Suspense>
+        )}
+        {readOnly && <span className="shrink-0">· {t("collab.role.viewer")}</span>}
+        {shared && !convexConfigured && rotationRequired && (
+          <span className="shrink-0 text-amber-500">· {t("collab.status.rotation")}</span>
+        )}
+        {shared && !convexConfigured && !rotationRequired && syncQueued && (
+          <span className="shrink-0">· {t("collab.status.pending")}</span>
+        )}
         {notice && (
           <span className={cn("truncate", notice.kind === "error" ? "text-destructive" : "text-[var(--color-ok)]")}>
             · {notice.text}

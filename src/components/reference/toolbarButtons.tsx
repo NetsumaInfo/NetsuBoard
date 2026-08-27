@@ -60,7 +60,7 @@ export const DEFAULT_BAR_BUTTONS: PinnedButtonId[] = [
   "snap", "zoomOut", "zoomIn", "fit", "freeze",
 ];
 export const DEFAULT_BAR_BUTTONS_END: PinnedButtonId[] = [
-  "undo", "redo", "newScene", "save", "saveAs", "openProject", "share", "settings", "mouseThrough",
+  "undo", "redo", "newScene", "save", "saveAs", "openProject", "share", "mouseThrough", "settings",
 ];
 
 // Bord de la fenêtre où la barre épinglée se pose. Gauche/droite la rendent verticale.

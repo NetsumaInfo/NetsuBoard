@@ -6,7 +6,8 @@
 // LAZILY loaded by `AppSettings`: this file pulls `convex/react` and the Better Auth client, which
 // must stay out of the entry chunk of an app that opens without a backend.
 
-import { LogOut, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, RefreshCw, UserRound } from "lucide-react";
 import { siDiscord } from "simple-icons";
 import { useTranslation } from "react-i18next";
 import { useConvexAuth, useQuery } from "convex/react";
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useDiscordLogin } from "@/components/auth/useDiscordLogin";
 import { AvatarDecoration } from "./AvatarDecoration";
+import { CollabSection } from "./CollabSection";
 import { useDiscordProfile } from "./useDiscordProfile";
 
 // Better Auth user document (Discord fields: name = handle, image = avatar, email).
@@ -50,6 +52,21 @@ function AccountInner() {
   const user = useQuery(api.auth.getCurrentUser) as AuthUser;
   const profile = useDiscordProfile(); // avatar + Nitro decoration (via the OAuth token)
   const { login, busy, error, reset } = useDiscordLogin();
+  const pending = isLoading || user === undefined;
+
+  // A query that never resolves left this card spinning forever with nothing to act on — the worst
+  // possible state, because it looks identical to a slow network and to a blocked one. The backend
+  // is reached over a WebSocket to *.convex.cloud plus HTTPS to *.convex.site; a firewall, a proxy
+  // or a captive network stops either silently. After the delay the user gets a cause and a retry.
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    if (!pending) {
+      setTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setTimedOut(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [pending]);
 
   return (
     <section>
@@ -57,7 +74,15 @@ function AccountInner() {
       <p className="mt-1 text-xs text-muted-foreground">{t("settings:account.subtitle")}</p>
 
       <div className="mt-4 rounded-lg border border-border p-4">
-        {isLoading || user === undefined ? (
+        {pending && timedOut ? (
+          <div className="space-y-3">
+            <p className="text-sm text-destructive">{t("settings:account.unreachable")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings:account.unreachableHint")}</p>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+              <RefreshCw className="size-3.5" /> {t("settings:account.retry")}
+            </Button>
+          </div>
+        ) : pending ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner className="size-4" /> {t("common:status.loading")}
           </div>
@@ -96,6 +121,10 @@ function AccountInner() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{user.name || t("settings:account.discordUser")}</p>
+              {/* The ACCOUNT is identified by its e-mail, not by a Discord handle: this card answers
+                  "which account am I signed in as", and a renamed Discord pseudonym must not change
+                  that answer. The handle belongs to the friends section, where it is what people
+                  type to add each other. */}
               {user.email && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
             </div>
             <Button variant="outline" size="sm" onClick={() => void signOut()}>
@@ -104,6 +133,9 @@ function AccountInner() {
           </div>
         )}
       </div>
+
+      {/* Friends and this device only exist for a signed-in account: the section returns null otherwise. */}
+      <CollabSection />
     </section>
   );
 }

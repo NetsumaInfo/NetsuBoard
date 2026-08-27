@@ -11,6 +11,7 @@
     "flipV": "Voltear vertical",
     "crop": "Recortar",
     "openLink": "Abrir el enlace",
+    "reloadMedia": "Recargar medio",
     "download": "Descargar",
     "restoreDownload": "Volver al archivo descargado",
     "zoomIn": "Acercar",
@@ -133,6 +134,10 @@
     "factor": "Factor",
     "denoise": "Reducción de ruido",
     "downloadOnline": "Descargar los vídeos en línea",
+    "copyLocal": "Copiar los medios locales en el proyecto",
+    "copyLocalOn": "Copiar",
+    "copyLocalOff": "Referenciar",
+    "copyLocalMax": "Límite de vídeo (MB)",
     "embedSwitch": "Cambio al reproductor",
     "embedSwitchKeep": "Conservar el archivo",
     "embedSwitchDrop": "Eliminar el archivo",
@@ -238,7 +243,12 @@
     "pinnedAllPlaced": "Todo está colocado.",
     "pinnedBarHint": "Arrastra para colocar o mover, clic para quitar.",
     "pinnedRemove": "Quitar {{label}} de la barra",
-    "barButtons": "Barra de herramientas"
+    "barButtons": "Barra de herramientas",
+    "assetSweep": "Medios sin usar",
+    "assetSweepHint": "Elimina los archivos que ninguna escena referencia. Nada de tus tableros se toca.",
+    "assetSweepAction": "Limpiar",
+    "assetSweepDone": "{{count}} archivo(s) eliminados, {{mb}} MB liberados.",
+    "assetSweepFailed": "La limpieza ha fallado."
   },
   "inspector": {
     "ytPlayer": "Reproductor de YouTube",
@@ -320,7 +330,8 @@
     "kindItem": "Elemento del tablero",
     "chooseFile": "Elegir un archivo…",
     "targetItem": "Elemento destino",
-    "remove": "Quitar el enlace"
+    "remove": "Quitar el enlace",
+    "sharedFile": "Este archivo pertenece al tablero compartido: no tiene ubicación en este disco."
   },
   "font": {
     "label": "Fuente",
@@ -494,6 +505,7 @@
     "hideFromList": "Ocultar de la lista",
     "deleteScene": "Eliminar la escena",
     "modified": "Modificado {{date}}",
+    "sharedBoard": "Compartido",
     "dropMedia": "Arrastra y suelta medios",
     "dropHint": "Se aceptan imágenes y vídeos",
     "or": "o",
@@ -510,14 +522,31 @@
     "deleteProject": "Eliminar por completo",
     "deleteProjectTitle": "¿Eliminar «{{name}}»?",
     "deleteProjectWarning": "El archivo .netsu y su carpeta .medias se eliminarán de forma permanente. Los medios de origen externos no se tocarán.",
-    "projectMissing": "Archivo no encontrado"
+    "projectMissing": "Archivo no encontrado",
+    "invites": {
+      "body": "te invita a un tablero compartido",
+      "join": "Unirse",
+      "decline": "Rechazar",
+      "later": "Más tarde",
+      "failed": "No se pudo unir a este tablero"
+    },
+    "cardStatus": {
+      "key": "Falta la clave",
+      "media": "Piden un archivo",
+      "changed": "Modificado"
+    }
   },
   "item": {
     "doubleClickEdit": "Doble clic para editar…",
     "frameDefault": "Marco",
     "missingMedia": "Medio ausente",
+    "mediaWaiting": "Esperando a un dispositivo que tenga este medio",
+    "mediaRemoved": "Medio retirado del proyecto",
+    "mediaSize": "{{size}}",
+    "retryMedia": "Reintentar",
     "notBundled": "{{size}} · no incluido",
     "relocate": "Relocalizar",
+    "reloadMedia": "Volver a descargar",
     "downloading": "Descargando…",
     "mediaFallback": "medio",
     "interactiveActive": "Interactivo — clic fuera para mover",
@@ -734,6 +763,8 @@
     "reading": "Leyendo {{count}} archivos…",
     "importing": "Importando {{name}}…",
     "done": "{{count}} medios importados",
+    "copyFailed": "No se pudo copiar «{{name}}»: este medio se perderá al cerrar la aplicación",
+    "copyFailedBatch": "{{count}} copias fallidas (incluida «{{name}}»): estos medios se perderán al cerrar la aplicación",
     "folderTruncated": "Carpeta demasiado grande: importados los primeros {{count}} medios",
     "fetching": "Obteniendo el medio…",
     "linkDone": "Medio importado",
@@ -744,5 +775,76 @@
     "off": "Recuperar el ratón",
     "warning": "Los clics y la rueda irán a la aplicación de debajo, y la ventana se mantiene encima. Para recuperar el control: vuelve a darle el foco (Alt+Tab).",
     "dontAskAgain": "No preguntar de nuevo"
+  },
+  "collab": {
+    "menu": "Colaborar",
+    "title": "Colaborar",
+    "subtitle": "Elige a los amigos que quieres invitar a este proyecto.",
+    "signedOut": "Conecta tu cuenta de Discord en Ajustes.",
+    "noFriends": "Primero añade amigos en Ajustes › Cuenta.",
+    "invited": "{{n}} invitación(es) enviada(s).",
+    "notice": "El tablero se vuelve colaborativo. Las personas invitadas reciben la invitación en su pantalla de inicio.",
+    "close": "Cerrar",
+    "create": "Crear e invitar",
+    "invite": "Invitar",
+    "fileBacked": "Este tablero está abierto desde un archivo .netsu. Un proyecto colaborativo vive en la biblioteca de escenas.",
+    "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su escena compartida. Usa la exportación para crear una copia local.",
+    "role": {
+      "owner": "Propietario",
+      "editor": "Puede editar",
+      "viewer": "Solo lectura"
+    },
+    "rotationPending": "La revocación está registrada. Las nuevas publicaciones esperan a que un dispositivo del propietario termine la rotación de clave.",
+    "staleHead": {
+      "title": "Rama de recuperación obsoleta",
+      "warning": "Un dispositivo no ha fusionado esta rama durante más de 30 días.",
+      "detail": "{{days}} días · {{size}} cifrados",
+      "discard": "Descartar",
+      "confirmTitle": "¿Descartar esta rama?",
+      "confirmWarning": "Los cambios publicados únicamente por este dispositivo se perderán para siempre. Continúa solo si ese dispositivo ya no puede volver a conectarse."
+    },
+    "status": {
+      "pending": "sincronización pendiente",
+      "rotation": "rotación de clave pendiente"
+    },
+    "members": {
+      "remove": "Quitar del proyecto",
+      "pending": "Invitación pendiente",
+      "cancelInvite": "Cancelar invitación"
+    },
+    "lifecycle": {
+      "leave": "Salir del proyecto",
+      "delete": "Eliminar proyecto",
+      "leaveTitle": "¿Salir de este proyecto?",
+      "deleteTitle": "¿Eliminar este proyecto?",
+      "leaveWarning": "Conservarás lo ya recibido en este dispositivo, pero ya no podrás sincronizar el proyecto.",
+      "deleteWarning": "Los datos de conexión, las invitaciones y las copias cifradas se eliminarán para todos. No se puede deshacer."
+    },
+    "noScene": "Guarda primero este tablero en la biblioteca de escenas.",
+    "willAdopt": "Este tablero se copiará a la biblioteca de escenas. El archivo .netsu permanece en tu disco.",
+    "failed": "El uso compartido ha fallado.",
+    "sync": {
+      "queued": "Hay cambios en espera. Se enviarán solos en cuanto un dispositivo esté disponible.",
+      "upToDate": "Todo está sincronizado.",
+      "peers": "{{count}} dispositivo(s) accesible(s)"
+    },
+    "mediaMissing": "{{count}} archivo(s) multimedia ausente(s) del disco: {{names}}. Están marcados en el tablero — recupéralos desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
+    "panel": {
+      "title": "Estado del uso compartido",
+      "online": "{{count}} en línea",
+      "alone": "Nadie más por ahora.",
+      "hereNow": "En línea",
+      "neverSeen": "Aún sin contactar",
+      "seenMinutes": "Visto hace {{count}} min",
+      "seenHours": "Visto hace {{count}} h",
+      "seenDays": "Visto hace {{count}} d",
+      "invited": "Invitación pendiente",
+      "unknownMember": "Miembro",
+      "queued": "Hay cambios en espera. Se enviarán solos en cuanto un dispositivo esté disponible.",
+      "upToDate": "Todo está sincronizado.",
+      "rotation": "Rotación de clave pendiente: las nuevas publicaciones esperan un dispositivo del propietario.",
+      "waitingKey": "{{count}} miembro(s) esperan la clave. Permanece en línea para transmitirla.",
+      "nobodyReachable": "Nadie está disponible ahora mismo: tus cambios se enviarán cuando vuelvan."
+    }
   }
 }

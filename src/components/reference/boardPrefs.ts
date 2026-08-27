@@ -109,6 +109,10 @@ export interface BoardPrefs {
   // Même chose pour la barre PLEINE : elle se dispose aussi.
   barButtons: PinnedButtonId[];
   barButtonsEnd: PinnedButtonId[];
+  // Version de la DISPOSITION par défaut de la barre pleine. Les paramètres finissent la barre,
+  // le passe-souris juste avant, et les deux flèches restent l'une contre l'autre : une
+  // disposition enregistrée sous l'ancien ordre doit être reprise une fois.
+  barLayoutVersion?: number;
   pinnedSide: PinnedSide;
   // Ce que l'opacité du fond atteint, en plus du fond lui-même. L'INTERFACE reste opaque par défaut :
   // une barre de titre translucide sur un bureau chargé ne se lit plus. Le cadre de la zone de pose,
@@ -134,6 +138,13 @@ export interface BoardPrefs {
   autoDownloadProviders: EmbedProvider[];
   // Avertissement du mode transparent à la souris déjà écarté ? Expliqué une fois, pas deux.
   mouseThroughWarned: boolean;
+  // Un média LOCAL posé sur le board est-il copié dans le dossier compagnon du projet ?
+  // Sans ça, le projet ne garde qu'un pointeur : le fichier renommé, effacé ou resté sur l'autre
+  // machine, et la case est vide. La copie rend le projet autonome — l'original n'est jamais touché.
+  copyLocalIntoProject: boolean;
+  // Plafond par fichier de cette copie, en Mo, appliqué aux SEULES vidéos : les images passent
+  // toujours. Un board porte volontiers dix boucles de quelques Mo, jamais dix rushes de 12 Go.
+  copyLocalMaxMB: number;
   // Repasser un média téléchargé en lecteur/carte embed doit-il SUPPRIMER le fichier local ?
   // Défaut NON : la bascule n'est qu'un changement d'affichage, le retour au fichier reste immédiat.
   dropDownloadOnEmbed: boolean;
@@ -239,6 +250,7 @@ const PREFS_DEFAULT: BoardPrefs = {
   pinnedButtonsEnd: [...DEFAULT_PINNED_BUTTONS_END],
   barButtons: [...DEFAULT_BAR_BUTTONS],
   barButtonsEnd: [...DEFAULT_BAR_BUTTONS_END],
+  barLayoutVersion: 1,
   pinnedSide: "top",
   seeThroughShell: false,
   seeThroughPlaceFrame: true,
@@ -252,6 +264,8 @@ const PREFS_DEFAULT: BoardPrefs = {
   onlineDefaultsVersion: 1,
   autoDownloadProviders: [...DOWNLOADABLE_EMBED_PROVIDERS],
   mouseThroughWarned: false,
+  copyLocalIntoProject: true,
+  copyLocalMaxMB: 512,
   dropDownloadOnEmbed: false,
   upQuick: false,
   upEngine: "ia",
@@ -309,10 +323,18 @@ export function readPrefs(): BoardPrefs {
       favFonts: Array.isArray(v.favFonts) ? v.favFonts : [],
       autoDownloadProviders: Array.isArray(v.autoDownloadProviders)
         ? v.autoDownloadProviders : PREFS_DEFAULT.autoDownloadProviders,
+      // Un plafond relu depuis un réglage corrompu ne doit jamais devenir « copie illimitée » ni
+      // « rien ne passe » : il décide de gigaoctets recopiés ou d'items laissés en pointeur.
+      copyLocalMaxMB: Number.isFinite(v.copyLocalMaxMB) && v.copyLocalMaxMB >= 0
+        ? Math.min(65536, Number(v.copyLocalMaxMB)) : PREFS_DEFAULT.copyLocalMaxMB,
       // Un bouton retiré du produit ne doit pas rester dans une barre enregistrée, et un bord
       // inconnu ne doit pas laisser la barre sans place.
       ...splitZones(v, "pinnedButtons", "pinnedButtonsEnd"),
       ...splitZones(v, "barButtons", "barButtonsEnd"),
+      ...(v.barLayoutVersion === 1 ? {} : {
+        barButtons: [...DEFAULT_BAR_BUTTONS], barButtonsEnd: [...DEFAULT_BAR_BUTTONS_END],
+      }),
+      barLayoutVersion: 1,
       pinnedSide: PINNED_SIDES.some((s) => s.id === v.pinnedSide) ? v.pinnedSide : PREFS_DEFAULT.pinnedSide,
       // fusion (jamais de raccourci manquant si une nouvelle action/outil apparaît après une sauvegarde)
       drawKeys: mergeKeys(DEFAULT_DRAW_KEYS, v.drawKeys),

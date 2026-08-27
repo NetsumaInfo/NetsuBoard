@@ -1,8 +1,9 @@
 // Page « Référence » (onglet) : board mood-board + barre d'outils + gestion de scènes +
 // inspecteur d'item + sélecteur de rushs/plans du projet.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { convexConfigured } from "@/lib/convexEnv";
 import { useApp } from "@/store";
 import { Toolbar } from "./Toolbar";
 import { BoardContextMenu } from "./BoardMenu";
@@ -21,6 +22,12 @@ import { useBoardShortcuts } from "./useBoardShortcuts";
 import { useProjectActions } from "./useProjectActions";
 import { useReferencePush } from "./useReferencePush";
 import { useAutosave } from "./useAutosave";
+
+// LAZY: pulls `convex/react`, which must stay out of the entry chunk of an app that opens without a
+// backend. Renders nothing — it holds the bridge between the board store and the shared document.
+const CollabHost = lazy(() =>
+  import("./CollabHost").then((module) => ({ default: module.CollabHost })),
+);
 import { useUnsavedWarning } from "./useUnsavedWarning";
 import { useDeselectOnBlur } from "./useAppFocus";
 import { isTouchFirst, onPenSeen, probeDevices } from "./tabletInput";
@@ -154,6 +161,11 @@ export function ReferencePanel() {
       vertical ? "flex-row" : "flex-col",
       pinned && "nr-shell-bg bg-[var(--color-bg)]",
     )}>
+      {convexConfigured && (
+        <Suspense fallback={null}>
+          <CollabHost />
+        </Suspense>
+      )}
       {!barAfter && bar}
       <BoardContextMenu
         board={boardRef}

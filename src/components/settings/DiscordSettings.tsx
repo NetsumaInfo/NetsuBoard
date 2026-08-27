@@ -5,7 +5,7 @@
 //
 // La présence ne passe par AUCUN compte : le core parle à une named pipe locale du client Discord.
 // Elle marche donc sans connexion, sans Convex, et hors ligne.
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { nr, type DiscordActivity, type DiscordPrefs, type DiscordState } from "@/lib/bridge";
@@ -24,6 +24,34 @@ function formatElapsed(startSec: number, nowSec: number) {
   const h = Math.floor(s / 3600);
   const rest = `${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
   return h > 0 ? `${h}:${rest}` : rest;
+}
+
+/**
+ * Cliquable quand l'activité porte une url pour cet élément, inerte sinon. L'aperçu se comporte
+ * donc comme la vraie carte : on peut vérifier où mène un clic sans quitter les Paramètres.
+ */
+function Linked({ url, className, children }: {
+  url?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  if (!url) return <div className={className}>{children}</div>;
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <button
+            type="button"
+            className={cn(className, "cursor-pointer text-left hover:text-foreground hover:underline")}
+            onClick={() => void nr.openExternal(url)}
+          />
+        }
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent>{url}</TooltipContent>
+    </Tooltip>
+  );
 }
 
 /**
@@ -56,20 +84,26 @@ function PresenceCard({ activity, app, dim }: {
         {t("discord.preview.heading")}
       </p>
       <div className="mt-3 flex items-center gap-3">
-        {showImg ? (
-          // La vignette RÉELLE : l'asset `nb_logo` s'il est publié, sinon l'icône de l'app — c'est le
-          // repli que Discord fait lui-même. L'icône locale sert si le CDN ne répond pas.
-          <img
-            src={app.imageUrl ?? ""} alt="" referrerPolicy="no-referrer" onError={() => setImgBroken(true)}
-            className="size-[3.25rem] shrink-0 rounded-lg object-cover"
-          />
-        ) : (
-          <BrandIcon className="size-[3.25rem]" />
-        )}
+        <Linked url={activity.assets?.large_url} className="shrink-0">
+          {showImg ? (
+            // La vignette RÉELLE : l'asset `nb_logo` s'il est publié, sinon l'icône de l'app — c'est le
+            // repli que Discord fait lui-même. L'icône locale sert si le CDN ne répond pas.
+            <img
+              src={app.imageUrl ?? ""} alt="" referrerPolicy="no-referrer" onError={() => setImgBroken(true)}
+              className="size-[3.25rem] shrink-0 rounded-lg object-cover"
+            />
+          ) : (
+            <BrandIcon className="size-[3.25rem]" />
+          )}
+        </Linked>
         <div className="min-w-0 leading-tight">
           {/* Le nom vient du portail dev, pas de notre marque : c'est celui-là que voient tes amis. */}
           <p className="truncate text-sm font-semibold">{app?.name || "NetsuBoard"}</p>
-          {activity.details && <p className="truncate text-xs text-muted-foreground">{activity.details}</p>}
+          {activity.details && (
+            <Linked url={activity.details_url} className="block max-w-full truncate text-xs text-muted-foreground">
+              {activity.details}
+            </Linked>
+          )}
           {activity.state && <p className="truncate text-xs text-muted-foreground">{activity.state}</p>}
           {start && (
             <p className="text-xs tabular-nums text-muted-foreground">
@@ -181,6 +215,17 @@ export function DiscordSettings() {
             disabled={off} className={TOGGLE_CLASS}
           >
             {prefs.showElapsed ? t("discord.on") : t("discord.off")}
+          </Toggle>
+        </Row>
+
+        {/* Les liens sont le SEUL moyen d'envoyer quelqu'un quelque part depuis une présence :
+            les boutons de profil, eux, ne s'affichent jamais à leur propriétaire. */}
+        <Row title={t("discord.showLinks")} hint={t("discord.showLinksHint")}>
+          <Toggle
+            size="sm" variant="outline" pressed={prefs.showLinks} onPressedChange={(v) => patch({ showLinks: v })}
+            disabled={off} className={TOGGLE_CLASS}
+          >
+            {prefs.showLinks ? t("discord.on") : t("discord.off")}
           </Toggle>
         </Row>
 

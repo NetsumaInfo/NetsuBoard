@@ -357,7 +357,6 @@
     "artcnn_c4f32": "动漫 — 速度与质量的最佳平衡。",
     "artcnn_c4f16": "动漫 — 速度最快。",
     "artcnn_quality": "动漫 — 降噪并锐化。",
-    "anime4k": "动漫 — 轻量，适合受损素材。",
     "lanczos": "实拍/通用 — 无需 AI，即时处理。"
   },
   "shaderHint": {
@@ -369,8 +368,6 @@
     "artcnn_c4f16": "动画 — 最快。",
     "artcnn_c4f16_ds": "快速 — 降噪并锐化。",
     "artcnn_c4f16_dn": "快速 — 降噪并柔化。",
-    "anime4k_aa_hq": "动画 — 观感最佳。",
-    "anime4k_bb_hq": "动画 — 柔和修复。",
     "rtx_vsr": "实拍与动画 — 固定 2×，NVIDIA。",
     "lanczos": "实拍 — 无 AI，瞬时。"
   },

@@ -11,7 +11,8 @@
     "system": "システム",
     "updates": "アップデート",
     "report": "報告",
-    "about": "情報"
+    "about": "情報",
+    "discord": "Discord"
   },
   "about": {
     "tagline": "無限のリファレンスボード。画像・動画・SNS・メモ・描画をひとつの場所に。",
@@ -34,7 +35,10 @@
     "subtitle": "NetsuBoard に接続している Discord アカウントです。",
     "none": "接続中のアカウントはありません。",
     "discordUser": "Discord ユーザー",
-    "signOut": "サインアウト"
+    "signOut": "サインアウト",
+    "unreachable": "サーバーに接続できません。",
+    "unreachableHint": "接続を確認してください。ファイアウォールや社内ネットワークが NetsuBoard を遮断することがあります。",
+    "retry": "再試行"
   },
   "playback": {
     "title": "プレビューとサムネイル",
@@ -241,7 +245,13 @@
     "history": "バージョン別の新機能",
     "whatsNew": "バージョン {{version}} の新機能",
     "gotIt": "始める",
-    "reportSubject": "v{{version}} への更新に失敗しました"
+    "reportSubject": "v{{version}} への更新に失敗しました",
+    "kind": {
+      "feature": "新機能",
+      "fix": "修正",
+      "improvement": "改善",
+      "performance": "パフォーマンス"
+    }
   },
   "compatibility": {
     "title": "この PC の互換性",
@@ -462,6 +472,8 @@
     "showBoardHint": "クライアント名が漏れる場合があります。",
     "showItems": "要素数",
     "showElapsed": "経過時間",
+    "showLinks": "クリックできるカード",
+    "showLinksHint": "画像は Discord サーバーを、1 行目はリポジトリを開きます。",
     "itemsLine": "{{count}} 個の要素",
     "custom": "カスタムテキスト",
     "customHelp": "自動の行を置き換えます。{board} と {items} が差し替わります。",
@@ -469,6 +481,43 @@
     "state": "2 行目"
   },
   "storage": {
+    "title": "ボードのストレージ",
+    "intro": "アプリは独自のメディアを保管します。貼り付けた画像、リンクから取得したメディア、抽出したフレーム、アップスケール結果です。.netsu プロジェクトを保存するとそれらのバイトは付随フォルダーに収まり、ストレージには複製だけが残ります。この複製は何も失わずに解放できます。",
+    "disk": "{{total}} 中 {{free}} 空き",
+    "scanning": "ストレージを調べています…",
+    "failed": "操作できませんでした",
+    "freedNotice": "{{size}} を解放しました（{{count}} 件）",
+    "movedNotice": "{{size}} を移動しました（{{count}} 件）",
+    "movedPartly": "{{count}} 件を移動、{{failed}} 件が失敗（そのまま残しました）",
+    "archivedNotice": "ボードを「{{name}}」に保存しました。メディアはプロジェクトフォルダーにあります",
+    "settling": "{{count}} 件を書き込み中",
+    "settlingHint": "たった今書かれたファイルは、ボードがまだ配置していないインポートのものかもしれません。次回の点検で判定します。",
+    "safe": {
+      "title": "安全に解放できます",
+      "hint": "1 ファイルずつ確認済みです。これらは作り直せるか、すでにプロジェクトフォルダーの中にあります。",
+      "caches": "表示キャッシュ",
+      "cachesHint": "サムネイルとプロキシ。アプリが必要に応じて作り直します。",
+      "duplicated": "すでにプロジェクトに収められたメディア（{{count}} 件）",
+      "duplicatedHint": "実体はプロジェクトの付随フォルダーにあります（例：「{{project}}」）。",
+      "duplicatedNone": "今のところ複製は見つかりません。",
+      "action": "解放する"
+    },
+    "sole": {
+      "title": "先に安全な場所へ",
+      "hint": "これらのメディアはここにしかありません。削除する手段は用意していません。まず保存すれば、上のセクションに移ります。",
+      "empty": "危険なものはありません。アプリが保持するものはすべて他の場所にもあります。",
+      "untitled": "無題のボード",
+      "sceneCount": "アプリだけが保持するメディア {{count}} 件 · {{size}}",
+      "shared": "共有ボード",
+      "sharedHint": "共有ボードにプロジェクト版はありません。ドキュメントが正であり、メディアは共同編集が管理します。",
+      "openBoard": "開いているボード",
+      "openBoardHint": "このボードは開いています。ツールバーの「名前を付けて保存…」を使ってください。",
+      "archive": "プロジェクトとして保存…",
+      "orphans": "どのボードも求めていないメディア",
+      "orphansHint": "{{count}} 件 · {{size}}。もう表示されませんが、これが唯一のコピーです。",
+      "move": "フォルダーへ移動…"
+    },
+    "footnote": "ご自身のディスクから追加したメディアは対象外です。アプリは自分で書いたファイルにしか触れません。",
     "empty": "キャッシュはまだありません。",
     "emptyHint": "サムネイルとプレビューは素材を見ていくうちに登録されます。",
     "diskFree": "{{total}} 中 {{free}} 空き",
@@ -673,5 +722,78 @@
     "title": "インデックス作成",
     "subtitle": "素材はまずショットに分割され、それからショットごとに解析されます。結果が変わらない設定は最初から有効です。",
     "cutTitle": "ショット分割"
+  },
+  "collab": {
+    "device": {
+      "title": "このデバイス",
+      "subtitle": "公開鍵が共同編集者に対するあなたの身元になります。秘密鍵はこの端末から出ません。",
+      "failed": "識別情報を読み取れません: {{error}}",
+      "ready": "保護されたネイティブ識別情報の準備ができました。",
+      "unavailable": "ネイティブ共同編集を利用できません。",
+      "unnamed": "NetsuBoard 端末",
+      "current": "この端末",
+      "revoke": "この端末を取り消す"
+    },
+    "friends": {
+      "title": "フレンド",
+      "subtitle": "Discord ユーザー名または NetsuBoard ID で追加。",
+      "yourHandle": "自分: @{{handle}}",
+      "placeholder": "Discord ユーザー名 / NetsuBoard ID",
+      "add": "追加",
+      "accept": "承認",
+      "remove": "削除",
+      "awaiting": "保留中",
+      "empty": "フレンドはまだいません。",
+      "status": {
+        "sent": "リクエストを送信しました。",
+        "linked": "フレンドになりました。",
+        "pending": "送信済みです。",
+        "already": "すでにフレンドです。",
+        "self": "これはあなたです。",
+        "unknown": "識別子が正しくありません。",
+        "ambiguous": "複数該当します。Discord ID を使ってください。",
+        "error": "失敗しました。",
+        "invited": "招待を送信しました。"
+      },
+      "notYetJoined": "未登録"
+    },
+    "invites": {
+      "title": "招待",
+      "join": "参加",
+      "sharedBoard": "共有ボード"
+    },
+    "projects": {
+      "title": "共有プロジェクト",
+      "members": "{{count}} 人のメンバー",
+      "rotation": "鍵のローテーション待ち",
+      "add": "シーンに追加",
+      "failed": "このシーンを追加できませんでした",
+      "role": {
+        "owner": "所有者",
+        "editor": "編集可",
+        "viewer": "閲覧のみ"
+      },
+      "unnamed": "{{date}} のボード",
+      "delete": "削除",
+      "leave": "退出",
+      "confirmDelete": "全員から削除しますか？",
+      "confirmLeave": "このボードから退出しますか？",
+      "subtitle": "アカウントで共有されているボード。このマシンにあるものはホーム画面から開けます。",
+      "absent": "このマシンにないボード {{count}} 件"
+    },
+    "activity": {
+      "title": "共同編集のアクティビティ",
+      "changed": "不在中に {{count}} 人がボードを変更しました。シーンを開いて変更を取得してください。",
+      "media": "{{count}} 人が元のメディアを待っています。シーンを開き、転送のためオンラインのままにしてください。",
+      "key": "新しいメンバー {{count}} 人が安全なアクセスを待っています。シーンを開いてプロジェクトキーを渡してください。",
+      "dismiss": "非表示"
+    },
+    "peers": {
+      "title": "接続",
+      "subtitle": "あなたの端末への接続を許可したフレンドの端末です。「テスト」は実際の暗号化接続を開きます。",
+      "test": "テスト",
+      "direct": "直接接続",
+      "relayed": "リレー経由"
+    }
   }
 }

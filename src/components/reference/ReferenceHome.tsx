@@ -1,11 +1,11 @@
 // Écran d'accueil du board (onglet Référence) : zone de dépôt, bouton « Nouveau projet » et grille
 // « Récent » unique (session, fichiers .netsu et scènes internes non converties).
 
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ImageUp, History, Settings2, FilePlus2, FolderOpen, FileCheck2, FileWarning,
-  Star, Trash2, EyeOff, FolderSearch,
+  Star, Trash2, EyeOff, FolderSearch, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
@@ -23,6 +23,14 @@ import {
 import { ProjectThumb, SceneThumb } from "./SceneThumb";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { useBoard } from "./useReferenceBoard";
+import { convexConfigured } from "@/lib/convexEnv";
+
+// Invitations et activité collaborative, en pop-up sur l'accueil. Lazy : la chaîne convex/react ne
+// doit pas entrer dans le bundle de démarrage (cf. src/lib/convexEnv.ts).
+const HomeCollabNotices = lazy(() =>
+  import("./HomeCollabNotices").then((module) => ({ default: module.HomeCollabNotices })),
+);
+import type { CollabCardStatus } from "./HomeCollabNotices";
 
 const RTF = new Intl.RelativeTimeFormat("fr-FR", { numeric: "auto" });
 function relDate(ts: number): string {
@@ -62,10 +70,12 @@ async function revealInternalProject() {
 
 // ---------- Carte de scène ----------
 function SceneCard({
-  scene, isFavorite, onOpen, onToggleFavorite, onHide, onDelete,
+  scene, isFavorite, status, onOpen, onToggleFavorite, onHide, onDelete,
 }: {
   scene: RefSceneMeta;
   isFavorite: boolean;
+  /** Ce que le board partagé attend, en un mot. Absent = rien à signaler. */
+  status?: CollabCardStatus;
   onOpen: () => void;
   onToggleFavorite: () => void;
   onHide: () => void;
@@ -133,6 +143,22 @@ function SceneCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Board PARTAGÉ : sa vignette est vide par construction — le document fait foi, la scène ne
+            garde aucun item. Sans ce repère, l'accueil ne montre qu'une case vide sans nom de cause. */}
+        {/* Une SEULE pastille, qui dit la chose la plus utile : « Partagé » quand tout va bien, et ce
+            que le board attend quand il attend quelque chose. Un board qui va bien ne réclame rien. */}
+        {scene.collaboration && (
+          <div
+            className={cn(
+              "pointer-events-none absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium backdrop-blur-[2px]",
+              status ? "bg-amber-500/90 text-black" : "bg-black/55 text-white/85",
+            )}
+          >
+            <Users className="size-3" />
+            {status ? t(`home.cardStatus.${status}`) : t("home.sharedBoard")}
+          </div>
+        )}
 
         {/* Badge favori permanent (masqué dès que les boutons sont sortis — sinon deux étoiles) */}
         {isFavorite && (
@@ -331,6 +357,9 @@ export function ReferenceHome({
   // L'accueil n'a pas de barre d'outils : sans ce relais, une ouverture de projet ratée (dépôt,
   // carte récente) ne dirait rien du tout — la notice partait dans un store que personne n'affiche.
   const notice = useBoard((s) => s.notice);
+  // Ce que chaque board partagé attend, posé sur SA carte. Rempli par le composant collaboratif —
+  // lui seul est abonné à Convex, et l'accueil ne doit pas tirer cette chaîne au démarrage.
+  const [cardStatus, setCardStatus] = useState<Record<string, CollabCardStatus>>({});
   const [favorites, setFavorites] = useState<Set<string>>(() => loadSet(LS_FAV));
   const [hidden, setHidden] = useState<Set<string>>(() => loadSet(LS_HIDDEN));
 
@@ -427,8 +456,16 @@ export function ReferenceHome({
     if (files.length) onNewFiles(files);
   };
 
+  // Un .netsu converti en board partagé reste sur disque comme export figé : sa carte fichier est
+  // masquée tant que la scène partagée liée existe, sinon deux cartes montrent « le même » board et
+  // la carte fichier — la plus reconnaissable — est la mauvaise à éditer. Si la scène partagée
+  // disparaît (projet quitté/supprimé), la carte fichier revient.
+  const collabSceneIds = new Set(recent.filter((s) => s.collaboration).map((s) => s.id));
+  const visibleProjects = projects.filter(
+    (entry) => !(entry.sourceSceneId && collabSceneIds.has(entry.sourceSceneId)),
+  );
   const projectSceneIds = new Set(
-    projects.map((entry) => entry.sourceSceneId).filter((id): id is string => !!id),
+    visibleProjects.map((entry) => entry.sourceSceneId).filter((id): id is string => !!id),
   );
   const visible = recent.filter((s) => !hidden.has(s.id) && !projectSceneIds.has(s.id));
 
@@ -532,8 +569,15 @@ export function ReferenceHome({
         </div>
       </div>
 
+      {/* Invitations reçues + activité : accepter un partage se fait ICI, pas dans les Paramètres. */}
+      {convexConfigured && (
+        <Suspense fallback={null}>
+          <HomeCollabNotices onOpenScene={onOpen} onCardStatus={setCardStatus} />
+        </Suspense>
+      )}
+
       {/* Section Récent */}
-      {(hasSession || projects.length > 0 || visible.length > 0) && (
+      {(hasSession || visibleProjects.length > 0 || visible.length > 0) && (
         <div className="border-t border-border bg-card/40 px-8 py-6">
           <h2 className="mb-4 text-sm font-semibold text-foreground">{t("home.recent")}</h2>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4">
@@ -556,7 +600,7 @@ export function ReferenceHome({
             )}
 
             {/* Projets .netsu récents — ouverts comme documents, jamais réimportés en scènes. */}
-            {onOpenRecent && projects.map((entry) => (
+            {onOpenRecent && visibleProjects.map((entry) => (
               <ProjectCard
                 key={entry.path}
                 entry={entry}
@@ -574,6 +618,7 @@ export function ReferenceHome({
                 key={s.id}
                 scene={s}
                 isFavorite={favorites.has(s.id)}
+                status={cardStatus[s.id]}
                 onOpen={() => onOpen(s.id)}
                 onToggleFavorite={() => toggleFavorite(s.id)}
                 onHide={() => hideScene(s.id)}

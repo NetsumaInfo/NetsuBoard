@@ -11,6 +11,7 @@
     "flipV": "垂直翻转",
     "crop": "裁剪",
     "openLink": "打开链接",
+    "reloadMedia": "重新加载媒体",
     "download": "下载",
     "restoreDownload": "恢复已下载的文件",
     "zoomIn": "放大",
@@ -133,6 +134,10 @@
     "factor": "倍数",
     "denoise": "降噪",
     "downloadOnline": "下载在线视频",
+    "copyLocal": "将本地媒体复制到项目",
+    "copyLocalOn": "复制",
+    "copyLocalOff": "引用",
+    "copyLocalMax": "视频上限 (MB)",
     "embedSwitch": "切换回播放器",
     "embedSwitchKeep": "保留文件",
     "embedSwitchDrop": "删除文件",
@@ -238,7 +243,12 @@
     "pinnedAllPlaced": "全部已放置。",
     "pinnedBarHint": "拖动放置或移动，点击移除。",
     "pinnedRemove": "从工具栏移除 {{label}}",
-    "barButtons": "工具栏"
+    "barButtons": "工具栏",
+    "assetSweep": "未使用的媒体",
+    "assetSweepHint": "删除没有任何场景引用的文件。看板中的内容不受影响。",
+    "assetSweepAction": "清理",
+    "assetSweepDone": "已删除 {{count}} 个文件，释放 {{mb}} MB。",
+    "assetSweepFailed": "清理失败。"
   },
   "inspector": {
     "ytPlayer": "YouTube 播放器",
@@ -320,7 +330,8 @@
     "kindItem": "画板项目",
     "chooseFile": "选择文件…",
     "targetItem": "目标项目",
-    "remove": "移除链接"
+    "remove": "移除链接",
+    "sharedFile": "该文件属于共享看板：在本机磁盘上没有位置。"
   },
   "font": {
     "label": "字体",
@@ -494,6 +505,7 @@
     "hideFromList": "从列表隐藏",
     "deleteScene": "删除场景",
     "modified": "修改于 {{date}}",
+    "sharedBoard": "已共享",
     "dropMedia": "拖放媒体",
     "dropHint": "支持图片和视频",
     "or": "或",
@@ -510,14 +522,31 @@
     "deleteProject": "彻底删除",
     "deleteProjectTitle": "删除“{{name}}”？",
     "deleteProjectWarning": ".netsu 文件及其 .medias 文件夹将被永久删除。外部源媒体不会被删除。",
-    "projectMissing": "找不到文件"
+    "projectMissing": "找不到文件",
+    "invites": {
+      "body": "邀请你加入共享看板",
+      "join": "加入",
+      "decline": "拒绝",
+      "later": "稍后",
+      "failed": "无法加入此看板"
+    },
+    "cardStatus": {
+      "key": "待发密钥",
+      "media": "待发媒体",
+      "changed": "有改动"
+    }
   },
   "item": {
     "doubleClickEdit": "双击编辑…",
     "frameDefault": "边框",
     "missingMedia": "媒体缺失",
+    "mediaWaiting": "正在等待拥有此媒体的设备",
+    "mediaRemoved": "媒体已从项目中移除",
+    "mediaSize": "{{size}}",
+    "retryMedia": "重试",
     "notBundled": "{{size}} · 未打包",
     "relocate": "重新定位",
+    "reloadMedia": "重新下载",
     "downloading": "下载中…",
     "mediaFallback": "媒体",
     "interactiveActive": "交互中 — 点击别处可移动",
@@ -734,6 +763,8 @@
     "reading": "正在读取 {{count}} 个文件…",
     "importing": "正在导入 {{name}}…",
     "done": "已导入 {{count}} 个媒体",
+    "copyFailed": "无法复制“{{name}}”：关闭应用后该媒体将丢失",
+    "copyFailedBatch": "{{count}} 个媒体复制失败（包括“{{name}}”）：关闭应用后这些媒体将丢失",
     "folderTruncated": "文件夹过大：已导入前 {{count}} 个媒体",
     "fetching": "正在获取媒体…",
     "linkDone": "已导入媒体",
@@ -744,5 +775,76 @@
     "off": "收回鼠标",
     "warning": "点击和滚轮将传给下方应用，窗口保持在最前。要收回：重新让它获得焦点（Alt+Tab）。",
     "dontAskAgain": "不再询问"
+  },
+  "collab": {
+    "menu": "协作",
+    "title": "协作",
+    "subtitle": "选择要邀请到此项目的好友。",
+    "signedOut": "请在设置中连接你的 Discord 账号。",
+    "noFriends": "请先在“设置 › 账户”中添加好友。",
+    "invited": "已发送 {{n}} 条邀请。",
+    "notice": "看板将变为协作模式。受邀者会在主屏幕上收到邀请。",
+    "close": "关闭",
+    "create": "创建并邀请",
+    "invite": "邀请",
+    "fileBacked": "此看板来自 .netsu 文件。协作项目需保存在场景库中。",
+    "saveAsBlocked": "协作项目仍由共享场景管理。请使用导出来创建本地副本。",
+    "role": {
+      "owner": "所有者",
+      "editor": "可编辑",
+      "viewer": "仅查看"
+    },
+    "rotationPending": "撤销已记录。新发布会等待所有者设备完成密钥轮换。",
+    "staleHead": {
+      "title": "过期的恢复分支",
+      "warning": "某台设备已超过 30 天未合并此分支。",
+      "detail": "{{days}} 天 · 已加密 {{size}}",
+      "discard": "丢弃",
+      "confirmTitle": "丢弃此分支？",
+      "confirmWarning": "仅由此设备发布的更改将永久丢失。只有在该设备无法再重新连接时才继续。"
+    },
+    "status": {
+      "pending": "等待同步",
+      "rotation": "等待密钥轮换"
+    },
+    "members": {
+      "remove": "从项目移除",
+      "pending": "邀请待处理",
+      "cancelInvite": "取消邀请"
+    },
+    "lifecycle": {
+      "leave": "退出项目",
+      "delete": "删除项目",
+      "leaveTitle": "退出此项目？",
+      "deleteTitle": "删除此项目？",
+      "leaveWarning": "此设备已收到的内容会保留，但你将无法再同步此项目。",
+      "deleteWarning": "所有成员的连接数据、邀请和加密恢复副本都会被删除，且无法撤销。"
+    },
+    "noScene": "请先将此看板保存到场景库。",
+    "willAdopt": "此看板将复制到场景库。.netsu 文件仍保留在你的磁盘上。",
+    "failed": "共享失败。",
+    "sync": {
+      "queued": "有改动等待发送。一旦有设备可达，将自动发送。",
+      "upToDate": "一切已同步。",
+      "peers": "{{count}} 台可达设备"
+    },
+    "mediaMissing": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。已在看板上标记 — 通过其卡片找回（文件夹被移动？），然后重新共享。",
+    "panel": {
+      "title": "共享状态",
+      "online": "{{count}} 人在线",
+      "alone": "暂时没有其他人。",
+      "hereNow": "在线",
+      "neverSeen": "尚未连接",
+      "seenMinutes": "{{count}} 分钟前见到",
+      "seenHours": "{{count}} 小时前见到",
+      "seenDays": "{{count}} 天前见到",
+      "invited": "邀请待回应",
+      "unknownMember": "成员",
+      "queued": "有改动等待发送。一旦有设备可达，将自动发送。",
+      "upToDate": "一切已同步。",
+      "rotation": "密钥轮换待处理：新的发布正在等待所有者的设备。",
+      "waitingKey": "{{count}} 位成员在等待密钥。请保持在线以便传递。",
+      "nobodyReachable": "目前无人可达：你的改动会在对方回来后发送。"
+    }
   }
 }

@@ -14,7 +14,7 @@ AGPL-3.0-only covers the original code in this repository. It does **not** chang
 
 - npm and Rust dependencies keep their own licences;
 - ffmpeg/ffprobe, `yt-dlp`, WebView2 and any other software installed or used on the machine are **not** relicensed by NetsuBoard;
-- the GLSL shaders (ArtCNN, Anime4K) and anything vendored under `vendor/` carry their own licences and restrictions;
+- the GLSL shaders (ArtCNN) and anything vendored under `vendor/` carry their own licences and restrictions;
 - licence files already shipped next to bundled resources must stay distributed with those resources.
 
 ## Native player runtime (mpv, FFmpeg)
@@ -39,7 +39,7 @@ Before publishing an installer or an image containing a new dependency: check it
 ## Rules that keep the project redistributable
 
 - **Never copy GPL or AGPL code into the tree**, not even translated into another language: it would make the whole app a derivative work of it. Studying a GPL project's UX or approach and reimplementing it is fine; copying its source is not.
-- **The GLSL shaders ship with the app**, so their licences ship with it too. ArtCNN and Anime4K are permissive (MIT), which is what makes bundling them in the installer possible; a shader under a copyleft or non-commercial licence would not be, whatever its quality.
+- **The GLSL shaders ship with the app**, so their licences ship with it too. ArtCNN is permissive (MIT), which is what makes bundling it in the installer possible; a shader under a copyleft or non-commercial licence would not be, whatever its quality.
 - **Verify a licence at its source** (the repository, the release page) before adding a shader or a dependency. Summaries and third-party mirrors have been wrong more than once, in both directions.
 - An asset re-uploaded by a third party **without a declared licence** is not usable, whatever the original's licence.
 

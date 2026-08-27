@@ -1,11 +1,16 @@
 # Convex, Discord sign-in and the bug relay — provisioning
 
-Everything here is **optional**. With no `.env.local`, NetsuBoard boots straight to the board: no sign-in screen, and bug reports fall back to the direct webhook or to a local file. Follow this only to turn the account and the relay on.
+Everything here is **optional for a solo board and required for collaboration**. With no `.env.local`,
+NetsuBoard boots straight to a local board: no sign-in, invitations, shared recovery, or activity inbox;
+bug reports fall back to the direct webhook or a local file.
 
 Design rules this setup exists to keep:
 
 - **No secret ever ships in the application.** The Discord client secret and the Discord webhook live on the Convex deployment. Only two public URLs are baked into the renderer.
 - **NetsuBoard and NetsuRush share nothing.** Different Convex project, different Discord application, different scheme (`netsuboard://` vs `netsurush://`), different storage prefix. Sharing any of them means a login started in one app can complete in the other.
+- **Convex receives encrypted recovery, not original media.** Membership, device proofs, wrapped keys,
+  heads, checkpoints, and consolidated notices are expected. Plaintext board state, local paths, and
+  image/video originals are not.
 
 ## 0. Check `.env.local` first — this repository shipped with the wrong one
 
@@ -80,6 +85,12 @@ VITE_CONVEX_URL=https://<deployment>.convex.cloud
 VITE_CONVEX_SITE_URL=https://<deployment>.convex.site
 ```
 
+`src-tauri/build.rs` embeds the exact `VITE_CONVEX_URL` origin into the native binary from the build
+environment or `.env.local`/`.env.production`. Rust refuses a different runtime hint, so changing the
+deployment requires rebuilding the application. When no URL is embedded, only a loopback Convex
+deployment is accepted by debug builds; release collaboration stays disabled instead of trusting a
+renderer-supplied host.
+
 They are **baked at build time**. Changing a deployment means rebuilding the installer — which is exactly why the webhook is *not* one of them.
 
 ## 5. Everyday use
@@ -94,6 +105,12 @@ npx convex deploy
 
 Then build the installer. The `netsuboard://` scheme is registered by the NSIS installer in release; in dev the Rust shell registers it at startup (`register_all()` in `src-tauri/src/lib.rs`).
 
+Before shipping a collaboration schema change, verify that production contains the indexes in
+`convex/schema.ts`, especially project membership, device, head, upload-reservation, inbox, invitation
+expiry, and media-request expiry indexes. Run `npx convex deploy` before distributing a renderer/native
+build that calls new functions. A new client against an old deployment fails closed but cannot recover
+or publish shared work.
+
 ## What the sign-in flow actually does
 
 1. `useDiscordLogin` asks Better Auth for the authorization URL and opens it in the **system browser** (never the webview — the app is never left).
@@ -103,8 +120,34 @@ Then build the installer. The `netsuboard://` scheme is registered by the NSIS i
 
 If the custom scheme is ever blocked on a machine, the fallback is a loopback callback (`http://127.0.0.1:<port>`) — not implemented, but nothing in the flow prevents it.
 
-## Free-plan quotas — what actually runs out
+## Free-plan quotas and operational checks
 
-Convex quotas are counted **per team**, not per project: every project on the account shares one pool. For this workload the function-call budget (1 M/month) is unreachable; the ceiling that matters is **egress, 1 GB/month**, because bug reports carry logs and screenshots. At ~2 MB per report that is roughly 500 reports a month.
+Convex measures resource usage **per team**, not per project. As of August 2026, its published Free
+limits include 1,000,000 function calls/month, 0.5 GiB database storage, 1 GiB database I/O/month,
+1 GiB file storage, and 1 GiB data egress/month. Check the current official pricing and limits before
+release; these values are not an application contract.
 
-The Free plan is a **hard cap** — past it, writes fail. If reports must never be silently lost, use the Starter plan, where the same allowance continues pay-as-you-go (~$0.13 per extra GB of egress).
+Collaboration is shaped to keep the free tier viable:
+
+- live edits and original media use iroh, not Convex;
+- one head/device, one checkpoint/project, one inbox row/recipient/project, and one media-request
+  row/requester/project bound row counts;
+- publication is debounced, transient retries back off, normal publication uses one roster query,
+  and P2P roster checks are cached for thirty seconds;
+- encrypted payloads move to file storage only above the inline threshold, and retained uploads carry
+  an authenticated ownership receipt;
+- lists and account/project/member/device counts are indexed and bounded.
+
+The remaining quota drivers are encrypted recovery payload downloads, database I/O from roster and
+recovery reads, and bug-report attachments. Original board videos must never appear in Convex storage.
+On Free, sustained limit overruns may make function calls fail. This is why a locally acknowledged edit
+stays in SQLite and the exact encrypted outbox until Convex confirms it.
+
+During beta, inspect the dashboard after every multi-device test:
+
+1. function calls and database I/O per active editing hour;
+2. checkpoint/head file bytes and file-download egress;
+3. one current head per proved device, no retained `projectPayloadUploads` rows, and at most 200
+   `projectAuditEvents` rows per project;
+4. one inbox row per recipient/project and coalesced media requests;
+5. storage growth after project deletion, member removal, and failed upload tests.

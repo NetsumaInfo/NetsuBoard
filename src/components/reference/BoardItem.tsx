@@ -3,14 +3,15 @@
 // Gestes via usePointerTransform (capture sur le wrapper). Multi-sélection (Shift) → déplacement de
 // groupe au relâchement. Notes texte éditables (double-clic). Miroir (flipH/flipV) sur le contenu.
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2, FileQuestion, FolderSearch, Loader2, ImageOff, Link2, Unlink2 } from "lucide-react";
+import { Trash2, FileQuestion, FolderSearch, Loader2, ImageOff, Link2, Unlink2, RefreshCw } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { nr, nextProxyToken } from "@/lib/bridge";
-import { type BoardItem as Item, type BoardLink, parseVideoEmbed, EMBED_PLAYER_PROVIDERS, displaySrc, isRemoteRef } from "./referenceShared";
-import { recoverMedia, relocateMissingMedia } from "./boardMediaActions";
+import i18n from "@/i18n";
+import { type BoardItem as Item, type BoardLink, parseVideoEmbed, EMBED_PLAYER_PROVIDERS, displaySrc, isCollabRef, isCoreFileRef } from "./referenceShared";
+import { recoverMediaOnce, reloadMedia, reloadableMedia, relocateMissingMedia } from "./boardMediaActions";
 import { usePointerTransform, type ResizeHandle } from "./usePointerTransform";
 import { enclosingFrame, frameContentIds, framable } from "./boardFrames";
 import { frameTitleFactor, noteTextFactor } from "./boardTextZoom";
@@ -25,16 +26,85 @@ import { fitNatSize } from "./boardNatFit";
 import { posterTime, stillSized, useVideoStill } from "./boardVideoLod";
 import { useOnScreen } from "./useOnScreen";
 
-// Récupération auto d'un média cassé/noir (lien distant mort ou média extrait d'un post) : une seule
-// tentative par item (anti-boucle), uniquement si un lien d'origine existe (sourceUrl ou ref http).
-const recoverAttempted = new Set<string>();
+// Récupération auto d'un média cassé/noir (lien distant mort ou média extrait d'un post), seulement
+// si un lien d'origine existe (sourceUrl ou ref http). Le compte des tentatives vit avec la
+// récupération elle-même (boardMediaActions) : un clic de l'utilisateur doit pouvoir le rouvrir.
 function recoverableLink(it: Item): boolean {
+  // Un média de board PARTAGÉ n'a pas à être retéléchargé depuis son lien d'origine : ses octets
+  // appartiennent au document, et les redemander à yt-dlp remplacerait le média commun par une
+  // copie personnelle — ou, quand la page ne rend aucun média, poserait l'adresse de la PAGE dans
+  // le lecteur. Sa reprise à lui est la résolution collaborative (`nb-collab-retry-media`).
+  if (isCollabRef(it.ref)) return false;
   return !!(it.sourceUrl || /^https?:/i.test(it.ref));
 }
 function triggerRecover(it: Item) {
-  if (!recoverableLink(it) || recoverAttempted.has(it.id)) return;
-  recoverAttempted.add(it.id);
-  void recoverMedia(it.id);
+  if (!recoverableLink(it)) return;
+  recoverMediaOnce(it.id);
+}
+
+// Délai de la seconde tentative d'un média local. Assez long pour couvrir un service qui finit de
+// démarrer, assez court pour que la case se répare avant qu'on ait le temps de la croire perdue.
+const LOCAL_RETRY_MS = 700;
+
+/**
+ * Un fichier LOCAL qui ne se charge pas n'est pas un fichier perdu.
+ *
+ * L'adresse d'affichage d'un item est calculée UNE fois, à l'ouverture du board, et gelée pour la
+ * session. Si à cet instant la voie de service n'est pas encore établie — port du service pas encore
+ * annoncé, protocole asset pas encore sondé, fichier tenu une seconde par l'antivirus — l'adresse
+ * part morte et le reste. Et comme la récupération en ligne exige un lien d'origine, un média venu
+ * du disque n'avait AUCUNE issue : la case affichait une icône d'image cassée, muette, pour toute la
+ * session, alors que le fichier était intact à côté. C'est ce que voit l'utilisateur qui rouvre son
+ * projet après une mise à jour.
+ *
+ * Deux temps donc : on remonte l'élément une fois (même adresse, requête neuve — ça suffit dès que
+ * le service a fini de démarrer) ; si ça échoue encore, on l'avoue en marquant l'item manquant. Une
+ * case qui dit ce qui lui manque et propose de le retrouver vaut mieux qu'une icône cassée, et un
+ * item marqué manquant redevient éligible à la récupération par son lien d'origine.
+ */
+function useLocalMediaRetry(item: Item) {
+  const [attempt, setAttempt] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  // Source remplacée (relocalisation, récupération) : le compteur repart, sinon un second échec sur
+  // un fichier fraîchement choisi serait déclaré manquant sans avoir été retenté.
+  useEffect(() => { setAttempt(0); }, [item.ref]);
+
+  // true = échec pris en charge ici ; false = à la voie de récupération en ligne de jouer.
+  //
+  // `absent` distingue les deux échecs, qui ne disent pas la même chose. Une source qui ne RÉPOND pas
+  // peut avoir disparu — on finit par le déclarer. Une source qui répond mais ne rend aucune image a
+  // été LUE : le fichier est là, c'est son codec que le webview ne décode pas. L'annoncer manquant
+  // enverrait l'utilisateur chercher un fichier qui n'a jamais bougé.
+  const onFailure = (absent = true): boolean => {
+    if (!isCoreFileRef(item.ref)) return false;
+    if (attempt === 0) {
+      timer.current = setTimeout(() => {
+        // L'adresse est RECALCULÉE depuis la `ref`, et c'est tout l'intérêt de la reprise. Elle avait
+        // été figée à l'ouverture du board ; si la voie de service n'était pas encore établie à cet
+        // instant, la même `ref` rend maintenant une AUTRE adresse, valide. Redemander l'ancienne
+        // n'aurait rien réparé — c'est elle qui était morte, pas le fichier.
+        const store = useBoard.getState();
+        const live = store.items.find((it) => it.id === item.id);
+        if (live) {
+          const fresh = displaySrc(live.kind, live.ref);
+          // Inchangée, elle est simplement redemandée par le remontage : ça suffit à un échec
+          // passager (fichier tenu une seconde par l'antivirus, service en cours de démarrage).
+          if (fresh && fresh !== live.src) store.patchItem(live.id, { src: fresh }, false);
+        }
+        setAttempt(1);
+      }, LOCAL_RETRY_MS);
+      return true;
+    }
+    if (absent && !item.missing) {
+      useBoard.getState().patchItem(item.id, {
+        missing: { name: item.title || item.ref.replace(/^.*[\\/]/, ""), size: 0, kind: item.kind },
+      }, false);
+    }
+    return false;
+  };
+
+  return { attempt, onFailure };
 }
 
 // Séquence d'images : taille du bloc de préchargement (frames gardées décodées en avance).
@@ -61,6 +131,7 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const patchItem = useBoard((s) => s.patchItem);
+  const retry = useLocalMediaRetry(item);
   const mediaSuspended = useBoard((s) => s.frozen || (s.navigating && s.prefs.pauseMediaWhileNavigating));
   // Hors champ = pause. La zone de culling couvre ~6× l'aire du viewport : sans ce test, jusqu'à
   // MEDIA_BUDGET vidéos décodaient en marge pour personne. currentTime survit — la reprise est nette.
@@ -76,7 +147,9 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   // mid-file échoue sur /stream copy → on voyait le DÉBUT du fichier, pas le plan) → on lit un PROXY
   // mp4 court de la portée exacte, comme l'aperçu du MediaPicker. Régénéré à chaque montage (cache
   // serveur → quasi instantané) ; survit donc au reload sans persister d'URL tmp.
-  const localRef = !isRemoteRef(item.ref);
+  // Fichier que le CORE peut ouvrir : un média de board partagé est servi par la coquille, le core
+  // ne sait ni le couper en proxy ni en tirer une affiche.
+  const localRef = isCoreFileRef(item.ref);
   const useProxy = !streamSrc && trimOut != null && localRef;
   const [proxUrl, setProxUrl] = useState<string | null>(null);
 
@@ -166,6 +239,64 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   };
   useEffect(seekIn, [trimIn, useProxy]);
 
+  // `onLoadedMetadata` n'est PAS un état : c'est un événement, et il est perdu s'il se produit avant
+  // que React n'ait attaché le handler — ce qui arrive dès que la source répond vite ou qu'elle est
+  // déjà en cache, et à chaque remontage de l'élément. L'appelant qui attend cette annonce (le voile
+  // « préparation » d'une carte YouTube) restait alors affiché pour toujours, PAR-DESSUS une vidéo
+  // qui jouait. On lit donc aussi l'ÉTAT de l'élément : des dimensions connues valent annonce.
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const announce = () => {
+      if (v.videoWidth) onReady?.();
+      // La DURÉE arrive par le même chemin, et c'est elle qui borne le sélecteur de portée : ratée,
+      // le champ « fin » restait vide et aucun point de sortie ne pouvait être posé — le symptôme
+      // se lisait comme « le in/out ne marche pas » alors que rien n'avait jamais pu être réglé.
+      const duration = v.duration;
+      if (!useProxy && duration && isFinite(duration) && Math.abs(duration - (item.dur ?? 0)) > 0.5) {
+        patchItem(item.id, { dur: duration }, false);
+      }
+    };
+    announce(); // déjà chargée : l'événement est passé avant nous
+    // Quatre annonces pour un seul fait : selon la source, les dimensions et la durée sont connues
+    // dès les métadonnées, à la première image décodée, ou seulement quand la lecture démarre.
+    const events = ["loadedmetadata", "loadeddata", "canplay", "playing"] as const;
+    for (const event of events) v.addEventListener(event, announce);
+    return () => {
+      for (const event of events) v.removeEventListener(event, announce);
+    };
+  }, [streamSrc, proxUrl, item.src, item.id, item.dur, useProxy, onReady, patchItem]);
+
+  // Rebouclage sur la borne de sortie, surveillé À CHAQUE FRAME DÉCODÉE. `timeupdate` n'est émis
+  // que ~4 fois par seconde : la lecture dépassait la borne de jusqu'à 250 ms avant le retour en
+  // arrière — assez, sur une borne posée près de la fin, pour atteindre la fin du média, vider le
+  // framebuffer et peindre un NOIR entre deux tours. C'est le clignotement visible sur les clips
+  // courts (GIF réencodés, extraits de quelques secondes), et il rendait aussi la sortie imprécise.
+  // `requestVideoFrameCallback` ramène ça à la frame près. Repli `timeupdate` conservé : l'API
+  // manque encore sur certains moteurs, et un rebouclage tardif vaut mieux qu'aucun.
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || useProxy || playMode !== "loop" || trimOut == null || !playing) return;
+    type FrameHost = HTMLVideoElement & {
+      requestVideoFrameCallback?: (cb: () => void) => number;
+      cancelVideoFrameCallback?: (handle: number) => void;
+    };
+    const host = v as FrameHost;
+    if (!host.requestVideoFrameCallback) return;
+    let handle = 0;
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      if (v.currentTime >= trimOut) v.currentTime = trimIn;
+      handle = host.requestVideoFrameCallback!(tick);
+    };
+    handle = host.requestVideoFrameCallback(tick);
+    return () => {
+      cancelled = true;
+      host.cancelVideoFrameCallback?.(handle);
+    };
+  }, [useProxy, playMode, trimIn, trimOut, playing, proxUrl]);
+
   const src = streamSrc ?? (useProxy ? proxUrl : item.src);
 
   // Sous-titres JAMAIS imposés : ni une piste incrustée dans le conteneur, ni celle que la WebView
@@ -186,6 +317,7 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   const poster = !streamSrc && localRef ? knownThumb(item.ref, posterTime(item)) ?? undefined : undefined;
   const video = (
     <video
+      key={retry.attempt}
       ref={ref}
       src={src ?? undefined}
       poster={poster}
@@ -198,11 +330,17 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
       playsInline
       className={item.crop ? "block select-none" : "block h-full w-full select-none object-cover"}
       style={item.crop ? cropStyle(item.crop) : undefined}
-      onError={() => { if (onStreamError) onStreamError(); else triggerRecover(item); }}
+      onError={() => {
+        if (onStreamError) onStreamError();
+        else if (!retry.onFailure()) triggerRecover(item);
+      }}
       onLoadedMetadata={(e) => {
         const d = e.currentTarget.duration;
         // chargé mais noir → récupère (ou, pour un flux relayé, repli sur le lecteur intégré)
-        if (!useProxy && !e.currentTarget.videoWidth) { if (onStreamError) onStreamError(); else triggerRecover(item); }
+        if (!useProxy && !e.currentTarget.videoWidth) {
+          if (onStreamError) onStreamError();
+          else if (!retry.onFailure(false)) triggerRecover(item);
+        }
         // Decoded dimensions = the true ratio of the source, whatever the ingestion probe managed to
         // measure: the item is reshaped around them so a video never plays cropped inside a box that
         // does not match it. A proxy is a re-encoded excerpt — its dimensions are the proxy's.
@@ -252,6 +390,7 @@ function SequenceContent({ item }: { item: Item }) {
   const commitSeqFrame = useBoard((s) => s.commitSeqFrame);
   const patchItem = useBoard((s) => s.patchItem);
   const imgRef = useRef<HTMLImageElement>(null);
+  const retry = useLocalMediaRetry(item);
   // Hors champ = pause : la boucle rAF s'arrête, plus d'échange d'<img> ni d'écriture au store pour
   // une séquence que personne ne voit. La position vivante reste dans seqFrames.
   const onScreen = useOnScreen(imgRef);
@@ -282,7 +421,11 @@ function SequenceContent({ item }: { item: Item }) {
   useEffect(() => {
     const from = block * PRELOAD_BLOCK;
     const imgs = frames.slice(from, from + PRELOAD_BLOCK * 2).filter(Boolean)
-      .map((f) => { const im = new Image(); im.src = displaySrc("image", f); return im; });
+      // Même garde qu'au rendu : une frame sans adresse ne monte aucun élément — un `src` vide fait
+      // recharger la page entière au navigateur, et il y en a deux blocs par changement.
+      .map((f) => displaySrc("image", f))
+      .filter(Boolean)
+      .map((src) => { const im = new Image(); im.src = src; return im; });
     return () => { imgs.forEach((im) => { im.src = ""; }); };
   }, [frames, block]);
 
@@ -349,12 +492,27 @@ function SequenceContent({ item }: { item: Item }) {
       </div>
     );
   }
+  // `src=""` fait recharger la PAGE ENTIÈRE au navigateur (avertissement React explicite) : une
+  // frame sans adresse ne monte pas d'élément du tout.
+  const frameSrc = displaySrc("image", frames[cur]);
+  if (!frameSrc) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-muted/40 text-muted-foreground">
+        <ImageOff className="size-8" strokeWidth={1.5} />
+      </div>
+    );
+  }
   const img = (
     <img
+      key={retry.attempt}
       ref={imgRef}
-      src={displaySrc("image", frames[cur])}
+      src={frameSrc}
       alt={item.title ?? ""}
       draggable={false}
+      // Une frame qui ne se charge pas est retentée comme n'importe quel média local, mais ne
+      // déclare JAMAIS la séquence manquante : sur des centaines de frames, une seule illisible
+      // condamnerait tout le reste, qui s'affiche parfaitement.
+      onError={() => { if (!retry.onFailure(false)) triggerRecover(item); }}
       className={item.crop ? "block select-none" : "block h-full w-full select-none object-cover"}
       style={item.crop ? cropStyle(item.crop) : undefined}
     />
@@ -363,9 +521,17 @@ function SequenceContent({ item }: { item: Item }) {
 }
 
 // Ouvre le lien d'une note : URL (navigateur), fichier (app système), ou item du board (caméra).
+// Un lien FICHIER d'un board partagé désigne un média du document, pas un chemin : rien à ouvrir
+// dans l'explorateur. Le dire vaut mieux qu'un clic sans effet ni message.
 function openNoteLink(link: BoardLink) {
   if (link.kind === "url") void nr.openExternal(link.target);
-  else if (link.kind === "file") void nr.openPath(link.target);
+  else if (link.kind === "file") {
+    if (isCollabRef(link.target)) {
+      useBoard.getState().setNotice({ kind: "error", text: i18n.t("reference:link.sharedFile") });
+      return;
+    }
+    void nr.openPath(link.target);
+  }
   else useBoard.getState().requestFocus(link.target);
 }
 
@@ -585,22 +751,59 @@ function MissingContent({ item }: { item: Item }) {
     if (!p) return;
     patchItem(item.id, { ref: p, src: displaySrc(item.kind, p), missing: undefined });
   };
+  const collaborativeReason = item.missing?.reason;
+  const retry = () => window.dispatchEvent(new Event("nb-collab-retry-media"));
+  // Un média venu d'internet ne se retrouve pas dans un sélecteur de fichiers : il se RETÉLÉCHARGE.
+  // Sans cette action, la seule issue offerte à un trou de synchronisation ou à un asset repris par
+  // le ménage était d'aller chercher à la main un fichier qui n'a jamais existé sur ce disque.
+  const [reloading, setReloading] = useState(false);
+  const canReload = !collaborativeReason && reloadableMedia(item);
+  const reload = async () => {
+    if (reloading) return;
+    setReloading(true);
+    try { await reloadMedia(item.id); } finally { setReloading(false); }
+  };
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted/30 p-3 text-center">
       <FileQuestion className="size-7 shrink-0 text-muted-foreground" strokeWidth={1.5} />
-      <p className="line-clamp-2 text-xs font-medium text-foreground break-all">{item.missing?.name || t("item.missingMedia")}</p>
-      {!!item.missing?.size && <p className="text-[10px] text-muted-foreground">{t("item.notBundled", { size: humanSize(item.missing.size) })}</p>}
+      <p className="line-clamp-2 text-xs font-medium text-foreground break-all">
+        {collaborativeReason === "waiting"
+          ? t("item.mediaWaiting")
+          : collaborativeReason === "removed"
+            ? t("item.mediaRemoved")
+            : item.missing?.name || t("item.missingMedia")}
+      </p>
+      {!!item.missing?.size && <p className="text-[10px] text-muted-foreground">{t("item.mediaSize", { size: humanSize(item.missing.size) })}</p>}
+      {/* Le lien d'origine passe DEVANT le sélecteur de fichiers : quand il existe, c'est la voie qui
+          rend le média sans rien demander à l'utilisateur. */}
+      {canReload && (
+        <button
+          type="button"
+          disabled={reloading}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => void reload()}
+          className="mt-1 inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+        >
+          {reloading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+          {t("item.reloadMedia")}
+        </button>
+      )}
       <button
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
-        onClick={() => void relocate()}
-        className="mt-1 inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
+        onClick={() => collaborativeReason === "waiting" ? retry() : void relocate()}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded px-2 py-1 text-[11px] font-medium",
+          canReload
+            ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+            : "mt-1 bg-primary text-primary-foreground hover:bg-primary/90",
+        )}
       >
-        <FolderSearch className="size-3.5" /> {t("item.relocate")}
+        <FolderSearch className="size-3.5" /> {t(collaborativeReason === "waiting" ? "item.retryMedia" : "item.relocate")}
       </button>
       {/* Un board reçu arrive rarement avec UN seul trou : proposer le dossier entier depuis la
           première tuile évite de répéter le même geste autant de fois qu'il y a de rushs. */}
-      {missingCount > 1 && (
+      {!collaborativeReason && missingCount > 1 && (
         <button
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
@@ -635,16 +838,20 @@ function LoadingContent({ item }: { item: Item }) {
 // arrête l'animation. Dessiner une image d'une autre origine (Giphy) teinte le canvas — sans
 // importance, on l'affiche, on n'en relit jamais les pixels.
 const ANIMATED_IMAGE_RE = /\.(gif|webp|avif|apng)(?:$|[?#])/i;
+// Un média de board partagé est adressé par empreinte : son URL ne porte aucune extension, et le
+// type déclaré par le document est alors la seule façon de reconnaître une animation.
+const ANIMATED_MIME_RE = /^image\/(gif|webp|avif|apng)$/i;
 
 function ImageContent({ item }: { item: Item }) {
   const frozen = useBoard((s) => s.frozen);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animated = ANIMATED_IMAGE_RE.test(item.src ?? "");
+  const animated = ANIMATED_IMAGE_RE.test(item.src ?? "") || ANIMATED_MIME_RE.test(item.mime ?? "");
   const [painted, setPainted] = useState(false);
   // Affichée petite, une image passe par sa vignette : trente bannières en pleine définition saturent
   // le cache d'images décodées de Chromium, qui les évince et les laisse blanches jusqu'au repaint.
   const lod = useImageLod(item);
+  const retry = useLocalMediaRetry(item);
 
   // Peint la frame courante de l'<img> dans le canvas de gel. `painted` retombe à false quand la
   // nouvelle source n'est pas encore chargée : sinon le canvas continuerait d'afficher l'ANCIEN
@@ -670,7 +877,7 @@ function ImageContent({ item }: { item: Item }) {
   // Une vignette absente ou périmée n'est PAS un média disparu : son erreur retombe sur la source
   // pleine (lod.onError), et seule la source pleine déclenche la récupération — sinon un cache de
   // vignettes nettoyé ferait passer toute la planche pour perdue.
-  const onErr = () => { if (!lod.onError()) triggerRecover(item); };
+  const onErr = () => { if (!lod.onError() && !retry.onFailure()) triggerRecover(item); };
   const onLd = (e: React.SyntheticEvent<HTMLImageElement>) => {
     if (lod.full && !e.currentTarget.naturalWidth) triggerRecover(item);
     // Decoded dimensions of the FULL source = the true ratio, whatever the ingestion probe managed
@@ -683,6 +890,9 @@ function ImageContent({ item }: { item: Item }) {
   };
   const cls = item.crop ? "block select-none" : "block h-full w-full select-none object-cover";
   const style = item.crop ? cropStyle(item.crop) : undefined;
+  // Un média encore en route sur un board partagé n'a pas d'adresse. `src=""` fait recharger la
+  // PAGE ENTIÈRE au navigateur (avertissement React explicite) : on ne monte alors aucun élément.
+  if (!lod.src) return <div className="h-full w-full bg-muted/30" />;
   const media = (
     <>
       {/* `decoding` sur la VIGNETTE seulement : le culling remonte les items à chaque dézoom, et un
@@ -690,6 +900,7 @@ function ImageContent({ item }: { item: Item }) {
           clignote. Une vignette se décode en une milliseconde, le coût du décodage synchrone est
           invisible ; une source pleine, elle, bloquerait la frame, d'où l'asynchrone conservé. */}
       <img
+        key={retry.attempt}
         ref={imgRef} src={lod.src} alt={item.title ?? ""} draggable={false} decoding={lod.full ? "async" : "sync"}
         onError={onErr} onLoad={onLd} className={cls} style={{ ...style, ...(painted ? { display: "none" } : null) }}
       />
@@ -721,8 +932,30 @@ function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean;
   // l'URL du flux (des secondes, pas des millisecondes), et un repli iframe remonte ensuite son
   // propre lecteur. Sans voile, tout ce temps est un rectangle noir qui ne dit rien.
   const [ready, setReady] = useState(false);
+  // Identité stable : le lecteur s'en sert comme dépendance d'effet, une lambda recréée à chaque
+  // rendu du parent le ferait se rebrancher sans cesse.
+  const markReady = useCallback(() => setReady(true), []);
   // Nouvelle vidéo sur le même item → on retente le flux direct.
   useEffect(() => { setEmbedded(false); setReady(false); onFallback(false); }, [item.ref, onFallback]);
+
+  // La DURÉE vient de yt-dlp, qui la connaît déjà (même invocation que la résolution du flux, aucun
+  // lancement supplémentaire). Sans elle, la seule source était le `<video>`, qui ne l'apprend
+  // qu'après avoir lu l'index du conteneur — souvent de longues secondes : le champ « fin » restait
+  // vide et aucun point de sortie n'était posable pendant tout ce temps.
+  const knownDuration = item.dur;
+  useEffect(() => {
+    if (knownDuration || !item.ref) return;
+    let alive = true;
+    void nr.reference?.ytDuration?.(item.ref)
+      .then((seconds) => {
+        if (!alive || !seconds || !isFinite(seconds)) return;
+        if (useBoard.getState().items.some((entry) => entry.id === item.id && !entry.dur)) {
+          useBoard.getState().patchItem(item.id, { dur: seconds }, false);
+        }
+      })
+      .catch(() => undefined);
+    return () => { alive = false; };
+  }, [item.ref, item.id, knownDuration]);
 
   // A YouTube card is posed before anything is known of the video — 16:9, or 9:16 when the link says
   // `/shorts/`. The relayed stream is where the TRUE ratio finally shows up (a Short shared as a
@@ -730,14 +963,14 @@ function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean;
   return (
     <div className="relative h-full w-full">
       {embedded ? (
-        <YoutubeItem item={item} interactive={live} onReady={() => setReady(true)} />
+        <YoutubeItem item={item} interactive={live} onReady={markReady} />
       ) : (
         <VideoContent
           item={item}
           streamSrc={nr.ytStreamUrl(item.ref)}
           // Le repli remonte un lecteur neuf : le voile revient jusqu'à ce que CELUI-LÀ soit prêt.
           onStreamError={() => { setEmbedded(true); setReady(false); onFallback(true); }}
-          onReady={() => setReady(true)}
+          onReady={markReady}
         />
       )}
       {!ready && <YoutubeLoading />}

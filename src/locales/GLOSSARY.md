@@ -68,6 +68,6 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 - **Services** : Discord, Convex, YouTube, Hugging Face.
 - **Modèles / moteurs** : SigLIP2, Real-ESRGAN, Real-CUGAN, TransNetV2, OmniShotCut, Whisper,
   WhisperX, Parakeet, Canary, Silero, NOVA-VAD, SAM2, MatAnyone, RIFE, Depth Anything, BiRefNet,
-  YuNet, SFace, MiniMax, Wan, ArtCNN, Anime4K.
+  YuNet, SFace, MiniMax, Wan, ArtCNN.
 - **Formats / techno** : HEVC, H.264, mp4, mkv, SRT, VTT, FCPXML, ZXP, CEP, NVENC, ffmpeg, GPU, VRAM,
   RAM, FPS, ASR, VAD, HSB/RGB/hex.

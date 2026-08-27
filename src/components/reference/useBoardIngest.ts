@@ -6,6 +6,7 @@
 import { useCallback } from "react";
 import { nr } from "@/lib/bridge";
 import i18n from "@/i18n";
+import { logError } from "@/lib/appLog";
 import {
   type ItemKind,
   type BoardItem,
@@ -52,6 +53,20 @@ function hostTitle(url: string): string {
 // Dernier segment d'un chemin → titre par défaut (sépare \ ou /).
 function baseTitle(path: string): string {
   return path.replace(/^.*[\\/]/, "");
+}
+
+// Copie durable impossible : l'item vit sur son objectURL le temps de la session, puis la
+// persistance l'écrit « manquant » (cf. useScenePersistence). Tu le sais MAINTENANT, pas au
+// prochain lancement devant une case vide.
+function assetCopyFailed(name: string, error?: string) {
+  logError("board:ingest", `copie en asset échouée — ${name}: ${error || "?"}`);
+  useBoard.getState().setNotice({ kind: "error", text: i18n.t("reference:ingest.copyFailed", { name }) });
+}
+
+// Destination de la copie durable d'un fichier sans chemin : le dossier compagnon du .netsu ouvert
+// quand il y en a un (même politique que les téléchargements web), sinon le magasin global.
+function assetOptions(title: string): { projectPath?: string; title: string } {
+  return { projectPath: useBoard.getState().filePath || undefined, title };
 }
 
 // Positions d'une grille centrée sur `c` (taille de cellule w×h + gouttière). Carré au plus juste
@@ -116,6 +131,34 @@ function entryKind(nameOrPath: string, mime = ""): "image" | "video" | null {
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("video/")) return "video";
   return null;
+}
+
+// Entités HTML d'un attribut `src` de presse-papier. Les URL de CDN sont pleines de `&` : sans ce
+// décodage, le lien mémorisé porte des `&amp;` et ne répond plus.
+function decodeAttr(value: string): string {
+  return value
+    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;/g, "'")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+}
+
+// Lien EXACT du média venu du presse-papier ou d'un glisser depuis un navigateur.
+//
+// « Copier l'image » ne met dans le presse-papier que des OCTETS, réencodés par le navigateur (d'où
+// le titre « image.png » d'un JPEG). L'adresse d'origine ne survit que dans la saveur `text/html` du
+// MÊME presse-papier, sous forme d'un `<img src>`. C'est le seul endroit où elle existe encore : sans
+// elle, l'item n'a plus aucun moyen de se reconstituer si ses octets disparaissent, et le lien du
+// post — le seul repère utile pour retrouver un plan — est perdu à la seconde du collage.
+//
+// À lire SYNCHRONEMENT : un DataTransfer est vidé dès que le gestionnaire d'événement rend la main.
+export function pastedSourceUrl(data: DataTransfer): string {
+  const tag = (data.getData("text/html") || "")
+    .match(/<(?:img|video|source)\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i);
+  if (tag) {
+    const url = decodeAttr(tag[1]);
+    if (/^https?:\/\//i.test(url)) return url;
+  }
+  const text = (data.getData("text/uri-list") || data.getData("text/plain") || "").trim();
+  return /^https?:\/\/\S+$/.test(text) ? text : "";
 }
 
 // Extension de fichier à partir d'un type MIME de blob (presse-papier/drop), avec quelques alias.
@@ -265,8 +308,12 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   // téléchargement et le décodage COMPLETS de l'image avant de poser quoi que ce soit : plusieurs
   // centaines de millisecondes sans le moindre signe à l'écran, exactement là où l'utilisateur vient
   // de lâcher son fichier.
+  //
+  // `extra` porte ce que le fichier ne dit pas de lui-même — au premier chef le lien d'origine d'un
+  // média collé depuis un navigateur (cf. `pastedSourceUrl`), écrit sur l'item DÈS sa pose : c'est ce
+  // qui rend l'item réparable si ses octets viennent à manquer.
   const addFile = useCallback(
-    async (file: File, at?: { x: number; y: number }) => {
+    async (file: File, at?: { x: number; y: number }, extra?: Partial<BoardItem>) => {
       const kind = entryKind(file.name, file.type);
       if (!kind) return;
       const box = useBoard.getState().prefs.mediaMaxSize;
@@ -289,6 +336,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         rotation: 0,
         loading: true,
         title: file.name,
+        ...extra,
       });
       useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.importing", { name: file.name }) });
 
@@ -327,7 +375,11 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       // arrière-plan — l'item est déjà à l'écran et le blob le tient jusqu'à ce que l'écriture aboutisse.
       if (!path && nr.reference?.saveAsset) {
         try {
-          const res = await nr.reference.saveAsset(await file.arrayBuffer(), extFromMime(file.type, kind));
+          const res = await nr.reference.saveAsset(
+            await file.arrayBuffer(),
+            extFromMime(file.type, kind),
+            assetOptions(file.name),
+          );
           if (res.ok && res.path) {
             const durable = displaySrc(kind, res.path);
             // Conteneur non lu par le webview : l'asset est sa PREMIÈRE source affichable, donc aussi
@@ -335,9 +387,13 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
             const late = (direct || size) ? null : fitSizeOf(await probeNat(kind, durable), box, liveCenter(id, c));
             useBoard.getState().patchItem(id, { ref: res.path, ...(direct ? null : { src: durable }), ...late }, false);
             if (!direct) URL.revokeObjectURL(blob);
+          } else {
+            assetCopyFailed(file.name, res.error);
+            return;
           }
-        } catch {
-          /* écriture refusée : le blob tient la session, la source d'origine reste sur disque */
+        } catch (e) {
+          assetCopyFailed(file.name, String(e));
+          return;
         }
       }
       useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: 1 }) });
@@ -357,7 +413,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   const addBatch = useCallback(
     async (
       list: BatchEntry[],
-      opts: { rootName?: string; frames?: boolean; at?: { x: number; y: number } } = {},
+      opts: { rootName?: string; frames?: boolean; at?: { x: number; y: number }; extra?: Partial<BoardItem> } = {},
     ) => {
       if (!list.length) return;
       const store = useBoard.getState();
@@ -428,6 +484,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
             rotation: 0,
             z: ++z,
             title: f.name,
+            ...opts.extra,
           });
         });
 
@@ -441,6 +498,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       // lot de 300 vidéos ne doit pas ouvrir 300 décodeurs d'un coup.
       let done = 0;
       const total = created.length;
+      const copyFailures: string[] = [];
       const tick = () => useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.progress", { done, total }) });
       tick();
       await pool(created, 8, async (c) => {
@@ -450,15 +508,24 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
           useBoard.getState().patchItem(c.id, { natW: nat.w, natH: nat.h, w: size.w, h: size.h }, false);
         }
         if (c.file && nr.reference?.saveAsset && c.file.size <= ASSET_COPY_MAX) {
+          const name = c.file.name;
           try {
-            const res = await nr.reference.saveAsset(await c.file.arrayBuffer(), extFromMime(c.file.type, c.kind));
+            const res = await nr.reference.saveAsset(
+              await c.file.arrayBuffer(),
+              extFromMime(c.file.type, c.kind),
+              assetOptions(name),
+            );
             if (res.ok && res.path) {
               const durable = displaySrc(c.kind, res.path);
               useBoard.getState().patchItem(c.id, { ref: res.path, src: durable }, false);
               URL.revokeObjectURL(c.src);
+            } else {
+              logError("board:ingest", `copie en asset échouée — ${name}: ${res.error || "?"}`);
+              copyFailures.push(name);
             }
-          } catch {
-            // Écriture refusée : l'objectURL tient la session, la source d'origine reste sur disque.
+          } catch (e) {
+            logError("board:ingest", `copie en asset échouée — ${name}: ${String(e)}`);
+            copyFailures.push(name);
           }
         }
         done++;
@@ -509,7 +576,16 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         useBoard.setState({ items: state.items.map((it) => next.get(it.id) ?? it) });
       }
 
-      useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: total }) });
+      // Un lot dont des copies durables ont échoué n'est PAS un import réussi : ces items vivront
+      // sur leur objectURL puis rouvriront « manquants ». L'erreur remplace le « terminé ».
+      if (copyFailures.length) {
+        useBoard.getState().setNotice({
+          kind: "error",
+          text: i18n.t("reference:ingest.copyFailedBatch", { count: copyFailures.length, name: copyFailures[0] }),
+        });
+      } else {
+        useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: total }) });
+      }
     },
     [centerPoint],
   );
@@ -520,10 +596,10 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   // progression. L'ancienne voie de repli les traitait en série et les posait tous au centre du
   // viewport : import interminable et planche illisible.
   const addFiles = useCallback(
-    (files: FileList | File[], at?: { x: number; y: number }) => {
+    (files: FileList | File[], at?: { x: number; y: number }, extra?: Partial<BoardItem>) => {
       const all = Array.from(files);
       if (!all.length) return;
-      if (all.length === 1) { void addFile(all[0], at); return; }
+      if (all.length === 1) { void addFile(all[0], at, extra); return; }
       void (async () => {
         useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.reading", { count: all.length }) });
         const paths = await nr.pathsForFiles(all);
@@ -535,9 +611,9 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
           if (!kind) { others.push(f); return; }
           list.push(p ? { path: p, rel: "", name: f.name, kind } : { file: f, rel: "", name: f.name, kind });
         });
-        if (list.length) await addBatch(list, { at });
+        if (list.length) await addBatch(list, { at, extra });
         else useBoard.getState().setNotice(null);
-        for (const f of others) await addFile(f, at);
+        for (const f of others) await addFile(f, at, extra);
       })();
     },
     [addFile, addBatch],
@@ -887,14 +963,20 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
 
   // Presse-papier / drop sans fichiers : blobs image OU vidéo (multi) ou URL texte (routée).
   // Renvoie false si rien d'exploitable (presse-papier vide, lien irrésoluble) → feedback appelant.
+  //
+  // Les octets et le LIEN arrivent ensemble : un « copier l'image » depuis un navigateur porte les
+  // deux saveurs, et jusqu'ici la voie des octets jetait l'autre. L'item se posait donc sans la
+  // moindre trace de sa provenance — impossible à réparer, impossible à rouvrir sur son site.
   const addPaste = useCallback(
     async (data: DataTransfer): Promise<boolean> => {
+      const sourceUrl = pastedSourceUrl(data);
       const blobs = Array.from(data.items)
         .filter((it) => it.kind === "file" && (it.type.startsWith("image/") || it.type.startsWith("video/")))
         .map((it) => it.getAsFile())
         .filter((f): f is File => !!f);
       if (blobs.length) {
-        blobs.forEach((b) => void addFile(b));
+        const extra = sourceUrl ? { sourceUrl } : undefined;
+        blobs.forEach((b) => void addFile(b, undefined, extra));
         return true;
       }
       const text = (data.getData("text/plain") || data.getData("text/uri-list")).trim();

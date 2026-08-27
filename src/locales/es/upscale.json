@@ -357,7 +357,6 @@
     "artcnn_c4f32": "Anime — el mejor equilibrio entre velocidad y calidad.",
     "artcnn_c4f16": "Anime — el más rápido.",
     "artcnn_quality": "Anime — reduce el ruido y mejora la nitidez.",
-    "anime4k": "Anime — ligero, adecuado para fuentes dañadas.",
     "lanczos": "Imagen real/general — sin IA, instantáneo."
   },
   "shaderHint": {
@@ -369,8 +368,6 @@
     "artcnn_c4f16": "Anime — el más rápido.",
     "artcnn_c4f16_ds": "Rápido — reduce ruido, realza.",
     "artcnn_c4f16_dn": "Rápido — reduce ruido, suaviza.",
-    "anime4k_aa_hq": "Anime — percepción máxima.",
-    "anime4k_bb_hq": "Anime — restauración suave.",
     "rtx_vsr": "Real y anime — ×2 fijo, NVIDIA.",
     "lanczos": "Real — sin IA, instantáneo."
   },

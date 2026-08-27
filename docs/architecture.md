@@ -6,6 +6,7 @@ Deep notes for agents and contributors. Read the section you need; do not load t
 
 ```
 src-tauri/            Rust shell: WebView2 window, HEVC flag, native mpv player, spawn/kill of the core
+  ├─ collab/          Loro authority, SQLite outbox, DPAPI keys, Convex client, iroh, blob store
   └─ spawns
 core/server.js        Node service, HTTP on 127.0.0.1, headless, port picked at launch
   ├─ media-server.js  /media (Range/seek) + /stream (live ffmpeg remux) + mediaGuard token
@@ -19,14 +20,21 @@ core/server.js        Node service, HTTP on 127.0.0.1, headless, port picked at 
   ├─ hardware.js + adaptiveCodec.js + export/        encoder probe and export profiles
   ├─ wallpaper/       wallpaper variants (blur, GIF→mp4, posters)
   └─ setup.js + config.js   first-run provisioning, NR_HOME, nr.config.json
-        ▲ HTTP/SSE (CORS open on the RPC and event routes only)
+        ▲ HTTP/SSE (loopback Host plus exact Tauri/loopback renderer origins)
 src/                  React renderer
   └─ lib/bridge.ts → coreClient.ts (fetch /rpc + EventSource /events)
 ```
 
+Collaborative projects use a second, native-only path: React sends typed intent through high-level
+Tauri commands to one Rust `CollabService`; Rust returns a total board projection and emits revision
+events to both windows. Rust calls Convex directly with a short-lived JWT supplied in memory by the
+authenticated renderer, and speaks iroh in-process. The Node core stores only the scene-to-project
+binding. It never owns the Loro document, project keys, peer selection, or collaborative media. See
+[`collab.md`](collab.md) for the complete trust and recovery contract.
+
 - `core/` is CommonJS (`core/package.json`). The root `package.json` is `type: module` for the Vite renderer.
-- **Ports.** Vite serves development on `localhost:1430` with `strictPort` (NetsuRush holds 1420, and both dev servers must be able to run at once). The core's port is **not fixed**: the Rust shell sweeps `8760`–`8779` for a free one, passes it as `NR_CORE_PORT`, and the renderer asks the shell for it (`nr_core_port`). Run alone (`npm run core`), the service sweeps the same range itself. That range is **disjoint from NetsuRush's** (`8730`–`8749`), and `/healthz` answers `app: "netsuboard"` so a sweep can tell the two services apart. The retained port is published to `NR_HOME/core-port.json` for out-of-process clients.
-- **`NR_HOME`** = `%LOCALAPPDATA%\NetsuBoard` (`~/.netsuboard` elsewhere), overridable with the `NR_HOME` environment variable. It holds `nr.config.json`, the provisioned runtime, wallpapers and logs. It is deliberately **distinct** from NetsuRush's home: the two applications are installed side by side.
+- **Ports.** Vite serves development on `localhost:1430` with `strictPort` (NetsuRush holds 1420, and both dev servers must be able to run at once). The core's port is **not fixed**: the Rust shell sweeps `43117`–`43136` for a free one, passes it as `NR_CORE_PORT`, and the renderer asks the shell for it (`nr_core_port`). Run alone (`npm run core`), the service sweeps the same range itself. That base is IANA-unassigned and sits below the Windows ephemeral range (49152+), away from the developer-tool ports (8000–9000) any local server may occupy; it is **disjoint from NetsuRush's** (`8730`–`8749`), and `/healthz` answers `app: "netsuboard"` so a sweep can tell the two services apart. The retained port is published to `NR_HOME/core-port.json` for out-of-process clients.
+- **`NR_HOME`** = `%LOCALAPPDATA%\NetsuBoard` (`~/.netsuboard` elsewhere), overridable with the `NR_HOME` environment variable. It holds `nr.config.json`, the provisioned runtime, wallpapers and logs. It is deliberately **distinct** from NetsuRush's home: the two applications are installed side by side. Since 0.5.0 the **scene library and the asset store live there too** (`DATA_DIR`, `~/.netsuboard` when `NR_HOME` is unset) — they used to sit in `~/.netsurush`, shared with NetsuRush, where a cleanup on either side could take the other's board media. An existing library is copied over once on first launch; the original is never moved. `identity.rs#board_data_dir` resolves the same root, and the two must not drift: Rust authorises media imports against the library the core wrote.
 - Opening the Vite URL in a plain browser renders the UI against `bridge.ts`'s no-op mock, so the layout is inspectable without the core.
 
 > **Inherited code.** `core/` also contains the untrimmed NetsuRush modules (Resolve bridge, Adobe bridges, timeline modules, optimiser, the model manifest still read by the cache admin). `rpc.js` still registers their channels, and `server.js` still imports some of them, but the board reaches none of it. Do not extend those modules.
@@ -44,6 +52,11 @@ Any new channel must be added in **all three** places, or it is immediate debt:
 | `mock` fallback | `src/lib/bridge.ts` |
 
 `core/rpc.js` entries stay thin: they delegate to the `core/` modules with injected dependencies. No business logic in `rpc.js` or `server.js`.
+
+This three-place rule applies to Node-core RPC. Native collaboration commands are intentionally not
+mirrored into Node: they are declared in `src-tauri/src/collab/commands.rs`, registered in
+`src-tauri/src/lib.rs`, and wrapped by `src/lib/collab/client.ts`. Their arguments remain high-level
+project operations; never expose raw keys, arbitrary paths, peer endpoints, or ciphertext recipients.
 
 ## Shell and navigation
 
