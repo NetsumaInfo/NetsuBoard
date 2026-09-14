@@ -744,20 +744,20 @@
       "revoke": "Révoquer cet appareil"
     },
     "performance": {
-      "title": "Performances de la synchronisation",
-      "subtitle": "Ce réglage s'applique uniquement à cet appareil.",
+      "title": "Vitesse de synchronisation",
+      "subtitle": "Propre à cet appareil. Les autres membres gardent le leur.",
       "modes": {
         "live": {
-          "title": "Écriture en direct",
-          "description": "Pont rapide et originaux récupérés sans attendre."
+          "title": "Rapide",
+          "description": "Pour une bonne connexion : les modifications partent aussitôt et les médias arrivent à l’avance."
         },
         "balanced": {
           "title": "Équilibré",
-          "description": "Un compromis régulier entre réactivité et transferts."
+          "description": "Le réglage par défaut. Convient à la plupart des connexions."
         },
         "economy": {
-          "title": "Économique",
-          "description": "Moins de transferts ; les originaux arrivent à l'affichage."
+          "title": "Économe",
+          "description": "Pour une connexion lente ou limitée : un média n’est téléchargé que lorsqu’il arrive à l’écran."
         }
       }
     },

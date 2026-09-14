@@ -744,20 +744,20 @@
       "revoke": "Dieses Gerät widerrufen"
     },
     "performance": {
-      "title": "Synchronisationsleistung",
-      "subtitle": "Diese Einstellung gilt nur für dieses Gerät.",
+      "title": "Synchronisationstempo",
+      "subtitle": "Gilt nur für dieses Gerät. Andere Mitglieder behalten ihres.",
       "modes": {
         "live": {
-          "title": "Live-Schreiben",
-          "description": "Schnelle Bridge-Updates und Originale im Voraus."
+          "title": "Schnell",
+          "description": "Für eine gute Verbindung: Änderungen gehen sofort raus, Medien kommen im Voraus."
         },
         "balanced": {
           "title": "Ausgewogen",
-          "description": "Stabiles Verhältnis von Reaktion und Übertragungen."
+          "description": "Die Standardeinstellung. Passt zu den meisten Verbindungen."
         },
         "economy": {
           "title": "Sparsam",
-          "description": "Weniger Übertragungen; Originale laden beim Anzeigen."
+          "description": "Für eine langsame oder begrenzte Verbindung: Eine Datei wird erst geladen, wenn sie im Bild erscheint."
         }
       }
     },

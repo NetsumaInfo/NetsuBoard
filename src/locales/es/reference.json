@@ -832,19 +832,19 @@
     "panel": {
       "title": "Estado del uso compartido",
       "online": "{{count}} en línea",
-      "alone": "Nadie más por ahora.",
+      "alone": "Nadie más.",
       "hereNow": "En línea",
-      "neverSeen": "Aún sin contactar",
+      "neverSeen": "Nunca visto",
       "seenMinutes": "Visto hace {{count}} min",
       "seenHours": "Visto hace {{count}} h",
       "seenDays": "Visto hace {{count}} d",
-      "invited": "Invitación pendiente",
+      "invited": "Invitado",
       "unknownMember": "Miembro",
-      "queued": "Hay cambios en espera. Se enviarán solos en cuanto un dispositivo esté disponible.",
-      "upToDate": "Todo está sincronizado.",
-      "rotation": "Rotación de clave pendiente: las nuevas publicaciones esperan un dispositivo del propietario.",
-      "waitingKey": "{{count}} miembro(s) esperan la clave. Permanece en línea para transmitirla.",
-      "nobodyReachable": "Nadie está disponible ahora mismo: tus cambios se enviarán cuando vuelvan."
+      "queued": "Cambios en espera. Se enviarán solos.",
+      "upToDate": "Todo enviado.",
+      "rotation": "Hace falta una clave nueva: el propietario debe abrir la app.",
+      "waitingKey": "{{count}} esperan la clave. Permanece en línea.",
+      "nobodyReachable": "Nadie en línea. Nada sale por ahora."
     }
   }
 }

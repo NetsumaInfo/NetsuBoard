@@ -100,10 +100,13 @@ export function DrawLayer() {
   const drawItem = useBoard((s) => s.items.find((i) => i.kind === "draw") ?? null);
   const drawSel = useBoard((s) => s.drawSel);
   const selectDrawShape = useBoard((s) => s.selectDrawShape);
+  const selectDrawShapes = useBoard((s) => s.selectDrawShapes);
 
   const ref = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<DrawShape | null>(null);
-  const drag = useRef<{ id: string; lx: number; ly: number; recorded: boolean } | null>(null);
+  // Un glissé porte sur TOUTES les formes sélectionnées : attraper l'une d'elles emmène le groupe,
+  // exactement comme un item pris dans une sélection multiple.
+  const drag = useRef<{ ids: string[]; lx: number; ly: number; recorded: boolean } | null>(null);
   const edit = useRef<{ id: string; k: string; recorded: boolean } | null>(null);
   const drawing = useRef(false);
   // La gomme peut venir de l'outil choisi OU du bout inversé du stylet : le geste en cours doit
@@ -185,7 +188,8 @@ export function DrawLayer() {
       const d = drag.current;
       const dx = x - d.lx, dy = y - d.ly;
       d.lx = x; d.ly = y;
-      const next = getShapes().map((s) => (s.id === d.id ? shifted(s, dx, dy) : s));
+      const moving = new Set(d.ids);
+      const next = getShapes().map((s) => (moving.has(s.id) ? shifted(s, dx, dy) : s));
       writeShapes(next, !d.recorded);
       d.recorded = true;
       return true;
@@ -195,26 +199,39 @@ export function DrawLayer() {
   // Tracé délié traîné hors de tout cadre : le lien coupé n'a plus d'objet — même règle que les
   // items, sinon il arriverait secrètement délié dans le prochain cadre où on le pose.
   const endGesture = () => {
-    const id = drag.current?.id;
+    const ids = drag.current?.ids;
     drag.current = null;
     edit.current = null;
-    if (!id) return;
-    const shape = getShapes().find((s) => s.id === id);
-    if (!shape?.detached) return;
-    const [a, b, c, d] = shapeBBox(shape);
-    if (frameAtPoint((a + c) / 2, (b + d) / 2, useBoard.getState().items)) return;
-    writeShapes(getShapes().map((s) => (s.id === id ? { ...s, detached: undefined } : s)), false);
+    if (!ids?.length) return;
+    const items = useBoard.getState().items;
+    const current = getShapes();
+    // Chaque forme du groupe est jugée pour elle-même : un glissé collectif peut très bien sortir
+    // l'une d'un cadre et laisser l'autre dedans.
+    const freed = new Set(ids.filter((id) => {
+      const shape = current.find((s) => s.id === id);
+      if (!shape?.detached) return false;
+      const [a, b, c, d] = shapeBBox(shape);
+      return !frameAtPoint((a + c) / 2, (b + d) / 2, items);
+    }));
+    if (!freed.size) return;
+    writeShapes(current.map((s) => (freed.has(s.id) ? { ...s, detached: undefined } : s)), false);
   };
 
   // Cibles transparentes (hors mode dessin) : pointer capture sur la cible → déplacement.
   const onTargetDown = useCallback((id: string, e: React.PointerEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
-    selectDrawShape(id);
+    const held = useBoard.getState().drawSel;
+    // Reprendre une forme DÉJÀ dans la sélection ne la réduit pas à elle seule : c'est ce qui
+    // rendait un groupe inutilisable — le premier appui le défaisait avant le moindre pixel.
+    const ids = e.shiftKey
+      ? (held.includes(id) ? held.filter((x) => x !== id) : [...held, id])
+      : held.includes(id) ? held : [id];
+    if (ids !== held) selectDrawShapes(ids);
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* best-effort */ }
     const { x, y } = worldFromXY(e.clientX, e.clientY);
-    drag.current = { id, lx: x, ly: y, recorded: false };
-  }, [selectDrawShape, worldFromXY]);
+    if (ids.length) drag.current = { ids, lx: x, ly: y, recorded: false };
+  }, [selectDrawShapes, worldFromXY]);
   const onHandleDown = (id: string, k: string, e: React.PointerEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
@@ -277,16 +294,21 @@ export function DrawLayer() {
     strokeId.current = e.pointerId;
 
     if (tool === "select") {
-      if (drawSel) {
-        const sel = shapes.find((s) => s.id === drawSel);
+      // Les poignées n'existent qu'à UNE forme : au-delà il n'y a pas de géométrie commune à tirer.
+      if (drawSel.length === 1) {
+        const sel = shapes.find((s) => s.id === drawSel[0]);
         const hThr = 11 / view.scale;
         const h = sel && handlesFor(sel).find((p) => Math.hypot(p.x - x, p.y - y) < hThr);
         if (sel && h) { edit.current = { id: sel.id, k: h.k, recorded: false }; return; }
       }
       const thr = 10 / view.scale;
       const hit = [...shapes].reverse().find((s) => hitShape(s, x, y, thr, true));
-      selectDrawShape(hit?.id ?? null);
-      if (hit) drag.current = { id: hit.id, lx: x, ly: y, recorded: false };
+      if (!hit) { selectDrawShapes([]); return; }
+      const ids = e.shiftKey
+        ? (drawSel.includes(hit.id) ? drawSel.filter((id) => id !== hit.id) : [...drawSel, hit.id])
+        : drawSel.includes(hit.id) ? drawSel : [hit.id];
+      if (ids !== drawSel) selectDrawShapes(ids);
+      if (ids.length) drag.current = { ids, lx: x, ly: y, recorded: false };
       return;
     }
     if (tool === "eraser") {
@@ -383,7 +405,12 @@ export function DrawLayer() {
 
   if (!drawItem && !drawMode) return null;
 
-  const selShape = drawSel && selectMode ? shapes.find((s) => s.id === drawSel) : null;
+  // Sélection résolue. `selShape` — la forme UNIQUE — commande poignées, pastilles et
+  // inspecteur ; `selShapes` ne sert qu'à tracer le contour de chaque membre du groupe.
+  const selShapes = selectMode && drawSel.length
+    ? shapes.filter((s) => drawSel.includes(s.id))
+    : EMPTY_SHAPES;
+  const selShape = selShapes.length === 1 ? selShapes[0] : null;
   // Largeur de la zone cliquable des cibles transparentes, quantifiée à l'octave : une valeur exacte
   // en 1/scale changerait à chaque commit de zoom et casserait le memo de HitTargets — toutes les
   // cibles re-réconciliées pour un cheveu de différence. Entre deux octaves elle vaut 7 à 14 px
@@ -425,6 +452,27 @@ export function DrawLayer() {
         <StaticShapes shapes={drawnShapes} draft={draft} />
 
         {!drawMode && <HitTargets shapes={drawnShapes} hitW={hitW} onDown={onTargetDown} onMove={onTargetMove} onUp={onTargetUp} />}
+
+        {/* Groupe : un contour par forme retenue. Pas de boîte unique englobante — elle
+            prétendrait à une emprise commune que rien ici ne sait redimensionner, et masquerait
+            ce que le lasso a réellement pris. */}
+        {selShapes.length > 1 && (
+          <g style={{ pointerEvents: "none" }}>
+            {selShapes.map((shape) => {
+              const [a, b, c, d] = shapeBBox(shape);
+              const pad = 4 / view.scale;
+              return (
+                <rect
+                  key={shape.id}
+                  x={a - pad} y={b - pad} width={c - a + pad * 2} height={d - b + pad * 2}
+                  fill="none" stroke="var(--color-primary)"
+                  strokeDasharray={`${5 / view.scale} ${4 / view.scale}`}
+                  strokeWidth={1.25 / view.scale}
+                />
+              );
+            })}
+          </g>
+        )}
 
         {selShape && (() => {
           const [a, b, c, d] = shapeBBox(selShape);

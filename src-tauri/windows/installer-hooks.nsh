@@ -107,7 +107,8 @@ FunctionEnd
 
   ; 2. A manual install can start while NetsuBoard is still open, and an in-app update always does.
   ; Ask its single window for a NORMAL close first: RunEvent::Exit then stops its node.exe core.
-  ; No PowerShell, no process enumeration and no forced kill are involved.
+  ; No PowerShell, no process enumeration and no forced kill are involved. The match is on the exact
+  ; window TITLE, so a NetsuRush window standing beside it is never addressed.
   FindWindow $0 "" "NetsuBoard"
   StrCmp $0 0 netsu_window_gone
   SendMessage $0 ${WM_CLOSE} 0 0 /TIMEOUT=3000
@@ -124,22 +125,35 @@ FunctionEnd
   ; 3. The window may never answer — a modal, a hung renderer, an in-app update that exits the
   ; process without running its shutdown, or an older version that left node.exe alive after a
   ; crash. The temporary copy of the app goes through Restart Manager, which closes ONLY the
-  ; process whose image is the file passed. app.exe comes first so its own shutdown stops the core.
-  ; `app.exe` is spelled out: it is Tauri's MAINBINARYNAME, which is the Cargo package name.
+  ; process whose image is the file passed — a PATH, never an image name. That distinction is the
+  ; whole reason this step exists beside Tauri's own: `CheckIfAppIsRunning` matches on the image
+  ; NAME, so while the main binary was called `app.exe` — the Cargo package name — installing or
+  ; uninstalling NetsuBoard terminated every `app.exe` of the session, NetsuRush included, by
+  ; TerminateProcess and without asking. `mainBinaryName` in tauri.conf.json now makes it
+  ; `NetsuBoard.exe`; nothing here may go back to matching a bare name.
+  ;
+  ; ${MAINBINARYNAME} rather than a spelled-out name, so this follows the config. `app.exe` is still
+  ; released AFTER it: an install provisioned before the rename carries the old name, and that is
+  ; the image actually holding the lock while it runs. Both are paths inside THIS install, so the
+  ; homonym owned by NetsuRush is unreachable from here.
+  ;
   ; InitPluginsDir is mandatory: until something initialises it, $PLUGINSDIR expands to nothing and
   ; the copy lands in $INSTDIR under a leading backslash, where the command below never finds it.
   InitPluginsDir
-  File /oname=$PLUGINSDIR\netsuboard-release-lock.exe "..\..\app.exe"
+  File /oname=$PLUGINSDIR\netsuboard-release-lock.exe "${MAINBINARYSRCPATH}"
+  nsExec::ExecToLog '"$PLUGINSDIR\netsuboard-release-lock.exe" --release-lock "$INSTDIR\${MAINBINARYNAME}.exe"'
+  Pop $0
   nsExec::ExecToLog '"$PLUGINSDIR\netsuboard-release-lock.exe" --release-lock "$INSTDIR\app.exe"'
   Pop $0
   nsExec::ExecToLog '"$PLUGINSDIR\netsuboard-release-lock.exe" --release-lock "$INSTDIR\resources\bin\node.exe"'
   Pop $0
   Delete "$PLUGINSDIR\netsuboard-release-lock.exe"
 
-  ; 4. The exit code of the two calls above is deliberately ignored: Restart Manager can be
-  ; unavailable, or refuse a process it cannot touch, on a machine where nothing holds the files at
-  ; all. The only fact that decides is whether the files can be written now.
-  Push "$INSTDIR\app.exe"
+  ; 4. The exit code of the calls above is deliberately ignored: Restart Manager can be unavailable,
+  ; or refuse a process it cannot touch, on a machine where nothing holds the files at all. The only
+  ; fact that decides is whether the files can be written now. The pre-rename `app.exe` is NOT
+  ; probed: this install no longer writes it, and a leftover nobody can replace is not a failure.
+  Push "$INSTDIR\${MAINBINARYNAME}.exe"
   Call NetsuRequireWritable
   Push "$INSTDIR\resources\bin\node.exe"
   Call NetsuRequireWritable

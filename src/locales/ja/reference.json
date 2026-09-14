@@ -832,19 +832,19 @@
     "panel": {
       "title": "共有の状態",
       "online": "{{count}} 人がオンライン",
-      "alone": "まだ他に誰もいません。",
+      "alone": "他に誰もいません。",
       "hereNow": "オンライン",
-      "neverSeen": "未接続",
+      "neverSeen": "未確認",
       "seenMinutes": "{{count}} 分前に確認",
       "seenHours": "{{count}} 時間前に確認",
       "seenDays": "{{count}} 日前に確認",
-      "invited": "招待の返答待ち",
+      "invited": "招待済み",
       "unknownMember": "メンバー",
-      "queued": "送信待ちの変更があります。端末に接続でき次第、自動的に送信されます。",
-      "upToDate": "すべて同期済みです。",
-      "rotation": "鍵のローテーション待ち：新しい公開は所有者の端末を待っています。",
-      "waitingKey": "{{count}} 人が鍵を待っています。オンラインのままにして渡してください。",
-      "nobodyReachable": "現在つながる相手がいません。相手が戻り次第、変更が送信されます。"
+      "queued": "送信待ちの変更があります。自動で送信されます。",
+      "upToDate": "すべて送信済み。",
+      "rotation": "新しい鍵が必要：所有者がアプリを開いてください。",
+      "waitingKey": "{{count}} 人が鍵を待っています。オンラインのままに。",
+      "nobodyReachable": "オンラインの人がいません。まだ何も送信されません。"
     }
   }
 }

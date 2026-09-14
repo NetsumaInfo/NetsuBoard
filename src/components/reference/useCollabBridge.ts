@@ -92,6 +92,8 @@ export function useCollabBridge() {
       const ids = new Set(items.map((item) => item.id));
       const selectedIds = state.selectedIds.filter((id) => ids.has(id));
       const shapes = items.find((item) => item.kind === "draw")?.shapes ?? [];
+      const shapeIds = new Set(shapes.map((shape) => shape.id));
+      const keptShapes = state.drawSel.filter((id) => shapeIds.has(id));
       return {
         items,
         dirty: false,
@@ -101,7 +103,9 @@ export function useCollabBridge() {
           : selectedIds[selectedIds.length - 1] ?? null,
         editingId: state.editingId && ids.has(state.editingId) ? state.editingId : null,
         croppingId: state.croppingId && ids.has(state.croppingId) ? state.croppingId : null,
-        drawSel: state.drawSel && shapes.some((shape) => shape.id === state.drawSel) ? state.drawSel : null,
+        // Identité conservée quand aucune forme sélectionnée n'a disparu : une annonce distante
+        // ne doit pas rerendre le calque pour une sélection qui n'a pas bougé.
+        drawSel: keptShapes.length === state.drawSel.length ? state.drawSel : keptShapes,
       };
     });
     applyingProjection.current = false;

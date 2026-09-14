@@ -832,19 +832,19 @@
     "panel": {
       "title": "Freigabestatus",
       "online": "{{count}} online",
-      "alone": "Noch niemand sonst.",
+      "alone": "Sonst niemand.",
       "hereNow": "Online",
-      "neverSeen": "Noch nicht erreicht",
+      "neverSeen": "Nie gesehen",
       "seenMinutes": "Vor {{count}} Min. gesehen",
       "seenHours": "Vor {{count}} Std. gesehen",
       "seenDays": "Vor {{count}} T. gesehen",
-      "invited": "Einladung ausstehend",
+      "invited": "Eingeladen",
       "unknownMember": "Mitglied",
-      "queued": "Änderungen warten hier. Sie werden automatisch gesendet, sobald ein Gerät erreichbar ist.",
-      "upToDate": "Alles ist synchronisiert.",
-      "rotation": "Schlüsselrotation ausstehend: Neue Veröffentlichungen warten auf ein Gerät des Eigentümers.",
-      "waitingKey": "{{count}} Mitglied(er) warten auf den Schlüssel. Bleib online, um ihn weiterzugeben.",
-      "nobodyReachable": "Zurzeit ist niemand erreichbar: Deine Änderungen gehen raus, sobald jemand zurück ist."
+      "queued": "Änderungen warten. Sie gehen von selbst raus.",
+      "upToDate": "Alles gesendet.",
+      "rotation": "Neuer Schlüssel nötig: Der Eigentümer muss die App öffnen.",
+      "waitingKey": "{{count}} warten auf den Schlüssel. Bleib online.",
+      "nobodyReachable": "Niemand online. Noch geht nichts raus."
     }
   }
 }

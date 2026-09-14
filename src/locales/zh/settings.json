@@ -744,20 +744,20 @@
       "revoke": "撤销此设备"
     },
     "performance": {
-      "title": "同步性能",
-      "subtitle": "此设置仅应用于本设备。",
+      "title": "同步速度",
+      "subtitle": "仅适用于本设备，其他成员保留各自的设置。",
       "modes": {
         "live": {
-          "title": "实时写作",
-          "description": "更快的桥接更新，并提前获取原始媒体。"
+          "title": "快速",
+          "description": "适合网络良好时：改动立即发出，媒体提前载入。"
         },
         "balanced": {
-          "title": "平衡",
-          "description": "在响应速度和传输之间保持稳定平衡。"
+          "title": "均衡",
+          "description": "默认设置，适合大多数网络。"
         },
         "economy": {
-          "title": "节省资源",
-          "description": "减少传输；卡片出现时再加载原始媒体。"
+          "title": "省流量",
+          "description": "适合网速慢或有流量限制：媒体只在出现在画面上时才下载。"
         }
       }
     },

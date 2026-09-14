@@ -52,6 +52,31 @@
         "kind": "fix",
         "fr": "Une carte Discord sans image ne porte plus de lien suspendu dans le vide : le lien n’est posé qu’avec ce qu’il rend cliquable.",
         "en": "A Discord card with no art no longer carries a link hanging on nothing: a link is only attached to what it makes clickable."
+      },
+      {
+        "kind": "fix",
+        "fr": "Installer, mettre à jour ou désinstaller NetsuBoard ne ferme plus NetsuRush. Les deux applications livraient un exécutable du même nom, et l’installeur fermait l’application ouverte en visant ce nom, sans regarder d’où venait le programme : il terminait l’autre au passage, sans prévenir et sans lui laisser sauvegarder.",
+        "en": "Installing, updating or uninstalling NetsuBoard no longer closes NetsuRush. Both applications shipped an executable under the same name, and the installer closed the running application by that name alone, without looking at where the program came from: it terminated the other one on its way, with no warning and no chance to save."
+      },
+      {
+        "kind": "fix",
+        "fr": "Un lasso sur des tracés les sélectionne enfin, en groupe. On les déplace, duplique et supprime ensemble ; Maj+clic ajoute ou retire une forme. Le calque de dessin n’avait pas d’emprise à lui : le lasso passait à travers alors qu’il attrapait les médias sans difficulté.",
+        "en": "A marquee over strokes finally selects them, as a group. They move, duplicate and delete together; Shift-click adds or removes one. The drawing layer had no extent of its own: the marquee went straight through it while catching media without trouble."
+      },
+      {
+        "kind": "fix",
+        "fr": "Une vidéo YouTube rognée en plein milieu démarre net à la première ouverture du board. Le lecteur recevait un deuxième saut vers la borne d’entrée pendant qu’il chargeait déjà le premier — d’où les à-coups, qui disparaissaient ensuite tout seuls.",
+        "en": "A YouTube video trimmed mid-way starts cleanly the first time the board opens. The player was being sent a second jump to the in point while it was still loading the first — hence the stutter, which then cleared up on its own."
+      },
+      {
+        "kind": "fix",
+        "fr": "La ligne yt-dlp ne propose plus de revenir en arrière sur une installation en canal nightly : elle interroge désormais le canal du binaire installé et compare les versions dans l’ordre, au lieu de signaler « différent » comme « à mettre à jour ».",
+        "en": "The yt-dlp row no longer offers to go backwards on a nightly-channel install: it now queries the channel the installed binary belongs to and compares versions in order, instead of reading “different” as “update available”."
+      },
+      {
+        "kind": "improvement",
+        "fr": "L’état d’un board partagé va droit au but : « Personne en ligne. Rien ne part pour l’instant. » plutôt qu’une phrase sur ce que l’application fera plus tard. Les trois profils de synchronisation décrivent maintenant une situation — bonne connexion, cas courant, connexion lente ou limitée — et non leur mécanique interne.",
+        "en": "A shared board’s status gets to the point: “Nobody online. Nothing is going out yet.” rather than a sentence about what the application will do later. The three sync profiles now describe a situation — good connection, common case, slow or capped connection — instead of their internal mechanics."
       }
     ]
   },

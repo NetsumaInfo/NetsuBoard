@@ -99,25 +99,31 @@ export function BoardContextMenu({
       return;
     }
     const shapeId = target.closest("[data-draw-shape]")?.getAttribute("data-draw-shape") ?? null;
-    if (shapeId) store().selectDrawShape(shapeId);
-    else store().select(null);
+    // Même règle que pour les items : viser une forme DÉJÀ dans le groupe garde le groupe, c'est
+    // justement pour ses actions collectives qu'on l'a visée.
+    if (shapeId) {
+      if (!store().drawSel.includes(shapeId)) store().selectDrawShape(shapeId);
+    } else store().select(null);
   };
 
   // Selected drawn shape: same two actions as its keyboard shortcuts (Ctrl+D / Suppr).
   const duplicateShape = () => {
     const st = store();
     const shapes = st.items.find((i) => i.kind === "draw")?.shapes ?? [];
-    const src = shapes.find((s) => s.id === st.drawSel);
-    if (!src) return;
     const off = 16 / st.view.scale;
-    const copy = { ...shifted(src, off, off), id: uid() };
-    st.drawSetShapes([...shapes, copy]);
-    st.selectDrawShape(copy.id);
+    const copies = st.drawSel
+      .map((id) => shapes.find((s) => s.id === id))
+      .filter((src): src is NonNullable<typeof src> => src != null)
+      .map((src) => ({ ...shifted(src, off, off), id: uid() }));
+    if (!copies.length) return;
+    st.drawSetShapes([...shapes, ...copies]);
+    st.selectDrawShapes(copies.map((copy) => copy.id));
   };
   const deleteShape = () => {
     const st = store();
     const shapes = st.items.find((i) => i.kind === "draw")?.shapes ?? [];
-    st.drawSetShapes(shapes.filter((s) => s.id !== st.drawSel));
+    const gone = new Set(st.drawSel);
+    st.drawSetShapes(shapes.filter((s) => !gone.has(s.id)));
     st.selectDrawShape(null);
   };
 
@@ -214,7 +220,7 @@ export function BoardContextMenu({
             </>
           )}
 
-          {drawSel && (
+          {drawSel.length > 0 && (
             <>
               <ContextMenuItem onClick={duplicateShape}>
                 <Copy /> {t("actions.duplicate")}

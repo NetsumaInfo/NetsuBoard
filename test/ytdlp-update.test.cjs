@@ -152,3 +152,29 @@ test('a date version is canonicalised, whatever spelling it arrives in', () => {
   const { result } = runScenario(SPELLING);
   assert.equal(result.status.version, '2026.08.19');
 });
+
+// A nightly carries a fourth timestamp segment and is NEWER than the latest stable. Comparing by
+// inequality read that as "an update is available" and offered to downgrade the tool.
+test('the version order, not a string inequality, decides what is outdated', () => {
+  const { isOlder } = require(path.join(root, 'core', 'ytdlpUpdate.js'));
+  assert.equal(isOlder('2026.08.30.232658', '2026.08.19'), false); // nightly ahead of stable
+  assert.equal(isOlder('2026.08.19', '2026.08.30.232658'), true);
+  assert.equal(isOlder('2026.08.19', '2026.08.19'), false);
+  assert.equal(isOlder('2026.08.19', '2026.09.02'), true);
+  assert.equal(isOlder('2026.09.02', '2026.08.19'), false);
+  // Same release, two spellings: canonicalised on the way in, and equal either way here.
+  assert.equal(isOlder('2026.08.19', '2026.8.19'), false);
+  // A version this cannot read never produces a claim.
+  assert.equal(isOlder('nightly', '2026.08.19'), false);
+});
+
+// `-U` updates within the channel the binary was built for. The setup fetches stable, but this
+// install sits on a nightly, and a nightly is always ahead of the newest stable: compared against
+// the stable repository it reads "up to date" forever and never offers the update.
+test('the published version is read from the channel the binary is on', () => {
+  const { releasesUrl } = require(path.join(root, 'core', 'ytdlpUpdate.js'));
+  assert.match(releasesUrl('2026.08.19'), /repos\/yt-dlp\/yt-dlp\/releases/);
+  assert.match(releasesUrl('2026.08.30.232658'), /repos\/yt-dlp\/yt-dlp-nightly-builds\/releases/);
+  // Nothing readable: the stable repository is the honest default, never a nightly.
+  assert.match(releasesUrl(null), /repos\/yt-dlp\/yt-dlp\/releases/);
+});

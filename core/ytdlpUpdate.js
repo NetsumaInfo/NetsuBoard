@@ -32,9 +32,19 @@ const VERSION_TIMEOUT_MS = 30 * 1000;
 // The published-version probe is cosmetic: it must never make the panel wait.
 const PROBE_TIMEOUT_MS = 8 * 1000;
 
-// The same source `-U` itself uses, so the panel and the tool can never disagree on what "latest"
-// means. `releases/latest` is the stable channel; nightlies are not this product's business.
-const GITHUB_URL = 'https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest';
+// `-U` updates within the CHANNEL the binary was built for, so the panel has to ask the same
+// repository or it compares across channels: the setup fetches the stable `releases/latest`, but an
+// install can end up on a nightly, and a nightly is always ahead of the newest stable — which read
+// as "up to date" forever and never offered the update the user came for.
+// The channel is read from the version shape, which is how yt-dlp itself spells it: stable is
+// `YYYY.MM.DD`, nightly and master add a `.HHMMSS` fourth segment. Asking the binary directly costs
+// a full extraction run (`--version` alone prints no debug header), which this panel will not pay.
+const STABLE_REPO = 'yt-dlp/yt-dlp';
+const NIGHTLY_REPO = 'yt-dlp/yt-dlp-nightly-builds';
+function releasesUrl(installed) {
+  const nightly = String(installed || '').split('.').length > 3;
+  return `https://api.github.com/repos/${nightly ? NIGHTLY_REPO : STABLE_REPO}/releases/latest`;
+}
 
 /** Application version: the repository package.json in dev, the staged one in a bundle. */
 function appVersion() {
@@ -64,14 +74,33 @@ function run(bin, args, timeout) {
   });
 }
 
-// yt-dlp spells its date version zero-padded (2026.08.19) while PyPI normalises the same release to
-// 2026.8.19. Two spellings of ONE version: comparing the raw strings claimed an update was available
-// against the build already installed. Everything below is canonicalised before it is compared or
-// shown, so the panel can never display two versions that are the same release.
+// yt-dlp spells its date version zero-padded (2026.08.19) while a registry normalises the same
+// release to 2026.8.19. Two spellings of ONE version: comparing the raw strings claimed an update was
+// available against the build already installed. Everything below is canonicalised before it is
+// compared or shown, so the panel can never display two versions that are the same release.
 function canonicalVersion(value) {
   const text = String(value || '').trim();
   const match = /^(\d{4})\.(\d{1,2})\.(\d{1,2})(.*)$/.exec(text);
   return match ? `${match[1]}.${match[2].padStart(2, '0')}.${match[3].padStart(2, '0')}${match[4]}` : text;
+}
+
+/**
+ * Is `version` strictly OLDER than `latest`? An ORDER, not an inequality: a nightly carries a fourth
+ * timestamp segment (2026.08.30.232658) and is newer than the latest stable (2026.08.19), which a
+ * plain `!==` read as "an update is available" and offered to downgrade. A segment that is not a
+ * number stops the comparison and answers NO: an update is never invented out of a version this
+ * cannot read.
+ */
+function isOlder(version, latest) {
+  const left = String(version || '').split('.');
+  const right = String(latest || '').split('.');
+  for (let i = 0; i < Math.max(left.length, right.length); i += 1) {
+    const a = left[i] === undefined ? 0 : Number(left[i]);
+    const b = right[i] === undefined ? 0 : Number(right[i]);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+    if (a !== b) return a < b;
+  }
+  return false;
 }
 
 // yt-dlp versions are dates (2026.07.04), sometimes with a build suffix. Anything else on the line
@@ -93,11 +122,13 @@ async function installedVersion() {
 }
 
 /**
- * Tag of the latest stable release, or null. Fails soft on every count — no network, a proxy, a
- * rate limit or a changed payload all mean "unknown", never an error the panel has to show.
+ * Tag of the latest release ON THE INSTALLED BINARY'S CHANNEL, or null. Fails soft on every count —
+ * no network, a proxy, a rate limit or a changed payload all mean "unknown", never an error the
+ * panel has to show.
+ * @param {string|null} installed
  * @returns {Promise<string|null>}
  */
-function publishedVersion() {
+function publishedVersion(installed) {
   return new Promise((resolve) => {
     let settled = false;
     const done = (value) => { if (!settled) { settled = true; resolve(value); } };
@@ -105,7 +136,7 @@ function publishedVersion() {
     try {
       // GitHub rejects an API request without a User-Agent; the product name is the honest one.
       const headers = { accept: 'application/vnd.github+json', 'user-agent': 'NetsuBoard' };
-      request = https.get(GITHUB_URL, { headers, timeout: PROBE_TIMEOUT_MS }, (res) => {
+      request = https.get(releasesUrl(installed), { headers, timeout: PROBE_TIMEOUT_MS }, (res) => {
         if (res.statusCode !== 200) { res.resume(); return done(null); }
         let body = '';
         res.setEncoding('utf8');
@@ -159,13 +190,11 @@ async function refreshYtDlpForAppVersion() {
  * @returns {Promise<{ ok: true, available: boolean, manager: 'binary', owned: boolean, version: string|null, latest: string|null, outdated: boolean, checkedFor: string|null, checkedAt: number|null, appVersion: string, reason?: string }>}
  */
 async function ytDlpStatus(options = {}) {
-  const [version, latest] = await Promise.all([
-    installedVersion(),
-    options.remote === false ? Promise.resolve(null) : publishedVersion(),
-  ]);
-  // String inequality, not an ordering: yt-dlp's date versions never go backwards, and inventing a
-  // comparator here would only be a way to claim "outdated" on a build we failed to parse.
-  const outdated = Boolean(version && latest && version !== latest);
+  // Sequential, not parallel: which repository holds "latest" depends on the channel of the binary
+  // on disk, so the installed version has to be known first.
+  const version = await installedVersion();
+  const latest = options.remote === false ? null : await publishedVersion(version);
+  const outdated = Boolean(version && latest && isOlder(version, latest));
   return {
     ok: true,
     manager: 'binary',
@@ -208,4 +237,9 @@ async function updateYtDlpNow() {
   return { ok: true, version, previous, changed: Boolean(version && previous && version !== previous) };
 }
 
-module.exports = { refreshYtDlpForAppVersion, ytDlpStatus, updateYtDlpNow };
+// `isOlder` is exported for the suite that pins the ordering: it is the rule that decides whether
+// a button is offered at all, and it is worth testing on its own rather than through a spawn.
+// `isOlder` and `releasesUrl` are exported for the suite that pins them: the ordering decides
+// whether a button is offered at all, and the channel decides what it is compared against. Both
+// are worth testing on their own rather than through a spawn.
+module.exports = { refreshYtDlpForAppVersion, ytDlpStatus, updateYtDlpNow, isOlder, releasesUrl };

@@ -175,6 +175,21 @@ Bug report (`components/settings/console/` → `bug:report` → `core/bugreport.
   it, so NetsuRush keeps everything. Scenes and assets only: thumbnails rebuild themselves and
   copying them would double the heaviest directory for nothing.
 
+## Installer identity
+
+- **The main binary is named after the product, never after the Cargo package.**
+  `mainBinaryName` in `src-tauri/tauri.conf.json` is `NetsuBoard`, so the installed image is
+  `NetsuBoard.exe`. Tauri's own `CheckIfAppIsRunning` closes the running app by matching the image
+  **name** (`nsis_tauri_utils::FindProcessCurrentUser` / `KillProcessCurrentUser`), with no path and
+  no window involved. Both Cargo packages are called `app`, so while this was unset, installing,
+  updating or uninstalling NetsuBoard called `TerminateProcess` on every `app.exe` of the session —
+  **NetsuRush was killed outright, without a prompt and without a chance to save**. The two products
+  share a machine by design; nothing in the packaging may address a process it does not own.
+- `windows/installer-hooks.nsh` releases locks through Restart Manager on **paths** inside
+  `$INSTDIR`, never on image names, which is why it was already harmless. It still releases the
+  pre-rename `app.exe` beside `${MAINBINARYNAME}.exe`: an install provisioned before the rename runs
+  under the old name, and that is the image holding the lock.
+
 ## Known violations left by the NetsuRush split
 
 These are **defects**, documented so they are not mistaken for design. Each needs a code change.

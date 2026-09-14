@@ -95,7 +95,7 @@ Without the variable the build prints a warning and produces an unsigned install
 Defender's `!ml` verdicts are classifier output, not signature matches, and an installer earns them by *looking* like a dropper. Three patterns are the expensive ones, and the first two are gone from this tree:
 
 - **A script dropped into `%TEMP%` and relaunched through `powershell.exe -ExecutionPolicy Bypass`** — the canonical dropper invocation. The uninstall cleanup is plain NSIS file operations in `src-tauri/windows/installer-hooks.nsh` for exactly this reason. The string sits in clear text inside the compiled installer, so it is scanned at **install** time even when the code only runs on uninstall. `test/packaging.test.cjs` asserts it stays out.
-- **Writing an executable somewhere and running it.** `NSIS_HOOK_PREINSTALL` still does this once, with `app.exe` copied into `$PLUGINSDIR` to release the `app.exe` and `node.exe` locks through Restart Manager. It is kept because removing it breaks installing over a running app — but the dropped binary is signed as soon as signing is on, which is what defuses it.
+- **Writing an executable somewhere and running it.** `NSIS_HOOK_PREINSTALL` still does this once, with the main binary copied into `$PLUGINSDIR` to release the `NetsuBoard.exe` and `node.exe` locks through Restart Manager. It is kept because removing it breaks installing over a running app — but the dropped binary is signed as soon as signing is on, which is what defuses it.
 
 One pattern in `NSIS_HOOK_PREINSTALL` looks adjacent to that list and is deliberately kept: when `$INSTDIR` is not writable, the hook re-runs **itself** — `$EXEPATH`, not a dropped file — through `ExecShell "runas"`, after a dialog the user has to accept, and passes `/NRELEVATED` so it can never ask twice. Requesting elevation is what every per-machine installer on Windows does; nothing is written, downloaded or executed before the user says yes.
 - **Downloading executable payloads after install.** `scripts/setup.ps1` fetches ffmpeg, the shaders and `yt-dlp.exe` on first run. This is structural to the product and cannot be removed; note that `yt-dlp.exe` is itself a long-standing `Wacatac.B!ml` false positive upstream because it is a PyInstaller bundle.
@@ -104,9 +104,9 @@ One pattern in `NSIS_HOOK_PREINSTALL` looks adjacent to that list and is deliber
 
 ## What the running app must not do
 
-The installer is only half of it. Defender also scores the **process tree**, and a detection naming `app.exe`, its pid and the Start Menu shortcut is a runtime verdict, not an install-time one.
+The installer is only half of it. Defender also scores the **process tree**, and a detection naming `NetsuBoard.exe`, its pid and the Start Menu shortcut is a runtime verdict, not an install-time one.
 
-The chain here is `app.exe` → `resources\bin\node.exe` → `powershell.exe` → downloaded executables. Every link is legitimate and none can be removed, so the shape of the PowerShell call is what is left to control:
+The chain here is `NetsuBoard.exe` → `resources\bin\node.exe` → `powershell.exe` → downloaded executables. Every link is legitimate and none can be removed, so the shape of the PowerShell call is what is left to control:
 
 - `core/setup.js` launches `setup.ps1` with **`-File`**. It previously used `-Command` with `& ([scriptblock]::Create([IO.File]::ReadAllText(...)))` — code built at runtime from a file read at runtime, under `-ExecutionPolicy Bypass`, in a hidden window. AMSI scans the constructed block, and that combination is what fileless loaders look like. `-File` is the ordinary shape and hides nothing.
 - The UTF-8 that scriptblock existed to force now comes from the **BOM on `scripts/setup.ps1`**, which is what Windows PowerShell 5.1 reads. The source file carries one and `scripts/build.ps1` rewrites the staged copy with one, so dev and bundle behave alike. Removing that BOM turns every accent in the setup UI into mojibake.

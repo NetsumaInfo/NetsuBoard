@@ -744,20 +744,20 @@
       "revoke": "Revoke this device"
     },
     "performance": {
-      "title": "Sync performance",
-      "subtitle": "This setting applies to this device only.",
+      "title": "Sync speed",
+      "subtitle": "Specific to this device. Other members keep their own.",
       "modes": {
         "live": {
-          "title": "Live writing",
-          "description": "Fast bridge updates and eager originals."
+          "title": "Fast",
+          "description": "For a good connection: changes go out at once and media arrives ahead of time."
         },
         "balanced": {
           "title": "Balanced",
-          "description": "A steady mix of responsiveness and transfers."
+          "description": "The default setting. Fits most connections."
         },
         "economy": {
-          "title": "Economy",
-          "description": "Fewer transfers; originals load when cards appear."
+          "title": "Light",
+          "description": "For a slow or capped connection: a media file is downloaded only when it comes on screen."
         }
       }
     },
