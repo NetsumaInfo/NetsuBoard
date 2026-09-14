@@ -1,5 +1,61 @@
 [
   {
+    "id": "netsuboard-0.5.1",
+    "version": "0.5.1",
+    "date": "2026-09-14",
+    "title": {
+      "fr": "Boards partagés à quinze, et une bibliothèque de liens qui se répare seule",
+      "en": "Shared boards for fifteen, and a link library that repairs itself"
+    },
+    "changes": [
+      {
+        "kind": "feature",
+        "fr": "Un board partagé accueille désormais quinze personnes au lieu de dix, propriétaire compris. Les invitations en attente réservent toujours leur siège : un projet ne peut pas dépasser ce compte.",
+        "en": "A shared board now holds fifteen people instead of ten, owner included. Pending invitations still reserve their seat: a project can never exceed that count."
+      },
+      {
+        "kind": "feature",
+        "fr": "Paramètres › Mises à jour porte une ligne yt-dlp : la version installée, celle qui est publiée, et un bouton pour mettre la bibliothèque à jour sans attendre la prochaine version de NetsuBoard. C’est elle qui résout les liens vidéo, et ses extracteurs cassent bien plus vite que l’application ne sort une version.",
+        "en": "Settings › Updates carries a yt-dlp row: the installed version, the published one, and a button to update the library without waiting for the next NetsuBoard release. It is what resolves video links, and its extractors break far faster than the application ships a version."
+      },
+      {
+        "kind": "feature",
+        "fr": "Un réglage « Performances de la synchronisation » dans Paramètres › Compte : Écriture en direct, Équilibré ou Économique. Il ne vaut que pour cette machine — un portable en partage de connexion peut passer en Économique sans ralentir la cadence des autres membres.",
+        "en": "A “Sync performance” setting in Account settings: Live writing, Balanced or Economy. It applies to this device only — a laptop on a tethered connection can drop to Economy without slowing anyone else’s cadence."
+      },
+      {
+        "kind": "improvement",
+        "fr": "La carte Discord affiche son image même avant la publication de l’asset : l’icône de l’application prend le relais, et la carte se met à jour dès que Discord répond.",
+        "en": "The Discord card shows its art even before the asset is published: the application icon stands in, and the card refreshes as soon as Discord answers."
+      },
+      {
+        "kind": "improvement",
+        "fr": "Les textes personnalisés de la présence Discord disparaissent. Une présence porte le nom de l’application : ce qu’elle affiche se lit comme venant de NetsuBoard, donc les lignes restent les nôtres — le nom du board et le nombre de références, avec les mêmes interrupteurs qu’avant.",
+        "en": "Custom text on the Discord presence is gone. A presence carries the application’s name, so whatever it says reads as coming from NetsuBoard: the lines stay ours — the board name and the reference count, behind the same switches as before."
+      },
+      {
+        "kind": "performance",
+        "fr": "En mode Économique, les originaux d’un board partagé ne sont plus tous récupérés à l’ouverture : chaque carte demande les siens en arrivant à l’écran. Une petite machine ne passe plus son ouverture à écrire du disque.",
+        "en": "In Economy mode, a shared board’s originals are no longer all fetched on open: each card asks for its own as it comes on screen. A small machine no longer spends its opening writing to disk."
+      },
+      {
+        "kind": "performance",
+        "fr": "La fenêtre de regroupement des modifications suit le profil choisi — 60 ms en Écriture en direct, 200 ms en Équilibré, 900 ms en Économique — au lieu d’un unique 150 ms imposé à toutes les machines.",
+        "en": "The window that batches edits now follows the chosen profile — 60 ms in Live writing, 200 ms in Balanced, 900 ms in Economy — instead of a single 150 ms imposed on every machine."
+      },
+      {
+        "kind": "fix",
+        "fr": "La ligne yt-dlp ne réclame plus une mise à jour déjà installée : la même version s’écrit 2026.8.19 sur le registre et 2026.08.19 dans l’outil, et les deux orthographes sont désormais ramenées à la même avant d’être comparées.",
+        "en": "The yt-dlp row no longer claims an update that is already installed: the same release is spelled 2026.8.19 on the registry and 2026.08.19 by the tool, and both spellings are now reduced to one before being compared."
+      },
+      {
+        "kind": "fix",
+        "fr": "Une carte Discord sans image ne porte plus de lien suspendu dans le vide : le lien n’est posé qu’avec ce qu’il rend cliquable.",
+        "en": "A Discord card with no art no longer carries a link hanging on nothing: a link is only attached to what it makes clickable."
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.5.0",
     "version": "0.5.0",
     "date": "2026-08-27",
