@@ -15,10 +15,22 @@ import type { BoardItem } from "@/components/reference/referenceShared";
 import { mediaPath, mediaUrl } from "./client";
 
 let current: string | null = null;
+let mediaRequester: ((hash: string) => Promise<void>) | null = null;
 
 /** Suivi par le pont collaboratif à l'ouverture et à la fermeture d'un board partagé. */
 export function setCurrentCollabProject(projectId: string | null): void {
   current = projectId;
+}
+
+/** Resolve one shared original requested by a visible board item. */
+export function setCurrentCollabMediaRequester(
+  requester: ((hash: string) => Promise<void>) | null,
+): void {
+  mediaRequester = requester;
+}
+
+export function requestCurrentCollabMedia(hash: string): Promise<void> {
+  return mediaRequester?.(hash) ?? Promise.resolve();
 }
 
 export function currentCollabProject(): string | null {

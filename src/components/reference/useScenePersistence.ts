@@ -80,7 +80,7 @@ export async function syncCollabMedia(force = false): Promise<void> {
     || media.some((ref, index) => ref !== lastCollabMedia[index]);
   if (!mediaChanged && signature === lastCollabPreview) return;
   // Only the LOCATOR list has to be on disk before the batch leaves — it authorises the import.
-  // The preview exists for the home-screen thumbnail: rewriting the row on every 150 ms flush of a
+  // The preview exists for the home-screen thumbnail: rewriting the row on every collaboration flush of a
   // drag was one SQLite write per pointer pause. A preview-only change waits until the board is
   // quiet for a moment.
   if (!mediaChanged && !force) {

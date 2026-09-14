@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { BoardItem } from "./referenceShared";
 import { diffBoard, unresolvedMediaItems, type AssetResolver } from "@/lib/collab/operations";
 import { projectBoard, type NativeProject } from "@/lib/collab/projection";
@@ -21,6 +21,11 @@ import {
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
 import { collabErrorMessage } from "@/lib/collab/client";
 import { describeUnresolved, importBoardAssets } from "@/lib/collab/media";
+import {
+  getCollaborationPerformanceMode,
+  getCollaborationPerformanceSettings,
+  subscribeCollaborationPerformance,
+} from "@/lib/collab/performance";
 
 type Resolution = "available" | "waiting" | "removed";
 
@@ -49,6 +54,7 @@ export type CollabProject = {
   undo: () => Promise<void>;
   redo: () => Promise<void>;
   refresh: () => Promise<void>;
+  requestMedia: (hash: string) => Promise<void>;
 };
 
 /**
@@ -71,6 +77,15 @@ function samePresence(left?: MemberPresence[], right?: MemberPresence[]): boolea
 }
 
 export function useCollabProject(projectId: string | null, sceneId: string | null): CollabProject {
+  const performanceMode = useSyncExternalStore(
+    subscribeCollaborationPerformance,
+    getCollaborationPerformanceMode,
+    getCollaborationPerformanceMode,
+  );
+  const profile = useMemo(
+    () => getCollaborationPerformanceSettings(performanceMode),
+    [performanceMode],
+  );
   const [items, setItems] = useState<BoardItem[]>([]);
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +95,8 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
   const resolutionCache = useRef(new Map<string, Resolution>());
   const importFailures = useRef(new Map<string, string>());
   const refreshGeneration = useRef(0);
+  const nativeProjectionRef = useRef<NativeProject | null>(null);
+  const mediaRequests = useRef(new Map<string, Promise<void>>());
   // Rust announces EVERY apply, including the ones this window just made. Reloading the projection
   // on our own echo replaced the board mid-gesture and dropped the selection with it, so a drag
   // could not survive its first frame. Each locally produced revision is parked here and the
@@ -92,6 +109,8 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
   // avalait la première annonce du suivant : une vraie modification distante ne provoquait alors
   // aucun rafraîchissement.
   useEffect(() => {
+    nativeProjectionRef.current = null;
+    mediaRequests.current.clear();
     resolutionCache.current.clear();
     importFailures.current.clear();
     selfRevisions.current.clear();
@@ -138,12 +157,39 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
     return projected;
   }, [projectId]);
 
+  const requestMedia = useCallback(async (hash: string) => {
+    if (!projectId || !hash) return;
+    const existing = mediaRequests.current.get(hash);
+    if (existing) return existing;
+    if (resolutionCache.current.get(hash) === "available") return;
+    const asset = assetCache.current.get(`collab:${hash}`);
+    if (!asset?.contentHash) return;
+    const request = (async () => {
+      const result = await resolveMedia(projectId, {
+        hash,
+        name: asset.displayName,
+        mime: asset.mime,
+        size: asset.size,
+      });
+      resolutionCache.current.set(hash, result.status);
+      const native = nativeProjectionRef.current;
+      if (result.status === "available" && native) {
+        setItems(renderProjection(native));
+      }
+    })().finally(() => {
+      mediaRequests.current.delete(hash);
+    });
+    mediaRequests.current.set(hash, request);
+    return request;
+  }, [projectId, renderProjection]);
+
   const refresh = useCallback(async () => {
     if (!projectId) return;
     const generation = ++refreshGeneration.current;
     try {
       const native = await nativeProjection(projectId);
       if (generation !== refreshGeneration.current) return;
+      nativeProjectionRef.current = native;
       const assets = nativeAssets(native);
       for (const [ref, asset] of assets) assetCache.current.set(ref, asset);
       // Blobs already on disk never go through a resolve round trip.
@@ -212,17 +258,17 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
         });
         await Promise.all(workers);
       };
-      // Originals saturate disk and CPU together (write + hash + decode as they land): a small
-      // machine froze under four at once, so they arrive one or two at a time. Previews stay wide:
-      // a few KiB each, latency-bound.
-      const originalWorkers = (navigator.hardwareConcurrency || 4) <= 4 ? 1 : 2;
+      // The profile is local to this device: Live keeps a writing session responsive, Balanced
+      // retains the previous two-worker ceiling, and Economy leaves originals for visible cards.
       void (async () => {
         try {
           if (previewJobs.length) {
-            await resolveAll(previewJobs, 4);
+            await resolveAll(previewJobs, profile.previewConcurrency);
             if (generation === refreshGeneration.current) setItems(renderProjection(native));
           }
-          await resolveAll(originalJobs, originalWorkers);
+          if (profile.autoResolveOriginals) {
+            await resolveAll(originalJobs, profile.originalConcurrency);
+          }
           if (generation === refreshGeneration.current) setItems(renderProjection(native));
         } catch (cause) {
           if (generation === refreshGeneration.current) {
@@ -235,7 +281,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
         setError(collabErrorMessage(cause, "collaboration error"));
       }
     }
-  }, [projectId, renderProjection]);
+  }, [profile, projectId, renderProjection]);
 
   useEffect(() => {
     if (!projectId) {
@@ -394,5 +440,6 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
     undo: () => runHistory(false),
     redo: () => runHistory(true),
     refresh,
+    requestMedia,
   };
 }

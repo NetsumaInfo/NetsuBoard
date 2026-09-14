@@ -10,7 +10,9 @@ import type { Id } from "./_generated/dataModel";
 import { recordProjectAudit } from "./audit";
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const MAX_MEMBERS = 10;
+// Includes the owner: one project has at most fifteen total seats.
+export const MAX_PROJECT_MEMBERS = 15;
+const MAX_MEMBERS = MAX_PROJECT_MEMBERS;
 const MAX_PROJECTS_PER_ACCOUNT = 100;
 const MAX_VISIBLE_INVITES = 100;
 export type ProjectRole = "owner" | "editor" | "viewer";

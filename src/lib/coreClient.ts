@@ -592,6 +592,8 @@ export function makeCoreClient(): NrApi {
     setupRun: () => call("setup:run"),
     compatibilityStatus: (opts) => call("compat:status", [opts ?? {}]),
     onSetupProgress: (cb) => on("setup:progress", cb as (p: unknown) => void),
+    ytDlpStatus: (opts) => call("ytdlp:status", [opts ?? {}]),
+    ytDlpUpdate: () => call("ytdlp:update"),
     consoleLogs: () => call("console:logs").then((logs) => ({ ok: true, logs: logs || [] })),
     consoleClear: () => call("console:clear"),
     onConsoleLog: (cb) => on("console:log", cb as (p: unknown) => void),

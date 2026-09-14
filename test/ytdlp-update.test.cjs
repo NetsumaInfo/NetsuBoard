@@ -85,3 +85,70 @@ test('only the provisioned standalone binary is updated', () => {
   assert.deepEqual(result.calls, []);
   assert.equal(result.first.reason, 'yt-dlp non provisionné');
 });
+
+// The per-release anchor has one hole: an installation nobody updates for months stops refreshing
+// the very thing that rots fastest. Settings › Updates reads the version and updates on demand.
+const MANUAL = `
+  const cp = require('node:child_process');
+  const calls = [];
+  let upgraded = false;
+  cp.execFile = (bin, args, opts, cb) => {
+    calls.push({ bin, args });
+    if (args.includes('--version')) return cb(null, upgraded ? '2026.09.02' : '2026.01.01', '');
+    upgraded = true;
+    cb(null, 'Updated yt-dlp to stable@2026.09.02', '');
+  };
+  const { ytDlpStatus, updateYtDlpNow } = require('./core/ytdlpUpdate');
+  (async () => {
+    const status = await ytDlpStatus({ remote: false });
+    const update = await updateYtDlpNow();
+    console.log(JSON.stringify({ status, update, calls }));
+  })();
+`;
+
+test('the panel reads the installed version without touching the network', () => {
+  const { result } = runScenario(MANUAL, { ytDlpCheckedFor: version });
+  assert.equal(result.status.available, true);
+  assert.equal(result.status.version, '2026.01.01');
+  assert.equal(result.status.manager, 'binary');
+  assert.equal(result.status.owned, true);
+  // `remote: false` skips the GitHub probe, so nothing can be claimed about being outdated.
+  assert.equal(result.status.latest, null);
+  assert.equal(result.status.outdated, false);
+});
+
+// The whole point of the manual door: the marker of the current release must NOT skip it.
+test('a manual update ignores the per-release marker and reports what changed', () => {
+  const { result, saved, bin } = runScenario(MANUAL, { ytDlpCheckedFor: version });
+  assert.equal(result.update.ok, true);
+  assert.equal(result.update.previous, '2026.01.01');
+  assert.equal(result.update.version, '2026.09.02');
+  assert.equal(result.update.changed, true);
+  assert.deepEqual(result.calls.filter((c) => !c.args.includes('--version')), [{ bin, args: ['-U'] }]);
+  // An update that just ran satisfies this release too: the next boot must not redo it.
+  assert.equal(saved.ytDlpCheckedFor, version);
+  assert.equal(typeof saved.ytDlpCheckedAt, 'number');
+});
+
+// A yt-dlp this product did not provision is reported, never replaced — the panel greys the button.
+test('a yt-dlp from elsewhere is read but never updated', () => {
+  const { result } = runScenario(MANUAL, { ytDlp: 'yt-dlp.exe' });
+  assert.equal(result.status.owned, false);
+  assert.equal(result.update.ok, false);
+  assert.equal(result.update.error, 'yt-dlp non provisionné');
+  assert.equal(result.calls.filter((c) => !c.args.includes('--version')).length, 0);
+});
+
+// A registry normalises a date version to 2026.8.19 while yt-dlp prints 2026.08.19. The panel
+// compared the raw strings and announced "2026.8.19 disponible" against the build already installed.
+const SPELLING = `
+  const cp = require('node:child_process');
+  cp.execFile = (bin, args, opts, cb) => cb(null, '2026.8.19', '');
+  const { ytDlpStatus } = require('./core/ytdlpUpdate');
+  ytDlpStatus({ remote: false }).then((status) => console.log(JSON.stringify({ status })));
+`;
+
+test('a date version is canonicalised, whatever spelling it arrives in', () => {
+  const { result } = runScenario(SPELLING);
+  assert.equal(result.status.version, '2026.08.19');
+});

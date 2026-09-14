@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
@@ -19,6 +19,14 @@ import { nr } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  getCollaborationPerformanceMode,
+  setCollaborationPerformanceMode,
+  subscribeCollaborationPerformance,
+  type CollaborationPerformanceMode,
+} from "@/lib/collab/performance";
+
+const PERFORMANCE_MODES: CollaborationPerformanceMode[] = ["live", "balanced", "economy"];
 
 type AuthUser = { name?: string | null; image?: string | null } | null | undefined;
 type Profile = {
@@ -69,6 +77,11 @@ function Row({ profile, children }: { profile: Profile; children?: React.ReactNo
 export function CollabSection() {
   const { t } = useTranslation("settings");
   const { isAuthenticated } = useConvexAuth();
+  const performanceMode = useSyncExternalStore(
+    subscribeCollaborationPerformance,
+    getCollaborationPerformanceMode,
+    getCollaborationPerformanceMode,
+  );
   const [queryNow] = useState(() => Date.now());
   const user = useQuery(api.auth.getCurrentUser) as AuthUser;
   const social = useQuery(api.social.listSocial) as Social | undefined;
@@ -366,6 +379,31 @@ export function CollabSection() {
             ))}
           </div>
         )}
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-sm font-medium">{t("collab.performance.title")}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{t("collab.performance.subtitle")}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label={t("collab.performance.title")}>
+          {PERFORMANCE_MODES.map((mode) => (
+            <Button
+              key={mode}
+              type="button"
+              size="sm"
+              variant={performanceMode === mode ? "default" : "outline"}
+              aria-pressed={performanceMode === mode}
+              onClick={() => setCollaborationPerformanceMode(mode)}
+              className="h-auto min-h-14 justify-start px-3 py-2 text-left"
+            >
+              <span className="min-w-0">
+                <span className="block text-xs font-medium">{t(`collab.performance.modes.${mode}.title`)}</span>
+                <span className="mt-0.5 block whitespace-normal text-[10px] font-normal opacity-80">
+                  {t(`collab.performance.modes.${mode}.description`)}
+                </span>
+              </span>
+            </Button>
+          ))}
+        </div>
       </section>
 
       <section className="mt-6">

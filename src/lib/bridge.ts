@@ -325,6 +325,30 @@ export interface SetupStatus {
   home: string;      // dossier de données écrivable (NR_HOME)
   items: SetupItem[];
 }
+// yt-dlp est la SEULE dépendance d'exécution qui pourrit : ses extracteurs sont cassés par les
+// plateformes toutes les quelques semaines. Le core la rafraîchit une fois par version de
+// l'application ; ces deux appels ouvrent la porte manuelle de Paramètres › Mises à jour, pour une
+// installation que personne n'a mise à jour depuis des mois (cf. core/ytdlpUpdate.js).
+export interface YtDlpStatus {
+  ok: true;
+  available: boolean;          // yt-dlp répond à `--version`
+  manager: "pip" | "binary";   // exécutable autonome ici, venv pip côté NetsuRush
+  owned: boolean;              // posé par ce produit → la mise à jour lui appartient
+  version: string | null;      // version installée
+  latest: string | null;       // dernière publiée, `null` si la sonde réseau n'a rien rendu
+  outdated: boolean;           // les deux sont connues ET diffèrent
+  checkedFor: string | null;   // version de l'app qui a déclenché le dernier rafraîchissement
+  checkedAt: number | null;    // horodatage du dernier rafraîchissement (ms)
+  appVersion: string;
+  reason?: string;
+}
+export interface YtDlpUpdateResult {
+  ok: boolean;
+  version: string | null;      // version après la tentative
+  previous: string | null;
+  changed: boolean;            // une version différente est réellement installée
+  error?: string;
+}
 // Suivi d'UN élément téléchargé (archive, roue pip, modèle). `total: 0` = taille inconnue :
 // l'interface montre alors une barre indéterminée plutôt qu'un pourcentage inventé.
 export interface SetupDownload {
@@ -394,7 +418,8 @@ export interface PlayInfo {
 
 // ---- Rich Presence Discord (Paramètres › Compte) --------------------------
 // Réglages persistés CÔTÉ CORE (NR_HOME/discord-rpc.json) : une seule source de vérité, le renderer
-// les lit au montage. Les gabarits acceptent {board} et {items} ; vides = lignes automatiques.
+// les lit au montage. Les lignes de la carte sont TOUJOURS générées par le core : la présence porte le
+// nom de l'app, donc ce qu'elle affiche se lit comme venant de NetsuBoard.
 // Rien ici ne dépend de la connexion Discord de l'app : la présence passe par une named pipe locale.
 export interface DiscordPrefs {
   enabled: boolean;
@@ -402,8 +427,6 @@ export interface DiscordPrefs {
   showItems: boolean;   // « 12 références » : combien le board en porte
   showElapsed: boolean; // « 12:34 écoulées » depuis l'ouverture de l'app
   showLinks: boolean;    // l'art ouvre le serveur, la premiere ligne le depot
-  detailsTpl: string;
-  stateTpl: string;
 }
 // L'activité telle que Discord la reçoit. Les lignes absentes sont OMISES (une string vide est
 // rejetée), d'où les champs optionnels — l'aperçu doit refléter cette omission.
@@ -864,6 +887,10 @@ export interface NrApi {
   setupRun(): Promise<SetupRunResult>;
   compatibilityStatus(opts?: { force?: boolean }): Promise<CompatibilityStatus>;
   onSetupProgress(cb: (p: SetupProgress) => void): () => void;
+  // yt-dlp seul, sans passer par une mise à jour de l'application. `remote: false` coupe la sonde
+  // réseau et ne rend que ce qui est lisible sur la machine.
+  ytDlpStatus(opts?: { remote?: boolean }): Promise<YtDlpStatus>;
+  ytDlpUpdate(): Promise<YtDlpUpdateResult>;
   // Console / journal (Paramètres › Console) : historique des logs core+python, vidage, flux temps réel.
   consoleLogs(): Promise<{ ok: boolean; logs: ConsoleLogEntry[] }>;
   consoleClear(): Promise<{ ok: boolean }>;
@@ -1009,8 +1036,6 @@ const MOCK_DISCORD_PREFS: DiscordPrefs = {
   showItems: true,
   showElapsed: true,
   showLinks: true,
-  detailsTpl: "",
-  stateTpl: "",
 };
 function mockDiscordState(): DiscordState {
   let prefs = MOCK_DISCORD_PREFS;
@@ -1022,9 +1047,9 @@ function mockDiscordState(): DiscordState {
   }
   // Le vrai `preview` est calculé par le core (buildActivity) ; hors app on en donne un échantillon
   // figé, juste pour que la carte d'aperçu ait quelque chose à mettre en forme.
+  // Hors app, aucun board n'est ouvert : il n'y a pas de contexte à mettre en forme, seul le chrono
+  // se calcule ici.
   const preview = {
-    details: prefs.detailsTpl.trim() || undefined,
-    state: prefs.stateTpl.trim() || undefined,
     timestamps: prefs.showElapsed ? { start: Math.floor(Date.now() / 1000) } : undefined,
   };
   // Le core résout le vrai nom/icône auprès de Discord ; hors app on ne fait pas l'appel réseau.
@@ -1065,6 +1090,12 @@ const mock: NrApi = {
     encoding: { h264: "h264_nvenc", h265: "hevc_nvenc", av1: null, webp: true, hardwareEncoders: ["h264_nvenc", "hevc_nvenc"], codecEncoders: { h264_main: "h264_nvenc", h264_high: "h264_nvenc", h265_main: "hevc_nvenc", h265_main10: "hevc_nvenc" }, codecEncoderOptions: { h264_main: ["h264_nvenc"], h265_main: ["hevc_nvenc"] }, upscaleProfileEncoderOptions: { h264_baseline: ["h264_nvenc"], h264_main: ["h264_nvenc"], h264_high: ["h264_nvenc"], h265_main: ["hevc_nvenc"], h265_main10: ["hevc_nvenc"], h265_rext444_8: ["hevc_nvenc"], h265_rext444_10: ["hevc_nvenc"] }, codecs: [], error: null },
   }),
   onSetupProgress: () => () => {},
+  // Hors app : aucun exécutable provisionné à interroger, donc rien à mettre à jour non plus.
+  ytDlpStatus: async () => ({
+    ok: true, available: false, manager: "binary", owned: false, version: null, latest: null,
+    outdated: false, checkedFor: null, checkedAt: null, appVersion: "",
+  }),
+  ytDlpUpdate: async () => ({ ok: false, version: null, previous: null, changed: false, error: i18n.t("common:mock.outsideApp") }),
   status: async () => ({ connected: false, error: i18n.t("common:mock.resolveUnavailable") }),
   importToMediaPool: async () => ({ ok: false, error: "mock" }),
   refreshNow: () => {},

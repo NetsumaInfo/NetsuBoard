@@ -251,6 +251,19 @@
       "fix": "Correcciones",
       "improvement": "Mejoras",
       "performance": "Rendimiento"
+    },
+    "ytdlp": {
+      "hint": "Biblioteca que resuelve los enlaces de vídeo. Sus extractores se rompen a menudo: se actualiza sin esperar a la próxima versión de NetsuBoard.",
+      "update": "Actualizar",
+      "updating": "Actualizando…",
+      "checking": "Leyendo la versión…",
+      "current": "Versión {{version}} · actualizada",
+      "available": "Versión {{version}} · {{latest}} disponible",
+      "unknown": "Versión {{version}}",
+      "updated": "Actualizada · versión {{version}}",
+      "missing": "No instalada",
+      "notOwned": "Versión {{version}} · instalada fuera de la aplicación",
+      "failed": "La actualización ha fallado"
     }
   },
   "compatibility": {
@@ -474,11 +487,7 @@
     "showElapsed": "Tiempo transcurrido",
     "showLinks": "Tarjeta con enlaces",
     "showLinksHint": "La imagen abre el servidor de Discord; la primera línea, el repositorio.",
-    "itemsLine": "{{count}} elemento(s)",
-    "custom": "Textos personalizados",
-    "customHelp": "Sustituyen a las líneas automáticas. {board} y {items} se reemplazan.",
-    "details": "Primera línea",
-    "state": "Segunda línea"
+    "itemsLine": "{{count}} elemento(s)"
   },
   "storage": {
     "title": "Almacenamiento del tablero",
@@ -733,6 +742,24 @@
       "unnamed": "Dispositivo NetsuBoard",
       "current": "este dispositivo",
       "revoke": "Revocar este dispositivo"
+    },
+    "performance": {
+      "title": "Rendimiento de la sincronización",
+      "subtitle": "Este ajuste solo se aplica a este dispositivo.",
+      "modes": {
+        "live": {
+          "title": "Escritura en directo",
+          "description": "Actualizaciones rápidas y originales anticipados."
+        },
+        "balanced": {
+          "title": "Equilibrado",
+          "description": "Un ritmo estable entre respuesta y transferencias."
+        },
+        "economy": {
+          "title": "Económico",
+          "description": "Menos transferencias; los originales llegan al mostrar la tarjeta."
+        }
+      }
     },
     "friends": {
       "title": "Amigos",

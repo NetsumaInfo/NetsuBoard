@@ -25,6 +25,7 @@ import { knownThumb, useImageLod, zoomCeil } from "./boardImageLod";
 import { fitNatSize } from "./boardNatFit";
 import { posterTime, stillSized, useVideoStill } from "./boardVideoLod";
 import { useOnScreen } from "./useOnScreen";
+import { requestCurrentCollabMedia } from "@/lib/collab/currentProject";
 
 // Récupération auto d'un média cassé/noir (lien distant mort ou média extrait d'un post), seulement
 // si un lien d'origine existe (sourceUrl ou ref http). Le compte des tentatives vit avec la
@@ -1023,6 +1024,12 @@ export const BoardItem = memo(function BoardItem({
   const [ytFallback, setYtFallback] = useState(false);
   const liveable = item.kind === "embed" || (item.kind === "youtube" && ytFallback);
   useEffect(() => { if (!primary) setLive(false); }, [primary]);
+  // Economy mode leaves originals parked until a cull-visible card asks for its bytes. The item
+  // stays in the Zustand board, so collaboration diffs still see the complete authoritative list.
+  useEffect(() => {
+    const hash = item.missing?.reason === "waiting" ? item.missing.locator : undefined;
+    if (hash) void requestCurrentCollabMedia(hash);
+  }, [item.id, item.missing?.locator, item.missing?.reason]);
 
   // Bouton de lien au cadre. Le cadre entourant n'est cherché QUE quand le bouton peut s'afficher
   // (survol ou sélection) : un sélecteur permanent balaierait la scène une fois par item et par

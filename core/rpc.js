@@ -33,6 +33,7 @@ const { createResolveWatch } = require("./resolve-watch");
 const { createHostPower } = require("./hostPower"); // fermer/rouvrir le logiciel de montage (libérer RAM/GPU)
 const { createProjectSnapshot } = require("./projectSnapshot"); // photo des lectures Resolve servie offline (hôte fermé)
 const setup = require("./setup"); // provisionnement 1er lancement (venv/ffmpeg/poids)
+const ytdlp = require("./ytdlpUpdate"); // yt-dlp : état + mise à jour à la demande (la lib rote vite)
 const compatibility = require('./compatibility'); // matériel + runtimes IA/encodage réellement actifs
 const { cacheIndex } = require("./cacheIndex"); // index latéral fichier de cache → rush source
 const { createCacheAdmin } = require("./cacheAdmin"); // Paramètres › Stockage : mesure + purge ciblée
@@ -219,6 +220,13 @@ function createRpc() {
       return setup.runSetup(ev);
     },
     "compat:status": ([opts]) => compatibility.status(opts || {}),
+
+    // --- yt-dlp (Paramètres › Mises à jour) ---
+    // The only runtime dependency that rots on its own: the boot path refreshes it once per
+    // application release, and these two channels let it be refreshed WITHOUT one, for an install
+    // left alone for months (cf. core/ytdlpUpdate.js).
+    "ytdlp:status": ([opts]) => ytdlp.ytDlpStatus(opts || {}),
+    "ytdlp:update": () => ytdlp.updateYtDlpNow(),
 
     // --- Console / journal (debug + bêta-test) : historique des logs, vidage, rapport de bug ---
     // Le flux temps réel arrive en SSE `console:log` (core + sidecars python).

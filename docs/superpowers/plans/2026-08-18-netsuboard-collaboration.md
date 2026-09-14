@@ -676,7 +676,7 @@ export async function requireRole(
 }
 ```
 
-Enforce owner-only invitation/removal/role/delete, max ten members, pending invitations bounded by
+Enforce owner-only invitation/removal/role/delete, max fifteen members, pending invitations bounded by
 the remaining project seats, max five active devices, stable invite codes, and no owner leave.
 
 - [x] **Step 5: Verify registration proof atomically**

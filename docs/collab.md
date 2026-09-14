@@ -4,7 +4,7 @@
 two-machine session. Native changes require a Tauri window restart before the running application can
 exercise them.
 
-NetsuBoard supports local-first shared boards for **2 to 10 members**. Members can edit the complete
+NetsuBoard supports local-first shared boards for **2 to 15 members**. Members can edit the complete
 persisted board contract: item creation and deletion, geometry, ordering, text, drawing, crop and trim,
 appearance, playback, palettes, sequences, links, embeds, and media manifests.
 
@@ -81,8 +81,11 @@ cursors and presence are intentionally not claimed by this version.
 The Zustand board is a render cache; the Loro document is authoritative. Four rules keep the two from
 fighting each other, and breaking any of them makes the board unusable rather than merely wrong:
 
-- **Local edits are coalesced.** Board mutations are batched over a 150 ms window and leave as one
+- **Local edits are coalesced.** The device-local performance profile batches board mutations over a
+  60 ms (Live), 200 ms (Balanced), or 900 ms (Economy) window, and each window leaves as one
   operation batch. One batch per pointer frame saturates the outbox and the publication debounce.
+  Live and Balanced resolve original media ahead of time; Economy resolves originals when a visible
+  card requests them, so one slower device does not change another member's cadence.
 - **A local apply never triggers a projection reload.** The native side announces every apply,
   including this window's own; the announcement carrying the revision the local apply just returned
   is consumed, not acted on. Rebuilding the board from the document mid-gesture destroys the item
@@ -362,7 +365,7 @@ username, or the existing NetsuBoard handle. It performs bounded exact index rea
 account found through multiple keys, and fails closed when distinct accounts match. Existing profiles
 gain the Discord fields on their next authenticated app start, with no table scan or prefix search.
 Profiles, friends, pending requests, projects, and invitations are bounded.
-Only friends may be invited. Invitations expire after seven days, reserve one of ten seats, and grant
+Only friends may be invited. Invitations expire after seven days, reserve one of fifteen seats, and grant
 editor or viewer—not owner.
 
 Project creation is transactional at product level: Convex metadata is created, Rust opens the local
@@ -445,7 +448,7 @@ delete. The current running device cannot revoke itself.
 
 ## Verification and operations
 
-Automated acceptance covers 2–10-replica convergence across the full board contract, Unicode edits,
+Automated acceptance covers 2–15-replica convergence across the full board contract, Unicode edits,
 atomic invalid-batch rollback, durable outbox sequencing, exact head confirmation, checkpoint CAS,
 signed P2P binding, viewer enforcement, path and token confinement, media range/grant behavior,
 thirty-day GC transitions, Convex policy helpers, scene binding, renderer build, core type checking,

@@ -6,7 +6,11 @@ import {
   type DeviceRegistrationStatement,
   verifyDeviceProof,
 } from "../../convex/devices";
-import { canInvite, normalizeProjectRole } from "../../convex/projects";
+import {
+  canInvite,
+  MAX_PROJECT_MEMBERS,
+  normalizeProjectRole,
+} from "../../convex/projects";
 import { isStaleHead } from "../../convex/collabPolicy";
 import {
   checkpointCasMatches,
@@ -33,6 +37,10 @@ describe("Convex collaboration policy", () => {
     expect(normalizeProjectRole("admin")).toBeNull();
     expect(canInvite("owner")).toBe(true);
     expect(canInvite("editor")).toBe(false);
+  });
+
+  it("keeps the project seat cap at fifteen total members", () => {
+    expect(MAX_PROJECT_MEMBERS).toBe(15);
   });
 
   it("verifies the complete native device registration statement", async () => {

@@ -17,6 +17,7 @@ use super::ops::OperationBatch;
 use super::store::{DurableEnvelope, ProjectStore};
 
 const COMMAND_CAPACITY: usize = 64;
+const MAX_INVITE_TARGETS: usize = 14;
 const ROSTER_REFRESH_INTERVAL: Duration = Duration::from_secs(30);
 const MAX_PUBLISH_RETRY: Duration = Duration::from_secs(15 * 60);
 const MEDIA_NOTICE_INTERVAL: Duration = Duration::from_secs(60 * 60);
@@ -1750,7 +1751,7 @@ async fn run_actor(
                         if let Some(project) = active.get_mut(&parsed) {
                             // Rebuilding the projection to collect media hashes is O(document);
                             // a geometry/text/stroke batch cannot change the referenced set, so a
-                            // drag no longer pays it on every 150 ms flush.
+                            // drag no longer pays it on every collaboration flush.
                             if batch_touches_media(&batch.ops) {
                                 if let Err(error) = refresh_media_retention(&parsed) {
                                     eprintln!("[collab] media retention update failed: {error}");
@@ -2081,9 +2082,9 @@ async fn run_actor(
                         )
                     })?;
                     let project_id = ProjectId::parse(request.project_id)?;
-                    if request.user_ids.is_empty() || request.user_ids.len() > 9 {
+                    if request.user_ids.is_empty() || request.user_ids.len() > MAX_INVITE_TARGETS {
                         return Err(CollabError::validation(
-                            "invite needs between one and nine users",
+                            "invite needs between one and fourteen users",
                         ));
                     }
                     if request.role == ProjectRole::Owner {

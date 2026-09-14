@@ -2,7 +2,7 @@
 
 ## Status
 
-Validated product direction: a collaborative moodboard for 2 to 10 participants, with Loro as the
+Validated product direction: a collaborative moodboard for 2 to 15 participants, with Loro as the
 document authority, iroh as the live and media transport, and Convex limited to identity, access,
 rendezvous, encrypted recovery data, and consolidated activity notices.
 
@@ -11,7 +11,7 @@ That prototype is useful implementation evidence, but it is not a security or pe
 
 ## Goals
 
-- Let 2 to 10 people edit the same board concurrently: create, delete, move, resize, reorder, write,
+- Let 2 to 15 people edit the same board concurrently: create, delete, move, resize, reorder, write,
   draw, crop, trim, style, and change supported media and embed properties.
 - Keep local editing available without Convex or another participant being online.
 - Make live collaboration peer-to-peer and keep Convex usage low enough for a small free-plan beta.
@@ -26,7 +26,7 @@ That prototype is useful implementation evidence, but it is not a security or pe
 - Convex is not the real-time document transport and never stores plaintext board content.
 - Original local videos never enter Convex. Original images do not enter Convex in V1 either.
 - V1 has no public project links, anonymous guests, browser client, server-rendered board, or more
-  than 10 members.
+  than 15 members.
 - V1 does not use shallow Loro history. Compaction retains the complete history needed by active
   replicas.
 - V1 does not promise push delivery while NetsuBoard is fully closed. It shows consolidated activity
@@ -202,8 +202,8 @@ Roles are `owner`, `editor`, and `viewer`.
 - Viewers receive state and media but their UI and native service both reject write operations.
 
 The owner cannot leave or delete their own membership while the project still exists. Projects are
-limited to ten members including the owner and five active devices per account. Pending invitations
-reserve the remaining project seats, so a project can never have more than nine. Expired, accepted,
+limited to fifteen members including the owner and five active devices per account. Pending invitations
+reserve the remaining project seats, so a project can never have more than fourteen. Expired, accepted,
 and rejected invitations do not remain active quota rows.
 
 A collaborative project id is stored in the board scene/project metadata. It is never selected from a
@@ -420,7 +420,7 @@ recovery. A local keep-offline pin never imposes disk use on other members.
 - One current head per device bounds metadata rows and write contention.
 - Activity writes stop while a recipient already has an unread row.
 - Media-wanted requests are bounded and coalesced; original media is never backend egress.
-- Project membership is capped at ten, invitations and devices have explicit caps, and every list is
+- Project membership is capped at fifteen, invitations and devices have explicit caps, and every list is
   indexed and bounded.
 - Convex functions avoid scans, JavaScript filtering after collection, `Date.now()` inside reactive
   queries, and hot parent-document heartbeats.
@@ -477,7 +477,7 @@ message.
 
 Completion requires automated evidence for all of the following:
 
-- two through ten replicas converge after concurrent create, edit, move, reorder, delete, palette,
+- two through fifteen replicas converge after concurrent create, edit, move, reorder, delete, palette,
   text, drawing, crop, trim, media-manifest, embed, and sequence operations;
 - an empty remote board clears the local projection;
 - Unicode text edits, including emoji and combining characters, use correct code-point positions;

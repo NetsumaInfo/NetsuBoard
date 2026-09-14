@@ -251,6 +251,19 @@
       "fix": "修复",
       "improvement": "改进",
       "performance": "性能"
+    },
+    "ytdlp": {
+      "hint": "解析视频链接的库。它的解析器经常失效：无需等待 NetsuBoard 的下一个版本即可更新。",
+      "update": "更新",
+      "updating": "正在更新…",
+      "checking": "正在读取版本…",
+      "current": "版本 {{version}} · 已是最新",
+      "available": "版本 {{version}} · 有 {{latest}}",
+      "unknown": "版本 {{version}}",
+      "updated": "已更新 · 版本 {{version}}",
+      "missing": "未安装",
+      "notOwned": "版本 {{version}} · 在应用外安装",
+      "failed": "更新失败"
     }
   },
   "compatibility": {
@@ -474,11 +487,7 @@
     "showElapsed": "已用时间",
     "showLinks": "可点击的卡片",
     "showLinksHint": "图片打开 Discord 服务器，第一行打开仓库。",
-    "itemsLine": "{{count}} 个元素",
-    "custom": "自定义文本",
-    "customHelp": "替换自动生成的行。{board} 和 {items} 会被替换。",
-    "details": "第一行",
-    "state": "第二行"
+    "itemsLine": "{{count}} 个元素"
   },
   "storage": {
     "title": "板面存储",
@@ -733,6 +742,24 @@
       "unnamed": "NetsuBoard 设备",
       "current": "此设备",
       "revoke": "撤销此设备"
+    },
+    "performance": {
+      "title": "同步性能",
+      "subtitle": "此设置仅应用于本设备。",
+      "modes": {
+        "live": {
+          "title": "实时写作",
+          "description": "更快的桥接更新，并提前获取原始媒体。"
+        },
+        "balanced": {
+          "title": "平衡",
+          "description": "在响应速度和传输之间保持稳定平衡。"
+        },
+        "economy": {
+          "title": "节省资源",
+          "description": "减少传输；卡片出现时再加载原始媒体。"
+        }
+      }
     },
     "friends": {
       "title": "好友",

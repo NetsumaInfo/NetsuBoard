@@ -251,6 +251,19 @@
       "fix": "Fehlerbehebungen",
       "improvement": "Verbesserungen",
       "performance": "Leistung"
+    },
+    "ytdlp": {
+      "hint": "Bibliothek, die Videolinks auflöst. Ihre Extraktoren brechen häufig: Sie wird aktualisiert, ohne auf die nächste NetsuBoard-Version zu warten.",
+      "update": "Aktualisieren",
+      "updating": "Wird aktualisiert…",
+      "checking": "Version wird gelesen…",
+      "current": "Version {{version}} · aktuell",
+      "available": "Version {{version}} · {{latest}} verfügbar",
+      "unknown": "Version {{version}}",
+      "updated": "Aktualisiert · Version {{version}}",
+      "missing": "Nicht installiert",
+      "notOwned": "Version {{version}} · außerhalb der Anwendung installiert",
+      "failed": "Die Aktualisierung ist fehlgeschlagen"
     }
   },
   "compatibility": {
@@ -474,11 +487,7 @@
     "showElapsed": "Vergangene Zeit",
     "showLinks": "Anklickbare Karte",
     "showLinksHint": "Das Bild öffnet den Discord-Server, die erste Zeile das Repository.",
-    "itemsLine": "{{count}} Element(e)",
-    "custom": "Eigene Texte",
-    "customHelp": "Ersetzen die automatischen Zeilen. {board} und {items} werden eingesetzt.",
-    "details": "Erste Zeile",
-    "state": "Zweite Zeile"
+    "itemsLine": "{{count}} Element(e)"
   },
   "storage": {
     "title": "Board-Speicher",
@@ -733,6 +742,24 @@
       "unnamed": "NetsuBoard-Gerät",
       "current": "dieses Gerät",
       "revoke": "Dieses Gerät widerrufen"
+    },
+    "performance": {
+      "title": "Synchronisationsleistung",
+      "subtitle": "Diese Einstellung gilt nur für dieses Gerät.",
+      "modes": {
+        "live": {
+          "title": "Live-Schreiben",
+          "description": "Schnelle Bridge-Updates und Originale im Voraus."
+        },
+        "balanced": {
+          "title": "Ausgewogen",
+          "description": "Stabiles Verhältnis von Reaktion und Übertragungen."
+        },
+        "economy": {
+          "title": "Sparsam",
+          "description": "Weniger Übertragungen; Originale laden beim Anzeigen."
+        }
+      }
     },
     "friends": {
       "title": "Freunde",

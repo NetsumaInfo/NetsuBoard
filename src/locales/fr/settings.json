@@ -251,6 +251,19 @@
       "fix": "Corrections",
       "improvement": "Améliorations",
       "performance": "Performances"
+    },
+    "ytdlp": {
+      "hint": "Bibliothèque qui résout les liens vidéo. Ses extracteurs cassent souvent : elle se met à jour sans attendre la prochaine version de NetsuBoard.",
+      "update": "Mettre à jour",
+      "updating": "Mise à jour…",
+      "checking": "Lecture de la version…",
+      "current": "Version {{version}} · à jour",
+      "available": "Version {{version}} · {{latest}} disponible",
+      "unknown": "Version {{version}}",
+      "updated": "Mis à jour · version {{version}}",
+      "missing": "Non installé",
+      "notOwned": "Version {{version}} · installé hors de l'application",
+      "failed": "Échec de la mise à jour"
     }
   },
   "compatibility": {
@@ -474,11 +487,7 @@
     "showElapsed": "Temps écoulé",
     "showLinks": "Carte cliquable",
     "showLinksHint": "L’image ouvre le serveur Discord, la première ligne le dépôt.",
-    "itemsLine": "{{count}} élément(s)",
-    "custom": "Textes personnalisés",
-    "customHelp": "Remplacent les lignes automatiques. {board} et {items} sont substitués.",
-    "details": "Première ligne",
-    "state": "Seconde ligne"
+    "itemsLine": "{{count}} élément(s)"
   },
   "storage": {
     "title": "Stockage du board",
@@ -733,6 +742,24 @@
       "unnamed": "Appareil NetsuBoard",
       "current": "cet appareil",
       "revoke": "Révoquer cet appareil"
+    },
+    "performance": {
+      "title": "Performances de la synchronisation",
+      "subtitle": "Ce réglage s'applique uniquement à cet appareil.",
+      "modes": {
+        "live": {
+          "title": "Écriture en direct",
+          "description": "Pont rapide et originaux récupérés sans attendre."
+        },
+        "balanced": {
+          "title": "Équilibré",
+          "description": "Un compromis régulier entre réactivité et transferts."
+        },
+        "economy": {
+          "title": "Économique",
+          "description": "Moins de transferts ; les originaux arrivent à l'affichage."
+        }
+      }
     },
     "friends": {
       "title": "Amis",

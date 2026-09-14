@@ -133,7 +133,7 @@ pub struct ProjectProjection {
 /// The on-disk `.loro` snapshot is a warm-start cache, not the durability layer: every accepted
 /// edit is already committed to the project's SQLite store before `commit_update` runs, and opening
 /// a project replays that store on top of whatever snapshot exists. Rewriting the full snapshot on
-/// every 150 ms batch therefore buys nothing — it is throttled to this interval and flushed on
+/// every coalesced batch therefore buys nothing — it is throttled to this interval and flushed on
 /// close (and after the open-time replay).
 const SNAPSHOT_INTERVAL: Duration = Duration::from_secs(2);
 
@@ -724,8 +724,8 @@ fn apply_batch_to_doc(doc: &LoroDoc, ops: &[Op]) -> Result<Vec<u8>, DocError> {
 ///
 /// The service persists both in one SQLite transaction before calling `commit_update`, so a crash
 /// cannot leave visible work without a recoverable head. The shadow makes this O(batch), not
-/// O(document): the previous implementation exported and re-imported two full snapshots per 150 ms
-/// batch, which dominated every drag on a large board.
+/// O(document): the previous implementation exported and re-imported two full snapshots per
+/// coalesced batch, which dominated every drag on a large board.
 pub fn prepare_batch(
     project_id: &str,
     protocol: u32,
@@ -1159,7 +1159,7 @@ mod path_tests {
     }
 
     #[test]
-    fn two_through_ten_replicas_converge_across_the_complete_board_contract() {
+    fn two_through_fifteen_replicas_converge_across_the_complete_board_contract() {
         use serde_json::json;
 
         let geometry = |x: f64| {
@@ -1251,9 +1251,12 @@ mod path_tests {
             ]),
         ];
 
-        for replica_count in 2..=10 {
+        for replica_count in 2..=15 {
             let mut updates = Vec::new();
-            for (index, batch) in batches.iter().take(replica_count).enumerate() {
+            for index in 0..replica_count {
+                // There are more replicas than distinct operation families; cycling keeps every
+                // replica independent while exercising the full fifteen-peer merge fan-in.
+                let batch = &batches[index % batches.len()];
                 let replica = LoroDoc::new();
                 replica.import(&snapshot).expect("replica snapshot");
                 replica.set_peer_id((index + 1) as u64).expect("peer id");

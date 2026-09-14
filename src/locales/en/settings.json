@@ -251,6 +251,19 @@
       "fix": "Fixes",
       "improvement": "Improvements",
       "performance": "Performance"
+    },
+    "ytdlp": {
+      "hint": "Library that resolves video links. Its extractors break often: it updates without waiting for the next NetsuBoard release.",
+      "update": "Update",
+      "updating": "Updating…",
+      "checking": "Reading the version…",
+      "current": "Version {{version}} · up to date",
+      "available": "Version {{version}} · {{latest}} available",
+      "unknown": "Version {{version}}",
+      "updated": "Updated · version {{version}}",
+      "missing": "Not installed",
+      "notOwned": "Version {{version}} · installed outside the application",
+      "failed": "The update failed"
     }
   },
   "compatibility": {
@@ -474,11 +487,7 @@
     "showElapsed": "Time elapsed",
     "showLinks": "Clickable card",
     "showLinksHint": "The art opens the Discord server, the first line the repository.",
-    "itemsLine": "{{count}} item(s)",
-    "custom": "Custom text",
-    "customHelp": "Replaces the automatic lines. {board} and {items} get substituted.",
-    "details": "First line",
-    "state": "Second line"
+    "itemsLine": "{{count}} item(s)"
   },
   "storage": {
     "title": "Board storage",
@@ -733,6 +742,24 @@
       "unnamed": "NetsuBoard device",
       "current": "this device",
       "revoke": "Revoke this device"
+    },
+    "performance": {
+      "title": "Sync performance",
+      "subtitle": "This setting applies to this device only.",
+      "modes": {
+        "live": {
+          "title": "Live writing",
+          "description": "Fast bridge updates and eager originals."
+        },
+        "balanced": {
+          "title": "Balanced",
+          "description": "A steady mix of responsiveness and transfers."
+        },
+        "economy": {
+          "title": "Economy",
+          "description": "Fewer transfers; originals load when cards appear."
+        }
+      }
     },
     "friends": {
       "title": "Friends",

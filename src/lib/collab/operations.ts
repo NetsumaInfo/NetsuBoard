@@ -17,7 +17,7 @@ import type {
 export type AssetResolver = (ref: string, item: BoardItem) => MediaAsset | null;
 
 // Structural equality over the plain-data values the facet builders produce. The previous
-// `JSON.stringify` pair serialized every facet of every item on every 150 ms flush — O(board) of
+// `JSON.stringify` pair serialized every facet of every item on every collaboration flush — O(board) of
 // string building to compare two objects that are usually identical. Matches stringify semantics
 // where it matters: a property holding `undefined` counts as absent, and NaN equals NaN.
 export function same(left: unknown, right: unknown): boolean {

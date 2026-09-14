@@ -8,7 +8,7 @@ instances. A runtime-only item is not represented as verified.
 
 | Requirement | Evidence | Status |
 |---|---|---|
-| Two through ten replicas converge across the complete persisted board contract | `collab::doc::path_tests::two_through_ten_replicas_converge_across_the_complete_board_contract` | Automated |
+| Two through fifteen replicas converge across the complete persisted board contract | `collab::doc::path_tests::two_through_fifteen_replicas_converge_across_the_complete_board_contract` | Automated |
 | Empty remote state clears the renderer | Rust `empty_document_has_a_total_empty_projection` and Vitest `projects an empty native document to an empty board` | Automated |
 | Unicode scalar indices, emoji, and combining text | Rust `text_indices_are_unicode_scalar_indices` and Vitest `diffs text by Unicode scalar value` | Automated |
 | An invalid multi-operation batch is atomic | Rust `invalid_second_operation_rolls_back_the_first_operation` | Automated |

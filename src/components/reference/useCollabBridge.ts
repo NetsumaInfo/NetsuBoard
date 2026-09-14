@@ -1,7 +1,15 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import type { BoardItem } from "./referenceShared";
 import { same } from "@/lib/collab/operations";
-import { setCurrentCollabProject } from "@/lib/collab/currentProject";
+import {
+  setCurrentCollabMediaRequester,
+  setCurrentCollabProject,
+} from "@/lib/collab/currentProject";
+import {
+  getCollaborationPerformanceMode,
+  getCollaborationPerformanceSettings,
+  subscribeCollaborationPerformance,
+} from "@/lib/collab/performance";
 import { useBoard } from "./useReferenceBoard";
 import { syncCollabMedia } from "./useScenePersistence";
 import { useCollabProject } from "./useCollabProject";
@@ -10,13 +18,17 @@ import { useCollabProject } from "./useCollabProject";
 // batch cost an IPC round trip per frame and kept the outbox permanently behind, which is what the
 // toolbar reported as "sync pending". Local edits are coalesced over this window and leave as one
 // batch once the gesture rests; the document is never more than this far behind the screen.
-const COALESCE_MS = 150;
-
 /** Bidirectional adapter. Rust/Loro is always authoritative; the Zustand board is a render cache. */
 export function useCollabBridge() {
   const projectId = useBoard((state) => state.collabProjectId);
   const sceneId = useBoard((state) => state.sceneId);
   const collab = useCollabProject(projectId, sceneId);
+  const performanceMode = useSyncExternalStore(
+    subscribeCollaborationPerformance,
+    getCollaborationPerformanceMode,
+    getCollaborationPerformanceMode,
+  );
+  const performance = getCollaborationPerformanceSettings(performanceMode);
   const applyingProjection = useRef(false);
   const lastSent = useRef<BoardItem[]>([]);
   const sendQueue = useRef(Promise.resolve());
@@ -36,8 +48,12 @@ export function useCollabBridge() {
   // bonne adresse au lieu d'une case vide rattrapée au rendu suivant.
   useLayoutEffect(() => {
     setCurrentCollabProject(projectId);
-    return () => setCurrentCollabProject(null);
-  }, [projectId]);
+    setCurrentCollabMediaRequester(projectId ? collab.requestMedia : null);
+    return () => {
+      setCurrentCollabMediaRequester(null);
+      setCurrentCollabProject(null);
+    };
+  }, [collab.requestMedia, projectId]);
 
   useEffect(() => {
     if (!projectId || !collab.session) return;
@@ -144,7 +160,7 @@ export function useCollabBridge() {
       if (state.items === lastSent.current) return;
       if (timer !== null) return;
       localPending.current += 1;
-      timer = window.setTimeout(flush, COALESCE_MS);
+      timer = window.setTimeout(flush, performance.coalesceMs);
     });
 
     return () => {
@@ -156,7 +172,7 @@ export function useCollabBridge() {
         flush();
       }
     };
-  }, [projectId, ready]);
+  }, [performance.coalesceMs, projectId, ready]);
 
   useEffect(() => {
     if (!collab.error) return;

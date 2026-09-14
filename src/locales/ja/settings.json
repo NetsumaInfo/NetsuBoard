@@ -251,6 +251,19 @@
       "fix": "修正",
       "improvement": "改善",
       "performance": "パフォーマンス"
+    },
+    "ytdlp": {
+      "hint": "動画リンクを解決するライブラリ。抽出機能は頻繁に壊れるため、次の NetsuBoard のリリースを待たずに更新されます。",
+      "update": "更新",
+      "updating": "更新中…",
+      "checking": "バージョンを確認中…",
+      "current": "バージョン {{version}} · 最新",
+      "available": "バージョン {{version}} · {{latest}} が利用可能",
+      "unknown": "バージョン {{version}}",
+      "updated": "更新済み · バージョン {{version}}",
+      "missing": "未インストール",
+      "notOwned": "バージョン {{version}} · アプリ外でインストール",
+      "failed": "更新に失敗しました"
     }
   },
   "compatibility": {
@@ -474,11 +487,7 @@
     "showElapsed": "経過時間",
     "showLinks": "クリックできるカード",
     "showLinksHint": "画像は Discord サーバーを、1 行目はリポジトリを開きます。",
-    "itemsLine": "{{count}} 個の要素",
-    "custom": "カスタムテキスト",
-    "customHelp": "自動の行を置き換えます。{board} と {items} が差し替わります。",
-    "details": "1 行目",
-    "state": "2 行目"
+    "itemsLine": "{{count}} 個の要素"
   },
   "storage": {
     "title": "ボードのストレージ",
@@ -733,6 +742,24 @@
       "unnamed": "NetsuBoard 端末",
       "current": "この端末",
       "revoke": "この端末を取り消す"
+    },
+    "performance": {
+      "title": "同期パフォーマンス",
+      "subtitle": "この設定はこの端末だけに適用されます。",
+      "modes": {
+        "live": {
+          "title": "ライブ編集",
+          "description": "ブリッジ更新を優先し、オリジナルも先に取得します。"
+        },
+        "balanced": {
+          "title": "バランス",
+          "description": "応答性と転送量のバランスを取ります。"
+        },
+        "economy": {
+          "title": "省エネ",
+          "description": "転送を減らし、カード表示時にオリジナルを取得します。"
+        }
+      }
     },
     "friends": {
       "title": "フレンド",

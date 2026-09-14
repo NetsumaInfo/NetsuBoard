@@ -7,11 +7,9 @@
 // Elle marche donc sans connexion, sans Convex, et hors ligne.
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Info } from "lucide-react";
 import { nr, type DiscordActivity, type DiscordPrefs, type DiscordState } from "@/lib/bridge";
 import { BrandIcon } from "@/components/BrandIcon";
 import { Toggle } from "@/components/ui/toggle";
-import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -228,28 +226,6 @@ export function DiscordSettings() {
             {prefs.showLinks ? t("discord.on") : t("discord.off")}
           </Toggle>
         </Row>
-
-        <div className="flex flex-col gap-2 px-4 py-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[0.8125rem]">{t("discord.custom")}</span>
-            <Tooltip>
-              <TooltipTrigger
-                render={<button type="button" className="text-muted-foreground transition-colors hover:text-foreground" aria-label={t("discord.customHelp")} />}
-              >
-                <Info className="size-3.5" />
-              </TooltipTrigger>
-              <TooltipContent>{t("discord.customHelp")}</TooltipContent>
-            </Tooltip>
-          </div>
-          <Input
-            value={prefs.detailsTpl} onChange={(e) => patch({ detailsTpl: e.target.value })}
-            placeholder={t("discord.details")} disabled={off} aria-label={t("discord.details")}
-          />
-          <Input
-            value={prefs.stateTpl} onChange={(e) => patch({ stateTpl: e.target.value })}
-            placeholder={t("discord.state")} disabled={off} aria-label={t("discord.state")}
-          />
-        </div>
       </div>
     </section>
   );

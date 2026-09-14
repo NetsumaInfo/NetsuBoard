@@ -31,7 +31,7 @@ unreachable NetsuRush modules. Their integration boundaries remain in scope.
 
 Assumptions previously confirmed with the product owner:
 
-- this is an internet-connected Windows desktop product for 2–10 invited collaborators per project;
+- this is an internet-connected Windows desktop product for 2–15 invited collaborators per project;
 - Discord/Better Auth identifies accounts, Convex is the public membership/recovery service, and
   peers may connect directly or through iroh relays;
 - collaborators are ordinary trusted creative partners, not mutually hostile Byzantine tenants;
