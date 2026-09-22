@@ -2,7 +2,7 @@
 name = "app"
 version = "0.5.1"
 description = "NetsuBoard — mood board standalone : canvas infini (images, vidéos, embeds), upscale par shaders GPU"
-authors = ["Haim Faraj"]
+authors = ["Netsuma"]
 license = "AGPL-3.0-only"
 repository = "https://github.com/NetsumaInfo/NetsuBoard"
 edition = "2021"

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.5.1",
   "license": "AGPL-3.0-only",
-  "author": "Haim Faraj",
+  "author": "Netsuma",
   "repository": {
     "type": "git",
     "url": "https://github.com/NetsumaInfo/NetsuBoard.git"
@@ -27,8 +27,8 @@
     "test:preview": "node --test test/preview-generation.test.cjs",
     "test:config-backend": "node --test test/config-backend.test.cjs",
     "test:packaging": "node --test test/packaging.test.cjs",
-    "test:setup": "node --test test/setup-selection.test.cjs",
     "test:bug-report": "node --test test/bug-report.test.cjs",
+    "test:ts": "vitest run",
     "test:collab": "vitest run test/collab",
     "check:i18n": "node scripts/check-i18n.mjs",
     "package": "powershell -ExecutionPolicy Bypass -File scripts/build.ps1",

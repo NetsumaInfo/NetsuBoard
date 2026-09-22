@@ -745,19 +745,19 @@
     },
     "performance": {
       "title": "Velocidad de sincronización",
-      "subtitle": "Solo para este dispositivo. Los demás miembros mantienen el suyo.",
+      "subtitle": "Este ajuste solo afecta a este dispositivo.",
       "modes": {
         "live": {
           "title": "Rápida",
-          "description": "Para una buena conexión: los cambios salen enseguida y los medios llegan por adelantado."
+          "description": "Buena conexión. Se envía enseguida, medios descargados por adelantado."
         },
         "balanced": {
           "title": "Equilibrada",
-          "description": "El ajuste por defecto. Va bien con casi cualquier conexión."
+          "description": "Por defecto. Va bien con casi todas las conexiones."
         },
         "economy": {
           "title": "Ahorro",
-          "description": "Para una conexión lenta o limitada: un archivo se descarga solo cuando aparece en pantalla."
+          "description": "Conexión lenta o limitada. Los medios se descargan cuando los ves."
         }
       }
     },

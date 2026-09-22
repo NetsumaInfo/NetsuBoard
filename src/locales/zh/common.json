@@ -63,7 +63,6 @@
     "notebook": "笔记本"
   },
   "mock": {
-    "resolveUnavailable": "浏览器中无法使用 Resolve。",
     "appUnavailable": "浏览器中无法使用此功能。",
     "outsideApp": "此功能仅可在应用中使用。",
     "pageNotFound": "找不到页面",

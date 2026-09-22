@@ -63,7 +63,6 @@
     "notebook": "NetsuBoard — Carnet"
   },
   "mock": {
-    "resolveUnavailable": "Resolve est indisponible dans le navigateur.",
     "appUnavailable": "Fonction indisponible dans le navigateur.",
     "outsideApp": "Fonction disponible uniquement dans l'application.",
     "pageNotFound": "Page introuvable",

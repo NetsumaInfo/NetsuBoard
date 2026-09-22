@@ -63,7 +63,6 @@
     "notebook": "ノート"
   },
   "mock": {
-    "resolveUnavailable": "Resolve はブラウザーでは利用できません。",
     "appUnavailable": "この機能はブラウザーでは利用できません。",
     "outsideApp": "この機能はアプリ内でのみ利用できます。",
     "pageNotFound": "ページが見つかりません",

@@ -8,7 +8,6 @@ const path = require('path');
 const fs = require('fs');
 const { spawn, execFile } = require('child_process');
 const { ffBin, SHADER_DIR, UPSCALE_TEST_DIR, fsp } = require('./config');
-const { importToMediaPool } = require('./resolve');
 const { codecExt, sanitizeName } = require('./utils');
 const { playInfo, probeMedia } = require('./ffmpeg');
 const { t } = require('./i18n');
@@ -301,7 +300,7 @@ async function runShaderUpscale(event, opts) {
   const { input, shader = 'artcnn_c4f32', scale = 2,
     quality = 20, preset = 'slow', bitDepth = 8, audio = 'copy', abr = 192, audioTrack = 0,
     deband = 'light', grain = 4, sharp = 'sharp', sigmoid = true, dither = true,
-    outDir, segments, whole, importBack, baseName, outputName, savePath, parallel = false, concurrency = 2 } = opts || {};
+    outDir, segments, whole, baseName, outputName, savePath, parallel = false, concurrency = 2 } = opts || {};
   if (!input) return { ok: false, error: t('sourceMissing') };
   if (!outDir) return { ok: false, error: t('outputFolderMissing') };
   const dirErr = shaderDirError();
@@ -372,11 +371,7 @@ async function runShaderUpscale(event, opts) {
     else lastErr = r.error;
   }
 
-  let imported = 0;
-  if (importBack && outputs.length) {
-    try { const res = await importToMediaPool(outputs); imported = res && res.count ? res.count : 0; } catch (_) {}
-  }
-  return { ok: outputs.length > 0, outputs, imported, total, failed: total - outputs.length, encoder: usedEncoder,
+  return { ok: outputs.length > 0, outputs, total, failed: total - outputs.length, encoder: usedEncoder,
     error: outputs.length ? null : lastErr };
 }
 

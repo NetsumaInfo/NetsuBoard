@@ -1,16 +1,14 @@
-// Icônes des logiciels pilotés (DaVinci Resolve / Premiere Pro / After Effects).
+// Icônes des logiciels pilotés (Premiere Pro / After Effects).
 // Icônes d'application ORIGINALES, extraites des exécutables installés par
 // `scripts/extract-host-icons.ps1` (256×256 RGBA) — pas de tracé redessiné, pas d'icône générique
 // lucide. Relancer le script quand un éditeur change son icône.
-// © Blackmagic Design (Resolve) · © Adobe (Premiere Pro, After Effects).
+// © Adobe (Premiere Pro, After Effects).
 import type { HostId } from "@/store/types";
 import { cn } from "@/lib/utils";
-import davinciIcon from "@/assets/hosts/davinci-resolve.png";
 import premiereIcon from "@/assets/hosts/premiere-pro.png";
 import afterEffectsIcon from "@/assets/hosts/after-effects.png";
 
 const ICONS: Record<HostId, string> = {
-  resolve: davinciIcon,
   ppro: premiereIcon,
   aeft: afterEffectsIcon,
 };

@@ -832,19 +832,19 @@
     "panel": {
       "title": "Sharing status",
       "online": "{{count}} online",
-      "alone": "Nobody else.",
+      "alone": "Nobody else",
       "hereNow": "Online",
-      "neverSeen": "Never seen",
-      "seenMinutes": "Seen {{count}} min ago",
-      "seenHours": "Seen {{count}} h ago",
-      "seenDays": "Seen {{count}} d ago",
+      "neverSeen": "Never connected",
+      "seenMinutes": "{{count}} min ago",
+      "seenHours": "{{count}} h ago",
+      "seenDays": "{{count}} d ago",
       "invited": "Invited",
       "unknownMember": "Member",
-      "queued": "Changes waiting. They will go out on their own.",
+      "queued": "Waiting to be sent.",
       "upToDate": "Everything is sent.",
-      "rotation": "New key needed: the owner has to open the app.",
+      "rotation": "A new key is needed. The owner has to open the app.",
       "waitingKey": "{{count}} waiting for the key. Stay online.",
-      "nobodyReachable": "Nobody online. Nothing is going out yet."
+      "nobodyReachable": "Nobody online. Nothing has been sent."
     }
   }
 }

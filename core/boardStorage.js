@@ -35,7 +35,7 @@ const sidecar = require('./netsu/sidecar');
 const { hashFileAsync } = require('./netsu/blobs');
 const recents = require('./netsu/recents');
 const { getThumbDir, getProxyDir, yieldLoop } = require('./config');
-const { diskInfo } = require('./optimize');
+const { diskInfo } = require('./diskUsage');
 const thumbs = require('./thumbs');
 const proxy = require('./proxy');
 

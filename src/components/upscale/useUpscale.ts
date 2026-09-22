@@ -148,16 +148,12 @@ export function useUpscale() {
 
     running.current = true;
     setResult(null); setErr(null); setSourcesErr(null);
-    // Tâche lourde → propose de fermer le logiciel de montage (libérer RAM/GPU).
-    useApp.getState().offerCloseForRam();
     const off = nr.onUpscaleProgress(setBusy);
-    // Import : le backend importe dans Resolve. Pour Adobe, on importe côté renderer APRÈS l'encodage
-    // (le core ignore l'hôte actif) → on désactive l'import backend et on route via hostImport.
+    // Import : le core ignore l'hôte actif, donc l'import se fait côté renderer APRÈS l'encodage.
     const host = useApp.getState().activeHost;
     const restoring = settings.mode === "restore";
     const parallel = !restoring && settings.engine === "turbo" && !shaderRuntimeModel(settings.shader) && settings.tParallel;
     const sourceConcurrency = parallel && sources.length > 1 ? settings.tConcurrency : 1;
-    const backendImport = importBack && host === "resolve" && !parallel;
     const outputs: string[] = [];
     const reviews: import("./useProcSources").RenderReview[] = [];
     let imported = 0; let failed = 0; let lastErr: string | null = null;
@@ -179,7 +175,7 @@ export function useUpscale() {
               quality: settings.quality, preset: settings.preset, bitDepth: settings.bitDepth, profile: settings.profile,
               audio: settings.audio, abr: settings.abr, ...processExportPayload(settings),
               outDir: dir, whole, segments,
-              importBack: backendImport, baseName: src.name.replace(/\.[^.]+$/, ""),
+              baseName: src.name.replace(/\.[^.]+$/, ""),
               outputName: outputNameFor(src),
               parallel: parallel && sources.length === 1,
               concurrency: settings.tConcurrency,
@@ -193,7 +189,7 @@ export function useUpscale() {
               quality: settings.quality, preset: settings.preset, bitDepth: settings.bitDepth, profile: settings.profile,
               audio: settings.audio, abr: settings.abr, ...processExportPayload(settings),
               outDir: dir, whole, segments,
-              importBack: backendImport, baseName: src.name.replace(/\.[^.]+$/, ""),
+              baseName: src.name.replace(/\.[^.]+$/, ""),
               outputName: outputNameFor(src),
             });
         return { src, segments, r };
@@ -203,8 +199,8 @@ export function useUpscale() {
         imported += r.imported || 0; failed += r.failed || 0;
         if (!r.ok) lastErr = r.error || i18n.t("upscale:errors.upscaleFailed");
       }
-      // En parallèle, l'import est regroupé après tous les encodages (les APIs hôte restent séquentielles).
-      if (importBack && (host !== "resolve" || parallel) && outputs.length) {
+      // L'import est regroupé après tous les encodages (les APIs hôte restent séquentielles).
+      if (importBack && outputs.length) {
         const ir = await hostImport(host, outputs);
         if (ir.ok) imported += ir.count ?? 0;
         else if (!lastErr) lastErr = ir.error ?? i18n.t("upscale:errors.adobeImportFailed");

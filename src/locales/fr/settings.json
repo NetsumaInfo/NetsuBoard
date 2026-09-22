@@ -745,19 +745,19 @@
     },
     "performance": {
       "title": "Vitesse de synchronisation",
-      "subtitle": "Propre à cet appareil. Les autres membres gardent le leur.",
+      "subtitle": "Ce réglage ne concerne que cet appareil.",
       "modes": {
         "live": {
           "title": "Rapide",
-          "description": "Pour une bonne connexion : les modifications partent aussitôt et les médias arrivent à l’avance."
+          "description": "Bonne connexion. Envoi immédiat, médias téléchargés à l’avance."
         },
         "balanced": {
           "title": "Équilibré",
-          "description": "Le réglage par défaut. Convient à la plupart des connexions."
+          "description": "Par défaut. Convient à la plupart des connexions."
         },
         "economy": {
           "title": "Économe",
-          "description": "Pour une connexion lente ou limitée : un média n’est téléchargé que lorsqu’il arrive à l’écran."
+          "description": "Connexion lente ou limitée. Les médias sont téléchargés quand tu les vois."
         }
       }
     },

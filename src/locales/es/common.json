@@ -63,7 +63,6 @@
     "notebook": "NetsuBoard — Cuaderno"
   },
   "mock": {
-    "resolveUnavailable": "Resolve no está disponible en el navegador.",
     "appUnavailable": "Esta función no está disponible en el navegador.",
     "outsideApp": "Esta función solo está disponible en la aplicación.",
     "pageNotFound": "Página no encontrada",

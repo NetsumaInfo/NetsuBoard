@@ -1,6 +1,6 @@
-// Slice « coquille » : onglet actif, sidebar repliée, statut Resolve.
+// Slice « coquille » : onglet actif, sidebar repliée, fenêtre.
 import type { StateCreator } from "zustand";
-import { nr, type ResolveInfo } from "@/lib/bridge";
+import { nr } from "@/lib/bridge";
 import type { AppState } from "./index";
 import type { TabId, HostId } from "./types";
 import {
@@ -53,34 +53,22 @@ export interface ShellSlice {
   onTopHold: boolean;
   setOnTopHold: (on: boolean) => void;
 
-  // Hôte cible actif (Resolve / Premiere / After Effects) — sélecteur en pied de sidebar.
-  // Change la source des rushs du Derush et la cible du build timeline.
+  // Hôte cible actif (Premiere / After Effects) — sélecteur en pied de sidebar.
   activeHost: HostId;
   setActiveHost: (h: HostId) => void;
-
-  status: ResolveInfo | null;
-  statusLoading: boolean;
-  // `silent` : refresh de fond (nav, poll, focus) → ne déclenche PAS le spinner/pastille amber,
-  // garde l'état connu affiché. Seul un refresh explicite (bouton) montre le chargement.
-  refreshStatus: (silent?: boolean) => Promise<void>;
-
-  // Compteur d'invalidation des listes de timelines (bumpé sur `resolve:changed`).
-  // Les vues qui listent les timelines (découpe, AE) le mettent dans leurs deps pour se rafraîchir.
-  timelinesEpoch: number;
-  bumpTimelinesEpoch: () => void;
 }
 
-const HOST_IDS: HostId[] = ["resolve", "ppro", "aeft"];
+const HOST_IDS: HostId[] = ["ppro", "aeft"];
 function initialHost(): HostId {
   try {
     // Rendu en remote dans le panneau Adobe (?host=aeft|ppro, cf. index.html) : cet hôte gagne sur
-    // la préférence persistée → Derush lit d'emblée les rushs du projet Adobe, pas Resolve.
+    // la préférence persistée.
     const forced = (window as unknown as { __NR_HOST__?: string }).__NR_HOST__ as HostId | undefined;
     if (forced && HOST_IDS.includes(forced)) return forced;
     const v = localStorage.getItem("nr.activeHost") as HostId | null;
     if (v && HOST_IDS.includes(v)) return v;
   } catch { /* noop */ }
-  return "resolve";
+  return "ppro";
 }
 
 const initialModules = loadModulePreferences();
@@ -186,22 +174,4 @@ export const createShellSlice: StateCreator<AppState, [], [], ShellSlice> = (set
 
   onTopHold: false,
   setOnTopHold: (on) => set({ onTopHold: on }),
-
-  status: null,
-  statusLoading: false,
-  refreshStatus: async (silent = false) => {
-    if (!silent) set({ statusLoading: true });
-    try {
-      const status = await nr.status();
-      set({ status, statusLoading: false });
-    } catch (cause) {
-      // Le statut Resolve est un indicateur de disponibilité, pas une raison de produire une
-      // promesse rejetée si le service local vient de redémarrer. L'UI reste explicitement hors
-      // ligne et le prochain refresh réessaiera via le client core.
-      set({ status: { connected: false, error: String(cause) }, statusLoading: false });
-    }
-  },
-
-  timelinesEpoch: 0,
-  bumpTimelinesEpoch: () => set((s) => ({ timelinesEpoch: s.timelinesEpoch + 1 })),
 });

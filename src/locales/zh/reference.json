@@ -832,19 +832,19 @@
     "panel": {
       "title": "共享状态",
       "online": "{{count}} 人在线",
-      "alone": "没有其他人。",
+      "alone": "没有其他人",
       "hereNow": "在线",
-      "neverSeen": "从未见到",
-      "seenMinutes": "{{count}} 分钟前见到",
-      "seenHours": "{{count}} 小时前见到",
-      "seenDays": "{{count}} 天前见到",
+      "neverSeen": "从未连接",
+      "seenMinutes": "{{count}} 分钟前",
+      "seenHours": "{{count}} 小时前",
+      "seenDays": "{{count}} 天前",
       "invited": "已邀请",
       "unknownMember": "成员",
-      "queued": "有改动等待发送，稍后会自动发送。",
-      "upToDate": "全部已发送。",
-      "rotation": "需要新密钥：所有者需打开应用。",
+      "queued": "等待发送。",
+      "upToDate": "已全部发送。",
+      "rotation": "需要新密钥。请所有者打开应用。",
       "waitingKey": "{{count}} 人在等待密钥。请保持在线。",
-      "nobodyReachable": "无人在线，暂时不会发送。"
+      "nobodyReachable": "无人在线，尚未发送。"
     }
   }
 }

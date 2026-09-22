@@ -63,7 +63,6 @@
     "notebook": "NetsuBoard — Notebook"
   },
   "mock": {
-    "resolveUnavailable": "Resolve is unavailable in the browser.",
     "appUnavailable": "This feature is unavailable in the browser.",
     "outsideApp": "This feature is only available in the app.",
     "pageNotFound": "Page not found",

@@ -745,19 +745,19 @@
     },
     "performance": {
       "title": "Sync speed",
-      "subtitle": "Specific to this device. Other members keep their own.",
+      "subtitle": "This setting only affects this device.",
       "modes": {
         "live": {
           "title": "Fast",
-          "description": "For a good connection: changes go out at once and media arrives ahead of time."
+          "description": "Good connection. Sent right away, media downloaded ahead of time."
         },
         "balanced": {
           "title": "Balanced",
-          "description": "The default setting. Fits most connections."
+          "description": "Default. Fits most connections."
         },
         "economy": {
           "title": "Light",
-          "description": "For a slow or capped connection: a media file is downloaded only when it comes on screen."
+          "description": "Slow or limited connection. Media is downloaded when you see it."
         }
       }
     },

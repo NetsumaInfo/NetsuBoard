@@ -745,19 +745,19 @@
     },
     "performance": {
       "title": "Synchronisationstempo",
-      "subtitle": "Gilt nur für dieses Gerät. Andere Mitglieder behalten ihres.",
+      "subtitle": "Diese Einstellung gilt nur für dieses Gerät.",
       "modes": {
         "live": {
           "title": "Schnell",
-          "description": "Für eine gute Verbindung: Änderungen gehen sofort raus, Medien kommen im Voraus."
+          "description": "Gute Verbindung. Sofort gesendet, Medien vorab geladen."
         },
         "balanced": {
           "title": "Ausgewogen",
-          "description": "Die Standardeinstellung. Passt zu den meisten Verbindungen."
+          "description": "Standard. Passt zu den meisten Verbindungen."
         },
         "economy": {
           "title": "Sparsam",
-          "description": "Für eine langsame oder begrenzte Verbindung: Eine Datei wird erst geladen, wenn sie im Bild erscheint."
+          "description": "Langsame oder begrenzte Verbindung. Medien werden geladen, wenn du sie siehst."
         }
       }
     },

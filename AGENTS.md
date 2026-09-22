@@ -4,15 +4,15 @@ NetsuBoard is a standalone Windows desktop app (Tauri shell + Node "core" servic
 
 ## The split from NetsuRush — read first
 
-NetsuBoard was copied out of NetsuRush. Timeline transfer, After Effects export, NetsuBoost, voice, dictation, roto, the chat agent, collections, the media library, script, notebook, search, wallpaper, the outbox and the optimiser are **gone** from `core/`, `src/` and the RPC table. `App.tsx` renders one page, `ReferencePanel`.
+NetsuBoard was copied out of NetsuRush. Timeline transfer, After Effects export, NetsuBoost, voice, dictation, roto, the chat agent, collections, the media library, script, notebook, search, wallpaper, the outbox, the optimiser, the Resolve bridge, host power and the project snapshot are **gone** from `core/`, `src/` and the RPC table. `App.tsx` renders one page, `ReferencePanel`.
 
-What is still inherited and **live**: the Resolve bridge cut down to `resolve:status` / `resolve:import`, the Adobe CEP bridge (status, snapshot, launch, media import, panel install), host power (close/reopen an editing app to free RAM/GPU), the project snapshot that feeds it, first-run setup, cache admin and export capabilities.
+What is still inherited and **live**: the Adobe CEP bridge (status, snapshot, launch, media import, panel install), first-run setup, cache admin and export capabilities. **No editing application is driven any more**: nothing spawns Python, and the only editing host the board talks to is an Adobe app through its CEP panel.
 
 **First-run setup asks nothing.** The runtime is the same for everyone — ffmpeg, the GLSL shaders, yt-dlp — so `setup:run` takes no options and the download starts before the language screen is even answered. There is no model catalogue: nothing in this product can execute a weight. Do not reintroduce one.
 
 - Do **not** re-import a retired module from NetsuRush; the RPC table is the contract of what this product does.
 - The two products stay related: NetsuBoard is [NetsuRush](https://github.com/NetsumaInfo/NetsuRush)'s reference board shipped as its own, far lighter application, under the same maintainer, and it downloads its ffmpeg runtime from a NetsuRush release asset (`docs/distribution.md`). **The board is one feature in two repositories**: when it is changed on one side — a fix, an optimisation, a removed page — the maintainer mirrors the change on the other side by hand. There is no shared code, submodule or sync job, so nothing propagates on its own; when you touch the board, say in the PR what the other repository needs. Everything else is separate: repository, Convex deployment, ports, home and caches.
-- 19 of the 61 Node suites are still quarantined in `.github/workflows/ci.yml`; a failure inside that list is not yours.
+- 13 of the 64 Node suites are still quarantined in `.github/workflows/ci.yml`; a failure inside that list is not yours.
 - Known name/path collisions still in code (tmp caches, log directory) are listed at the end of `docs/invariants.md`. They are defects, not design.
 
 ## Language
@@ -34,10 +34,13 @@ What is still inherited and **live**: the Resolve bridge cut down to `resolve:st
 | Locale parity | `npm run check:i18n` |
 | One Node test | `node --test test/<name>.test.cjs` |
 | All Node tests (red, see above) | `node --test test/*.test.cjs` |
+| All TypeScript tests | `npm run test:ts` |
+| Collaboration tests only | `npm run test:collab` |
 | Rust shell check | `cargo check --locked` (in `src-tauri/`) |
 | Core alone, headless | `npm run core` |
 
-- 6 of the 61 Node suites also have an `npm run test:*` shortcut; the rest run with `node --test`.
+- 5 of the 64 Node suites also have an `npm run test:*` shortcut; the rest run with `node --test`.
+- `test/**/*.test.ts` (collaboration, board) runs under **vitest**, not `node --test`: a TypeScript suite is invisible to `node --test test/*.test.cjs`.
 - `.github/workflows/ci.yml` is the source of truth for what must pass.
 - There is no ESLint and no formatter config: `tsc` is the lint.
 

@@ -5,9 +5,6 @@
 //   GET  /events  (SSE)                 -> push { channel, payload } (barres de progression)
 // Les modules métier sont des modules core/ (electron-free). L'argument Electron `e`
 // (utilisé pour e.sender.send des progressions) est remplacé par un shim qui diffuse en SSE.
-//
-// Les canaux resolve:* exigent le pont Python externe actif (Resolve + scripting externe = Local).
-// Ils se limitent au statut du pont et à l'import Media Pool : NetsuBoard ne monte aucune timeline.
 
 const path = require("path");
 const { CONFIG, DATA_DIR, saveConfig } = require("./config");
@@ -15,9 +12,6 @@ const { t } = require("./i18n");
 const ffmpeg = require("./ffmpeg");
 const thumbs = require("./thumbs");
 const proxy = require("./proxy");
-const resolveMod = require("./resolve"); // pont Python externe à resolve-proxy
-const { beginResolveOp, endResolveOp, bridge } = require("./resolve-proxy"); // bracket d'op (reset sûr du registre) + pont brut (arrêt/reconnexion)
-const timeline = require("./timeline"); // frame-math identique, Resolve via le pont
 const sidecars = require("./sidecars");
 const turbo = require("./turbo"); // panier temps réel : shader GLSL libplacebo, RTX VSR ou ArtCNN R ONNX
 const shaderUpscale = require("./shaderUpscale"); // moteur d'upscale unique de NetsuBoard (GPU, sans IA)
@@ -29,9 +23,6 @@ const netsu = require("./netsu"); // format de partage « .netsu » (board → c
 const extract = require("./extract"); // yt-dlp / gallery-dl : extraction du vrai média d'un lien
 const netsuSidecar = require("./netsu/sidecar");
 const { createAdobeBridge } = require("./adobe"); // pont Adobe : panneau CEP Premiere/AE ↔ core
-const { createResolveWatch } = require("./resolve-watch");
-const { createHostPower } = require("./hostPower"); // fermer/rouvrir le logiciel de montage (libérer RAM/GPU)
-const { createProjectSnapshot } = require("./projectSnapshot"); // photo des lectures Resolve servie offline (hôte fermé)
 const setup = require("./setup"); // provisionnement 1er lancement (venv/ffmpeg/poids)
 const ytdlp = require("./ytdlpUpdate"); // yt-dlp : état + mise à jour à la demande (la lib rote vite)
 const compatibility = require('./compatibility'); // matériel + runtimes IA/encodage réellement actifs
@@ -112,63 +103,6 @@ function createRpc() {
   const discordRpc = createDiscordRpc({ CONFIG, broadcast, dataDir: DATA_DIR });
   discordRpc.boot();
 
-  // « Snapshot projet » : photo des lectures Resolve prise à la fermeture, servie offline pour que
-  // rushes/timelines restent visibles pendant que l'hôte est fermé (effacée à la réouverture).
-  const projectSnapshot = createProjectSnapshot({ dataDir: DATA_DIR, broadcast });
-  // Lectures passées à snapshot.capture() : rOp-wrappées (protège le registre de handles). rOp est
-  // défini plus bas mais ces closures ne sont invoquées qu'à la fermeture → référence résolue au call.
-  const captureReaders = {
-    // Une seule lecture complète : projectSnapshot conserve la liste entière pour NetsuDraft et en
-    // dérive sa tranche vidéo historique pour NetsuCut/les autres consommateurs hors ligne.
-    listMediaPool: () => rOp(() => resolveMod.listMediaPool({ includeAudio: true }))(),
-    listTimelines: () => rOp(() => timeline.listTimelines())(),
-    timelineTree: () => rOp(() => timeline.timelineTree())(),
-    timelineThumbs: () => rOp(() => timeline.timelineThumbs(null, {}))(),
-    readTimelineCutsByName: (name) => rOp(() => timeline.readTimelineCuts({ timelineName: name }))(), // plans d'une timeline
-  };
-
-  // Fermer / rouvrir le logiciel de montage pour libérer RAM/GPU pendant une tâche lourde, puis
-  // reprendre le projet. La réouverture réamorce le flush du « cache projet » (envois différés).
-  const hostPower = createHostPower({
-    CONFIG, resolveMod, bridge, adobeBridge, broadcast, dataDir: DATA_DIR,
-    projectSnapshot, captureReaders,
-  });
-
-
-
-  // Poller de synchro Resolve→renderer (diff de signature légère → SSE `resolve:changed`).
-  // onReconnect : Resolve vient de rouvrir → flush de la file « cache projet » + efface l'état « fermé »
-  // de l'énergie hôte (si Resolve a été relancé à la main, l'offre « Rouvrir » ne doit plus traîner).
-  const watch = createResolveWatch({
-    broadcast,
-    getSignature: () => resolveMod.resolveSignature(),
-    onReconnect: () => hostPower.markOnline('resolve'),
-  });
-  watch.start();
-  // Suspend le poll pendant une op lourde (occupe le pont Python) puis le reprend. Bracket aussi
-  // l'opération (beginResolveOp/endResolveOp) → getResolve ne purge le registre de handles QUE si elle
-  // est seule en vol (sinon « handle invalide » quand 2 ops Resolve se chevauchent).
-  const guarded = (fn) => async (...a) => {
-    watch.pause();
-    beginResolveOp();
-    try {
-      return await fn(...a);
-    } finally {
-      endResolveOp();
-      watch.resume();
-    }
-  };
-  // Bracket SEUL (sans pause du poll) pour les ops Resolve légères/fréquentes (statut, listes).
-  const rOp = (fn) => async (...a) => {
-    beginResolveOp();
-    try {
-      return await fn(...a);
-    } finally {
-      endResolveOp();
-    }
-  };
-
-
   // Pistes sondées + `langCode` normalisé (tag ou titre libre → code langue, cf. audioLang).
   // La table des variantes reste la SEULE de core/audioLang.js : le renderer lit ce code pour dire à
   // quelle piste se résout une règle par langue, sans réimplémenter la normalisation.
@@ -185,12 +119,6 @@ function createRpc() {
 
   // Table de dispatch : channel -> (args[], ev) => result|Promise. Calque exact de registerIpc().
   const H = {
-    // --- Resolve : statut du pont et import Media Pool (pont Python externe requis) ---
-    "resolve:status": rOp(() => resolveMod.resolveStatus()),
-    "resolve:import": guarded(([paths]) => resolveMod.importToMediaPool(paths)),
-    // Poll immédiat (déclenché par le renderer au focus fenêtre).
-    "resolve:refreshNow": () => { void watch.refreshNow(); return { ok: true }; },
-
     // --- Langue de l'UI : copie durable dans nr.config.json (lue au prochain boot). Le renderer
     // applique le changement immédiatement via localStorage ; ici c'est la persistance de fond. ---
     "config:get": () => ({ lang: CONFIG.lang || null }),
@@ -198,19 +126,6 @@ function createRpc() {
       const code = String(lang || "fr").toLowerCase().split(/[-_]/)[0];
       return saveConfig({ lang: ["fr", "en", "es", "de", "ja", "zh"].includes(code) ? code : "fr" });
     },
-
-    // --- Fermer/rouvrir le logiciel de montage (libérer RAM/GPU pendant une tâche lourde) ---
-    "power:state": () => hostPower.state(),
-    "power:reconcile": rOp(() => hostPower.reconcile()),
-    "power:close": guarded(([host]) => hostPower.close(host || "resolve")),
-    "power:reopen": guarded(async () => {
-      const r = await hostPower.reopen();
-      return r;
-    }),
-    "power:restart": guarded(async ([host]) => {
-      const r = await hostPower.restart(host || "resolve");
-      return r;
-    }),
 
     // --- Provisionnement 1er lancement (app packagée) : ffmpeg + shaders GLSL + yt-dlp ---
     // Sans option : le socle est le même pour tout le monde, rien ne se choisit.
@@ -529,7 +444,7 @@ function createRpc() {
   }
 
   return {
-    handle, broadcast, channels: Object.keys(H), stopWatch: watch.stop, stopCache: cachePolicy.stop,
+    handle, broadcast, channels: Object.keys(H), stopCache: cachePolicy.stop,
     stopDiscord: discordRpc.stop,
     closeProjects: () => netsu.closeAllProjects(),
   };

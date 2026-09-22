@@ -11,7 +11,6 @@ const { CONFIG, PYTHON, DETECT_ENV, UPSCALE_TEST_DIR, fsp } = require('./config'
 const { perfEnv } = require('./prefs'); // options de performance partagées entre les fenêtres
 const { cacheIndex } = require('./cacheIndex');
 const scheduler = require('./scheduler');
-const { importToMediaPool } = require('./resolve'); // pont Python externe (core/resolve.js)
 const { codecExt: upscaleExt, hasFiles, sanitizeName } = require('./utils');
 const { resolveProcessEncoding } = require('./processEncoding');
 const { MANIFEST, modelDir, RIFE_TORCH_DIR, RIFE_ARCH_DIR, GMFSS_DIR, DRBA_DIR, DRBA_ARCH_DIR } = require('./models');   // dossiers de poids gérés (BEN2/MatAnyone…) → env sidecar
@@ -884,7 +883,7 @@ async function runUpscale(event, opts) {
   const { input, model = 'light', scale = 4, denoise, tile = 0, tilePad = 10, prePad = 0,
     cleanupNoise = 0, cleanupEdges = 0,
     fp32 = false, quality = 20, preset = 'medium', bitDepth = 8, audio = 'copy', abr = 192, audioTrack = 0,
-    outDir, segments, whole, importBack, baseName, outputName, savePath } = opts || {};
+    outDir, segments, whole, baseName, outputName, savePath } = opts || {};
   if (!input) return { ok: false, error: 'aucune source' };
   if (!outDir) return { ok: false, error: 'aucun dossier de sortie' };
   const resolved = await resolveProcessEncoding(opts || {});
@@ -937,11 +936,7 @@ async function runUpscale(event, opts) {
     if (r && r.ok && r.output) outputs.push(r.output);
     else lastErr = (r && r.error) || 'échec upscale';
   }
-  let imported = 0;
-  if (importBack && outputs.length) {
-    try { const res = await importToMediaPool(outputs); imported = res && res.count ? res.count : 0; } catch (_) {}
-  }
-  return { ok: outputs.length > 0, outputs, imported, total, failed: total - outputs.length,
+  return { ok: outputs.length > 0, outputs, total, failed: total - outputs.length,
     error: outputs.length ? null : lastErr };
 }
 
@@ -970,7 +965,7 @@ function processJobs(opts) {
 async function runInterpolate(event, opts) {
   const { input, model = 'rife-v4.6', factor = 2, targetFps, slowmo = false, dedup = false,
     quality = 20, preset = 'medium', bitDepth = 8, audio = 'copy', abr = 192, audioTrack = 0,
-    outDir, importBack, baseName, outputName } = opts || {};
+    outDir, baseName, outputName } = opts || {};
   if (!input) return { ok: false, error: 'aucune source' };
   if (!outDir) return { ok: false, error: 'aucun dossier de sortie' };
   const resolved = await resolveProcessEncoding(opts || {});
@@ -1006,11 +1001,7 @@ async function runInterpolate(event, opts) {
     if (r && r.ok && r.output) outputs.push(r.output);
     else lastErr = (r && r.error) || 'échec interpolation';
   }
-  let imported = 0;
-  if (importBack && outputs.length) {
-    try { const res = await importToMediaPool(outputs); imported = res && res.count ? res.count : 0; } catch (_) {}
-  }
-  return { ok: outputs.length > 0, outputs, imported, total, failed: total - outputs.length,
+  return { ok: outputs.length > 0, outputs, total, failed: total - outputs.length,
     error: outputs.length ? null : lastErr };
 }
 
@@ -1018,7 +1009,7 @@ async function runInterpolate(event, opts) {
 async function runDepth(event, opts) {
   const { input, model = 'depth-anything-v2-small', bits = 8, colormap = 'gray', dedup = false,
     quality = 20, preset = 'medium', bitDepth = 8, audio = 'copy', abr = 192, audioTrack = 0,
-    outDir, importBack, baseName, outputName } = opts || {};
+    outDir, baseName, outputName } = opts || {};
   if (!input) return { ok: false, error: 'aucune source' };
   if (!outDir) return { ok: false, error: 'aucun dossier de sortie' };
   const resolved = await resolveProcessEncoding(opts || {});
@@ -1053,11 +1044,7 @@ async function runDepth(event, opts) {
     if (r && r.ok && r.output) outputs.push(r.output);
     else lastErr = (r && r.error) || 'échec depth';
   }
-  let imported = 0;
-  if (importBack && outputs.length) {
-    try { const res = await importToMediaPool(outputs); imported = res && res.count ? res.count : 0; } catch (_) {}
-  }
-  return { ok: outputs.length > 0, outputs, imported, total, failed: total - outputs.length,
+  return { ok: outputs.length > 0, outputs, total, failed: total - outputs.length,
     error: outputs.length ? null : lastErr };
 }
 
@@ -1066,7 +1053,7 @@ async function runDepth(event, opts) {
 // l'import Media Pool pousse alors le dossier (séquence d'images).
 async function runRemoveBg(event, opts) {
   const { input, model = 'isnet-anime', format = 'prores_4444', dedup = false,
-    despeckle = 0, edgeSmoothing = 0, edgeOffset = 0, outDir, importBack, baseName, outputName } = opts || {};
+    despeckle = 0, edgeSmoothing = 0, edgeOffset = 0, outDir, baseName, outputName } = opts || {};
   if (!input) return { ok: false, error: 'aucune source' };
   if (!outDir) return { ok: false, error: 'aucun dossier de sortie' };
   const encoding = format === 'png_seq' ? null : await resolveProcessEncoding(opts || {});
@@ -1113,11 +1100,7 @@ async function runRemoveBg(event, opts) {
     if (r && r.ok && r.output) outputs.push(imported);
     else lastErr = (r && r.error) || 'échec détourage';
   }
-  let imported = 0;
-  if (importBack && outputs.length) {
-    try { const res = await importToMediaPool(outputs); imported = res && res.count ? res.count : 0; } catch (_) {}
-  }
-  return { ok: outputs.length > 0, outputs, imported, total, failed: total - outputs.length,
+  return { ok: outputs.length > 0, outputs, total, failed: total - outputs.length,
     error: outputs.length ? null : lastErr };
 }
 

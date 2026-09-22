@@ -1,11 +1,14 @@
 <div align="center">
-  <img src="src-tauri/icons/128x128.png" alt="NetsuBoard" width="112" height="112">
+  <img src="src-tauri/icons/128x128.png" alt="" width="112" height="112">
 
 # NetsuBoard
 
-**An infinite mood board for people who work with footage.** Images, videos, YouTube links, notes and drawings on one canvas — with a GPU shader upscaler built in.
+**An infinite mood board for people who work with footage.** Images, videos, YouTube links, notes and drawings on one canvas — with GPU upscaling built in.
 
-[![Licence: AGPL v3](https://img.shields.io/badge/licence-AGPL--3.0--only-blue.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/NetsumaInfo/NetsuBoard)](https://github.com/NetsumaInfo/NetsuBoard/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/NetsumaInfo/NetsuBoard/ci.yml?branch=main&label=CI)](https://github.com/NetsumaInfo/NetsuBoard/actions/workflows/ci.yml)
+[![Downloads](https://img.shields.io/github/downloads/NetsumaInfo/NetsuBoard/total)](https://github.com/NetsumaInfo/NetsuBoard/releases)
+[![Licence](https://img.shields.io/github/license/NetsumaInfo/NetsuBoard)](LICENSE)
 ![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
 
 </div>
@@ -18,14 +21,17 @@ It is built to sit next to a busy NLE, so the whole runtime is deliberately smal
 
 | | |
 |---|---|
-| **Infinite canvas** | Pan/zoom board with images, local videos, YouTube videos, web embeds, text notes, shapes and freehand drawing |
+| **Infinite canvas** | Pan/zoom board carrying images, local videos, YouTube videos, web embeds and links, text notes, shapes and lines, freehand drawing, emoji and icons, colour palettes, and frames and sequences to group what belongs together |
 | **Media handling** | Local playback through a range-serving media route, remux on the fly for containers WebView2 cannot read, per-item trim, loop and ping-pong |
 | **Online media** | YouTube plays as a plain `<video>` through a `yt-dlp` relay, so trim and looping behave like a local file; generic pages exposing OpenGraph or HTML5 video can be linked or downloaded |
-| **Turbo upscale** | GPU upscaling through the ffmpeg `libplacebo` filter (Vulkan): ArtCNN and Anime4K GLSL shaders for animation, `lanczossharp` for live action. No neural runtime, no weights |
+| **Upscale** | Two engines. **Shaders**: the ffmpeg `libplacebo` filter over Vulkan, running ArtCNN in six variants for animation and `lanczossharp` for live action — weights are compiled into the GLSL, so there is nothing to install or download. **AI**: NVIDIA RTX Video Super Resolution, decoding and encoding on the GPU, output always HEVC 10-bit |
 | **Projects** | Scenes stored internally, plus `.netsu` project files — a SQLite container with content-addressed media and a companion `my-project.medias/` folder |
 | **Collaboration** | A board can be shared with friends: one authoritative CRDT document, edits and media travelling peer to peer over an encrypted link, and a status panel showing who is present and what is still owed. The server is used for recovery and membership, never as a live relay for the document |
 | **Detached board** | A second frameless, always-on-top window rendering the board bare, or the same thing in place when the main window is pinned |
+| **Export** | Send a board or a selection out to the formats the export page offers |
+| **Storage** | A settings section for what the app keeps: media it fetched or extracted, processing tests, cache policy per kind, disk usage, and cleanup |
 | **Appearance** | Switchable palettes, custom themes, image/GIF/video wallpapers with crop, blur and translucency |
+| **Along the way** | Discord rich presence, a keyboard shortcut panel, in-app update checks, hardware and compatibility reports, and a bug report that collects its own context |
 | **Languages** | French, English, Spanish, German, Japanese, Chinese |
 
 ## Getting started
@@ -37,7 +43,7 @@ It is built to sit next to a busy NLE, so the whole runtime is deliberately smal
 - **ffmpeg / ffprobe** on your `PATH` for development
 
 > [!TIP]
-> Use the ffmpeg version pinned in `scripts/setup.ps1`. The installed app checks the version of the ffmpeg it provisioned; a development `PATH` is not checked, so an older build can silently behave differently from what ships. The upscaler in particular needs a build with `libplacebo`.
+> Use the ffmpeg version pinned in `scripts/setup.ps1`. The installed app checks the version of the ffmpeg it provisioned; a development `PATH` is not checked, so an older build can silently behave differently from what ships. The shader upscaler in particular needs a build with `libplacebo`.
 
 There is **no Python requirement**: `yt-dlp` is provisioned as a standalone executable carrying its own interpreter.
 
@@ -69,7 +75,7 @@ Opening `http://localhost:1430` in a normal browser renders the interface agains
 npm run package
 ```
 
-`scripts/build.ps1` type-checks, builds the renderer, fetches a portable `node.exe`, then stages into `src-tauri/resources/` a **closed list** of folders — `bin`, `core`, `dist`, `scripts`, `shaders`, `windows` — and purges anything else it finds there before running `tauri build`. Tauri bundles `resources/**/*` whole, so a folder left behind would ship inside the installer. No Python sidecar and no mpv runtime are staged. The result is an NSIS installer under `src-tauri/target/release/bundle/nsis/`, installed per user with no administrator rights.
+`scripts/build.ps1` type-checks, builds the renderer, fetches a portable `node.exe`, then stages into `src-tauri/resources/` a **closed list** of folders — `bin`, `core`, `dist`, `scripts`, `shaders`, `windows` — and purges anything else it finds there before running `tauri build`. Tauri bundles `resources/**/*` whole, so a folder left behind would ship inside the installer. The result is an NSIS installer under `src-tauri/target/release/bundle/nsis/`, installed per user with no administrator rights.
 
 ## First run
 
@@ -77,9 +83,9 @@ The installed app provisions its runtime on first launch (`scripts/setup.ps1`): 
 
 ## Project status
 
-NetsuBoard is the reference board of [NetsuRush](https://github.com/NetsumaInfo/NetsuRush), a larger post-production hub, shipped as its own far lighter application, and it keeps that board, the `.netsu` format and the shader upscaler. The two repositories are separate — separate code, releases and configuration — and the only runtime tie is the ffmpeg archive, hosted as a NetsuRush release asset. Since 0.5.0 they no longer share a data directory either: NetsuBoard keeps its scenes and media under `~/.netsuboard` and copies an existing NetsuRush library over once, on first launch, leaving the original untouched. The board being one feature in two products, a change made to it on one side is carried over to the other **by hand**; nothing synchronises on its own.
+NetsuBoard is the reference board of [NetsuRush](https://github.com/NetsumaInfo/NetsuRush), a larger post-production hub, extracted and shipped as its own far lighter application. It keeps the board, the `.netsu` format and the upscaler. The two repositories are separate — separate code, releases and configuration — and a change made to the board on one side is carried to the other by hand.
 
-**The split is not finished**: the working tree still carries a large amount of inherited NetsuRush code the app never reaches — the Resolve and Adobe bridges, the timeline modules, the optimiser, the venv plumbing of a Python sidecar that no longer exists. It is not documented here and it is not part of the product. Some of the inherited Node suites fail for the same reason; they are quarantined by name in [`.github/workflows/ci.yml`](.github/workflows/ci.yml), and the blocking job runs everything else. See [AGENTS.md](AGENTS.md) for the current state.
+Some pages are carried over from the main application rather than written for this one, and the Settings panel still lists a few. They are not part of what NetsuBoard is for. A handful of inherited Node test suites fail for the same reason and are quarantined by name in [`.github/workflows/ci.yml`](.github/workflows/ci.yml); the blocking job runs everything else. See [AGENTS.md](AGENTS.md) for the current state.
 
 ## Contributing
 

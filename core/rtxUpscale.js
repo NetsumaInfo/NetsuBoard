@@ -9,7 +9,6 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { rtxBin, RTX_DIR, RTX_DLLS } = require('./config');
-const { importToMediaPool } = require('./resolve');
 const { sanitizeName } = require('./utils');
 const { playInfo, probeMedia } = require('./ffmpeg');
 const { t } = require('./i18n');
@@ -118,7 +117,7 @@ async function mapConcurrent(items, limit, fn) {
 async function runRtxUpscale(event, opts) {
   const { input, scale = RTX_SCALE, quality = 21, preset = 'slow', audio = 'copy', abr = 192,
     vsrQuality = RTX_QUALITY_MAX, hdr = false, hdrContrast = 125, hdrSaturation = 100,
-    hdrMidGray = 25, hdrNits = 1000, outDir, segments, whole, importBack, baseName, outputName,
+    hdrMidGray = 25, hdrNits = 1000, outDir, segments, whole, baseName, outputName,
     parallel = false, concurrency = 2 } = opts || {};
   if (!input) return { ok: false, error: t('sourceMissing') };
   if (!outDir) return { ok: false, error: t('outputFolderMissing') };
@@ -171,13 +170,7 @@ async function runRtxUpscale(event, opts) {
     else lastErr = r.error;
   }
 
-  let imported = 0;
-  if (importBack && outputs.length) {
-    try { const res = await importToMediaPool(outputs); imported = res && res.count ? res.count : 0; } catch (e) {
-      console.warn(`[rtx] import Media Pool échoué : ${String(e)}`);
-    }
-  }
-  return { ok: outputs.length > 0, outputs, imported, total, failed: total - outputs.length, encoder: 'hevc_nvenc',
+  return { ok: outputs.length > 0, outputs, total, failed: total - outputs.length, encoder: 'hevc_nvenc',
     error: outputs.length ? null : lastErr };
 }
 

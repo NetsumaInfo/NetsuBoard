@@ -171,7 +171,6 @@ let shuttingDown = false;
 async function shutdown(code = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
-  try { rpc.stopWatch?.(); } catch {}
   try { rpc.stopCache?.(); } catch {}
   // Efface la présence AVANT de mourir : une pipe coupée sans SET_ACTIVITY null laisse Discord
   // afficher « joue à NetsuBoard » quelques secondes de plus.

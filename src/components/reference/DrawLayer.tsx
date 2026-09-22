@@ -58,6 +58,9 @@ const HitTargets = memo(function HitTargets({ shapes, hitW, onDown, onMove, onUp
           onPointerDown: (e: React.PointerEvent) => onDown(s.id, e),
           onPointerMove: onMove,
           onPointerUp: onUp,
+          // A cancelled pen gesture (palm, pinch takeover) emits NO release: without this route the
+          // drag stayed armed once the gesture was over.
+          onPointerCancel: onUp,
           style: { cursor: "move" as const },
         };
         const k = `h-${s.id}`;
@@ -221,6 +224,10 @@ export function DrawLayer() {
   const onTargetDown = useCallback((id: string, e: React.PointerEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
+    // Same defence as an item's gesture engine: an unprevented pointerdown still emits the legacy
+    // mousedown, and THAT is what opens the browser's own selection drag — the page highlights
+    // whole and the pointer carries a ghost of it anywhere, over a gesture we are already driving.
+    e.preventDefault();
     const held = useBoard.getState().drawSel;
     // Reprendre une forme DÉJÀ dans la sélection ne la réduit pas à elle seule : c'est ce qui
     // rendait un groupe inutilisable — le premier appui le défaisait avant le moindre pixel.
@@ -235,10 +242,19 @@ export function DrawLayer() {
   const onHandleDown = (id: string, k: string, e: React.PointerEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
+    e.preventDefault();
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* best-effort */ }
     edit.current = { id, k, recorded: false };
   };
-  const onTargetMove = useCallback((e: React.PointerEvent) => { if (applyMove(e.clientX, e.clientY)) e.stopPropagation(); }, [applyMove]);
+  // Nothing held down and a gesture still armed: the previous one ended without ever reaching a
+  // release — a cancelled pen contact, or a target the culling unmounted mid-drag, which drops the
+  // pointer capture silently. The gesture survived it, so the next SIMPLE HOVER over any stroke
+  // carried the whole selection away with the cursor. Closing it here covers every such exit,
+  // whatever cut the release off.
+  const onTargetMove = useCallback((e: React.PointerEvent) => {
+    if (e.buttons === 0 && (drag.current || edit.current)) { endGesture(); return; }
+    if (applyMove(e.clientX, e.clientY)) e.stopPropagation();
+  }, [applyMove]);
   const onTargetUp = useCallback((e: React.PointerEvent) => {
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* noop */ }
     endGesture();
@@ -286,6 +302,7 @@ export function DrawLayer() {
     // d'écriture : sans ce test elle ne déclencherait rien du tout.
     const tipErases = useBoard.getState().prefs.penEraserTip && usesEraser(e);
     if (!drawMode || (e.button !== 0 && !tipErases)) return;
+    e.preventDefault(); // likewise: no native selection drag on top of a stroke being drawn
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* best-effort */ }
     const { x, y } = worldPoint(e);
     const tool = tipErases ? "eraser" : pen.tool;
@@ -331,6 +348,8 @@ export function DrawLayer() {
 
   const onMove = (e: React.PointerEvent) => {
     if (!drawMode) return;
+    // Same guard as the transparent targets: a gesture left armed must not follow a bare hover.
+    if (e.buttons === 0 && (drag.current || edit.current)) { endGesture(); return; }
     if (applyMove(e.clientX, e.clientY)) return;
     if (!drawing.current) return;
     const { x, y } = worldPoint(e);
@@ -442,7 +461,7 @@ export function DrawLayer() {
           (= le lag ressenti). Le <svg> reste statique, rasterisé une fois, déplacé par le div parent. */}
       <div
         data-board-pan
-        className="absolute inset-0 origin-top-left will-change-transform"
+        className="absolute inset-0 origin-top-left select-none will-change-transform"
         style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})` }}
       >
         <svg
@@ -494,72 +513,80 @@ export function DrawLayer() {
                   onPointerDown={drawMode ? undefined : (e) => onHandleDown(selShape.id, h.k, e)}
                   onPointerMove={drawMode ? undefined : onTargetMove}
                   onPointerUp={drawMode ? undefined : onTargetUp}
+                  onPointerCancel={drawMode ? undefined : onTargetUp}
                 />
               ))}
             </g>
           );
         })()}
         </svg>
-      </div>
 
-      {/* Pastilles posées sur le tracé sélectionné — mêmes gestes que sur un item : lien au cadre
-          (bleu = le cadre l'emmène) et suppression. Rendues HORS de la couche transformée, donc à
-          taille d'écran constante : un tracé fin très dézoomé garde des boutons cliquables. */}
-      {selShape && !drawMode && (() => {
-        const [a, b, c, d] = shapeBBox(selShape);
-        const left = view.tx + a * view.scale;
-        const top = view.ty + b * view.scale;
-        const width = (c - a) * view.scale;
-        const frame = frameAtPoint((a + c) / 2, (b + d) / 2, boardItems);
-        const setDetached = (on: boolean) =>
-          writeShapes(getShapes().map((s) => (s.id === selShape.id ? { ...s, detached: on || undefined } : s)));
-        return (
-          <div
-            className="pointer-events-auto absolute z-30 flex items-center gap-1"
-            style={{ left, top: top - 34, width: Math.max(width, 64) }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            {frame && (
+        {/* Pills on the selected stroke — same gestures as on an item: frame link (blue = the frame
+            carries it) and delete. They live INSIDE the panned layer, like an item's own pills: a
+            pan or a zoom is applied imperatively to that layer and only reaches the store at the
+            end of the gesture, so pills positioned from `view` stayed nailed to the screen while
+            the stroke slid away under them. The inverse scale keeps them at screen size — a thin
+            stroke zoomed far out keeps clickable buttons. The strip takes no pointer of its own,
+            only the buttons do: an empty band above a stroke no longer swallows clicks. */}
+        {selShape && !drawMode && (() => {
+          const [a, b, c, d] = shapeBBox(selShape);
+          const frame = frameAtPoint((a + c) / 2, (b + d) / 2, boardItems);
+          const setDetached = (on: boolean) =>
+            writeShapes(getShapes().map((s) => (s.id === selShape.id ? { ...s, detached: on || undefined } : s)));
+          return (
+            <div
+              className="pointer-events-none absolute z-30 flex items-center gap-1"
+              style={{
+                left: a,
+                top: b,
+                width: Math.max((c - a) * view.scale, 64),
+                transform: `scale(${1 / view.scale}) translateY(-34px)`,
+                transformOrigin: "top left",
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              {frame && (
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label={t(selShape.detached ? "actions.linkFrame" : "actions.unlinkFrame")}
+                        aria-pressed={!selShape.detached}
+                        onClick={() => setDetached(!selShape.detached)}
+                        className={cn(
+                          "pointer-events-auto flex size-6 items-center justify-center rounded-full shadow ring-1 [&_svg]:size-3.5",
+                          selShape.detached
+                            ? "bg-muted text-muted-foreground ring-foreground/15 hover:bg-muted/80"
+                            : "bg-primary text-primary-foreground ring-black/10 hover:bg-primary/90",
+                        )}
+                      />
+                    }
+                  >
+                    {selShape.detached ? <Unlink2 /> : <Link2 />}
+                  </TooltipTrigger>
+                  <TooltipContent>{t(selShape.detached ? "actions.linkFrame" : "actions.unlinkFrame")}</TooltipContent>
+                </Tooltip>
+              )}
               <Tooltip>
                 <TooltipTrigger
                   render={
                     <button
                       type="button"
-                      aria-label={t(selShape.detached ? "actions.linkFrame" : "actions.unlinkFrame")}
-                      aria-pressed={!selShape.detached}
-                      onClick={() => setDetached(!selShape.detached)}
-                      className={cn(
-                        "flex size-6 items-center justify-center rounded-full shadow ring-1 [&_svg]:size-3.5",
-                        selShape.detached
-                          ? "bg-muted text-muted-foreground ring-foreground/15 hover:bg-muted/80"
-                          : "bg-primary text-primary-foreground ring-black/10 hover:bg-primary/90",
-                      )}
+                      aria-label={t("common:action.delete")}
+                      onClick={() => { writeShapes(getShapes().filter((s) => s.id !== selShape.id)); selectDrawShape(null); }}
+                      className="pointer-events-auto flex size-6 items-center justify-center rounded-full bg-destructive/90 text-white shadow ring-1 ring-black/10 hover:bg-destructive [&_svg]:size-3.5"
                     />
                   }
                 >
-                  {selShape.detached ? <Unlink2 /> : <Link2 />}
+                  <Trash2 />
                 </TooltipTrigger>
-                <TooltipContent>{t(selShape.detached ? "actions.linkFrame" : "actions.unlinkFrame")}</TooltipContent>
+                <TooltipContent>{t("common:action.delete")}</TooltipContent>
               </Tooltip>
-            )}
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <button
-                    type="button"
-                    aria-label={t("common:action.delete")}
-                    onClick={() => { writeShapes(getShapes().filter((s) => s.id !== selShape.id)); selectDrawShape(null); }}
-                    className="flex size-6 items-center justify-center rounded-full bg-destructive/90 text-white shadow ring-1 ring-black/10 hover:bg-destructive [&_svg]:size-3.5"
-                  />
-                }
-              >
-                <Trash2 />
-              </TooltipTrigger>
-              <TooltipContent>{t("common:action.delete")}</TooltipContent>
-            </Tooltip>
-          </div>
-        );
-      })()}
+            </div>
+          );
+        })()}
+      </div>
 
       {selShape && (
         <ShapeInspector

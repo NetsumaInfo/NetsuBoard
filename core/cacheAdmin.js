@@ -9,8 +9,8 @@
 //  - les caches de BASE (plans/embeddings/transcriptions) → cacheDb, qui a `file_path` en clair.
 //
 // SÉCURITÉ : tout chemin reçu du renderer est revalidé ici avant suppression — il doit se résoudre à
-// l'intérieur d'une racine de cache connue. Même principe que la whitelist de core/optimize.js:199,
-// adapté à des fichiers plutôt qu'à des noms de dossiers Resolve.
+// l'intérieur d'une racine de cache connue : cette appartenance est la seule autorisation de
+// suppression.
 
 const path = require('path');
 const fs = require('fs');
@@ -19,7 +19,7 @@ const {
   VOICE_DIR, UPSCALE_TEST_DIR, ROTO_DIR, DEFAULT_THUMB_DIR, DEFAULT_PROXY_DIR,
   getThumbDir, getProxyDir, getCacheRoot, fsp, yieldLoop,
 } = require('./config');
-const { dirSize, diskInfo } = require('./optimize');
+const { dirSize, diskInfo } = require('./diskUsage');
 const cacheDb = require('./cacheDb');
 const models = require('./models');
 const thumbs = require('./thumbs');

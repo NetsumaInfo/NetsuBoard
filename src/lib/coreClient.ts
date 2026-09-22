@@ -4,7 +4,7 @@
 // Dialogs / openExternal passent par les plugins Tauri (chargés à la demande, seulement sous Tauri).
 
 import { convertFileSrc } from "@tauri-apps/api/core";
-import type { NrApi, RefApi, PowerApi } from "./bridge";
+import type { NrApi, RefApi } from "./bridge";
 import i18n from "@/i18n";
 import { rememberImportGrants } from "@/lib/collab/importGrants";
 import { logError } from "@/lib/appLog";
@@ -539,16 +539,6 @@ const reference: RefApi = {
   onPush: (cb) => on("reference:push", cb),
 };
 
-const power: PowerApi = {
-  state: () => call("power:state"),
-  reconcile: () => call("power:reconcile"),
-  close: (host) => call("power:close", [host]),
-  reopen: () => call("power:reopen"),
-  restart: (host) => call("power:restart", [host]),
-  onChanged: (cb) => on("power:changed", cb as (p: unknown) => void),
-  onProgress: (cb) => on("power:progress", cb as (p: unknown) => void),
-};
-
 // --- Changement de format de la fenêtre (bascule épinglé ↔ normal) -----------------------------
 // La fenêtre passe d'un format à l'autre en interpolant sa géométrie sur quelques frames. Posée
 // d'un coup, la nouvelle taille se lit comme un à-coup ; étalée sur deux dixièmes de seconde, elle
@@ -604,9 +594,6 @@ export function makeCoreClient(): NrApi {
     bugReport: (request) => call("bug:report", [request]),
     bugStatus: () => call("bug:status"),
     bugContext: () => call("bug:context"),
-    status: () => call("resolve:status"),
-    importToMediaPool: (paths) => call("resolve:import", [paths]),
-    refreshNow: () => { void call("resolve:refreshNow").catch(() => {}); },
     playInfo: (p) => call("player:info", [p]),
     streamUrl: (p, t, mode) => `${BASE}/stream?p=${encodeURIComponent(p)}&t=${t || 0}&mode=${mode}${tkParam}`,
     audioTracks: (p) => call("ffmpeg:audioTracks", [p]),
@@ -729,7 +716,6 @@ export function makeCoreClient(): NrApi {
       })();
     },
     reference,
-    power,
   };
   return client;
 }

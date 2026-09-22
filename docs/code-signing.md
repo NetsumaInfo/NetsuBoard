@@ -90,6 +90,12 @@ Without the variable the build prints a warning and produces an unsigned install
 
 `bundle.publisher` in `tauri.conf.json` is `Haim Faraj`. It must be kept **identical to the subject of the certificate** that ends up signing the builds — if a legal entity is registered for Azure Artifact Signing, the company name replaces it in both places at once.
 
+> [!WARNING]
+> `publisher` and the `copyright` field beside it are deliberately the certificate holder's legal
+> name, not the `Netsuma` pseudonym used for authorship elsewhere in this repository. Do not
+> "align" them. Windows rejects a signature whose subject does not match, and the copyright notice
+> carries the same legal name on purpose.
+
 ## What the installer must not do
 
 Defender's `!ml` verdicts are classifier output, not signature matches, and an installer earns them by *looking* like a dropper. Three patterns are the expensive ones, and the first two are gone from this tree:

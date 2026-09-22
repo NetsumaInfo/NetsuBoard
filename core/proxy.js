@@ -162,7 +162,7 @@ function proxyCancelAll() {
 }
 
 // Encodes de proxy EN VOL + demandes en file. Sert de signal « NetsuRush travaille » à la
-// surveillance mémoire (core/optimize/watchdog.js), qui ne s'arme que pendant une tâche lourde.
+// surveillance mémoire, qui ne s'arme que pendant une tâche lourde.
 function proxyActiveCount() {
   return { encoding: proxyChildren.size, queued: qHigh.length + qLow.length };
 }

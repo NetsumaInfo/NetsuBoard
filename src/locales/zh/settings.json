@@ -745,19 +745,19 @@
     },
     "performance": {
       "title": "同步速度",
-      "subtitle": "仅适用于本设备，其他成员保留各自的设置。",
+      "subtitle": "此设置只影响本设备。",
       "modes": {
         "live": {
           "title": "快速",
-          "description": "适合网络良好时：改动立即发出，媒体提前载入。"
+          "description": "网络良好。立即发送，媒体提前下载。"
         },
         "balanced": {
           "title": "均衡",
-          "description": "默认设置，适合大多数网络。"
+          "description": "默认。适合大多数网络。"
         },
         "economy": {
           "title": "省流量",
-          "description": "适合网速慢或有流量限制：媒体只在出现在画面上时才下载。"
+          "description": "网速慢或有限制。媒体在你看到时才下载。"
         }
       }
     },

@@ -63,7 +63,6 @@
     "notebook": "Notizbuch"
   },
   "mock": {
-    "resolveUnavailable": "Resolve ist im Browser nicht verfügbar.",
     "appUnavailable": "Diese Funktion ist im Browser nicht verfügbar.",
     "outsideApp": "Diese Funktion ist nur in der App verfügbar.",
     "pageNotFound": "Seite nicht gefunden",

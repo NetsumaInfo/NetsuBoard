@@ -9,7 +9,7 @@
 //
 // L'empreinte est calculée sur le CONTENU (pas les mtimes) : fs.copyFileSync ne conserve pas les
 // dates, une comparaison par mtime déclencherait une réinstallation à chaque démarrage.
-// La préférence (auto-update on/off) vit dans NR_HOME (pattern hostPower.js / discord-rpc.json) :
+// La préférence (auto-update on/off) vit dans NR_HOME (même emplacement que discord-rpc.json) :
 // une seule source de vérité, indépendante du renderer et de nr.config.json (figé au packaging).
 
 const path = require('node:path');

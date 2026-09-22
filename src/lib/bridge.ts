@@ -7,14 +7,6 @@ import { makeCoreClient, coreAvailable } from "./coreClient";
 import i18n from "@/i18n";
 import type { AudioSelect } from "@/features/export/profiles";
 
-export interface ResolveInfo {
-  connected: boolean;
-  project?: string | null;
-  timeline?: string | null;
-  version?: string | null;
-  error?: string | null;
-}
-
 export interface Scene {
   start: number;
   end: number;
@@ -907,10 +899,6 @@ export interface NrApi {
   bugStatus(): Promise<{ ok: boolean; configured: boolean; maxAttachments?: number; maxAttachmentMB?: number }>;
   // Specs de la machine, lues par le core (jamais saisies par le testeur).
   bugContext(): Promise<BugContext | { ok: false }>;
-  status(): Promise<ResolveInfo>;
-  importToMediaPool(paths: string[]): Promise<{ ok: boolean; count?: number; error?: string }>;
-  // Poll immédiat côté core (déclenché au focus fenêtre).
-  refreshNow(): void;
   playInfo(filePath: string): Promise<PlayInfo>;
   streamUrl(filePath: string, t: number, mode: "copy" | "enc"): string;
   audioTracks(filePath: string): Promise<{ tracks: AudioTrack[]; error?: string }>;
@@ -986,7 +974,6 @@ export interface NrApi {
   // quand on épingle, et à réagrandir au dépinglage (le responsif est inconfortable en très étroit).
   setWindowSize(w: number, h: number): void;
   reference?: RefApi;
-  power?: PowerApi;
 }
 
 // --- Cache médias (Paramètres › Stockage) ------------------------------------------------------
@@ -995,23 +982,6 @@ export interface NrApi {
  *  qu'ils vivent en fichiers ou en base — c'est le même contenu, le lieu de stockage n'intéresse
  *  personne. Le core rend ses types dans l'ordre de ses racines, donc l'UI retrie sur cette liste. */
 export const CACHE_KIND_LIST = ["thumb", "indexThumbs", "proxy", "voice", "upscaleTest", "roto", "scenes", "transcripts", "embeddings", "faces"] as const;
-
-// ---- Fermer / rouvrir le logiciel de montage (libérer RAM/GPU pendant une tâche lourde) --------
-export type PowerHost = "resolve" | "ppro" | "aeft";
-export interface PowerClosed { host: PowerHost; project: string | null; projectPath?: string | null; page?: string | null; folder?: string[]; database?: Record<string, unknown> | null; at: number; }
-export interface PowerState { closed: PowerClosed | null; busy: boolean; }
-export interface PowerProgress { msg: string; pct: number | null; }
-export interface PowerApi {
-  state(): Promise<PowerState>;
-  // Efface un état « fermé » périmé si le logiciel est en réalité détecté ouvert (réouverture externe).
-  reconcile(): Promise<PowerState>;
-  close(host: PowerHost): Promise<{ ok: boolean; project?: string | null; already?: boolean; error?: string }>;
-  reopen(): Promise<{ ok: boolean; host?: PowerHost; project?: string | null; error?: string }>;
-  // Fermer + rouvrir d'un geste, sur le même projet et la même page.
-  restart(host: PowerHost): Promise<{ ok: boolean; host?: PowerHost; project?: string | null; error?: string }>;
-  onChanged(cb: (s: PowerState) => void): () => void;
-  onProgress(cb: (p: PowerProgress) => void): () => void;
-}
 
 declare global {
   interface Window {
@@ -1096,9 +1066,6 @@ const mock: NrApi = {
     outdated: false, checkedFor: null, checkedAt: null, appVersion: "",
   }),
   ytDlpUpdate: async () => ({ ok: false, version: null, previous: null, changed: false, error: i18n.t("common:mock.outsideApp") }),
-  status: async () => ({ connected: false, error: i18n.t("common:mock.resolveUnavailable") }),
-  importToMediaPool: async () => ({ ok: false, error: "mock" }),
-  refreshNow: () => {},
   playInfo: async () => ({ duration: 0, codec: "", pix: "", fps: 0, native: false }),
   streamUrl: (p, t, mode) => "nrstream://play?p=" + encodeURIComponent(p) + "&t=" + (t || 0) + "&mode=" + mode,
   audioTracks: async () => ({ tracks: [] }),
@@ -1124,9 +1091,9 @@ const mock: NrApi = {
   adobeImport: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
   adobeInstallPanel: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
   adobeSetPanelAutoUpdate: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-  upscaleRun: async () => ({ ok: false, error: i18n.t("common:mock.resolveUnavailable") }),
-  upscaleShaderRun: async () => ({ ok: false, error: i18n.t("common:mock.resolveUnavailable") }),
-  upscaleTestFrame: async () => ({ ok: false, error: i18n.t("common:mock.resolveUnavailable") }),
+  upscaleRun: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+  upscaleShaderRun: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+  upscaleTestFrame: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
   onUpscaleProgress: () => () => {},
   chooseDir: async () => null,
   chooseFiles: async () => null,
@@ -1213,16 +1180,6 @@ const mock: NrApi = {
       onPush: () => () => {},
     } satisfies RefApi;
   })(),
-  // Mock navigateur : rien à fermer/rouvrir hors app.
-  power: {
-    state: async () => ({ closed: null, busy: false }),
-    reconcile: async () => ({ closed: null, busy: false }),
-    close: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-    reopen: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-    restart: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-    onChanged: () => () => {},
-    onProgress: () => () => {},
-  } satisfies PowerApi,
 };
 
 // coreClient (Tauri) et mock (navigateur) exposent tous deux `reference` → sélection directe.

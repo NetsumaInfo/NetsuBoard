@@ -1,6 +1,6 @@
 ﻿<#
   extract-host-icons.ps1 — extrait l'icône d'application ORIGINALE des logiciels pilotés
-  (DaVinci Resolve, Premiere Pro, After Effects) vers src/assets/hosts/*.png.
+  (Premiere Pro, After Effects) vers src/assets/hosts/*.png.
 
   Pourquoi lire la ressource PE plutôt que passer par GDI : depuis Vista, la variante 256×256 d'une
   icône Windows est stockée telle quelle en PNG dans l'exécutable. On la recopie donc octet pour
@@ -170,7 +170,6 @@ function Find-Exe {
 $targets = @(
   @{ Name = 'premiere-pro.png';    Exe = (Find-Exe 'Premiere Pro' 'Adobe Premiere Pro.exe') }
   @{ Name = 'after-effects.png';   Exe = (Find-Exe 'After Effects' 'Support Files\AfterFX.exe') }
-  @{ Name = 'davinci-resolve.png'; Exe = 'C:\Program Files\Blackmagic Design\DaVinci Resolve\Resolve.exe' }
 )
 
 Write-Host 'Extraction des icônes des logiciels pilotés :'
