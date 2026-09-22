@@ -8,7 +8,7 @@
     "minimize": "Minimize",
     "restore": "Restore",
     "maximize": "Maximize",
-    "pinnedByMode": "Held above by the transparent-to-mouse mode"
+    "pinnedByMode": "Kept on top by “Click-through” mode"
   },
   "errorBadge": {
     "open": "Open the console",

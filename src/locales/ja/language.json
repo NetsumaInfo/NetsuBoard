@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "言語",
-    "subtitle": "アプリの表示言語です。",
+    "subtitle": "変更はすぐに反映されます。再起動は不要です。",
     "fieldLabel": "表示言語"
   }
 }

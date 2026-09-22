@@ -163,7 +163,7 @@
   },
   "bugReport": {
     "title": "Informar de un problema",
-    "subtitle": "Describe qué ha pasado. Registro y datos del equipo se adjuntan.",
+    "subtitle": "Describe qué ha pasado. Se adjuntan el registro y los datos de tu equipo.",
     "type": "¿Qué pasa?",
     "module": "¿Dónde?",
     "modules": {
@@ -236,7 +236,7 @@
       "loading": "Leyendo…",
       "manual": "Escríbelo tú",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Datos del equipo adjuntos: se leen enteros en la Consola."
+      "attached": "Los datos de tu PC van adjuntos: puedes leerlos enteros en la Consola."
     },
     "sending": "Enviando…",
     "send": "Enviar",
@@ -283,46 +283,52 @@
     "showElapsed": "Tiempo transcurrido",
     "showLinks": "Tarjeta con enlaces",
     "showLinksHint": "La imagen abre el servidor de Discord; la primera línea, el repositorio.",
-    "itemsLine": "{{count}} elemento(s)"
+    "itemsLine_one": "{{count}} elemento",
+    "itemsLine_other": "{{count}} elementos"
   },
   "storage": {
     "title": "Almacenamiento del tablero",
-    "intro": "La aplicación guarda medios propios: imágenes pegadas, medios obtenidos de un enlace, fotogramas extraídos, resultados de un upscale. Guardar un proyecto .netsu archiva esos bytes en su carpeta acompañante — el almacén conserva entonces solo un duplicado, liberable sin perder nada.",
+    "intro": "Lo que la app guarda para sí: imágenes pegadas, medios de enlaces, fotogramas extraídos, resultados de escalado. Al guardar un proyecto .netsu, esos archivos pasan a la carpeta del proyecto; aquí solo queda una copia, que puedes liberar sin perder nada.",
     "disk": "{{free}} libres de {{total}}",
     "scanning": "Analizando el almacenamiento…",
-    "failed": "Operación fallida",
-    "freedNotice": "{{size}} liberados ({{count}} archivos)",
-    "movedNotice": "{{size}} movidos ({{count}} archivos)",
-    "movedPartly": "{{count}} archivos movidos, {{failed}} con error (se quedan donde están)",
+    "failed": "No se pudo completar la operación. Inténtalo otra vez.",
     "archivedNotice": "Tablero guardado en «{{name}}»: sus medios están ahora en la carpeta del proyecto",
     "settling": "{{count}} escribiéndose ahora",
     "settlingHint": "Un archivo recién escrito puede pertenecer a una importación que el tablero aún no ha colocado. Se evaluará en la próxima pasada.",
     "safe": {
       "title": "Liberable sin riesgo",
-      "hint": "Verificado archivo por archivo: estos bytes se rehacen, o ya existen dentro de la carpeta de un proyecto.",
+      "hint": "Comprobado archivo por archivo: estos archivos se rehacen, o ya existen dentro de la carpeta de un proyecto.",
       "caches": "Cachés de visualización",
       "cachesHint": "Miniaturas y proxies. La aplicación los rehace cuando hacen falta.",
       "duplicated": "Medios ya archivados en un proyecto ({{count}})",
-      "duplicatedHint": "Sus bytes están en la carpeta acompañante de un proyecto, por ejemplo «{{project}}».",
+      "duplicatedHint": "Los archivos ya están en la carpeta de un proyecto, por ejemplo «{{project}}».",
       "duplicatedNone": "Ningún duplicado detectado por ahora.",
       "action": "Liberar"
     },
     "sole": {
       "title": "Ponlos a salvo primero",
-      "hint": "Estos medios no existen en ningún otro sitio. Nada aquí los borra: guárdalos antes y pasarán a la sección de arriba.",
+      "hint": "Estos medios no existen en ningún otro sitio. Nada aquí los borra: guárdalos primero y pasarán a la sección de arriba.",
       "empty": "Nada en riesgo: todo lo que guarda la aplicación existe también en otro sitio.",
       "untitled": "Tablero sin título",
-      "sceneCount": "{{count}} medios de los que la aplicación es la única depositaria · {{size}}",
       "shared": "Tablero compartido",
       "sharedHint": "Un tablero compartido no tiene versión «proyecto»: su documento manda y la colaboración gestiona sus medios.",
       "openBoard": "Tablero abierto",
       "openBoardHint": "Este tablero está abierto: usa «Guardar como…» desde su barra de herramientas.",
       "archive": "Guardar como proyecto…",
       "orphans": "Medios que ningún tablero reclama",
-      "orphansHint": "{{count}} archivos · {{size}}. Ya nada los muestra, pero esta es la única copia.",
-      "move": "Mover a una carpeta…"
+      "move": "Mover a una carpeta…",
+      "orphansHint_one": "{{count}} archivo · {{size}}. Ya nada lo muestra, pero esta es la única copia.",
+      "orphansHint_other": "{{count}} archivos · {{size}}. Ya nada los muestra, pero esta es la única copia.",
+      "sceneCount_one": "{{count}} medio que solo existe en la aplicación · {{size}}",
+      "sceneCount_other": "{{count}} medios que solo existen en la aplicación · {{size}}"
     },
-    "footnote": "Los medios que añadiste desde tu disco nunca se ven afectados: la aplicación solo toca archivos que ha escrito ella misma."
+    "footnote": "Los medios que has añadido desde tu disco nunca se ven afectados: la aplicación solo toca archivos que ha escrito ella misma.",
+    "freedNotice_one": "{{size}} liberados ({{count}} archivo)",
+    "freedNotice_other": "{{size}} liberados ({{count}} archivos)",
+    "movedNotice_one": "{{size}} movidos ({{count}} archivo)",
+    "movedNotice_other": "{{size}} movidos ({{count}} archivos)",
+    "movedPartly_one": "{{count}} archivo movido, {{failed}} con error (se quedan donde están)",
+    "movedPartly_other": "{{count}} archivos movidos, {{failed}} con error (se quedan donde están)"
   },
   "tab": {
     "system": {
@@ -360,9 +366,9 @@
     },
     "friends": {
       "title": "Amigos",
-      "subtitle": "Añade por nombre de Discord o identificador de NetsuBoard.",
+      "subtitle": "Añade por usuario de Discord o identificador NetsuBoard.",
       "yourHandle": "Tú: @{{handle}}",
-      "placeholder": "Nombre de Discord o identificador NetsuBoard",
+      "placeholder": "Usuario de Discord o identificador NetsuBoard",
       "add": "Añadir",
       "accept": "Aceptar",
       "remove": "Quitar",
@@ -374,9 +380,9 @@
         "pending": "Ya enviada.",
         "already": "Ya es amigo.",
         "self": "Eres tú.",
-        "unknown": "Identificador no válido.",
+        "unknown": "No coincide nadie. Revisa el nombre o pega su ID de Discord.",
         "ambiguous": "Coinciden varias personas. Usa su ID de Discord.",
-        "error": "Error.",
+        "error": "La búsqueda ha fallado. Inténtalo otra vez.",
         "invited": "Invitación enviada."
       },
       "notYetJoined": "Aún no registrado"
@@ -387,8 +393,8 @@
       "sharedBoard": "Tablero compartido"
     },
     "projects": {
-      "title": "Proyectos compartidos",
-      "members": "{{count}} miembro(s)",
+      "title": "Tableros compartidos",
+      "members": "Miembros: {{count}}",
       "rotation": "rotación de clave pendiente",
       "add": "Añadir a escenas",
       "failed": "No se pudo añadir esta escena",
@@ -403,14 +409,18 @@
       "confirmDelete": "¿Eliminar para todos?",
       "confirmLeave": "¿Salir de este tablero?",
       "subtitle": "Los tableros compartidos con tu cuenta. Los de esta máquina se abren desde la pantalla de inicio.",
-      "absent": "{{count}} tablero(s) ausente(s) de esta máquina"
+      "absent_one": "{{count}} tablero que no está en esta máquina",
+      "absent_other": "{{count}} tableros que no están en esta máquina"
     },
     "activity": {
       "title": "Actividad colaborativa",
-      "changed": "{{count}} personas modificaron un tablero mientras no estabas. Abre su escena para recuperar los cambios.",
-      "media": "{{count}} personas esperan un medio original. Abre la escena y mantente en línea para transferirlo.",
-      "key": "{{count}} miembros nuevos esperan acceso seguro. Abre la escena para entregar la clave del proyecto.",
-      "dismiss": "Ocultar"
+      "dismiss": "Ocultar",
+      "changed_one": "{{count}} persona modificó un tablero mientras no estabas. Abre su escena para recuperar los cambios.",
+      "changed_other": "{{count}} personas modificaron un tablero mientras no estabas. Abre su escena para recuperar los cambios.",
+      "key_one": "{{count}} miembro nuevo espera acceso seguro. Abre la escena para entregar la clave del proyecto.",
+      "key_other": "{{count}} miembros nuevos esperan acceso seguro. Abre la escena para entregar la clave del proyecto.",
+      "media_one": "{{count}} persona espera un medio original. Abre la escena y mantente en línea para transferirlo.",
+      "media_other": "{{count}} personas esperan un medio original. Abre la escena y mantente en línea para transferirlo."
     },
     "peers": {
       "title": "Conexiones",

@@ -12,10 +12,10 @@
     "defaultFolder": "NetsuBoard — Cuts",
     "existingFolders": "Existing folders",
     "mediaPoolFolders": "Media Pool folders",
-    "profile": "Profile",
+    "profile": "Preset",
     "profileCustom": "Custom",
-    "optimization": "Optimization",
-    "speed": "Speed",
+    "optimization": "Encoder",
+    "speed": "Compression",
     "codec": "Codec",
     "audio": "Audio",
     "audioCodec": "Audio codec",
@@ -68,20 +68,20 @@
   },
   "speed": {
     "fast": {
-      "label": "Fast",
-      "hint": "prioritize encoding speed"
+      "label": "Minimal",
+      "hint": "fastest, larger file"
     },
     "balanced": {
       "label": "Balanced",
       "hint": "good trade-off"
     },
     "quality": {
-      "label": "Quality",
-      "hint": "better compression"
+      "label": "High",
+      "hint": "smaller file, slower encode"
     },
     "max": {
       "label": "Maximum",
-      "hint": "slower and smaller"
+      "hint": "smallest file, slowest encode"
     }
   },
   "issue": {

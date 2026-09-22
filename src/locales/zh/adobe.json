@@ -6,8 +6,8 @@
     "alreadyOpen": "应用已打开",
     "panelUnreachable": "面板无法连接",
     "installFailed": "安装失败",
-    "installedRestart": "面板已安装。重启 {{apps}}，然后 窗口 ▸ 扩展 ▸ NetsuBoard。",
-    "installedOpen": "面板已安装。打开 Premiere Pro/After Effects，然后 窗口 ▸ 扩展 ▸ NetsuBoard。",
+    "installedRestart": "面板已安装。重启 {{apps}}，然后打开“窗口 ▸ 扩展 ▸ NetsuBoard”。",
+    "installedOpen": "面板已安装。启动 Premiere Pro/After Effects，再打开“窗口 ▸ 扩展 ▸ NetsuBoard”。",
     "autoUpdateFailed": "无法更改更新设置"
   }
 }

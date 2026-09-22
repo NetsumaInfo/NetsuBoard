@@ -12,10 +12,10 @@
     "defaultFolder": "NetsuBoard — 剪切",
     "existingFolders": "已有文件夹",
     "mediaPoolFolders": "Media Pool 文件夹",
-    "profile": "配置",
+    "profile": "预设",
     "profileCustom": "自定义",
-    "optimization": "优化",
-    "speed": "速度",
+    "optimization": "编码器",
+    "speed": "压缩",
     "codec": "编码格式",
     "audio": "音频",
     "audioCodec": "音频编码",
@@ -68,20 +68,20 @@
   },
   "speed": {
     "fast": {
-      "label": "快速",
-      "hint": "优先编码速度"
+      "label": "最低",
+      "hint": "最快，文件较大"
     },
     "balanced": {
       "label": "均衡",
       "hint": "折中选择"
     },
     "quality": {
-      "label": "质量",
-      "hint": "更佳压缩"
+      "label": "高",
+      "hint": "文件更小，编码更慢"
     },
     "max": {
       "label": "最高",
-      "hint": "更慢且文件更小"
+      "hint": "文件最小，编码最慢"
     }
   },
   "issue": {
@@ -98,7 +98,7 @@
   },
   "workflow": {
     "timeline": "时间线",
-    "remux": "重新封装",
+    "remux": "Remux",
     "encode": "重新编码"
   },
   "audioMode": {
@@ -123,7 +123,7 @@
   },
   "codec": {
     "bitDepth": "{{count}} 位",
-    "profile": "配置 {{count}}",
+    "profile": "规格 {{count}}",
     "losslessArchive": "无损（归档）",
     "archive": "归档"
   },

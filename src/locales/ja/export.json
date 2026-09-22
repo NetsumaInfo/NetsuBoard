@@ -12,10 +12,10 @@
     "defaultFolder": "NetsuBoard — カット",
     "existingFolders": "既存のフォルダー",
     "mediaPoolFolders": "Media Pool のフォルダー",
-    "profile": "プロファイル",
+    "profile": "プリセット",
     "profileCustom": "カスタム",
-    "optimization": "最適化",
-    "speed": "速度",
+    "optimization": "エンコーダー",
+    "speed": "圧縮",
     "codec": "コーデック",
     "audio": "オーディオ",
     "audioCodec": "オーディオコーデック",
@@ -68,20 +68,20 @@
   },
   "speed": {
     "fast": {
-      "label": "高速",
-      "hint": "速度を優先"
+      "label": "最小",
+      "hint": "最速・ファイルは大きめ"
     },
     "balanced": {
       "label": "バランス",
       "hint": "ほどよいバランス"
     },
     "quality": {
-      "label": "高品質",
-      "hint": "圧縮効率を優先"
+      "label": "高",
+      "hint": "ファイルは小さく、処理は遅い"
     },
     "max": {
       "label": "最大",
-      "hint": "低速で最小サイズ"
+      "hint": "最小のファイル・最も遅い"
     }
   },
   "issue": {

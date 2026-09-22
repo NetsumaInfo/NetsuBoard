@@ -91,7 +91,7 @@
     "adobeImportFailed": "Adobe-Import fehlgeschlagen",
     "upscaleUnavailable": "Upscale nicht verfügbar: {{err}}. Prüfen, ob Core-Dienst und Python-venv laufen (NetsuBoard neu starten).",
     "interpolateUnavailable": "Interpolation nicht verfügbar: {{err}}. Prüfen, ob Core-Dienst und Python-venv laufen (NetsuBoard neu starten).",
-    "depthUnavailable": "Depth nicht verfügbar: {{err}}. Prüfen, ob Core-Dienst und Python-venv laufen (NetsuBoard neu starten).",
+    "depthUnavailable": "Tiefenkarte nicht verfügbar: {{err}}. Prüfen, ob Core-Dienst und Python-Umgebung laufen, dann NetsuBoard neu starten.",
     "removebgUnavailable": "Freistellen nicht verfügbar: {{err}}. Prüfen, ob Core-Dienst und Python-venv laufen (NetsuBoard neu starten).",
     "chainUnavailable": "Kette nicht verfügbar: {{err}}. Prüfen, ob Core und venv laufen."
   }

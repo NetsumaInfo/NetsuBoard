@@ -1,5 +1,5 @@
 {
-  "title": "NetsuBoard konfigurieren",
+  "title": "NetsuBoard einrichten",
   "scan": {
     "running": "Installation und GPU werden geprüft…"
   },
@@ -24,7 +24,7 @@
     "working": "läuft…"
   },
   "auto": {
-    "running": "Laufzeitumgebung wird installiert…",
-    "ready": "Laufzeitumgebung installiert."
+    "running": "Umgebung wird installiert…",
+    "ready": "Umgebung installiert."
   }
 }

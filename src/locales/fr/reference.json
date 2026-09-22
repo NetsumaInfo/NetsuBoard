@@ -31,7 +31,8 @@
     "resetRotation": "Rotation",
     "resetFlip": "Miroirs",
     "resetCrop": "Rognage",
-    "resetAll": "Tout réinitialiser"
+    "resetAll": "Tout réinitialiser",
+    "detach": "Détacher"
   },
   "toolbar": {
     "home": "Accueil",
@@ -105,7 +106,7 @@
     "disabled": "Désactivé",
     "placeFrame": "Cadre de la zone de pose",
     "pinnedToolbar": "Barre d'outils une fois épinglé",
-    "pinnedToolbarHint": "Barre réduite quand la fenêtre est épinglée. Le reste passe par le clic droit.",
+    "pinnedToolbarHint": "Barre réduite, avec les boutons choisis ci-dessous. Sans elle, tout passe par le clic droit.",
     "decompose": "Décomposer une vidéo en images",
     "decomposeHint": "Pose une série d'images échantillonnées de la vidéo sur le board.",
     "imagesPerSec": "Images / s",
@@ -140,7 +141,7 @@
     "editShortcut": "Modifier le raccourci {{label}}",
     "pressLetter": "Appuie sur une lettre · Échap annule",
     "keyboardShortcuts": "Raccourcis clavier",
-    "pressCombo": "Appuie sur la nouvelle combinaison · Suppr pour délier · Échap pour annuler",
+    "pressCombo": "Appuie sur la nouvelle combinaison · Suppr efface · Échap annule",
     "gestures": "Gestes",
     "gesturePaste": "Coller (image / lien / YouTube)",
     "gestureMove": "Déplacer la sélection (Maj = ×10)",
@@ -179,7 +180,7 @@
     "provider_odysee": "Odysee",
     "provider_rumble": "Rumble",
     "provider_generic": "Autres sites",
-    "noUpscaleEngine": "Aucun moteur d'upscale : le pilote graphique n'expose pas Vulkan.",
+    "noUpscaleEngine": "Aucun moteur d'upscale : le pilote graphique ne gère pas Vulkan.",
     "snapTitle": "Aimant",
     "snapEnabled": "Accrocher aux autres éléments",
     "snapThreshold": "Distance d'accrochage (px)",
@@ -601,7 +602,8 @@
     "settings": {
       "title": "Stockage des médias",
       "hint": "Ce que le .netsu emporte par défaut. Réglable média par média dans l'inspecteur."
-    }
+    },
+    "onlineMedia": "Média en ligne"
   },
   "board": {
     "clipboardEmpty": "Presse-papiers vide ou non pris en charge",
@@ -784,22 +786,20 @@
     "subtitle": "Choisis les amis à inviter sur ce projet.",
     "signedOut": "Connecte ton compte Discord dans les Paramètres.",
     "noFriends": "Ajoute d'abord des amis dans Paramètres › Compte.",
-    "invited": "{{n}} invitation(s) envoyée(s).",
     "notice": "Le board devient collaboratif. Les personnes invitées reçoivent l'invitation sur leur écran d'accueil.",
     "close": "Fermer",
     "create": "Créer et inviter",
     "invite": "Inviter",
-    "fileBacked": "Ce board est ouvert depuis un fichier .netsu. Un projet collaboratif vit dans la bibliothèque de scènes.",
     "saveAsBlocked": "Un projet collaboratif reste piloté par sa scène partagée. Utilise l'export pour créer une copie locale.",
     "role": {
       "owner": "Propriétaire",
       "editor": "Peut modifier",
       "viewer": "Lecture seule"
     },
-    "rotationPending": "La révocation est enregistrée. Les nouvelles publications attendent qu’un appareil du propriétaire termine la rotation de clé.",
+    "rotationPending": "La révocation est enregistrée. Les nouvelles publications attendent qu'un appareil du propriétaire termine la rotation de clé.",
     "staleHead": {
       "title": "Branche de récupération obsolète",
-      "warning": "Un appareil n’a pas fusionné cette branche depuis plus de 30 jours.",
+      "warning": "Un appareil n'a pas fusionné cette branche depuis plus de 30 jours.",
       "detail": "{{days}} j · {{size}} chiffrés",
       "discard": "Abandonner",
       "confirmTitle": "Abandonner cette branche ?",
@@ -812,7 +812,7 @@
     "members": {
       "remove": "Retirer du projet",
       "pending": "Invitation en attente",
-      "cancelInvite": "Annuler l’invitation"
+      "cancelInvite": "Annuler l'invitation"
     },
     "lifecycle": {
       "leave": "Quitter le projet",
@@ -822,19 +822,19 @@
       "leaveWarning": "Tu garderas ce que ton appareil a déjà reçu, mais tu ne pourras plus synchroniser ce projet.",
       "deleteWarning": "Le rendez-vous, les invitations et les sauvegardes chiffrées seront supprimés pour tous les membres. Cette action est irréversible."
     },
-    "noScene": "Enregistre d'abord ce board dans la bibliothèque de scènes.",
-    "willAdopt": "Ce board sera copié dans la bibliothèque de scènes. Le fichier .netsu reste sur ton disque.",
+    "noScene": "Enregistre d'abord ce board comme scène de référence.",
+    "willAdopt": "Ce board sera copié dans tes scènes de référence. Le fichier .netsu reste sur ton disque.",
     "failed": "Le partage a échoué.",
     "sync": {
       "queued": "Des modifications attendent ici. Elles partiront toutes seules dès qu'un appareil sera joignable.",
       "upToDate": "Tout est synchronisé.",
-      "peers": "{{count}} appareil(s) joignable(s)"
+      "peers_one": "{{count}} appareil joignable",
+      "peers_other": "{{count}} appareils joignables"
     },
-    "mediaMissing": "{{count}} média(s) introuvable(s) sur le disque : {{names}}. Ils sont marqués sur le board — retrouve-les (dossier déplacé ?) via leur carte, puis repartage.",
     "panel": {
       "title": "État du partage",
       "online": "{{count}} en ligne",
-      "alone": "Personne d’autre",
+      "alone": "Personne d'autre",
       "hereNow": "En ligne",
       "neverSeen": "Jamais connecté",
       "seenMinutes": "Il y a {{count}} min",
@@ -842,11 +842,16 @@
       "seenDays": "Il y a {{count}} j",
       "invited": "Invité",
       "unknownMember": "Membre",
-      "queued": "En attente d’envoi.",
+      "queued": "En attente d'envoi.",
       "upToDate": "Tout est envoyé.",
-      "rotation": "Nouvelle clé nécessaire. Le propriétaire doit ouvrir l’app.",
-      "waitingKey": "{{count}} attendent la clé. Reste en ligne.",
-      "nobodyReachable": "Personne en ligne. Rien n’a été envoyé."
-    }
+      "rotation": "Nouvelle clé nécessaire. Le propriétaire doit ouvrir l'app.",
+      "nobodyReachable": "Personne en ligne. Rien n'a été envoyé.",
+      "waitingKey_one": "{{count}} attend la clé. Reste en ligne.",
+      "waitingKey_other": "{{count}} attendent la clé. Reste en ligne."
+    },
+    "mediaMissing_one": "{{count}} média introuvable sur le disque : {{names}}. Il est marqué sur le board — retrouve-le (dossier déplacé ?) depuis sa carte, puis repartage.",
+    "mediaMissing_other": "{{count}} médias introuvables sur le disque : {{names}}. Ils sont marqués sur le board — retrouve-les (dossier déplacé ?) depuis leur carte, puis repartage.",
+    "invited_one": "{{count}} invitation envoyée.",
+    "invited_other": "{{count}} invitations envoyées."
   }
 }

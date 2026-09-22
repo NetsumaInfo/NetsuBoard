@@ -12,10 +12,10 @@
     "defaultFolder": "NetsuBoard — Schnitte",
     "existingFolders": "Vorhandene Ordner",
     "mediaPoolFolders": "Media-Pool-Ordner",
-    "profile": "Profil",
+    "profile": "Voreinstellung",
     "profileCustom": "Benutzerdefiniert",
-    "optimization": "Optimierung",
-    "speed": "Geschwindigkeit",
+    "optimization": "Encoder",
+    "speed": "Komprimierung",
     "codec": "Codec",
     "audio": "Audio",
     "audioCodec": "Audio-Codec",
@@ -68,20 +68,20 @@
   },
   "speed": {
     "fast": {
-      "label": "Schnell",
-      "hint": "Kodiergeschwindigkeit priorisieren"
+      "label": "Minimal",
+      "hint": "am schnellsten, größere Datei"
     },
     "balanced": {
       "label": "Ausgewogen",
       "hint": "guter Kompromiss"
     },
     "quality": {
-      "label": "Qualität",
-      "hint": "bessere Kompression"
+      "label": "Hoch",
+      "hint": "kleinere Datei, langsamer"
     },
     "max": {
       "label": "Maximal",
-      "hint": "langsamer und kompakter"
+      "hint": "kleinste Datei, am langsamsten"
     }
   },
   "issue": {
@@ -152,7 +152,7 @@
     "webmAv1": "WebM AV1",
     "prores4444": "ProRes 4444 (Alpha)",
     "dnxhrHqx": "DNxHR HQX 10 Bit",
-    "ffv1Archive": "FFV1 — Archiv",
+    "ffv1Archive": "FFV1 — Archivierung",
     "generic": "Profil {{index}}",
     "fallback": "Export-Profil"
   },

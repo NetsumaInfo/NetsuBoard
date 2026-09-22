@@ -91,8 +91,8 @@
     "adobeImportFailed": "Adobe import failed",
     "upscaleUnavailable": "Upscale unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
     "interpolateUnavailable": "Interpolation unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
-    "depthUnavailable": "Depth unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
-    "removebgUnavailable": "Remove BG unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
+    "depthUnavailable": "Depth map unavailable: {{err}}. Check that the core service and the Python environment are running, then restart NetsuBoard.",
+    "removebgUnavailable": "Background removal unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
     "chainUnavailable": "Chain unavailable: {{err}}. Check that the core and the venv are running."
   }
 }

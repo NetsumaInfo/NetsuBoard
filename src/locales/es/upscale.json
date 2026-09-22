@@ -91,7 +91,7 @@
     "adobeImportFailed": "error al importar en Adobe",
     "upscaleUnavailable": "Escalado no disponible: {{err}}. Comprueba que el servicio core y el venv de Python estén activos (reinicia NetsuBoard).",
     "interpolateUnavailable": "Interpolación no disponible: {{err}}. Comprueba que el servicio core y el venv de Python estén activos (reinicia NetsuBoard).",
-    "depthUnavailable": "Profundidad no disponible: {{err}}. Comprueba que el servicio core y el venv de Python estén activos (reinicia NetsuBoard).",
+    "depthUnavailable": "Mapa de profundidad no disponible: {{err}}. Comprueba que el servicio core y el entorno de Python estén activos y reinicia NetsuBoard.",
     "removebgUnavailable": "Quitar fondo no disponible: {{err}}. Comprueba que el servicio core y el venv de Python estén activos (reinicia NetsuBoard).",
     "chainUnavailable": "Cadena no disponible: {{err}}. Comprueba que el core y el venv estén activos."
   }

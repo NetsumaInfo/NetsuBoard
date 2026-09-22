@@ -31,7 +31,8 @@
     "resetRotation": "Rotation",
     "resetFlip": "Flip",
     "resetCrop": "Crop",
-    "resetAll": "Reset all"
+    "resetAll": "Reset all",
+    "detach": "Detach"
   },
   "toolbar": {
     "home": "Home",
@@ -105,7 +106,7 @@
     "disabled": "Off",
     "placeFrame": "Content frame",
     "pinnedToolbar": "Toolbar when pinned",
-    "pinnedToolbarHint": "Reduced bar while the window is pinned. The rest stays in the right-click menu.",
+    "pinnedToolbarHint": "A reduced bar with the buttons picked below. Without it, everything goes through the right-click menu.",
     "decompose": "Break a video into frames",
     "decomposeHint": "Places a series of frames sampled from the video on the board.",
     "imagesPerSec": "Frames/s",
@@ -140,7 +141,7 @@
     "editShortcut": "Change the {{label}} shortcut",
     "pressLetter": "Press a letter · Esc cancels",
     "keyboardShortcuts": "Keyboard shortcuts",
-    "pressCombo": "Press the new combination · Delete to unbind · Esc to cancel",
+    "pressCombo": "Press the new combination · Delete clears · Esc cancels",
     "gestures": "Gestures",
     "gesturePaste": "Paste (image / link / YouTube)",
     "gestureMove": "Move selection (Shift = ×10)",
@@ -179,7 +180,7 @@
     "provider_odysee": "Odysee",
     "provider_rumble": "Rumble",
     "provider_generic": "Other sites",
-    "noUpscaleEngine": "No upscale engine: the graphics driver does not expose Vulkan.",
+    "noUpscaleEngine": "No upscale engine: the graphics driver has no Vulkan support.",
     "snapTitle": "Snapping",
     "snapEnabled": "Snap to other items",
     "snapThreshold": "Snap distance (px)",
@@ -601,7 +602,8 @@
     "settings": {
       "title": "Media storage",
       "hint": "What the .netsu includes by default. You can change it for each media item in the inspector."
-    }
+    },
+    "onlineMedia": "Online media"
   },
   "board": {
     "clipboardEmpty": "Clipboard empty or not supported",
@@ -784,12 +786,10 @@
     "subtitle": "Pick the friends to invite to this project.",
     "signedOut": "Connect your Discord account in Settings.",
     "noFriends": "Add friends first in Settings › Account.",
-    "invited": "{{n}} invitation(s) sent.",
     "notice": "The board becomes collaborative. Invited people receive the invitation on their home screen.",
     "close": "Close",
     "create": "Create and invite",
     "invite": "Invite",
-    "fileBacked": "This board is open from a .netsu file. A collaborative project lives in the scene library.",
     "saveAsBlocked": "A collaborative project remains owned by its shared scene. Use export to create a local copy.",
     "role": {
       "owner": "Owner",
@@ -822,15 +822,15 @@
       "leaveWarning": "You keep what this device already received, but can no longer sync this project.",
       "deleteWarning": "Rendezvous data, invitations, and encrypted recovery copies will be deleted for every member. This cannot be undone."
     },
-    "noScene": "Save this board to the scene library first.",
-    "willAdopt": "This board will be copied into the scene library. The .netsu file stays on your disk.",
+    "noScene": "Save this board as a reference scene first.",
+    "willAdopt": "This board will be copied into your reference scenes. The .netsu file stays on your disk.",
     "failed": "Sharing failed.",
     "sync": {
-      "queued": "Changes are waiting here. They will leave on their own as soon as a device is reachable.",
+      "queued": "Changes are waiting here. They'll be sent automatically as soon as a device is reachable.",
       "upToDate": "Everything is in sync.",
-      "peers": "{{count}} reachable device(s)"
+      "peers_one": "{{count}} reachable device",
+      "peers_other": "{{count}} reachable devices"
     },
-    "mediaMissing": "{{count}} media file(s) missing from disk: {{names}}. They are marked on the board — recover them (moved folder?) from their card, then share again.",
     "panel": {
       "title": "Sharing status",
       "online": "{{count}} online",
@@ -845,8 +845,13 @@
       "queued": "Waiting to be sent.",
       "upToDate": "Everything is sent.",
       "rotation": "A new key is needed. The owner has to open the app.",
-      "waitingKey": "{{count}} waiting for the key. Stay online.",
-      "nobodyReachable": "Nobody online. Nothing has been sent."
-    }
+      "nobodyReachable": "Nobody online. Nothing has been sent.",
+      "waitingKey_one": "{{count}} waiting for the key. Stay online.",
+      "waitingKey_other": "{{count}} waiting for the key. Stay online."
+    },
+    "mediaMissing_one": "{{count}} media file missing from disk: {{names}}. It is marked on the board — find it again (moved folder?) from its card, then share again.",
+    "mediaMissing_other": "{{count}} media files missing from disk: {{names}}. They are marked on the board — find them again (moved folder?) from their cards, then share again.",
+    "invited_one": "{{count}} invite sent.",
+    "invited_other": "{{count}} invites sent."
   }
 }

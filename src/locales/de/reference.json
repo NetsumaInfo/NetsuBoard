@@ -31,7 +31,8 @@
     "resetRotation": "Drehung",
     "resetFlip": "Spiegelungen",
     "resetCrop": "Zuschnitt",
-    "resetAll": "Alles zurücksetzen"
+    "resetAll": "Alles zurücksetzen",
+    "detach": "Abdocken"
   },
   "toolbar": {
     "home": "Start",
@@ -105,7 +106,7 @@
     "disabled": "Deaktiviert",
     "placeFrame": "Rahmen der Platzierungszone",
     "pinnedToolbar": "Werkzeugleiste im angehefteten Zustand",
-    "pinnedToolbarHint": "Verkleinerte Leiste bei angepinntem Fenster. Der Rest bleibt im Rechtsklickmenü.",
+    "pinnedToolbarHint": "Verkleinerte Leiste mit den unten gewählten Schaltflächen. Ohne sie läuft alles über das Rechtsklickmenü.",
     "decompose": "Video in Bilder zerlegen",
     "decomposeHint": "Legt eine Reihe von Einzelbildern aus dem Video auf das Board.",
     "imagesPerSec": "Bilder / s",
@@ -140,7 +141,7 @@
     "editShortcut": "Kürzel {{label}} ändern",
     "pressLetter": "Drücke einen Buchstaben · Esc bricht ab",
     "keyboardShortcuts": "Tastenkürzel",
-    "pressCombo": "Neue Tastenkombination drücken · Entf zum Lösen · Esc zum Abbrechen",
+    "pressCombo": "Neue Tastenkombination drücken · Entf löscht · Esc bricht ab",
     "gestures": "Gesten",
     "gesturePaste": "Einfügen (Bild / Link / YouTube)",
     "gestureMove": "Auswahl bewegen (Umschalt = ×10)",
@@ -179,7 +180,7 @@
     "provider_odysee": "Odysee",
     "provider_rumble": "Rumble",
     "provider_generic": "Andere Websites",
-    "noUpscaleEngine": "Keine Upscale-Engine: Der Grafiktreiber stellt Vulkan nicht bereit.",
+    "noUpscaleEngine": "Keine Upscale-Engine: Der Grafiktreiber unterstützt kein Vulkan.",
     "snapTitle": "Magnet",
     "snapEnabled": "An anderen Elementen ausrichten",
     "snapThreshold": "Fangabstand (px)",
@@ -601,7 +602,8 @@
     "settings": {
       "title": "Medienspeicherung",
       "hint": "Was die .netsu-Datei standardmäßig enthält. Pro Medium im Inspektor einstellbar."
-    }
+    },
+    "onlineMedia": "Online-Medium"
   },
   "board": {
     "clipboardEmpty": "Zwischenablage leer oder nicht unterstützt",
@@ -784,12 +786,10 @@
     "subtitle": "Wähle die Freunde aus, die du zu diesem Projekt einlädst.",
     "signedOut": "Verbinde dein Discord-Konto in den Einstellungen.",
     "noFriends": "Füge zuerst Freunde unter Einstellungen › Konto hinzu.",
-    "invited": "{{n}} Einladung(en) gesendet.",
     "notice": "Das Board wird kollaborativ. Eingeladene erhalten die Einladung auf ihrem Startbildschirm.",
     "close": "Schließen",
     "create": "Erstellen und einladen",
     "invite": "Einladen",
-    "fileBacked": "Dieses Board stammt aus einer .netsu-Datei. Ein kollaboratives Projekt lebt in der Szenenbibliothek.",
     "saveAsBlocked": "Ein kollaboratives Projekt bleibt an seine geteilte Szene gebunden. Exportiere es für eine lokale Kopie.",
     "role": {
       "owner": "Eigentümer",
@@ -822,15 +822,15 @@
       "leaveWarning": "Bereits empfangene Daten bleiben auf diesem Gerät, aber das Projekt wird nicht mehr synchronisiert.",
       "deleteWarning": "Vermittlungsdaten, Einladungen und verschlüsselte Sicherungen werden für alle Mitglieder unwiderruflich gelöscht."
     },
-    "noScene": "Speichere dieses Board zuerst in der Szenenbibliothek.",
-    "willAdopt": "Dieses Board wird in die Szenenbibliothek kopiert. Die .netsu-Datei bleibt auf deiner Festplatte.",
+    "noScene": "Speichere dieses Board zuerst als Referenzszene.",
+    "willAdopt": "Dieses Board wird in deine Referenzszenen kopiert. Die .netsu-Datei bleibt auf deiner Festplatte.",
     "failed": "Freigabe fehlgeschlagen.",
     "sync": {
       "queued": "Änderungen warten hier. Sie werden automatisch gesendet, sobald ein Gerät erreichbar ist.",
       "upToDate": "Alles ist synchronisiert.",
-      "peers": "{{count}} erreichbare(s) Gerät(e)"
+      "peers_one": "{{count}} erreichbares Gerät",
+      "peers_other": "{{count}} erreichbare Geräte"
     },
-    "mediaMissing": "{{count}} Mediendatei(en) fehlen auf der Festplatte: {{names}}. Sie sind auf dem Board markiert — stelle sie über ihre Karte wieder her (Ordner verschoben?) und teile dann erneut.",
     "panel": {
       "title": "Freigabestatus",
       "online": "{{count}} online",
@@ -845,8 +845,13 @@
       "queued": "Warten auf Versand.",
       "upToDate": "Alles gesendet.",
       "rotation": "Neuer Schlüssel nötig. Der Eigentümer muss die App öffnen.",
-      "waitingKey": "{{count}} warten auf den Schlüssel. Bleib online.",
-      "nobodyReachable": "Niemand online. Nichts wurde gesendet."
-    }
+      "nobodyReachable": "Niemand online. Nichts wurde gesendet.",
+      "waitingKey_one": "Warten auf den Schlüssel: {{count}}. Bleib online.",
+      "waitingKey_other": "Warten auf den Schlüssel: {{count}}. Bleib online."
+    },
+    "mediaMissing_one": "{{count}} Mediendatei fehlt auf der Festplatte: {{names}}. Sie ist auf dem Board markiert – stelle sie über ihre Karte wieder her (Ordner verschoben?) und teile dann erneut.",
+    "mediaMissing_other": "{{count}} Mediendateien fehlen auf der Festplatte: {{names}}. Sie sind auf dem Board markiert – stelle sie über ihre Karten wieder her (Ordner verschoben?) und teile dann erneut.",
+    "invited_one": "{{count}} Einladung gesendet.",
+    "invited_other": "{{count}} Einladungen gesendet."
   }
 }

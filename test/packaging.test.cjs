@@ -101,7 +101,7 @@ test('release metadata and updater manifest generator are present', () => {
   assert.ok(releases.every((release) => release.id && release.version && (release.changes?.length || release.highlights?.fr.length)));
   // The notes open in the interface language: a missing one shows English to that user.
   for (const release of releases) {
-    for (const lang of [fr, en, es, de, ja, zh]) {
+    for (const lang of ['fr', 'en', 'es', 'de', 'ja', 'zh']) {
       assert.ok(release.title[lang], `${release.id}: title has no ${lang}`);
       for (const change of release.changes ?? []) assert.ok(change[lang], `${release.id}: a change has no ${lang}`);
       if (release.highlights) assert.equal(release.highlights[lang]?.length, release.highlights.fr.length, `${release.id}: highlights ${lang}`);

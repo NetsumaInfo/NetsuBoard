@@ -91,7 +91,7 @@
     "adobeImportFailed": "import Adobe échoué",
     "upscaleUnavailable": "Upscale indisponible : {{err}}. Vérifie que le service core et le venv Python sont actifs (relance NetsuBoard).",
     "interpolateUnavailable": "Interpolation indisponible : {{err}}. Vérifie que le service core et le venv Python sont actifs (relance NetsuBoard).",
-    "depthUnavailable": "Depth map indisponible : {{err}}. Vérifie que le service core et l’environnement Python sont actifs, puis relance NetsuBoard.",
+    "depthUnavailable": "Depth map indisponible : {{err}}. Vérifie que le service core et l'environnement Python sont actifs, puis relance NetsuBoard.",
     "removebgUnavailable": "Détourage indisponible : {{err}}. Vérifie que le service core et le venv Python sont actifs (relance NetsuBoard).",
     "chainUnavailable": "Chaîne indisponible : {{err}}. Vérifie que le core et le venv sont actifs."
   }

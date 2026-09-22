@@ -24,7 +24,7 @@
     "working": "en cours…"
   },
   "auto": {
-    "running": "Installation du socle en cours…",
-    "ready": "Socle installé."
+    "running": "Installation de l'environnement…",
+    "ready": "Environnement installé."
   }
 }

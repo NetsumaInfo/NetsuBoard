@@ -236,7 +236,7 @@
       "loading": "正在读取…",
       "manual": "自己填写",
       "manualPlaceholder": "RTX 3060、Ryzen 5600X、32 GB、Windows 11",
-      "attached": "已附加机器信息 — 完整内容可在控制台查看。"
+      "attached": "已附上你的电脑信息，完整内容可在控制台查看。"
     },
     "sending": "发送中…",
     "send": "发送",
@@ -283,27 +283,25 @@
     "showElapsed": "已用时间",
     "showLinks": "可点击的卡片",
     "showLinksHint": "图片打开 Discord 服务器，第一行打开仓库。",
-    "itemsLine": "{{count}} 个元素"
+    "itemsLine_one": "{{count}} 个元素",
+    "itemsLine_other": "{{count}} 个元素"
   },
   "storage": {
-    "title": "板面存储",
-    "intro": "应用会保存自己的媒体：粘贴的图片、从链接获取的媒体、抽取的帧、放大结果。保存 .netsu 项目会把这些字节归入其伴随文件夹——此时存储中只剩一份副本，可以毫无损失地释放。",
-    "disk": "{{total}} 中可用 {{free}}",
+    "title": "画板存储",
+    "intro": "应用自己保存的内容：粘贴的图片、链接媒体、抽取的帧、超分辨率结果。保存 .netsu 项目后，这些文件会归入项目文件夹，这里只剩一份副本，释放它不会丢失任何东西。",
+    "disk": "可用 {{free}}，共 {{total}}",
     "scanning": "正在分析存储…",
-    "failed": "操作失败",
-    "freedNotice": "已释放 {{size}}（{{count}} 个文件）",
-    "movedNotice": "已移动 {{size}}（{{count}} 个文件）",
-    "movedPartly": "已移动 {{count}} 个文件，{{failed}} 个失败（保留原处）",
-    "archivedNotice": "板面已保存为“{{name}}”：其媒体现在位于项目文件夹中",
+    "failed": "没能完成。再试一次。",
+    "archivedNotice": "画板已保存为“{{name}}”：其媒体现在位于项目文件夹中",
     "settling": "{{count}} 个正在写入",
-    "settlingHint": "刚写入的文件可能属于板面尚未放置的导入。下次检查时再判定。",
+    "settlingHint": "刚写入的文件可能属于画板尚未放置的导入。下次检查时再判定。",
     "safe": {
       "title": "可安全释放",
-      "hint": "逐个文件核对过：这些字节可以重新生成，或已存在于某个项目文件夹中。",
+      "hint": "逐个文件核对过：这些文件可以重新生成，或已存在于某个项目文件夹中。",
       "caches": "显示缓存",
       "cachesHint": "缩略图与代理文件。应用会按需重新生成。",
       "duplicated": "已归入项目的媒体（{{count}} 个）",
-      "duplicatedHint": "其字节位于某个项目的伴随文件夹中，例如“{{project}}”。",
+      "duplicatedHint": "文件已在某个项目的文件夹中，例如“{{project}}”。",
       "duplicatedNone": "目前未发现副本。",
       "action": "释放"
     },
@@ -311,18 +309,26 @@
       "title": "请先妥善保存",
       "hint": "这些媒体别处没有。这里不提供删除：先保存，它们就会移到上方那一节。",
       "empty": "没有风险：应用保存的一切在别处也存在。",
-      "untitled": "未命名板面",
-      "sceneCount": "仅由应用保管的媒体 {{count}} 个 · {{size}}",
-      "shared": "共享板面",
-      "sharedHint": "共享板面没有项目版本：其文档为准，媒体由协作管理。",
-      "openBoard": "板面已打开",
-      "openBoardHint": "该板面已打开：请使用其工具栏中的“另存为…”。",
+      "untitled": "未命名画板",
+      "shared": "共享画板",
+      "sharedHint": "共享画板没有项目版本：以其文档为准，媒体由协作管理。",
+      "openBoard": "画板已打开",
+      "openBoardHint": "该画板已打开：请使用其工具栏中的“另存为…”。",
       "archive": "保存为项目…",
-      "orphans": "没有板面需要的媒体",
-      "orphansHint": "{{count}} 个文件 · {{size}}。已无处显示，但这是唯一的副本。",
-      "move": "移动到文件夹…"
+      "orphans": "没有任何画板使用的媒体",
+      "move": "移动到文件夹…",
+      "orphansHint_one": "{{count}} 个文件 · {{size}}。已无处显示，但这是唯一的副本。",
+      "orphansHint_other": "{{count}} 个文件 · {{size}}。已无处显示，但这是唯一的副本。",
+      "sceneCount_one": "仅由应用保管的媒体 {{count}} 个 · {{size}}",
+      "sceneCount_other": "仅由应用保管的媒体 {{count}} 个 · {{size}}"
     },
-    "footnote": "你从自己磁盘添加的媒体绝不受影响：应用只处理它自己写入的文件。"
+    "footnote": "你从自己磁盘添加的媒体绝不受影响：应用只处理它自己写入的文件。",
+    "freedNotice_one": "已释放 {{size}}（{{count}} 个文件）",
+    "freedNotice_other": "已释放 {{size}}（{{count}} 个文件）",
+    "movedNotice_one": "已移动 {{size}}（{{count}} 个文件）",
+    "movedNotice_other": "已移动 {{size}}（{{count}} 个文件）",
+    "movedPartly_one": "已移动 {{count}} 个文件，{{failed}} 个失败（保留原处）",
+    "movedPartly_other": "已移动 {{count}} 个文件，{{failed}} 个失败（保留原处）"
   },
   "tab": {
     "system": {
@@ -332,13 +338,13 @@
   "collab": {
     "device": {
       "title": "本设备",
-      "subtitle": "它的公钥用于向协作者标识你。私钥永远不会离开这台机器。",
+      "subtitle": "它的公钥用于向协作者标识你的身份。私钥永远不会离开这台机器。",
       "failed": "身份无法读取：{{error}}",
       "ready": "受保护的本机身份已就绪。",
       "unavailable": "本机协作不可用。",
       "unnamed": "NetsuBoard 设备",
       "current": "此设备",
-      "revoke": "撤销此设备"
+      "revoke": "吊销此设备"
     },
     "performance": {
       "title": "同步速度",
@@ -360,7 +366,7 @@
     },
     "friends": {
       "title": "好友",
-      "subtitle": "用 Discord 用户名或 NetsuBoard 标识添加。",
+      "subtitle": "通过 Discord 用户名或 NetsuBoard 标识添加。",
       "yourHandle": "你：@{{handle}}",
       "placeholder": "Discord 用户名或 NetsuBoard 标识",
       "add": "添加",
@@ -374,9 +380,9 @@
         "pending": "已发送过。",
         "already": "已是好友。",
         "self": "这是你自己。",
-        "unknown": "标识符无效。",
+        "unknown": "没有找到这个人。检查用户名，或粘贴对方的 Discord ID。",
         "ambiguous": "匹配到多人。请使用其 Discord ID。",
-        "error": "失败。",
+        "error": "没能查到。再试一次。",
         "invited": "邀请已发送。"
       },
       "notYetJoined": "尚未注册"
@@ -384,11 +390,11 @@
     "invites": {
       "title": "邀请",
       "join": "加入",
-      "sharedBoard": "共享看板"
+      "sharedBoard": "共享画板"
     },
     "projects": {
-      "title": "共享项目",
-      "members": "{{count}} 位成员",
+      "title": "共享画板",
+      "members": "成员：{{count}} 位",
       "rotation": "等待密钥轮换",
       "add": "添加到场景",
       "failed": "无法添加此场景",
@@ -397,20 +403,24 @@
         "editor": "可编辑",
         "viewer": "仅查看"
       },
-      "unnamed": "{{date}} 的看板",
+      "unnamed": "{{date}} 的画板",
       "delete": "删除",
       "leave": "退出",
       "confirmDelete": "为所有成员删除？",
-      "confirmLeave": "退出此看板？",
-      "subtitle": "与你的账户共享的看板。本机上的看板可从主屏幕打开。",
-      "absent": "{{count}} 个不在本机的看板"
+      "confirmLeave": "退出此画板？",
+      "subtitle": "与你的账号共享的画板。本机上的画板可从主屏幕打开。",
+      "absent_one": "{{count}} 个画板不在本机",
+      "absent_other": "{{count}} 个画板不在本机"
     },
     "activity": {
       "title": "协作动态",
-      "changed": "你离开期间有 {{count}} 人修改了看板。打开对应场景即可获取更改。",
-      "media": "{{count}} 人正在等待原始媒体。请打开对应场景并保持在线以完成传输。",
-      "key": "{{count}} 位新成员正在等待安全访问。请打开对应场景以传递项目密钥。",
-      "dismiss": "隐藏"
+      "dismiss": "隐藏",
+      "changed_one": "你不在时有 {{count}} 人修改了画板。打开对应场景即可获取更改。",
+      "changed_other": "你不在时有 {{count}} 人修改了画板。打开对应场景即可获取更改。",
+      "key_one": "{{count}} 位新成员正在等待安全访问。请打开对应场景以传递项目密钥。",
+      "key_other": "{{count}} 位新成员正在等待安全访问。请打开对应场景以传递项目密钥。",
+      "media_one": "{{count}} 人正在等待原始媒体。请打开对应场景并保持在线以完成传输。",
+      "media_other": "{{count}} 人正在等待原始媒体。请打开对应场景并保持在线以完成传输。"
     },
     "peers": {
       "title": "连接",

@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "语言",
-    "subtitle": "应用界面的语言。",
+    "subtitle": "切换后立即生效，无需重启。",
     "fieldLabel": "界面语言"
   }
 }

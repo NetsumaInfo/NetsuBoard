@@ -134,7 +134,7 @@
       "performance": "Leistung"
     },
     "ytdlp": {
-      "hint": "Bibliothek, die Videolinks auflöst. Ihre Extraktoren brechen häufig: Sie wird aktualisiert, ohne auf die nächste NetsuBoard-Version zu warten.",
+      "hint": "Bibliothek, die Videolinks auflöst. Da ihre Extraktoren oft kaputtgehen, aktualisiert sie sich, ohne auf die nächste NetsuBoard-Version zu warten.",
       "update": "Aktualisieren",
       "updating": "Wird aktualisiert…",
       "checking": "Version wird gelesen…",
@@ -236,7 +236,7 @@
       "loading": "Wird gelesen…",
       "manual": "Schreib es selbst",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Systeminfos angehängt – vollständig in der Konsole lesbar."
+      "attached": "Die Infos zu deinem PC sind angehängt – du kannst sie vollständig in der Konsole lesen."
     },
     "sending": "Wird gesendet…",
     "send": "Senden",
@@ -283,46 +283,52 @@
     "showElapsed": "Vergangene Zeit",
     "showLinks": "Anklickbare Karte",
     "showLinksHint": "Das Bild öffnet den Discord-Server, die erste Zeile das Repository.",
-    "itemsLine": "{{count}} Element(e)"
+    "itemsLine_one": "{{count}} Element",
+    "itemsLine_other": "{{count}} Elemente"
   },
   "storage": {
     "title": "Board-Speicher",
-    "intro": "Die App bewahrt eigene Medien auf: eingefügte Bilder, über einen Link geholte Medien, extrahierte Frames, Upscale-Ergebnisse. Beim Speichern eines .netsu-Projekts wandern diese Bytes in dessen Begleitordner — der Speicher hält dann nur noch ein Duplikat, das sich verlustfrei freigeben lässt.",
+    "intro": "Was die App für sich behält: eingefügte Bilder, Medien aus Links, extrahierte Frames, Upscale-Ergebnisse. Beim Speichern eines .netsu-Projekts wandern diese Dateien in den Projektordner; hier bleibt nur eine Kopie, die sich verlustfrei freigeben lässt.",
     "disk": "{{free}} frei von {{total}}",
     "scanning": "Speicher wird analysiert…",
-    "failed": "Vorgang fehlgeschlagen",
-    "freedNotice": "{{size}} freigegeben ({{count}} Dateien)",
-    "movedNotice": "{{size}} verschoben ({{count}} Dateien)",
-    "movedPartly": "{{count}} Dateien verschoben, {{failed}} fehlgeschlagen (bleiben liegen)",
-    "archivedNotice": "Board in „{{name}}“ gespeichert: seine Medien liegen jetzt im Projektordner",
-    "settling": "{{count}} werden gerade geschrieben",
-    "settlingHint": "Eine eben geschriebene Datei kann zu einem Import gehören, den das Board noch nicht platziert hat. Sie wird beim nächsten Durchgang bewertet.",
+    "failed": "Hat nicht geklappt. Versuch es noch einmal.",
+    "archivedNotice": "Board in „{{name}}“ gespeichert: Seine Medien liegen jetzt im Projektordner",
+    "settling": "Wird geschrieben: {{count}}",
+    "settlingHint": "Eine eben geschriebene Datei kann zu einem Import gehören, den das Board noch nicht platziert hat. Beim nächsten Durchgang wird sie geprüft.",
     "safe": {
       "title": "Gefahrlos freigebbar",
-      "hint": "Datei für Datei geprüft: diese Bytes lassen sich neu erzeugen oder liegen bereits in einem Projektordner.",
+      "hint": "Datei für Datei geprüft: Diese Dateien lassen sich neu erzeugen oder liegen bereits in einem Projektordner.",
       "caches": "Anzeige-Caches",
       "cachesHint": "Miniaturen und Proxys. Die App erzeugt sie bei Bedarf neu.",
       "duplicated": "Medien, die bereits in einem Projekt liegen ({{count}})",
-      "duplicatedHint": "Ihre Bytes liegen im Begleitordner eines Projekts, zum Beispiel „{{project}}“.",
+      "duplicatedHint": "Die Dateien liegen bereits im Ordner eines Projekts, zum Beispiel „{{project}}“.",
       "duplicatedNone": "Bisher kein Duplikat gefunden.",
       "action": "Freigeben"
     },
     "sole": {
       "title": "Zuerst in Sicherheit bringen",
       "hint": "Diese Medien existieren nirgendwo sonst. Nichts hier löscht sie: erst sichern, dann rücken sie in den Abschnitt darüber.",
-      "empty": "Nichts gefährdet: alles, was die App aufbewahrt, existiert auch anderswo.",
+      "empty": "Nichts in Sicherheit zu bringen: Alles, was die App aufbewahrt, gibt es auch anderswo.",
       "untitled": "Board ohne Titel",
-      "sceneCount": "{{count}} Medien, die nur die App besitzt · {{size}}",
       "shared": "Geteiltes Board",
-      "sharedHint": "Ein geteiltes Board hat keine Projektfassung: sein Dokument ist maßgeblich und die Zusammenarbeit verwaltet seine Medien.",
+      "sharedHint": "Ein geteiltes Board hat keine Projektfassung: Sein Dokument ist maßgeblich, und die Zusammenarbeit verwaltet seine Medien.",
       "openBoard": "Board geöffnet",
-      "openBoardHint": "Dieses Board ist geöffnet: benutze „Speichern unter…“ in seiner Werkzeugleiste.",
+      "openBoardHint": "Dieses Board ist geöffnet: Benutze „Speichern unter…“ in seiner Werkzeugleiste.",
       "archive": "Als Projekt speichern…",
-      "orphans": "Medien, die kein Board anfordert",
-      "orphansHint": "{{count}} Dateien · {{size}}. Nichts zeigt sie mehr an, aber dies ist die einzige Kopie.",
-      "move": "In einen Ordner verschieben…"
+      "orphans": "Medien, die kein Board verwendet",
+      "move": "In einen Ordner verschieben…",
+      "orphansHint_one": "{{count}} Datei · {{size}}. Nichts zeigt sie mehr an, aber dies ist die einzige Kopie.",
+      "orphansHint_other": "{{count}} Dateien · {{size}}. Nichts zeigt sie mehr an, aber dies ist die einzige Kopie.",
+      "sceneCount_one": "{{count}} Medium, das nur die App besitzt · {{size}}",
+      "sceneCount_other": "{{count}} Medien, die nur die App besitzt · {{size}}"
     },
-    "footnote": "Medien von deiner eigenen Festplatte sind nie betroffen: die App rührt nur Dateien an, die sie selbst geschrieben hat."
+    "footnote": "Medien von deiner eigenen Festplatte sind nie betroffen: Die App rührt nur Dateien an, die sie selbst geschrieben hat.",
+    "freedNotice_one": "{{size}} freigegeben ({{count}} Datei)",
+    "freedNotice_other": "{{size}} freigegeben ({{count}} Dateien)",
+    "movedNotice_one": "{{size}} verschoben ({{count}} Datei)",
+    "movedNotice_other": "{{size}} verschoben ({{count}} Dateien)",
+    "movedPartly_one": "{{count}} Datei verschoben, {{failed}} fehlgeschlagen (bleiben liegen)",
+    "movedPartly_other": "{{count}} Dateien verschoben, {{failed}} fehlgeschlagen (bleiben liegen)"
   },
   "tab": {
     "system": {
@@ -332,7 +338,7 @@
   "collab": {
     "device": {
       "title": "Dieses Gerät",
-      "subtitle": "Sein öffentlicher Schlüssel weist dich gegenüber deinen Mitarbeitenden aus. Der private Schlüssel verlässt diesen Rechner nie.",
+      "subtitle": "Sein öffentlicher Schlüssel identifiziert dich bei den Personen, mit denen du zusammenarbeitest. Der private Schlüssel verlässt diesen Rechner nie.",
       "failed": "Identität nicht lesbar: {{error}}",
       "ready": "Geschützte native Identität ist bereit.",
       "unavailable": "Native Zusammenarbeit ist nicht verfügbar.",
@@ -341,7 +347,7 @@
       "revoke": "Dieses Gerät widerrufen"
     },
     "performance": {
-      "title": "Synchronisationstempo",
+      "title": "Tempo der Synchronisierung",
       "subtitle": "Diese Einstellung gilt nur für dieses Gerät.",
       "modes": {
         "live": {
@@ -360,9 +366,9 @@
     },
     "friends": {
       "title": "Freunde",
-      "subtitle": "Über Discord-Namen oder NetsuBoard-Handle hinzufügen.",
+      "subtitle": "Über den Discord-Namen oder die NetsuBoard-Kennung hinzufügen.",
       "yourHandle": "Du: @{{handle}}",
-      "placeholder": "Discord-Name oder NetsuBoard-Handle",
+      "placeholder": "Discord-Name oder NetsuBoard-Kennung",
       "add": "Hinzufügen",
       "accept": "Annehmen",
       "remove": "Entfernen",
@@ -374,9 +380,9 @@
         "pending": "Bereits gesendet.",
         "already": "Bereits befreundet.",
         "self": "Das bist du.",
-        "unknown": "Ungültige Kennung.",
+        "unknown": "Niemand passt dazu. Prüf den Namen oder füg die Discord-ID ein.",
         "ambiguous": "Mehrere Treffer. Nutze die Discord-ID.",
-        "error": "Fehlgeschlagen.",
+        "error": "Die Suche hat nicht geklappt. Versuch es noch einmal.",
         "invited": "Einladung gesendet."
       },
       "notYetJoined": "Noch nicht registriert"
@@ -387,30 +393,34 @@
       "sharedBoard": "Geteiltes Board"
     },
     "projects": {
-      "title": "Geteilte Projekte",
-      "members": "{{count}} Mitglied(er)",
-      "rotation": "Schlüsselrotation ausstehend",
+      "title": "Geteilte Boards",
+      "members": "Mitglieder: {{count}}",
+      "rotation": "Schlüsselwechsel ausstehend",
       "add": "Zu Szenen hinzufügen",
       "failed": "Szene konnte nicht hinzugefügt werden",
       "role": {
         "owner": "Eigentümer",
-        "editor": "Darf bearbeiten",
-        "viewer": "Nur ansehen"
+        "editor": "Kann bearbeiten",
+        "viewer": "Nur lesen"
       },
       "unnamed": "Board vom {{date}}",
       "delete": "Löschen",
       "leave": "Verlassen",
       "confirmDelete": "Für alle löschen?",
       "confirmLeave": "Dieses Board verlassen?",
-      "subtitle": "Die mit deinem Konto geteilten Boards. Die auf dieser Maschine öffnen sich vom Startbildschirm aus.",
-      "absent": "{{count}} Board(s) nicht auf dieser Maschine"
+      "subtitle": "Die mit deinem Konto geteilten Boards. Die auf diesem Rechner öffnen sich vom Startbildschirm aus.",
+      "absent_one": "{{count}} Board nicht auf diesem Rechner",
+      "absent_other": "{{count}} Boards nicht auf diesem Rechner"
     },
     "activity": {
-      "title": "Zusammenarbeitsaktivität",
-      "changed": "{{count}} Personen haben ein Board in deiner Abwesenheit geändert. Öffne seine Szene, um die Änderungen abzurufen.",
-      "media": "{{count}} Personen warten auf ein Originalmedium. Öffne die Szene und bleibe online, um es zu übertragen.",
-      "key": "{{count}} neue Mitglieder warten auf sicheren Zugriff. Öffne die Szene, um den Projektschlüssel zu übertragen.",
-      "dismiss": "Ausblenden"
+      "title": "Aktivität der Zusammenarbeit",
+      "dismiss": "Ausblenden",
+      "changed_one": "{{count}} Person hat ein Board geändert, während du weg warst. Öffne seine Szene, um die Änderungen zu holen.",
+      "changed_other": "{{count}} Personen haben ein Board geändert, während du weg warst. Öffne seine Szene, um die Änderungen zu holen.",
+      "key_one": "{{count}} neues Mitglied wartet auf sicheren Zugriff. Öffne die Szene, um den Projektschlüssel zu übertragen.",
+      "key_other": "{{count}} neue Mitglieder warten auf sicheren Zugriff. Öffne die Szene, um den Projektschlüssel zu übertragen.",
+      "media_one": "{{count}} Person wartet auf ein Originalmedium. Öffne die Szene und bleibe online, um es zu übertragen.",
+      "media_other": "{{count}} Personen warten auf ein Originalmedium. Öffne die Szene und bleibe online, um es zu übertragen."
     },
     "peers": {
       "title": "Verbindungen",

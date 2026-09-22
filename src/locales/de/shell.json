@@ -8,7 +8,7 @@
     "minimize": "Minimieren",
     "restore": "Wiederherstellen",
     "maximize": "Maximieren",
-    "pinnedByMode": "Vom Modus \"Für die Maus transparent\" im Vordergrund gehalten"
+    "pinnedByMode": "Vom Modus „Für die Maus transparent“ im Vordergrund gehalten"
   },
   "errorBadge": {
     "open": "Konsole öffnen",
@@ -17,7 +17,7 @@
     "aria_other": "{{count}} Fehler – Konsole öffnen"
   },
   "errorBoundary": {
-    "title": "NetsuBoard ist beim Rendern abgestürzt",
+    "title": "NetsuBoard ist beim Anzeigen abgestürzt",
     "reload": "Neu laden"
   }
 }

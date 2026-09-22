@@ -12,10 +12,10 @@
     "defaultFolder": "NetsuBoard — Cortes",
     "existingFolders": "Carpetas existentes",
     "mediaPoolFolders": "Carpetas del Media Pool",
-    "profile": "Perfil",
+    "profile": "Preajuste",
     "profileCustom": "Personalizado",
-    "optimization": "Optimización",
-    "speed": "Velocidad",
+    "optimization": "Codificador",
+    "speed": "Compresión",
     "codec": "Códec",
     "audio": "Audio",
     "audioCodec": "Códec de audio",
@@ -68,20 +68,20 @@
   },
   "speed": {
     "fast": {
-      "label": "Rápido",
-      "hint": "prioriza la velocidad"
+      "label": "Mínima",
+      "hint": "la más rápida, archivo más grande"
     },
     "balanced": {
-      "label": "Equilibrado",
+      "label": "Equilibrada",
       "hint": "buen equilibrio"
     },
     "quality": {
-      "label": "Calidad",
-      "hint": "mejor compresión"
+      "label": "Alta",
+      "hint": "archivo más pequeño, codificación más lenta"
     },
     "max": {
       "label": "Máxima",
-      "hint": "más lento y compacto"
+      "hint": "el archivo más pequeño, la codificación más lenta"
     }
   },
   "issue": {
@@ -124,8 +124,8 @@
   "codec": {
     "bitDepth": "{{count}} bits",
     "profile": "Perfil {{count}}",
-    "losslessArchive": "Sin pérdidas (archivo)",
-    "archive": "archivo"
+    "losslessArchive": "Sin pérdidas (archivado)",
+    "archive": "archivado"
   },
   "lang": {
     "ja": "Japonés",
@@ -152,7 +152,7 @@
     "webmAv1": "WebM AV1",
     "prores4444": "ProRes 4444 (alfa)",
     "dnxhrHqx": "DNxHR HQX 10 bits",
-    "ffv1Archive": "FFV1 — archivo",
+    "ffv1Archive": "FFV1 — archivado",
     "generic": "Perfil {{index}}",
     "fallback": "Perfil de exportación"
   },

@@ -17,7 +17,7 @@
     "aria_other": "{{count}} 个错误，打开控制台"
   },
   "errorBoundary": {
-    "title": "NetsuBoard 渲染崩溃",
+    "title": "NetsuBoard 渲染时崩溃",
     "reload": "重新加载"
   }
 }

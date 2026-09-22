@@ -472,7 +472,7 @@ export function CollaborationDialog({
           </Button>
         </div>}
 
-        {invited !== null && <p className="text-xs text-muted-foreground">{t("collab.invited", { n: invited })}</p>}
+        {invited !== null && <p className="text-xs text-muted-foreground">{t("collab.invited", { count: invited })}</p>}
         {blocker && <p className="text-xs text-destructive">{t(`collab.${blocker}`)}</p>}
         {!blocker && !projectId && filePath && (
           <p className="text-xs text-muted-foreground">{t("collab.willAdopt")}</p>

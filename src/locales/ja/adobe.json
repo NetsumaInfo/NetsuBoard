@@ -6,8 +6,8 @@
     "alreadyOpen": "アプリは起動済みです",
     "panelUnreachable": "パネルに接続できません",
     "installFailed": "インストールできません",
-    "installedRestart": "パネルをインストールしました。{{apps}} を再起動し、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開きます。",
-    "installedOpen": "パネルをインストールしました。Premiere Pro / After Effects を開き、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開きます。",
+    "installedRestart": "パネルをインストールしました。{{apps}} を再起動してから、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開いてください。",
+    "installedOpen": "パネルをインストールしました。Premiere Pro / After Effects を開き、ウィンドウ ▸ エクステンション ▸ NetsuBoard を開いてください。",
     "autoUpdateFailed": "アップデート設定を変更できませんでした"
   }
 }

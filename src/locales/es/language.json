@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "Idioma",
-    "subtitle": "Idioma de la interfaz de la aplicación.",
+    "subtitle": "El cambio se aplica al instante, sin reiniciar.",
     "fieldLabel": "Idioma de la interfaz"
   }
 }

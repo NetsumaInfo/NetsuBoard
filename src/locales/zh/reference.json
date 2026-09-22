@@ -31,7 +31,8 @@
     "resetRotation": "旋转",
     "resetFlip": "翻转",
     "resetCrop": "裁剪",
-    "resetAll": "全部重置"
+    "resetAll": "全部重置",
+    "detach": "分离"
   },
   "toolbar": {
     "home": "首页",
@@ -105,7 +106,7 @@
     "disabled": "关",
     "placeFrame": "放置区边框",
     "pinnedToolbar": "固定后的工具栏",
-    "pinnedToolbarHint": "窗口固定时使用精简工具栏，其余在右键菜单。",
+    "pinnedToolbarHint": "精简工具栏，只显示下方选择的按钮。关闭后，所有操作都通过右键菜单。",
     "decompose": "把视频拆成图片",
     "decomposeHint": "把从视频里抽取的一组图片放到画板上。",
     "imagesPerSec": "图片 / 秒",
@@ -140,7 +141,7 @@
     "editShortcut": "修改{{label}}快捷键",
     "pressLetter": "按一个字母 · Esc 取消",
     "keyboardShortcuts": "键盘快捷键",
-    "pressCombo": "按下新的组合键 · Delete 解除绑定 · Esc 取消",
+    "pressCombo": "按下新的组合键 · Delete 清除 · Esc 取消",
     "gestures": "手势",
     "gesturePaste": "粘贴（图片 / 链接 / YouTube）",
     "gestureMove": "移动所选（Shift = ×10）",
@@ -179,7 +180,7 @@
     "provider_odysee": "Odysee",
     "provider_rumble": "Rumble",
     "provider_generic": "其他网站",
-    "noUpscaleEngine": "无可用放大引擎：显卡驱动未提供 Vulkan。",
+    "noUpscaleEngine": "没有可用的超分辨率引擎：显卡驱动不支持 Vulkan。",
     "snapTitle": "吸附",
     "snapEnabled": "吸附到其他元素",
     "snapThreshold": "吸附距离（px）",
@@ -484,7 +485,7 @@
     "preview": "预览",
     "validate": "确定",
     "working": "处理中…",
-    "noEngine": "无法放大：此 GPU 不支持 Vulkan。"
+    "noEngine": "无法使用超分辨率：此 GPU 不支持 Vulkan。"
   },
   "scene": {
     "title": "参考场景",
@@ -601,7 +602,8 @@
     "settings": {
       "title": "媒体存储",
       "hint": ".netsu 默认包含的内容。可在检查器中逐个媒体设置。"
-    }
+    },
+    "onlineMedia": "在线媒体"
   },
   "board": {
     "clipboardEmpty": "剪贴板为空或不支持",
@@ -783,13 +785,11 @@
     "title": "协作",
     "subtitle": "选择要邀请到此项目的好友。",
     "signedOut": "请在设置中连接你的 Discord 账号。",
-    "noFriends": "请先在“设置 › 账户”中添加好友。",
-    "invited": "已发送 {{n}} 条邀请。",
-    "notice": "看板将变为协作模式。受邀者会在主屏幕上收到邀请。",
+    "noFriends": "请先在“设置 › 账号”中添加好友。",
+    "notice": "画板将变为协作模式。受邀者会在主屏幕上收到邀请。",
     "close": "关闭",
     "create": "创建并邀请",
     "invite": "邀请",
-    "fileBacked": "此看板来自 .netsu 文件。协作项目需保存在场景库中。",
     "saveAsBlocked": "协作项目仍由共享场景管理。请使用导出来创建本地副本。",
     "role": {
       "owner": "所有者",
@@ -820,17 +820,17 @@
       "leaveTitle": "退出此项目？",
       "deleteTitle": "删除此项目？",
       "leaveWarning": "此设备已收到的内容会保留，但你将无法再同步此项目。",
-      "deleteWarning": "所有成员的连接数据、邀请和加密恢复副本都会被删除，且无法撤销。"
+      "deleteWarning": "将删除所有成员的连接数据、邀请和加密恢复副本。此操作无法撤销。"
     },
-    "noScene": "请先将此看板保存到场景库。",
-    "willAdopt": "此看板将复制到场景库。.netsu 文件仍保留在你的磁盘上。",
+    "noScene": "请先将此画板保存为参考场景。",
+    "willAdopt": "此画板将复制到参考场景。.netsu 文件仍保留在你的磁盘上。",
     "failed": "共享失败。",
     "sync": {
       "queued": "有改动等待发送。一旦有设备可达，将自动发送。",
       "upToDate": "一切已同步。",
-      "peers": "{{count}} 台可达设备"
+      "peers_one": "{{count}} 台可达设备",
+      "peers_other": "{{count}} 台可达设备"
     },
-    "mediaMissing": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。已在看板上标记 — 通过其卡片找回（文件夹被移动？），然后重新共享。",
     "panel": {
       "title": "共享状态",
       "online": "{{count}} 人在线",
@@ -845,8 +845,13 @@
       "queued": "等待发送。",
       "upToDate": "已全部发送。",
       "rotation": "需要新密钥。请所有者打开应用。",
-      "waitingKey": "{{count}} 人在等待密钥。请保持在线。",
-      "nobodyReachable": "无人在线，尚未发送。"
-    }
+      "nobodyReachable": "无人在线，尚未发送。",
+      "waitingKey_one": "{{count}} 人在等待密钥。请保持在线。",
+      "waitingKey_other": "{{count}} 人在等待密钥。请保持在线。"
+    },
+    "mediaMissing_one": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。已在画板上标记，可从卡片找回（文件夹是否移动过？），然后重新共享。",
+    "mediaMissing_other": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。已在画板上标记，可从卡片找回（文件夹是否移动过？），然后重新共享。",
+    "invited_one": "已发送 {{count}} 个邀请。",
+    "invited_other": "已发送 {{count}} 个邀请。"
   }
 }

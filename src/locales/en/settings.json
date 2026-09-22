@@ -163,7 +163,7 @@
   },
   "bugReport": {
     "title": "Report a problem",
-    "subtitle": "Describe what happened. Log and machine snapshot are attached.",
+    "subtitle": "Describe what happened. The log and your machine details are attached.",
     "type": "What is happening?",
     "module": "Where?",
     "modules": {
@@ -236,7 +236,7 @@
       "loading": "Reading…",
       "manual": "Type it yourself",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Machine snapshot attached — read it in full in the Console."
+      "attached": "Your PC details are attached — you can read them in full in the Console."
     },
     "sending": "Sending…",
     "send": "Send",
@@ -283,27 +283,25 @@
     "showElapsed": "Time elapsed",
     "showLinks": "Clickable card",
     "showLinksHint": "The image opens the Discord server, the first line opens the repository.",
-    "itemsLine": "{{count}} item(s)"
+    "itemsLine_one": "{{count}} item",
+    "itemsLine_other": "{{count}} items"
   },
   "storage": {
     "title": "Board storage",
-    "intro": "The app keeps media of its own: pasted images, media fetched from a link, extracted frames, upscale results. Saving a .netsu project files those bytes in its companion folder — the store then holds only a duplicate, which can be freed without losing anything.",
+    "intro": "What the app keeps for itself: pasted images, media from links, extracted frames, upscale results. Saving a .netsu project files them in the project folder; what stays here is only a copy, and freeing it loses nothing.",
     "disk": "{{free}} free of {{total}}",
     "scanning": "Scanning storage…",
-    "failed": "Operation failed",
-    "freedNotice": "Freed {{size}} ({{count}} files)",
-    "movedNotice": "Moved {{size}} ({{count}} files)",
-    "movedPartly": "{{count}} files moved, {{failed}} failed (left in place)",
+    "failed": "That didn't go through. Try again.",
     "archivedNotice": "Board saved to “{{name}}”: its media now live in the project folder",
     "settling": "{{count}} still being written",
-    "settlingHint": "A file written moments ago may belong to an import the board has not placed yet. It will be judged on the next pass.",
+    "settlingHint": "A file written moments ago may belong to an import the board has not placed yet. It will be checked on the next pass.",
     "safe": {
       "title": "Safe to free",
-      "hint": "Checked file by file: these bytes are rebuildable, or already exist inside a project folder.",
+      "hint": "Checked file by file: these files can be rebuilt, or already exist inside a project folder.",
       "caches": "Display caches",
       "cachesHint": "Thumbnails and proxies. The app rebuilds them on demand.",
       "duplicated": "Media already filed in a project ({{count}})",
-      "duplicatedHint": "Their bytes are in a project's companion folder, for example “{{project}}”.",
+      "duplicatedHint": "The files are already in a project's folder, for example “{{project}}”.",
       "duplicatedNone": "No duplicate found yet.",
       "action": "Free up"
     },
@@ -312,17 +310,25 @@
       "hint": "These media exist nowhere else. Nothing here deletes them: save them first and they move to the section above.",
       "empty": "Nothing at risk: everything the app keeps also exists elsewhere.",
       "untitled": "Untitled board",
-      "sceneCount": "{{count}} media the app is the only holder of · {{size}}",
       "shared": "Shared board",
       "sharedHint": "A shared board has no project version: its document is authoritative and collaboration handles its media.",
       "openBoard": "Board open",
       "openBoardHint": "This board is open: use “Save as…” from its toolbar.",
       "archive": "Save as project…",
-      "orphans": "Media no board asks for",
-      "orphansHint": "{{count}} files · {{size}}. Nothing displays them any more, but this is the only copy.",
-      "move": "Move to a folder…"
+      "orphans": "Media no board uses",
+      "move": "Move to a folder…",
+      "orphansHint_one": "{{count}} file · {{size}}. Nothing displays it anymore, but this is the only copy.",
+      "orphansHint_other": "{{count}} files · {{size}}. Nothing displays them anymore, but this is the only copy.",
+      "sceneCount_one": "{{count}} media file only the app holds · {{size}}",
+      "sceneCount_other": "{{count}} media files only the app holds · {{size}}"
     },
-    "footnote": "Media you added from your own disk are never involved: the app only touches files it wrote itself."
+    "footnote": "Media you added from your own disk is never affected: the app only touches files it wrote itself.",
+    "freedNotice_one": "Freed {{size}} ({{count}} file)",
+    "freedNotice_other": "Freed {{size}} ({{count}} files)",
+    "movedNotice_one": "Moved {{size}} ({{count}} file)",
+    "movedNotice_other": "Moved {{size}} ({{count}} files)",
+    "movedPartly_one": "{{count}} file moved, {{failed}} failed (left in place)",
+    "movedPartly_other": "{{count}} files moved, {{failed}} failed (left in place)"
   },
   "tab": {
     "system": {
@@ -373,10 +379,10 @@
         "linked": "You are friends.",
         "pending": "Already sent.",
         "already": "Already a friend.",
-        "self": "That is you.",
-        "unknown": "Invalid identifier.",
+        "self": "That's you.",
+        "unknown": "Nobody matches. Check the username, or paste their Discord ID.",
         "ambiguous": "Several people match. Use their Discord ID.",
-        "error": "Failed.",
+        "error": "The lookup failed. Try again.",
         "invited": "Invitation sent."
       },
       "notYetJoined": "Not signed up yet"
@@ -387,8 +393,8 @@
       "sharedBoard": "Shared board"
     },
     "projects": {
-      "title": "Shared projects",
-      "members": "{{count}} member(s)",
+      "title": "Shared boards",
+      "members": "Members: {{count}}",
       "rotation": "key rotation pending",
       "add": "Add to scenes",
       "failed": "Could not add this scene",
@@ -403,18 +409,22 @@
       "confirmDelete": "Delete for everyone?",
       "confirmLeave": "Leave this board?",
       "subtitle": "The boards shared with your account. The ones on this machine open from the home screen.",
-      "absent": "{{count}} board(s) not on this machine"
+      "absent_one": "{{count}} board not on this machine",
+      "absent_other": "{{count}} boards not on this machine"
     },
     "activity": {
       "title": "Collaboration activity",
-      "changed": "{{count}} people changed a board while you were away. Open its scene to retrieve the changes.",
-      "media": "{{count}} people are waiting for original media. Open the scene and stay online to transfer it.",
-      "key": "{{count}} new member(s) are waiting for secure access. Open the scene to deliver the project key.",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "changed_one": "{{count}} person changed a board while you were away. Open its scene to retrieve the changes.",
+      "changed_other": "{{count}} people changed a board while you were away. Open its scene to retrieve the changes.",
+      "key_one": "{{count}} new member is waiting for secure access. Open the scene to deliver the project key.",
+      "key_other": "{{count}} new members are waiting for secure access. Open the scene to deliver the project key.",
+      "media_one": "{{count}} person is waiting for original media. Open the scene and stay online to transfer it.",
+      "media_other": "{{count}} people are waiting for original media. Open the scene and stay online to transfer it."
     },
     "peers": {
       "title": "Connections",
-      "subtitle": "Your friends' devices allowed to connect to yours. \"Test\" opens a real encrypted connection.",
+      "subtitle": "Your friends' devices allowed to connect to yours. “Test” opens a real encrypted connection.",
       "test": "Test",
       "direct": "Direct connection",
       "relayed": "Through a relay"

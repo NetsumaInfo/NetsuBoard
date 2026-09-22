@@ -5,78 +5,138 @@
     "date": "2026-09-14",
     "title": {
       "fr": "Boards partagés à quinze, et une bibliothèque de liens qui se répare seule",
-      "en": "Shared boards for fifteen, and a link library that repairs itself"
+      "en": "Shared boards for fifteen, and a link library that repairs itself",
+      "es": "Tableros compartidos para quince, y una biblioteca de enlaces que se repara sola",
+      "de": "Geteilte Boards für fünfzehn und eine Linkbibliothek, die sich selbst repariert",
+      "ja": "共有ボードは 15 人まで、リンクのライブラリは自分で直る",
+      "zh": "共享画板最多 15 人，链接库自行修复"
     },
     "changes": [
       {
         "kind": "feature",
         "fr": "Un board partagé accueille désormais quinze personnes au lieu de dix, propriétaire compris. Les invitations en attente réservent toujours leur siège : un projet ne peut pas dépasser ce compte.",
-        "en": "A shared board now holds fifteen people instead of ten, owner included. Pending invitations still reserve their seat: a project can never exceed that count."
+        "en": "A shared board now holds fifteen people instead of ten, owner included. Pending invitations still reserve their seat: a project can never exceed that count.",
+        "es": "Un tablero compartido admite ahora quince personas en vez de diez, incluido el propietario. Las invitaciones pendientes siguen reservando su sitio: un proyecto no puede pasar de esa cifra.",
+        "de": "Ein geteiltes Board fasst jetzt fünfzehn Personen statt zehn, Eigentümer eingeschlossen. Ausstehende Einladungen belegen weiterhin ihren Platz: Ein Projekt kann diese Zahl nicht überschreiten.",
+        "ja": "共有ボードに参加できる人数が 10 人から 15 人になりました。所有者も含みます。保留中の招待は引き続き席を確保するため、プロジェクトがこの人数を超えることはありません。",
+        "zh": "共享画板现在可容纳 15 人，而不是 10 人，其中包含所有者。待处理的邀请仍会占一个名额：项目不会超过这个人数。"
       },
       {
         "kind": "feature",
         "fr": "Paramètres › Mises à jour porte une ligne yt-dlp : la version installée, celle qui est publiée, et un bouton pour mettre la bibliothèque à jour sans attendre la prochaine version de NetsuBoard. C’est elle qui résout les liens vidéo, et ses extracteurs cassent bien plus vite que l’application ne sort une version.",
-        "en": "Settings › Updates carries a yt-dlp row: the installed version, the published one, and a button to update the library without waiting for the next NetsuBoard release. It is what resolves video links, and its extractors break far faster than the application ships a version."
+        "en": "Settings › Updates carries a yt-dlp row: the installed version, the published one, and a button to update the library without waiting for the next NetsuBoard release. It is what resolves video links, and its extractors break far faster than the application ships a version.",
+        "es": "Ajustes › Actualizaciones tiene una fila yt-dlp: la versión instalada, la publicada y un botón para actualizar la biblioteca sin esperar a la próxima versión de NetsuBoard. Es ella la que resuelve los enlaces de vídeo, y sus extractores se rompen mucho más rápido de lo que la aplicación saca versiones.",
+        "de": "Einstellungen › Updates hat eine yt-dlp-Zeile: die installierte Version, die veröffentlichte und einen Button, um die Bibliothek zu aktualisieren, ohne auf die nächste NetsuBoard-Version zu warten. Sie löst die Videolinks auf, und ihre Extraktoren brechen viel schneller, als die App eine Version veröffentlicht.",
+        "ja": "設定 › アップデート に yt-dlp の行が加わりました。インストール済みのバージョン、公開されているバージョン、そして NetsuBoard の次のリリースを待たずにライブラリを更新するボタンです。動画リンクを解決するのはこのライブラリで、その抽出機能はアプリがリリースを出すよりずっと速く壊れます。",
+        "zh": "设置 › 更新 中新增了一行 yt-dlp：已安装的版本、已发布的版本，以及一个无需等待 NetsuBoard 下一个版本就能更新这个库的按钮。解析视频链接的正是它，而它的解析器失效的速度远快于应用发布新版本。"
       },
       {
         "kind": "feature",
         "fr": "Un réglage « Performances de la synchronisation » dans Paramètres › Compte : Écriture en direct, Équilibré ou Économique. Il ne vaut que pour cette machine — un portable en partage de connexion peut passer en Économique sans ralentir la cadence des autres membres.",
-        "en": "A “Sync performance” setting in Account settings: Live writing, Balanced or Economy. It applies to this device only — a laptop on a tethered connection can drop to Economy without slowing anyone else’s cadence."
+        "en": "A “Sync performance” setting in Account settings: Live writing, Balanced or Economy. It applies to this device only — a laptop on a tethered connection can drop to Economy without slowing anyone else’s cadence.",
+        "es": "Un ajuste «Rendimiento de la sincronización» en Ajustes › Cuenta: Escritura en directo, Equilibrado o Económico. Solo vale para esta máquina — un portátil que tira de la conexión del móvil puede pasar a Económico sin frenar el ritmo de los demás miembros.",
+        "de": "Eine Einstellung „Synchronisationsleistung“ unter Einstellungen › Konto: Direktes Schreiben, Ausgewogen oder Sparsam. Sie gilt nur für diesen Rechner – ein Laptop am Handy-Hotspot kann auf Sparsam wechseln, ohne das Tempo der anderen Mitglieder zu bremsen.",
+        "ja": "設定 › アカウント に「同期のパフォーマンス」の設定が加わりました。ライブ書き込み、バランス、節約から選べます。この設定はこの端末にだけ適用されるため、テザリング中のノートパソコンを節約に切り替えても、他のメンバーのテンポは落ちません。",
+        "zh": "设置 › 账号 中新增“同步性能”设置：实时写入、均衡或省流量。它只对本机生效，用手机热点的笔记本电脑可以切到省流量，不会拖慢其他成员的节奏。"
       },
       {
         "kind": "improvement",
         "fr": "La carte Discord affiche son image même avant la publication de l’asset : l’icône de l’application prend le relais, et la carte se met à jour dès que Discord répond.",
-        "en": "The Discord card shows its art even before the asset is published: the application icon stands in, and the card refreshes as soon as Discord answers."
+        "en": "The Discord card shows its art even before the asset is published: the application icon stands in, and the card refreshes as soon as Discord answers.",
+        "es": "La tarjeta de Discord muestra su imagen incluso antes de que se publique el asset: el icono de la aplicación toma el relevo, y la tarjeta se actualiza en cuanto Discord responde.",
+        "de": "Die Discord-Karte zeigt ihr Bild schon, bevor das Asset veröffentlicht ist: Das Symbol der App springt ein, und die Karte aktualisiert sich, sobald Discord antwortet.",
+        "ja": "Discord のカードは、アセットが公開される前でも画像を表示します。アプリのアイコンが代わりに使われ、Discord が応答するとカードが更新されます。",
+        "zh": "即使资源尚未发布，Discord 卡片也会显示图片：应用图标先顶上，等 Discord 响应后卡片就会更新。"
       },
       {
         "kind": "improvement",
         "fr": "Les textes personnalisés de la présence Discord disparaissent. Une présence porte le nom de l’application : ce qu’elle affiche se lit comme venant de NetsuBoard, donc les lignes restent les nôtres — le nom du board et le nombre de références, avec les mêmes interrupteurs qu’avant.",
-        "en": "Custom text on the Discord presence is gone. A presence carries the application’s name, so whatever it says reads as coming from NetsuBoard: the lines stay ours — the board name and the reference count, behind the same switches as before."
+        "en": "Custom text on the Discord presence is gone. A presence carries the application’s name, so whatever it says reads as coming from NetsuBoard: the lines stay ours — the board name and the reference count, behind the same switches as before.",
+        "es": "Los textos personalizados de la presencia de Discord desaparecen. Una presencia lleva el nombre de la aplicación: lo que muestra se lee como si viniera de NetsuBoard, así que las líneas siguen siendo nuestras — el nombre del tablero y el número de referencias, con los mismos interruptores que antes.",
+        "de": "Die eigenen Texte in der Discord-Präsenz fallen weg. Eine Präsenz trägt den Namen der App: Was sie anzeigt, liest sich, als käme es von NetsuBoard, also bleiben die Zeilen unsere – der Name des Boards und die Zahl der Referenzen, mit denselben Schaltern wie zuvor.",
+        "ja": "Discord プレゼンスのカスタムテキストはなくなりました。プレゼンスにはアプリの名前が付き、そこに表示される内容は NetsuBoard から出ているものとして読まれます。だから表示する行はこちらのもののままです。ボード名とリファレンスの数で、切り替えは以前と同じです。",
+        "zh": "Discord 状态的自定义文字取消了。状态会带上应用名称，上面显示的内容会被看作出自 NetsuBoard，所以这几行仍由我们决定：画板名称和参考数量，开关和以前一样。"
       },
       {
         "kind": "performance",
         "fr": "En mode Économique, les originaux d’un board partagé ne sont plus tous récupérés à l’ouverture : chaque carte demande les siens en arrivant à l’écran. Une petite machine ne passe plus son ouverture à écrire du disque.",
-        "en": "In Economy mode, a shared board’s originals are no longer all fetched on open: each card asks for its own as it comes on screen. A small machine no longer spends its opening writing to disk."
+        "en": "In Economy mode, a shared board’s originals are no longer all fetched on open: each card asks for its own as it comes on screen. A small machine no longer spends its opening writing to disk.",
+        "es": "En modo Económico, los originales de un tablero compartido ya no se recuperan todos al abrirlo: cada tarjeta pide los suyos cuando llega a la pantalla. Una máquina modesta ya no se pasa la apertura escribiendo en el disco.",
+        "de": "Im Modus Sparsam werden die Originale eines geteilten Boards nicht mehr alle beim Öffnen geholt: Jede Karte fordert ihre eigenen an, sobald sie auf den Bildschirm kommt. Ein kleiner Rechner verbringt das Öffnen nicht mehr damit, auf die Festplatte zu schreiben.",
+        "ja": "節約モードでは、共有ボードのオリジナルを開いた時点ですべて取得することはなくなりました。各カードが画面に現れたときに自分の分を要求します。非力なマシンが、開くあいだずっとディスクに書き込み続けることはもうありません。",
+        "zh": "在省流量模式下，共享画板的原始文件不再在打开时全部取回：每张卡片在进入画面时才要自己那份。配置较低的机器不会再把打开的时间都花在写磁盘上。"
       },
       {
         "kind": "performance",
         "fr": "La fenêtre de regroupement des modifications suit le profil choisi — 60 ms en Écriture en direct, 200 ms en Équilibré, 900 ms en Économique — au lieu d’un unique 150 ms imposé à toutes les machines.",
-        "en": "The window that batches edits now follows the chosen profile — 60 ms in Live writing, 200 ms in Balanced, 900 ms in Economy — instead of a single 150 ms imposed on every machine."
+        "en": "The window that batches edits now follows the chosen profile — 60 ms in Live writing, 200 ms in Balanced, 900 ms in Economy — instead of a single 150 ms imposed on every machine.",
+        "es": "La ventana que agrupa los cambios sigue el perfil elegido — 60 ms en Escritura en directo, 200 ms en Equilibrado, 900 ms en Económico — en vez de un único valor de 150 ms impuesto a todas las máquinas.",
+        "de": "Das Fenster, das Änderungen bündelt, folgt dem gewählten Profil – 60 ms bei Direktes Schreiben, 200 ms bei Ausgewogen, 900 ms bei Sparsam – statt einheitlich 150 ms für jeden Rechner.",
+        "ja": "変更をまとめる時間の幅が、選んだプロファイルに従うようになりました。ライブ書き込みで 60 ms、バランスで 200 ms、節約で 900 ms です。すべてのマシンに一律 150 ms を課すことはなくなりました。",
+        "zh": "合并改动的时间窗口会跟随所选的配置：实时写入 60 毫秒，均衡 200 毫秒，省流量 900 毫秒，不再对所有机器一律用 150 毫秒。"
       },
       {
         "kind": "fix",
         "fr": "La ligne yt-dlp ne réclame plus une mise à jour déjà installée : la même version s’écrit 2026.8.19 sur le registre et 2026.08.19 dans l’outil, et les deux orthographes sont désormais ramenées à la même avant d’être comparées.",
-        "en": "The yt-dlp row no longer claims an update that is already installed: the same release is spelled 2026.8.19 on the registry and 2026.08.19 by the tool, and both spellings are now reduced to one before being compared."
+        "en": "The yt-dlp row no longer claims an update that is already installed: the same release is spelled 2026.8.19 on the registry and 2026.08.19 by the tool, and both spellings are now reduced to one before being compared.",
+        "es": "La fila yt-dlp ya no pide una actualización que ya está instalada: la misma versión se escribe 2026.8.19 en el registro y 2026.08.19 en la herramienta, y ahora ambas grafías se reducen a una sola antes de compararlas.",
+        "de": "Die yt-dlp-Zeile verlangt kein Update mehr, das schon installiert ist: Dieselbe Version steht im Register als 2026.8.19 und im Werkzeug als 2026.08.19, und beide Schreibweisen werden jetzt vor dem Vergleich auf eine gebracht.",
+        "ja": "yt-dlp の行が、すでにインストール済みの更新を求めることはなくなりました。同じバージョンがレジストリでは 2026.8.19、ツール側では 2026.08.19 と書かれるため、比較する前に両方の書き方を同じ形にそろえるようにしました。",
+        "zh": "yt-dlp 那一行不会再提示一个已经装好的更新：同一个版本在软件源上写作 2026.8.19，在工具里写作 2026.08.19，现在两种写法会先统一再比较。"
       },
       {
         "kind": "fix",
         "fr": "Une carte Discord sans image ne porte plus de lien suspendu dans le vide : le lien n’est posé qu’avec ce qu’il rend cliquable.",
-        "en": "A Discord card with no art no longer carries a link hanging on nothing: a link is only attached to what it makes clickable."
+        "en": "A Discord card with no art no longer carries a link hanging on nothing: a link is only attached to what it makes clickable.",
+        "es": "Una tarjeta de Discord sin imagen ya no lleva un enlace colgando del vacío: el enlace solo se coloca sobre lo que vuelve clicable.",
+        "de": "Eine Discord-Karte ohne Bild trägt keinen Link mehr, der ins Leere hängt: Ein Link wird nur auf das gelegt, was er anklickbar macht.",
+        "ja": "画像のない Discord カードに、何にもつながらないリンクが残ることはなくなりました。リンクは、クリックできるものがあるときだけ付きます。",
+        "zh": "没有图片的 Discord 卡片不会再带着一个悬空的链接：只有当链接有可点击的东西时才会附上。"
       },
       {
         "kind": "fix",
         "fr": "Installer, mettre à jour ou désinstaller NetsuBoard ne ferme plus NetsuRush. Les deux applications livraient un exécutable du même nom, et l’installeur fermait l’application ouverte en visant ce nom, sans regarder d’où venait le programme : il terminait l’autre au passage, sans prévenir et sans lui laisser sauvegarder.",
-        "en": "Installing, updating or uninstalling NetsuBoard no longer closes NetsuRush. Both applications shipped an executable under the same name, and the installer closed the running application by that name alone, without looking at where the program came from: it terminated the other one on its way, with no warning and no chance to save."
+        "en": "Installing, updating or uninstalling NetsuBoard no longer closes NetsuRush. Both applications shipped an executable under the same name, and the installer closed the running application by that name alone, without looking at where the program came from: it terminated the other one on its way, with no warning and no chance to save.",
+        "es": "Instalar, actualizar o desinstalar NetsuBoard ya no cierra NetsuRush. Las dos aplicaciones traían un ejecutable con el mismo nombre, y el instalador cerraba la aplicación abierta apuntando solo a ese nombre, sin mirar de dónde venía el programa: se llevaba la otra por delante, sin avisar y sin dejarle guardar.",
+        "de": "NetsuBoard zu installieren, zu aktualisieren oder zu deinstallieren schließt NetsuRush nicht mehr. Beide Apps lieferten eine ausführbare Datei mit demselben Namen, und der Installer schloss die laufende App allein über diesen Namen, ohne zu prüfen, woher das Programm kam: Er beendete die andere gleich mit, ohne Warnung und ohne Gelegenheit zum Speichern.",
+        "ja": "NetsuBoard をインストール・更新・アンインストールしても、NetsuRush が閉じることはなくなりました。2 つのアプリは同じ名前の実行ファイルを配布しており、インストーラーはその名前だけを見て起動中のアプリを閉じていました。プログラムの出どころは見ていないため、警告も保存の機会もないまま、もう一方も一緒に終了させていたのです。",
+        "zh": "安装、更新或卸载 NetsuBoard 不会再关闭 NetsuRush。两个应用发布的可执行文件同名，安装程序只按这个名字关闭正在运行的应用，不看程序来自哪里：于是顺手把另一个也结束掉，既不提示，也不给它保存的机会。"
       },
       {
         "kind": "fix",
         "fr": "Un lasso sur des tracés les sélectionne enfin, en groupe. On les déplace, duplique et supprime ensemble ; Maj+clic ajoute ou retire une forme. Le calque de dessin n’avait pas d’emprise à lui : le lasso passait à travers alors qu’il attrapait les médias sans difficulté.",
-        "en": "A marquee over strokes finally selects them, as a group. They move, duplicate and delete together; Shift-click adds or removes one. The drawing layer had no extent of its own: the marquee went straight through it while catching media without trouble."
+        "en": "A marquee over strokes finally selects them, as a group. They move, duplicate and delete together; Shift-click adds or removes one. The drawing layer had no extent of its own: the marquee went straight through it while catching media without trouble.",
+        "es": "Un lazo sobre unos trazos por fin los selecciona, en grupo. Se mueven, duplican y eliminan juntos; Mayús+clic añade o quita una forma. La capa de dibujo no tenía superficie propia: el lazo la atravesaba mientras atrapaba los medios sin problema.",
+        "de": "Ein Lasso über Striche wählt sie endlich aus, als Gruppe. Sie lassen sich zusammen verschieben, duplizieren und löschen; Umschalt+Klick nimmt eine Form dazu oder heraus. Die Zeichenebene hatte keine eigene Fläche: Das Lasso ging hindurch, während es Medien ohne Weiteres einfing.",
+        "ja": "描線を範囲選択で囲むと、まとめて選べるようになりました。移動・複製・削除もまとめてでき、Shift+クリックで図形を 1 つ足したり外したりできます。描画レイヤーには自分の領域がなく、メディアは問題なくつかめるのに、範囲選択は描線を素通りしていました。",
+        "zh": "用框选圈住笔迹终于能选中它们，而且是整组选中。可以一起移动、复制和删除，Shift+点击可增减一个形状。绘图图层原本没有自己的范围：框选能轻松抓到媒体，却会直接从笔迹上穿过去。"
       },
       {
         "kind": "fix",
         "fr": "Une vidéo YouTube rognée en plein milieu démarre net à la première ouverture du board. Le lecteur recevait un deuxième saut vers la borne d’entrée pendant qu’il chargeait déjà le premier — d’où les à-coups, qui disparaissaient ensuite tout seuls.",
-        "en": "A YouTube video trimmed mid-way starts cleanly the first time the board opens. The player was being sent a second jump to the in point while it was still loading the first — hence the stutter, which then cleared up on its own."
+        "en": "A YouTube video trimmed mid-way starts cleanly the first time the board opens. The player was being sent a second jump to the in point while it was still loading the first — hence the stutter, which then cleared up on its own.",
+        "es": "Un vídeo de YouTube recortado justo por la mitad arranca limpio la primera vez que se abre el tablero. El reproductor recibía un segundo salto al punto de inicio mientras ya cargaba el primero — de ahí los tirones, que luego desaparecían solos.",
+        "de": "Ein mittendrin beschnittenes YouTube-Video startet beim ersten Öffnen des Boards sauber. Der Player bekam einen zweiten Sprung zum Anfangspunkt, während er den ersten noch lud – daher das Ruckeln, das danach von selbst verschwand.",
+        "ja": "途中を切り出した YouTube 動画が、ボードを初めて開いたときからきれいに再生されます。プレイヤーは最初のジャンプを読み込んでいる最中に、開始位置への 2 回目のジャンプを受け取っていました。これがカクつきの原因で、しばらくすると自然に収まっていました。",
+        "zh": "从中间剪过的 YouTube 视频在第一次打开画板时就能干净地开始播放。播放器在还没加载完第一次跳转时，又收到了第二次跳到入点的指令，这就是卡顿的原因，之后卡顿会自己消失。"
       },
       {
         "kind": "fix",
         "fr": "La ligne yt-dlp ne propose plus de revenir en arrière sur une installation en canal nightly : elle interroge désormais le canal du binaire installé et compare les versions dans l’ordre, au lieu de signaler « différent » comme « à mettre à jour ».",
-        "en": "The yt-dlp row no longer offers to go backwards on a nightly-channel install: it now queries the channel the installed binary belongs to and compares versions in order, instead of reading “different” as “update available”."
+        "en": "The yt-dlp row no longer offers to go backwards on a nightly-channel install: it now queries the channel the installed binary belongs to and compares versions in order, instead of reading “different” as “update available”.",
+        "es": "La fila yt-dlp ya no propone retroceder en una instalación del canal nightly: ahora consulta el canal del binario instalado y compara las versiones en orden, en vez de señalar «diferente» como «pendiente de actualizar».",
+        "de": "Die yt-dlp-Zeile bietet bei einer Installation aus dem Nightly-Kanal keinen Rückschritt mehr an: Sie fragt jetzt den Kanal der installierten Binärdatei ab und vergleicht die Versionen der Reihe nach, statt „anders“ als „Update verfügbar“ zu melden.",
+        "ja": "yt-dlp の行が、nightly チャンネルのインストールに対してバージョンを戻すよう促すことはなくなりました。インストール済みのバイナリが属するチャンネルを問い合わせ、バージョンを順序で比較します。「違う」を「更新が必要」として扱うことはありません。",
+        "zh": "yt-dlp 那一行不会再对 nightly 通道的安装提示回退版本：它现在会查询已安装二进制文件所属的通道，并按顺序比较版本，而不是把“不一样”当成“有更新”。"
       },
       {
         "kind": "improvement",
         "fr": "L’état d’un board partagé va droit au but : « Personne en ligne. Rien ne part pour l’instant. » plutôt qu’une phrase sur ce que l’application fera plus tard. Les trois profils de synchronisation décrivent maintenant une situation — bonne connexion, cas courant, connexion lente ou limitée — et non leur mécanique interne.",
-        "en": "A shared board’s status gets to the point: “Nobody online. Nothing is going out yet.” rather than a sentence about what the application will do later. The three sync profiles now describe a situation — good connection, common case, slow or capped connection — instead of their internal mechanics."
+        "en": "A shared board’s status gets to the point: “Nobody online. Nothing is going out yet.” rather than a sentence about what the application will do later. The three sync profiles now describe a situation — good connection, common case, slow or capped connection — instead of their internal mechanics.",
+        "es": "El estado de un tablero compartido va al grano: «Nadie en línea. Por ahora no sale nada.» en vez de una frase sobre lo que la aplicación hará más tarde. Los tres perfiles de sincronización describen ahora una situación — buena conexión, caso habitual, conexión lenta o limitada — y no su mecánica interna.",
+        "de": "Der Status eines geteilten Boards kommt auf den Punkt: „Niemand online. Im Moment geht nichts raus.“ statt eines Satzes darüber, was die App später tun wird. Die drei Synchronisationsprofile beschreiben jetzt eine Situation – gute Verbindung, Normalfall, langsame oder begrenzte Verbindung – und nicht ihre innere Mechanik.",
+        "ja": "共有ボードの状態が単刀直入になりました。あとでアプリが何をするかを述べる文ではなく、「オンラインの人がいません。今は何も送信されていません。」と表示します。3 つの同期プロファイルも、内部の仕組みではなく状況を説明します。回線が良い、よくある場合、回線が遅い・制限がある、の 3 つです。",
+        "zh": "共享画板的状态直截了当：不再讲应用稍后会做什么，而是直接说“无人在线。目前什么都没有发出。”三种同步配置现在描述的是情况：网络良好、常见情况、网速慢或有限制，而不是它们内部的机制。"
       }
     ]
   },
@@ -86,108 +146,192 @@
     "date": "2026-08-27",
     "title": {
       "fr": "Partage et collaboration de moodboards",
-      "en": "Moodboard sharing and collaboration"
+      "en": "Moodboard sharing and collaboration",
+      "es": "Moodboards compartidos y colaboración",
+      "de": "Moodboards teilen und zusammenarbeiten",
+      "ja": "ボードの共有と共同編集",
+      "zh": "画板的共享与协作"
     },
     "changes": [
       {
         "kind": "feature",
         "fr": "Un panneau d’état sur un board partagé : qui est là, avec son avatar et sa pastille de présence, qui attend encore la clé, et ce qui reste à envoyer. La présence est celle qu’on a vraiment observée — « vu il y a 5 min » plutôt qu’un « hors ligne » qu’aucune machine ne peut affirmer.",
-        "en": "A status panel on a shared board: who is here, with their avatar and presence dot, who is still waiting for the key, and what is left to send. Presence is what was actually observed — “seen 5 min ago” rather than an “offline” no machine can assert."
+        "en": "A status panel on a shared board: who is here, with their avatar and presence dot, who is still waiting for the key, and what is left to send. Presence is what was actually observed — “seen 5 min ago” rather than an “offline” no machine can assert.",
+        "es": "Un panel de estado en un tablero compartido: quién está, con su avatar y su punto de presencia, quién sigue esperando la clave y qué queda por enviar. La presencia es la que se ha observado de verdad — «visto hace 5 min» en vez de un «sin conexión» que ninguna máquina puede afirmar.",
+        "de": "Ein Statusbereich auf einem geteilten Board: wer da ist, mit Avatar und Präsenzpunkt, wer noch auf den Schlüssel wartet und was noch zu senden ist. Die Präsenz ist die, die wirklich beobachtet wurde – „vor 5 Min. gesehen“ statt eines „offline“, das keine Maschine behaupten kann.",
+        "ja": "共有ボードに状態パネルが付きました。誰がいるか、アバターとオンライン状態のドット、まだ鍵を待っている人、そして送信が残っているものが分かります。表示されるのは実際に観測した状態だけです。どのマシンも断言できない「オフライン」ではなく、「5 分前に確認」と出ます。",
+        "zh": "共享画板上有了状态面板：谁在这里，带头像和在线圆点；谁还在等密钥；还有哪些东西没发出去。在线状态只反映真正观察到的情况，显示“5 分钟前见到过”，而不是任何机器都无法断定的“离线”。"
       },
       {
         "kind": "feature",
         "fr": "Les invitations arrivent sur l’écran d’accueil : rejoindre, refuser ou remettre à plus tard, sans passer par les paramètres. Rejoindre ouvre le board directement.",
-        "en": "Invitations arrive on the home screen: join, decline or postpone, without going through the settings. Joining opens the board directly."
+        "en": "Invitations arrive on the home screen: join, decline or postpone, without going through the settings. Joining opens the board directly.",
+        "es": "Las invitaciones llegan a la pantalla de inicio: unirse, rechazar o dejarlo para luego, sin pasar por los ajustes. Unirse abre el tablero directamente.",
+        "de": "Einladungen erscheinen auf dem Startbildschirm: beitreten, ablehnen oder auf später verschieben, ohne den Umweg über die Einstellungen. Beitreten öffnet das Board direkt.",
+        "ja": "招待はホーム画面に届きます。設定を開かなくても、その場で「参加」「辞退」「後で」を選べます。参加するとボードがそのまま開きます。",
+        "zh": "邀请会出现在主屏幕上：加入、拒绝或稍后，不用进设置。选择加入会直接打开画板。"
       },
       {
         "kind": "feature",
         "fr": "La carte d’un board partagé porte son propre état : le badge devient ambre et dit en un mot ce qu’il attend — une clé, un média, ou une modification faite pendant votre absence.",
-        "en": "A shared board’s card carries its own state: the badge turns amber and names in one word what it is waiting for — a key, a media file, or a change made while you were away."
+        "en": "A shared board’s card carries its own state: the badge turns amber and names in one word what it is waiting for — a key, a media file, or a change made while you were away.",
+        "es": "La tarjeta de un tablero compartido lleva su propio estado: el distintivo se pone ámbar y dice en una palabra qué espera — una clave, un medio o un cambio hecho mientras no estabas.",
+        "de": "Die Karte eines geteilten Boards trägt ihren eigenen Zustand: Das Badge wird bernsteinfarben und sagt in einem Wort, worauf es wartet – auf einen Schlüssel, ein Medium oder eine Änderung, die in deiner Abwesenheit passiert ist.",
+        "ja": "共有ボードのカードが自分の状態を示します。バッジが琥珀色になり、待っているものを一言で伝えます。鍵、メディア、あるいは不在中に加えられた変更です。",
+        "zh": "共享画板的卡片会显示自己的状态：徽章变成琥珀色，用一个词说明它在等什么，可能是一把密钥、一个媒体文件，或是你不在时的一处改动。"
       },
       {
         "kind": "feature",
         "fr": "Paramètres › Compte liste enfin les projets partagés de façon lisible : nom, rôle, et de quoi supprimer ou quitter directement. Ceux qui ne sont pas sur cette machine sont repliés derrière une seule ligne.",
-        "en": "Account settings finally lists shared projects readably: name, role, and the means to delete or leave right there. Those not on this machine are folded behind a single line."
+        "en": "Account settings finally lists shared projects readably: name, role, and the means to delete or leave right there. Those not on this machine are folded behind a single line.",
+        "es": "Ajustes › Cuenta por fin lista los proyectos compartidos de forma legible: nombre, rol y con qué eliminarlos o salir de ellos ahí mismo. Los que no están en esta máquina quedan plegados detrás de una sola línea.",
+        "de": "Einstellungen › Konto listet die geteilten Projekte endlich lesbar auf: Name, Rolle und die Mittel, sie direkt zu löschen oder zu verlassen. Die, die nicht auf diesem Rechner liegen, sind hinter einer einzigen Zeile eingeklappt.",
+        "ja": "設定 › アカウント が共有プロジェクトを読みやすく並べるようになりました。名前、役割、そしてその場で削除や退出ができます。このマシンにないものは 1 行にまとめてあります。",
+        "zh": "设置 › 账号 终于能清楚地列出共享项目：名称、角色，以及可以直接删除或退出的入口。不在本机上的项目会折叠成一行。"
       },
       {
         "kind": "fix",
         "fr": "Les séquences d’images, l’export en PNG, l’export en SVG et la copie d’un média fonctionnent sur un board partagé. Ils échouaient en silence, ou produisaient une image vide en annonçant une réussite.",
-        "en": "Image sequences, PNG export, SVG export and copying a media all work on a shared board. They failed silently, or produced an empty image while reporting success."
+        "en": "Image sequences, PNG export, SVG export and copying a media all work on a shared board. They failed silently, or produced an empty image while reporting success.",
+        "es": "Las secuencias de imágenes, la exportación a PNG, la exportación a SVG y la copia de un medio funcionan en un tablero compartido. Fallaban en silencio, o producían una imagen vacía anunciando que había ido bien.",
+        "de": "Bildsequenzen, der PNG-Export, der SVG-Export und das Kopieren eines Mediums funktionieren auf einem geteilten Board. Sie scheiterten stillschweigend oder erzeugten ein leeres Bild und meldeten dabei Erfolg.",
+        "ja": "連番画像、PNG 書き出し、SVG 書き出し、メディアのコピーが共有ボードでも動きます。これまでは黙って失敗するか、成功と告げながら空の画像を出していました。",
+        "zh": "图片序列、导出 PNG、导出 SVG 和复制媒体在共享画板上都能用了。此前它们会悄悄失败，或者一边报告成功一边生成空白图片。"
       },
       {
         "kind": "fix",
         "fr": "Exporter un board partagé en .netsu embarque ses vrais médias. Le fichier partait entièrement composé de cases « à relocaliser », en affichant « Exporté ».",
-        "en": "Exporting a shared board to .netsu now carries its real media. The file used to go out made entirely of “relocate” placeholders while announcing “Exported”."
+        "en": "Exporting a shared board to .netsu now carries its real media. The file used to go out made entirely of “relocate” placeholders while announcing “Exported”.",
+        "es": "Exportar un tablero compartido a .netsu se lleva sus medios de verdad. El archivo salía compuesto entero de casillas «por relocalizar», mostrando «Exportado».",
+        "de": "Ein geteiltes Board nach .netsu zu exportieren nimmt seine echten Medien mit. Die Datei bestand vorher komplett aus Feldern „neu zuordnen“ und meldete dabei „Exportiert“.",
+        "ja": "共有ボードを .netsu に書き出すと、本当のメディアが入ります。これまでは「場所を指定」の枠だけでできたファイルが出て行き、「書き出しました」と表示されていました。",
+        "zh": "把共享画板导出为 .netsu 会带上真正的媒体。此前导出的文件全是“重新定位”占位框，却显示“已导出”。"
       },
       {
         "kind": "fix",
         "fr": "Une vidéo YouTube partagée se lit, avec ses points d’entrée et de sortie. Le lecteur arrivait sans source et le voile « préparation » ne partait jamais.",
-        "en": "A shared YouTube video plays, with its in and out points. The player arrived with no source and the “preparing” veil never lifted."
+        "en": "A shared YouTube video plays, with its in and out points. The player arrived with no source and the “preparing” veil never lifted.",
+        "es": "Un vídeo de YouTube compartido se reproduce, con su inicio y su final. El reproductor llegaba sin fuente y el velo «preparando» no se iba nunca.",
+        "de": "Ein geteiltes YouTube-Video läuft, mit Anfang und Ende. Der Player kam ohne Quelle an, und der Schleier „wird vorbereitet“ verschwand nie.",
+        "ja": "共有された YouTube 動画が、開始点と終了点も含めて再生されます。これまではプレイヤーにソースが渡らず、「準備中」の幕が消えませんでした。",
+        "zh": "共享的 YouTube 视频可以播放，入点和出点都在。此前播放器拿不到源，“正在准备”的遮罩一直不消失。"
       },
       {
         "kind": "fix",
         "fr": "L’extraction de palette lit les couleurs d’un média partagé.",
-        "en": "Palette extraction reads the colours of a shared media."
+        "en": "Palette extraction reads the colours of a shared media.",
+        "es": "La extracción de paleta lee los colores de un medio compartido.",
+        "de": "Die Palettenextraktion liest die Farben eines geteilten Mediums.",
+        "ja": "パレット抽出が、共有メディアの色を読めるようになりました。",
+        "zh": "调色板提取能读出共享媒体的颜色了。"
       },
       {
         "kind": "fix",
         "fr": "Une image de plus de 8 Mo arrive entière. Au-delà, elle était tronquée sans erreur : un GIF s’affichait cassé ou sautait au noir en rebouclant.",
-        "en": "An image above 8 MB arrives whole. Past that size it was truncated with no error: a GIF showed broken or flashed black when looping."
+        "en": "An image above 8 MB arrives whole. Past that size it was truncated with no error: a GIF showed broken or flashed black when looping.",
+        "es": "Una imagen de más de 8 MB llega entera. Por encima de ese tamaño se truncaba sin error: un GIF se veía roto o saltaba a negro al volver a empezar el bucle.",
+        "de": "Ein Bild über 8 MB kommt vollständig an. Darüber wurde es ohne Fehler abgeschnitten: Ein GIF zeigte sich kaputt oder sprang beim erneuten Durchlauf auf Schwarz.",
+        "ja": "8 MB を超える画像も丸ごと届きます。これまではそれ以上のサイズがエラーなしで切り詰められ、GIF が壊れて表示されたり、ループのたびに黒くなったりしていました。",
+        "zh": "超过 8 MB 的图片会完整到达。此前超出这个大小的图片会被无声截断：GIF 显示破损，或在循环时跳成黑屏。"
       },
       {
         "kind": "fix",
         "fr": "Annuler une suppression, modifier un trait de dessin ou poser un point de sortie ne fait plus tomber tout le lot en silence. Trois symptômes différents, une seule cause : le document refusait la réapparition d’un objet supprimé.",
-        "en": "Undoing a deletion, editing a pen stroke or setting an out point no longer drops the whole batch in silence. Three different symptoms, one cause: the document refused a deleted object coming back."
+        "en": "Undoing a deletion, editing a pen stroke or setting an out point no longer drops the whole batch in silence. Three different symptoms, one cause: the document refused a deleted object coming back.",
+        "es": "Deshacer una eliminación, modificar un trazo de dibujo o marcar un final ya no tira todo el lote en silencio. Tres síntomas distintos, una sola causa: el documento rechazaba que un objeto eliminado volviera a aparecer.",
+        "de": "Eine Löschung rückgängig zu machen, einen Zeichenstrich zu ändern oder ein Ende zu setzen lässt nicht mehr den ganzen Stapel stillschweigend fallen. Drei verschiedene Symptome, eine Ursache: Das Dokument verweigerte das Wiederauftauchen eines gelöschten Objekts.",
+        "ja": "削除を元に戻す、描いた線を編集する、終了点を置く。これらの操作でひとまとまりが黙って落ちることはなくなりました。症状は 3 つでも原因は 1 つで、ドキュメントが、削除したオブジェクトの復活を受け付けていませんでした。",
+        "zh": "撤销删除、修改一条笔迹或设置出点，不会再让整批改动悄悄丢失。三种不同的症状，只有一个原因：文档不接受已删除的对象重新出现。"
       },
       {
         "kind": "fix",
         "fr": "Partager un projet ouvert depuis un fichier ne crée plus une deuxième carte identique sur l’accueil, et accepter deux fois la même invitation ne crée plus deux boards.",
-        "en": "Sharing a project opened from a file no longer creates a second identical card on the home screen, and accepting the same invitation twice no longer creates two boards."
+        "en": "Sharing a project opened from a file no longer creates a second identical card on the home screen, and accepting the same invitation twice no longer creates two boards.",
+        "es": "Compartir un proyecto abierto desde un archivo ya no crea una segunda tarjeta idéntica en el inicio, y aceptar dos veces la misma invitación ya no crea dos tableros.",
+        "de": "Ein aus einer Datei geöffnetes Projekt zu teilen erzeugt keine zweite, identische Karte mehr auf dem Startbildschirm, und dieselbe Einladung zweimal anzunehmen erzeugt keine zwei Boards mehr.",
+        "ja": "ファイルから開いたプロジェクトを共有しても、ホーム画面に同じカードがもう 1 枚できることはなくなりました。同じ招待を 2 回受けても、ボードが 2 つできることもありません。",
+        "zh": "共享一个从文件打开的项目，不会再在主屏幕上多出一张一模一样的卡片；同一个邀请接受两次，也不会再生成两个画板。"
       },
       {
         "kind": "fix",
         "fr": "Un média dont le dossier a bougé est retrouvé tout seul à l’ouverture et avant un partage — ses octets vivent souvent encore ailleurs, et le nom du fichier suffit à les reconnaître.",
-        "en": "A media whose folder moved is found again on open and before sharing — its bytes usually still live elsewhere, and the file name is enough to recognise them."
+        "en": "A media whose folder moved is found again on open and before sharing — its bytes usually still live elsewhere, and the file name is enough to recognise them.",
+        "es": "Un medio cuya carpeta ha cambiado de sitio se recupera solo al abrir y antes de compartir — sus bytes suelen seguir en otra parte, y el nombre del archivo basta para reconocerlos.",
+        "de": "Ein Medium, dessen Ordner verschoben wurde, wird beim Öffnen und vor einem Teilen von selbst wiedergefunden – seine Bytes liegen oft noch woanders, und der Dateiname genügt, um sie zu erkennen.",
+        "ja": "フォルダーが移動したメディアは、ボードを開いたときと共有の前に自動で見つかります。実体は別の場所に残っていることが多く、ファイル名だけで見分けられます。",
+        "zh": "所在文件夹被移动过的媒体，会在打开时和共享前自动找回，它的字节通常还在别处，文件名就足以认出它们。"
       },
       {
         "kind": "performance",
         "fr": "Rejoindre un board partagé ne sature plus une petite machine : les aperçus arrivent d’abord, puis les originaux, images en tête et du plus léger au plus lourd, un ou deux à la fois selon le processeur.",
-        "en": "Joining a shared board no longer saturates a small machine: previews arrive first, then originals, images ahead and lightest first, one or two at a time depending on the processor."
+        "en": "Joining a shared board no longer saturates a small machine: previews arrive first, then originals, images ahead and lightest first, one or two at a time depending on the processor.",
+        "es": "Unirse a un tablero compartido ya no satura una máquina modesta: primero llegan las vistas previas, luego los originales, las imágenes por delante y de lo más ligero a lo más pesado, uno o dos a la vez según el procesador.",
+        "de": "Einem geteilten Board beizutreten überlastet einen kleinen Rechner nicht mehr: Zuerst kommen die Vorschauen, dann die Originale, Bilder zuerst und vom Leichtesten zum Schwersten, ein bis zwei gleichzeitig je nach Prozessor.",
+        "ja": "共有ボードに参加しても、非力なマシンが飽和しなくなりました。まずプレビューが届き、次にオリジナルが、画像を先に、軽いものから重いものの順に、CPU に応じて 1 件か 2 件ずつ届きます。",
+        "zh": "加入共享画板不会再把配置较低的机器压垮：先到的是预览，然后是原始文件，图片排在前面，从小到大，按处理器性能一次一到两个。"
       },
       {
         "kind": "performance",
         "fr": "Les transferts entre postes passent par une connexion unique et des blocs seize fois plus gros, et le document ne se réécrit plus sur disque à chaque geste.",
-        "en": "Transfers between machines use a single connection and blocks sixteen times larger, and the document no longer rewrites itself to disk on every gesture."
+        "en": "Transfers between machines use a single connection and blocks sixteen times larger, and the document no longer rewrites itself to disk on every gesture.",
+        "es": "Las transferencias entre equipos pasan por una sola conexión y bloques dieciséis veces más grandes, y el documento ya no se reescribe en el disco con cada gesto.",
+        "de": "Übertragungen zwischen Rechnern laufen über eine einzige Verbindung und sechzehnmal größere Blöcke, und das Dokument schreibt sich nicht mehr bei jeder Geste neu auf die Festplatte.",
+        "ja": "端末間の転送は 1 本の接続にまとまり、ブロックは 16 倍の大きさになりました。ドキュメントも、操作のたびにディスクへ書き直されることはなくなりました。",
+        "zh": "设备之间的传输改走一条连接，数据块大了 16 倍，文档也不会再每做一个动作就重写到磁盘。"
       },
       {
         "kind": "performance",
         "fr": "La durée d’une vidéo YouTube est connue immédiatement : elle est lue en même temps que le flux, au lieu d’attendre que le lecteur ait parcouru le fichier. C’est ce qui rendait les points d’entrée et de sortie inutilisables pendant de longues secondes.",
-        "en": "A YouTube video’s duration is known immediately: it is read alongside the stream instead of waiting for the player to walk the file. That is what made in and out points unusable for long seconds."
+        "en": "A YouTube video’s duration is known immediately: it is read alongside the stream instead of waiting for the player to walk the file. That is what made in and out points unusable for long seconds.",
+        "es": "La duración de un vídeo de YouTube se conoce enseguida: se lee al mismo tiempo que el flujo, en vez de esperar a que el reproductor haya recorrido el archivo. Eso es lo que dejaba inservibles el inicio y el final durante largos segundos.",
+        "de": "Die Dauer eines YouTube-Videos steht sofort fest: Sie wird zusammen mit dem Stream gelesen, statt zu warten, bis der Player die Datei durchlaufen hat. Genau das machte Anfang und Ende für lange Sekunden unbrauchbar.",
+        "ja": "YouTube 動画の長さがすぐに分かります。プレイヤーがファイルを読み終えるのを待たず、ストリームと同時に取得するようになりました。開始点と終了点が何秒も使えなかったのは、これが原因です。",
+        "zh": "YouTube 视频的时长会立刻知道：它和视频流一起读出，不必等播放器把文件走一遍。入点和出点之前有好几秒不能用，原因就在这里。"
       },
       {
         "kind": "performance",
         "fr": "Plus de tempête d’erreurs à l’ouverture d’un board partagé : l’application sait désormais quels médias sont déjà sur ce disque et n’en réclame aucun qui ne l’est pas.",
-        "en": "No more error storm when opening a shared board: the application now knows which media are already on this disk and asks for none that are not."
+        "en": "No more error storm when opening a shared board: the application now knows which media are already on this disk and asks for none that are not.",
+        "es": "Se acabó la tormenta de errores al abrir un tablero compartido: la aplicación ya sabe qué medios están en este disco y no pide ninguno que no lo esté.",
+        "de": "Kein Fehlersturm mehr beim Öffnen eines geteilten Boards: Die App weiß jetzt, welche Medien schon auf dieser Festplatte liegen, und fordert keines an, das dort fehlt.",
+        "ja": "共有ボードを開いたときにエラーが大量に出ることはなくなりました。どのメディアがこのディスクにあるかをアプリが把握し、ないものを要求しません。",
+        "zh": "打开共享画板时不会再出现一大串错误：应用现在知道哪些媒体已经在本机磁盘上，不会去要不在的那些。"
       },
       {
         "kind": "improvement",
         "fr": "NetsuBoard a enfin son propre dossier de données. Il partageait celui de NetsuRush — mêmes scènes, mêmes médias, mêmes vignettes — et le ménage de l’une pouvait emporter les fichiers de l’autre. Votre bibliothèque est recopiée au premier lancement ; celle de NetsuRush reste intacte.",
-        "en": "NetsuBoard finally has its own data folder. It shared NetsuRush’s — same scenes, same media, same thumbnails — and a cleanup on one side could take the other’s files. Your library is copied over on first launch; NetsuRush’s stays untouched."
+        "en": "NetsuBoard finally has its own data folder. It shared NetsuRush’s — same scenes, same media, same thumbnails — and a cleanup on one side could take the other’s files. Your library is copied over on first launch; NetsuRush’s stays untouched.",
+        "es": "NetsuBoard por fin tiene su propia carpeta de datos. Compartía la de NetsuRush — mismas escenas, mismos medios, mismas miniaturas — y la limpieza de una podía llevarse los archivos de la otra. Tu biblioteca se copia en el primer arranque; la de NetsuRush queda intacta.",
+        "de": "NetsuBoard hat endlich einen eigenen Datenordner. Es teilte sich den von NetsuRush – dieselben Szenen, dieselben Medien, dieselben Miniaturen – und das Aufräumen auf der einen Seite konnte die Dateien der anderen mitnehmen. Deine Bibliothek wird beim ersten Start kopiert; die von NetsuRush bleibt unangetastet.",
+        "ja": "NetsuBoard に専用のデータフォルダーができました。これまでは NetsuRush のものを共用しており、シーンもメディアもサムネイルも同じで、片方の掃除がもう片方のファイルを持っていくことがありました。ライブラリは初回起動時にコピーされます。NetsuRush 側はそのまま残ります。",
+        "zh": "NetsuBoard 终于有了自己的数据文件夹。此前它和 NetsuRush 共用一个，场景、媒体、缩略图都一样，清理其中一个可能会带走另一个的文件。你的库会在首次启动时复制过来，NetsuRush 那边保持不变。"
       },
       {
         "kind": "improvement",
         "fr": "Paramètres › Stockage sépare ce qui est libérable sans risque de ce dont l’application est seule dépositaire, et propose de mettre ce dernier à l’abri avant quoi que ce soit.",
-        "en": "Settings › Storage separates what is safe to free from what the application alone holds, and offers to put the latter somewhere safe first."
+        "en": "Settings › Storage separates what is safe to free from what the application alone holds, and offers to put the latter somewhere safe first.",
+        "es": "Ajustes › Almacenamiento separa lo que se puede liberar sin riesgo de aquello de lo que la aplicación es la única depositaria, y propone poner esto último a salvo antes de nada.",
+        "de": "Einstellungen › Speicher trennt, was sich gefahrlos freigeben lässt, von dem, was nur die App besitzt, und bietet an, Letzteres zuerst in Sicherheit zu bringen.",
+        "ja": "設定 › ストレージ が、安全に解放できるものと、アプリだけが保持しているものを分けて示します。後者については、何かをする前に安全な場所へ移すことを勧めます。",
+        "zh": "设置 › 存储 会把可安全释放的部分和仅由应用保管的部分分开，并建议先把后者妥善保存，再做别的。"
       },
       {
         "kind": "improvement",
         "fr": "Le service interne écoute sur un port qu’aucun autre logiciel ne revendique, au lieu de se placer au milieu des ports de développement.",
-        "en": "The internal service listens on a port no other software claims, instead of sitting among the development ports."
+        "en": "The internal service listens on a port no other software claims, instead of sitting among the development ports.",
+        "es": "El servicio interno escucha en un puerto que ningún otro programa reclama, en vez de colocarse en medio de los puertos de desarrollo.",
+        "de": "Der interne Dienst lauscht auf einem Port, den keine andere Software beansprucht, statt sich mitten unter die Entwicklungsports zu setzen.",
+        "ja": "内部サービスは、ほかのソフトが使わないポートで待ち受けます。開発用ポートの真ん中に入ることはなくなりました。",
+        "zh": "内部服务改在其他软件不会占用的端口上监听，不再挤在开发端口中间。"
       },
       {
         "kind": "improvement",
         "fr": "Les messages d’erreur du partage sont lisibles : ils nomment les fichiers concernés au lieu d’afficher un mur de chemins, ou « [object Object] ».",
-        "en": "Sharing error messages are readable: they name the files involved instead of printing a wall of paths, or “[object Object]”."
+        "en": "Sharing error messages are readable: they name the files involved instead of printing a wall of paths, or “[object Object]”.",
+        "es": "Los mensajes de error al compartir son legibles: nombran los archivos afectados en vez de mostrar un muro de rutas, o «[object Object]».",
+        "de": "Die Fehlermeldungen beim Teilen sind lesbar: Sie nennen die betroffenen Dateien, statt eine Wand aus Pfaden oder „[object Object]“ zu zeigen.",
+        "ja": "共有のエラーメッセージが読めるようになりました。パスの壁や「[object Object]」ではなく、対象のファイル名を挙げます。",
+        "zh": "共享的错误信息变得可读：它们会写出涉及的文件名，而不是一堵路径墙，也不是“[object Object]”。"
       }
     ]
   },
@@ -197,7 +341,11 @@
     "date": "2026-08-17",
     "title": {
       "fr": "Voir à travers la planche, poser un post entier",
-      "en": "See through the board, land a whole post"
+      "en": "See through the board, land a whole post",
+      "es": "Ver a través del tablero, colocar una publicación entera",
+      "de": "Durch das Board hindurchsehen, einen ganzen Post ablegen",
+      "ja": "ボード越しに見る、投稿をまるごと置く",
+      "zh": "透过画板看背后，整条帖子一次放下"
     },
     "highlights": {
       "fr": [
@@ -221,6 +369,50 @@
         "Frame-by-frame stepping at the file's real cadence, read from ffprobe (23.976, not 24): on a film strip it changes frame, on a video or a YouTube stream it pauses and moves by exactly one frame.",
         "A shortcut can be unbound, and a button's tooltip shows the key bound to it — a rebind shows up without opening the settings.",
         "A medium still being imported lands where its loading square is, not where the link was pasted: a row stays a row even if you move everything during the download."
+      ],
+      "es": [
+        "Una publicación con varios medios llega entera, en fila y en orden de lectura: carruseles de X, publicaciones de fotos de TikTok, galerías de Reddit. Un enlace que apunta a una imagen concreta coloca solo esa.",
+        "Las fotos de X/Twitter bajan en resolución original, por el endpoint de las integraciones oficiales — yt-dlp no expone nada para un tuit con foto, y lo que se recuperaba era una miniatura de vista previa.",
+        "La opacidad del fondo es un ajuste: por debajo de 1 la ventana se vuelve translúcida y ves lo que hay detrás, sin tocar los medios colocados encima. El alcance se regula — la interfaz sigue siendo opaca de forma predeterminada, porque una barra de título translúcida sobre un escritorio cargado deja de leerse.",
+        "Alt + rueda ajusta la opacidad: la de un medio bajo el cursor, o la de todo el tablero sobre el vacío. El fondo, el contenido y la interfaz son tres opacidades separadas — se mira a través de las referencias mientras se dibuja debajo.",
+        "Modo transparente al ratón: los clics, la rueda y el paso por encima atraviesan la ventana y llegan a la aplicación de debajo. La salida es la vuelta del foco (Alt+Tab), explicada antes de entrar en el modo, y la ventana se mantiene encima mientras dura.",
+        "Las dos barras de herramientas se reordenan arrastrando y soltando, sobre una maqueta de la propia barra; la barra fijada elige además su borde, vertical a la izquierda o a la derecha. Se añaden ahí dos acciones que solo tenían atajo: extraer la paleta y ordenar.",
+        "Avance fotograma a fotograma, a la cadencia real del archivo leída por ffprobe (23,976 y no 24): en una tira de fotogramas cambia de imagen; en un vídeo o un flujo de YouTube pone en pausa y avanza exactamente un fotograma.",
+        "Un atajo se puede quitar, y la ayuda emergente de un botón muestra la tecla que le corresponde — una reasignación se ve sin abrir los ajustes.",
+        "Un medio todavía en importación llega donde está su cuadrado de carga, no donde se pegó el enlace: una fila sigue siendo una fila aunque lo muevas todo durante la descarga."
+      ],
+      "de": [
+        "Ein Post mit mehreren Medien kommt vollständig an, in einer Reihe und in Leserichtung: X-Karussells, TikTok-Fotoposts, Reddit-Galerien. Ein Link, der auf ein bestimmtes Bild zielt, legt nur dieses ab.",
+        "Fotos von X/Twitter kommen in Originalauflösung herunter, über den Endpunkt der offiziellen Einbettungen – yt-dlp stellt für einen Foto-Tweet nichts bereit, und geholt wurde eine Vorschau-Miniatur.",
+        "Die Deckkraft des Hintergrunds ist eine Einstellung: unter 1 wird das Fenster durchscheinend und du siehst, was dahinter liegt, ohne dass sich an den abgelegten Medien etwas ändert. Der Wirkungsbereich lässt sich festlegen – die Oberfläche bleibt standardmäßig deckend, denn eine durchscheinende Titelleiste über einem vollen Desktop ist nicht mehr lesbar.",
+        "Alt + Mausrad stellt die Deckkraft ein: die eines Mediums unter dem Zeiger oder die des ganzen Boards über leerer Fläche. Hintergrund, Inhalt und Oberfläche sind drei getrennte Deckkräfte – man sieht durch seine Referenzen hindurch und zeichnet darunter.",
+        "Modus „Für die Maus transparent“: Klicks, Mausrad und Überfahren gehen durch das Fenster hindurch zur Anwendung darunter. Der Ausweg ist der zurückkehrende Fokus (Alt+Tab), erklärt vor dem Einstieg in den Modus, und das Fenster bleibt im Vordergrund, solange er dauert.",
+        "Beide Werkzeugleisten lassen sich per Ziehen und Ablegen umsortieren, auf einem Modell der Leiste selbst; die angeheftete Leiste wählt zusätzlich ihre Kante, senkrecht links oder rechts. Zwei Aktionen, die es nur als Kürzel gab – Palette extrahieren, Ordnen –, kommen dort dazu.",
+        "Bildweises Vorrücken mit der echten Bildrate der Datei, die ffprobe liest (23,976 statt 24): Auf einem Frame-Streifen wechselt es das Bild, bei einem Video oder einem YouTube-Stream pausiert es und geht genau ein Bild weiter.",
+        "Ein Kürzel lässt sich lösen, und der Tooltip eines Buttons zeigt die zugehörige Taste – eine Neubelegung ist zu sehen, ohne die Einstellungen zu öffnen.",
+        "Ein Medium, das noch importiert wird, landet dort, wo sein Ladequadrat steht, nicht dort, wo der Link eingefügt wurde: Eine Reihe bleibt eine Reihe, auch wenn während des Downloads alles verschoben wird."
+      ],
+      "ja": [
+        "複数のメディアを含む投稿が、まるごと横一列に、読む順番どおりに並びます。X のカルーセル、TikTok の写真投稿、Reddit のギャラリーが対象です。特定の画像を指すリンクなら、その 1 枚だけを置きます。",
+        "X/Twitter の写真は、公式の埋め込みが使うエンドポイント経由で、元の解像度のまま取得します。yt-dlp は写真ツイートに何も提供しないため、これまではプレビュー用のサムネイルを拾っていました。",
+        "背景の不透明度が設定になりました。1 より小さくするとウィンドウが半透明になり、置いたメディアはそのままで、後ろにあるものが見えます。範囲も調整できます。インターフェースは既定では不透明のままです。散らかったデスクトップの上では、半透明のタイトルバーは読めなくなるからです。",
+        "Alt + ホイールで不透明度を調整します。カーソルの下にメディアがあればそのメディア、何もなければボード全体です。背景・コンテンツ・インターフェースは別々の 3 つの不透明度なので、リファレンス越しに見ながらその下に描けます。",
+        "「マウスを透過」モード：クリック、ホイール、ホバーがウィンドウを通り抜け、下のアプリに届きます。抜けるにはこのウィンドウをアクティブに戻します（Alt+Tab）。この操作はモードに入る前に説明され、モードの間ウィンドウは最前面に保たれます。",
+        "2 つのツールバーは、バーそのものを模した図の上でドラッグして並べ替えられます。ピン留め時のバーは、さらに左右どちらの端に縦置きするかを選べます。ショートカットしかなかった 2 つの操作、パレットの抽出と整列も、そこに加わりました。",
+        "コマ送りは、ffprobe が読んだファイル本来のフレームレート（24 ではなく 23.976）に従います。連番画像の帯では表示する画像が変わり、動画や YouTube のストリームでは一時停止して、ちょうど 1 フレーム進みます。",
+        "ショートカットは解除できます。ボタンのツールチップには対応するキーが出るので、割り当てを変えたことが設定を開かなくても分かります。",
+        "読み込み中のメディアは、リンクを貼り付けた場所ではなく、読み込み中の四角がある場所に届きます。ダウンロード中に全部を動かしても、並びは並びのままです。"
+      ],
+      "zh": [
+        "含多个媒体的帖子会整条落下，排成一行并按阅读顺序：X 的轮播、TikTok 的图文帖、Reddit 的图集。指向某一张图片的链接只放那一张。",
+        "X/Twitter 的图片会以原始分辨率下载，走的是官方嵌入所用的接口。yt-dlp 对图片推文不提供任何内容，此前取到的是一张预览缩略图。",
+        "背景不透明度成了一个设置：低于 1 时窗口变半透明，能看到后面的东西，放好的媒体不受影响。作用范围可以调：界面默认保持不透明，因为在杂乱的桌面上，半透明的标题栏会看不清。",
+        "Alt + 滚轮调整不透明度：光标下有媒体就调那个媒体，指着空白处就调整个画板。背景、内容和界面是三个独立的不透明度，可以透过参考图在下面画。",
+        "鼠标穿透模式：点击、滚轮和悬停会穿过窗口，落到下方的应用上。退出方式是让窗口重新获得焦点（Alt+Tab），进入该模式前会先说明这一点，而且模式持续期间窗口保持在最前。",
+        "两条工具栏都可以拖放重排，拖放就在这条栏本身的示意图上进行；固定模式下的工具栏还能选择贴哪一边，竖排在左或在右。两个原本只有快捷键的操作，提取调色板和整理，也加了进来。",
+        "逐帧步进按 ffprobe 读到的文件真实帧率走（是 23.976，不是 24）：在帧序列条上它会换一张图，在视频或 YouTube 流上它会暂停并正好前进一帧。",
+        "快捷键可以解除，按钮的提示会显示对应的按键，改过的绑定不用打开设置就能看到。",
+        "还在导入中的媒体会落在它那个加载方块所在的位置，而不是粘贴链接的位置：即使下载期间把所有东西都挪走，一行仍然是一行。"
       ]
     }
   },
@@ -230,7 +422,11 @@
     "date": "2026-08-17",
     "title": {
       "fr": "Les liens YouTube restent vivants, l'installation se tient mieux",
-      "en": "YouTube links stay alive, the install behaves"
+      "en": "YouTube links stay alive, the install behaves",
+      "es": "Los enlaces de YouTube siguen vivos, la instalación se porta mejor",
+      "de": "YouTube-Links bleiben lebendig, die Installation benimmt sich",
+      "ja": "YouTube のリンクは生き続け、インストールはおとなしくなる",
+      "zh": "YouTube 链接保持有效，安装更守规矩"
     },
     "highlights": {
       "fr": [
@@ -250,6 +446,42 @@
         "Uninstalling no longer runs a PowerShell script dropped in the temporary folder — a pattern Defender scores as a dropper. It is plain NSIS, touches only NetsuBoard's own folder, and leaves your wallpapers and preferences behind when that box is unchecked.",
         "First-run provisioning runs as an ordinary script rather than a code block built on the fly: the second pattern that had antivirus engines scoring the application badly.",
         "A leaner title bar when pinned: the Close button stays inside the frame even on a narrow window."
+      ],
+      "es": [
+        "yt-dlp se actualiza solo en el primer arranque de una nueva versión de la aplicación. Es el único componente que se pudre — las plataformas rompen sus extractores cada pocas semanas — y una instalación a la que no se toca iba perdiendo poco a poco la mitad de un tablero.",
+        "YouTube pide resolver un desafío ejecutando JavaScript: la aplicación le presta su propio Node a yt-dlp en vez de dejar que caiga en un cliente obsoleto que acabará por no resolver nada.",
+        "Actualizar desde la aplicación ya no deja un archivo bloqueado detrás: el instalador pide el cierre, libera la aplicación y su servicio, y espera a que estén libres de verdad en lugar de dormir medio segundo.",
+        "Una instalación colocada en Program Files por error se repara en vez de encadenar errores de archivo: el instalador propone una elevación una sola vez, y dice por qué si la rechazas.",
+        "La desinstalación ya no pasa por un script de PowerShell dejado en la carpeta temporal — un patrón que Defender puntúa como dropper. Va en NSIS nativo, solo toca la carpeta de NetsuBoard y deja tus fondos de pantalla y tus preferencias si la casilla correspondiente está desmarcada.",
+        "El aprovisionamiento del primer arranque se ejecuta como un script normal, ya no como un bloque de código construido al vuelo: segundo patrón que hacía que los antivirus puntuaran mal la aplicación.",
+        "Barra de título aligerada con la ventana fijada: el botón Cerrar se queda dentro del marco incluso en una ventana estrecha."
+      ],
+      "de": [
+        "yt-dlp aktualisiert sich beim ersten Start einer neuen Version der App von selbst. Es ist der einzige Bestandteil, der verdirbt – die Plattformen brechen seine Extraktoren alle paar Wochen –, und eine Installation, die in Ruhe gelassen wurde, verlor nach und nach die Hälfte eines Boards.",
+        "YouTube verlangt, eine Aufgabe per JavaScript zu lösen: Die App leiht yt-dlp ihr eigenes Node, statt es auf einen veralteten Client zurückfallen zu lassen, der irgendwann nichts mehr auflöst.",
+        "Ein Update aus der App heraus lässt keine gesperrte Datei mehr zurück: Der Installer bittet um das Schließen, gibt die App und ihren Dienst frei und wartet, bis sie wirklich frei sind, statt eine halbe Sekunde zu schlafen.",
+        "Eine versehentlich in Program Files gelegte Installation repariert sich selbst, statt Dateifehler aneinanderzureihen: Der Installer bietet einmal eine Rechteerhöhung an und sagt, warum, wenn du ablehnst.",
+        "Die Deinstallation läuft nicht mehr über ein PowerShell-Skript im temporären Ordner – ein Muster, das Defender als Dropper bewertet. Sie ist reines NSIS, rührt nur den Ordner von NetsuBoard an und lässt deine Hintergrundbilder und Einstellungen liegen, wenn das zugehörige Kästchen nicht angehakt ist.",
+        "Die Einrichtung beim ersten Start läuft als gewöhnliches Skript, nicht mehr als ein im Flug gebauter Codeblock: das zweite Muster, das der App schlechte Bewertungen von Virenscannern einbrachte.",
+        "Schlankere Titelleiste im angehefteten Zustand: Der Button Schließen bleibt auch bei einem schmalen Fenster im Rahmen."
+      ],
+      "ja": [
+        "アプリの新しいバージョンを初めて起動したとき、yt-dlp が自動で更新されます。傷むのはこの部品だけで、プラットフォームが数週間おきに抽出機能を壊します。放っておいたインストールは、ボードの半分を少しずつ失っていました。",
+        "YouTube は JavaScript を実行してチャレンジを解くことを求めます。アプリは自分の Node を yt-dlp に貸すようになり、いずれ何も解決できなくなる非推奨のクライアントに頼らせません。",
+        "アプリからの更新が、ロックされたファイルを残すことはなくなりました。インストーラーはウィンドウを閉じるよう求め、アプリとそのサービスを解放し、0.5 秒眠るのではなく、実際に解放されるまで待ちます。",
+        "誤って Program Files に置かれたインストールは、ファイルエラーを並べる代わりに修復されます。インストーラーは昇格を一度だけ求め、断った場合はその理由を伝えます。",
+        "アンインストールは、一時フォルダーに置いた PowerShell スクリプトを経由しなくなりました。Defender がドロッパーとみなすパターンだからです。処理はネイティブの NSIS で行い、NetsuBoard のフォルダーだけに触れ、該当のチェックを外しておけば壁紙と設定は残します。",
+        "初回起動時のセットアップは、その場で組み立てたコードブロックではなく、普通のスクリプトとして実行します。これがアンチウイルスの評価を下げていた 2 つ目のパターンでした。",
+        "ピン留めモードではタイトルバーが軽くなり、狭いウィンドウでも「閉じる」ボタンが枠内に収まります。"
+      ],
+      "zh": [
+        "应用升到新版本后第一次启动时，yt-dlp 会自动更新。它是唯一会腐坏的组件，各平台每隔几周就会弄坏它的解析器，放着不管的安装会一点点丢掉画板里一半的内容。",
+        "YouTube 要求通过运行 JavaScript 来解一道验证题：应用会把自己的 Node 借给 yt-dlp，而不是让它退回到一个终将什么都解不出来的弃用客户端。",
+        "从应用内更新不会再留下被锁住的文件：安装程序会先请求关闭，释放应用和它的服务，并等到它们真的空闲，而不是睡上半秒就继续。",
+        "误装到 Program Files 的安装会自行修复，而不是一串文件错误：安装程序只请求一次提权，如果你拒绝，它会说明原因。",
+        "卸载不再走放在临时文件夹里的 PowerShell 脚本，Defender 会把这种做法判为 dropper。现在用原生 NSIS，只动 NetsuBoard 自己的文件夹，如果对应的复选框未勾选，你的壁纸和偏好设置会保留。",
+        "首次启动的初始化现在作为一个普通脚本运行，不再是临时拼出来的代码块，这是杀毒软件给应用打低分的第二个原因。",
+        "固定模式下的标题栏更精简：窗口很窄时，关闭按钮也留在框内。"
       ]
     }
   },
@@ -259,7 +491,11 @@
     "date": "2026-08-17",
     "title": {
       "fr": "Tablettes graphiques et écrans tactiles",
-      "en": "Pen tablets and touch screens"
+      "en": "Pen tablets and touch screens",
+      "es": "Tabletas gráficas y pantallas táctiles",
+      "de": "Grafiktabletts und Touchscreens",
+      "ja": "ペンタブレットとタッチスクリーン",
+      "zh": "数位板与触摸屏"
     },
     "highlights": {
       "fr": [
@@ -281,6 +517,46 @@
         "Optional larger targets, for aiming a button without seeing your hand on a tablet with no screen.",
         "The update button opens the title bar instead of being wedged against Close, the settings window takes the room available, and the release notes scroll instead of pushing their button off screen.",
         "A pen or finger gesture that gets interrupted no longer leaves a handle glued to the pointer (colour wheel, gradient, palette panel)."
+      ],
+      "es": [
+        "El trazo sigue la presión del lápiz, y la inclinación ensancha la marca como el costado de un lápiz de grafito. Ambos se ajustan en Ajustes ▸ Tablero ▸ Lápiz; un hardware sin sensor deja un trazo de grosor constante, igual que el ratón.",
+        "La punta borradora del lápiz borra, sea cual sea la herramienta elegida, y el botón lateral puede navegar en vez de abrir el menú.",
+        "Dos dedos hacen zoom y mueven el tablero. Un segundo dedo durante un trazo anula ese trazo en vez de empezar otro, y se ignora la palma justo después de usar el lápiz.",
+        "Los controles que solo aparecían al pasar por encima quedan visibles allí donde nada pasa por encima: favoritos y eliminación de escenas, bloqueos de paleta, estrellas de fuentes. En una tableta eran sencillamente inalcanzables.",
+        "Pestaña Lápiz en los ajustes del tablero, con una lectura del hardware en directo: pasar el lápiz sobre la ventana muestra presión e inclinación sin dibujar nada — así se distingue un ajuste desactivado de un controlador que no da nada.",
+        "Controles más grandes como opción, para apuntar a un botón sin ver la mano en una tableta sin pantalla.",
+        "El botón de actualización abre la barra de título en vez de quedar encajado contra Cerrar, la ventana de ajustes ocupa el sitio disponible, y las notas de versión se desplazan en vez de empujar su botón fuera de la pantalla.",
+        "Un gesto con el lápiz o con el dedo que se interrumpe ya no deja un tirador pegado al cursor (rueda de color, degradado, panel de paleta)."
+      ],
+      "de": [
+        "Der Strich folgt dem Druck des Stifts, und die Neigung verbreitert die Spur wie die Flanke eines Bleistifts. Beides lässt sich unter Einstellungen ▸ Board ▸ Stift einstellen; Hardware ohne Sensor zieht einen Strich mit gleichbleibender Stärke, genau wie die Maus.",
+        "Die Radiererseite des Stifts löscht, gleich welches Werkzeug gewählt ist, und die Seitentaste kann navigieren, statt das Menü zu öffnen.",
+        "Zwei Finger zoomen und verschieben das Board. Ein zweiter Finger während eines Strichs bricht diesen Strich ab, statt einen zweiten zu ziehen, und der Handballen wird ignoriert, solange der Stift gerade im Einsatz war.",
+        "Bedienelemente, die nur beim Überfahren erschienen, bleiben dort sichtbar, wo nichts überfährt: Favoriten und Löschen von Szenen, Palettensperren, Schriftsterne. Auf einem Tablett waren sie schlicht nicht erreichbar.",
+        "Ein Reiter Stift in den Board-Einstellungen, mit einer Live-Anzeige der Hardware: Fährt der Stift über das Fenster, erscheinen Druck und Neigung, ohne dass etwas gezeichnet wird – so lässt sich eine abgeschaltete Einstellung von einem Treiber unterscheiden, der nichts liefert.",
+        "Größere Bedienelemente als Option, um auf einem Tablett ohne Bildschirm einen Button zu treffen, ohne die Hand zu sehen.",
+        "Der Update-Button öffnet die Titelleiste, statt sich an Schließen zu klemmen, das Einstellungsfenster nutzt den vorhandenen Platz, und die Versionshinweise scrollen, statt ihren Button aus dem Bild zu schieben.",
+        "Eine abgebrochene Stift- oder Fingergeste lässt keinen Griff mehr am Zeiger kleben (Farbkreis, Verlauf, Palettenbereich)."
+      ],
+      "ja": [
+        "線が筆圧に追従し、傾きは鉛筆の腹のようにマークを広げます。どちらも 設定 ▸ ボード ▸ ペン で調整できます。センサーのない機材では、マウスと同じく太さの変わらない線を引きます。",
+        "ペンの消しゴム側は、選んでいるツールにかかわらず消します。サイドボタンはメニューを開く代わりに移動に使えます。",
+        "2 本指でボードをズームし、移動できます。描いている途中に 2 本目の指が触れると、2 本目の線を引くのではなく、その線を取り消します。ペンを使った直後は手のひらを無視します。",
+        "ホバーでしか出なかった操作が、ホバーのない環境では常に表示されます。シーンのお気に入りと削除、パレットのロック、フォントの星です。タブレットでは、そもそも届きませんでした。",
+        "ボードの設定に「ペン」タブが加わり、ハードウェアの値をその場で読めます。ペンをウィンドウにかざすと、何も描かずに筆圧と傾きが表示されます。オフの設定なのか、値を返さないドライバーなのかを見分けられます。",
+        "タッチ領域を大きくする設定も用意しました。画面のないタブレットで、手元を見ずにボタンを狙えます。",
+        "アップデートのボタンはタイトルバーの先頭に置かれ、「閉じる」に押し付けられることはなくなりました。設定ウィンドウは使える場所いっぱいに広がり、リリースノートはスクロールするので、ボタンが画面の外へ押し出されません。",
+        "ペンや指の操作が途中で切れても、ハンドルがカーソルに貼り付いたままになることはなくなりました（カラーホイール、グラデーション、パレットのパネル）。"
+      ],
+      "zh": [
+        "笔迹会跟随手写笔的压感，倾斜则像铅笔侧锋一样把笔画铺宽。两者都在 设置 ▸ 画板 ▸ 手写笔 中调整；没有传感器的硬件画出的是等宽笔迹，和鼠标一样。",
+        "笔尾橡皮不论当前选的是哪个工具都能擦除，笔身侧键也可以改成平移，而不是打开菜单。",
+        "双指可以缩放和平移画板。绘制过程中第二根手指落下会取消这一笔，而不是再画一笔；手写笔刚用过时，手掌接触会被忽略。",
+        "原本只在悬停时出现的控件，在没有悬停的设备上会一直显示：场景的收藏与删除、调色板的锁、字体的星标。在平板上它们此前根本够不着。",
+        "画板设置里多了“手写笔”标签页，可以实时读取硬件：用笔悬停在窗口上就能看到压感和倾斜，不会画出任何东西，足以分清是设置关着，还是驱动什么都不给。",
+        "可选的更大点按范围，方便在没有屏幕的数位板上看不见手也能点中按钮。",
+        "更新按钮位于标题栏的开头，不再被挤在关闭按钮旁边；设置窗口会占满可用空间；版本说明可以滚动，不会把自己的按钮顶到屏幕外面。",
+        "手写笔或手指的手势中断后，不会再有滑柄黏在指针上（色轮、渐变、调色板的面板）。"
       ]
     }
   },
@@ -290,7 +566,11 @@
     "date": "2026-08-16",
     "title": {
       "fr": "Présence Discord, palettes de plan, aperçus qui montrent quelque chose",
-      "en": "Discord presence, shot palettes, previews that show something"
+      "en": "Discord presence, shot palettes, previews that show something",
+      "es": "Presencia de Discord, paletas de plano, vistas previas que enseñan algo",
+      "de": "Discord-Präsenz, Shot-Paletten, Vorschauen, die etwas zeigen",
+      "ja": "Discord プレゼンス、ショットのパレット、中身が見えるプレビュー",
+      "zh": "Discord 状态、镜头调色板、真正有内容的预览"
     },
     "highlights": {
       "fr": [
@@ -312,6 +592,46 @@
         "The trim slider's playhead lines up with the bounds along the whole track, and an untrimmed clip reaches the end of it.",
         "A perfectly straight stroke, or one drawn on a rotated medium, now belongs to that medium: it used to stay free and float above it.",
         "Pinning then unpinning brings back your board instead of the home screen; and a link that failed no longer comes back pre-filled."
+      ],
+      "es": [
+        "Rich Presence de Discord: tu perfil puede mostrar el tablero abierto y el número de referencias. Se activa en Ajustes ▸ Cuenta, cada línea a elección, con el nombre del tablero oculto de forma predeterminada. No hace falta iniciar sesión en ninguna cuenta, y con Discord cerrado no cambia nada.",
+        "La paleta de un vídeo se extrae de todo el rango reproducido, ocho fotogramas en vez de uno solo: un plano que entra en la noche ya no devuelve el color de su primera imagen.",
+        "La vista previa del escalado parte de la mitad del plano y no de la primera imagen, que casi siempre es un negro o un fundido — lo que había que juzgar era el desenfoque de la entrada y no el trabajo del shader.",
+        "El comparador antes/después hace zoom donde apunta el cursor, se desplaza sin salirse del marco, se restablece con doble clic y su ventana es más grande. Con Mayús pulsada compara sin alejar el zoom.",
+        "Marcar un inicio o un final en un vídeo de YouTube ya no congela el reproductor: la vista previa sigue al cursor, y la reproducción salta dentro del rango en cuanto queda marcado, en vez de esperar varios minutos.",
+        "El cabezal del control de rango coincide con los límites en todo el recorrido, y un clip sin recortar llega de verdad al final de la pista.",
+        "Un trazo perfectamente recto, o dibujado sobre un medio girado, ahora se ancla al medio: antes quedaba suelto y flotaba encima.",
+        "Al fijar y dejar de fijar se vuelve al tablero y no al inicio; y un enlace que ha fallado ya no vuelve relleno al reabrir."
+      ],
+      "de": [
+        "Discord Rich Presence: Dein Profil kann das offene Board und die Zahl der Referenzen zeigen. Einzuschalten unter Einstellungen ▸ Konto, jede Zeile nach Wahl, der Name des Boards standardmäßig verborgen. Eine Anmeldung bei einem Konto ist nicht nötig, und ein geschlossenes Discord ändert nichts.",
+        "Die Palette eines Videos wird über den gesamten abgespielten Bereich entnommen, acht Frames statt nur einem: Ein Shot, der in die Nacht hineingeht, gibt nicht mehr die Farbe seines ersten Bildes zurück.",
+        "Die Upscale-Vorschau beginnt in der Mitte des Shots und nicht beim ersten Bild, das fast immer schwarz oder eine Blende ist – zu beurteilen war so die Unschärfe des Anfangs statt der Arbeit des Shaders.",
+        "Der Vorher-Nachher-Vergleich zoomt dorthin, wo der Zeiger steht, verschiebt sich, ohne den Rahmen zu verlassen, setzt sich per Doppelklick zurück, und sein Fenster ist größer. Mit gedrückter Umschalttaste wird verglichen, ohne herauszuzoomen.",
+        "Einen Anfang oder ein Ende auf einem YouTube-Video zu setzen friert den Player nicht mehr ein: Die Vorschau folgt dem Zeiger, und die Wiedergabe springt in den Bereich, sobald er gesetzt ist, statt mehrere Minuten zu warten.",
+        "Der Abspielkopf des Bereichsreglers deckt sich auf der ganzen Strecke mit den Grenzen, und ein ungeschnittener Clip erreicht das Ende der Spur wirklich.",
+        "Ein perfekt gerader Strich oder einer, der auf ein gedrehtes Medium gezeichnet wurde, gehört jetzt zu diesem Medium: Vorher blieb er frei und schwebte darüber.",
+        "Anheften und wieder lösen führt zurück auf das Board und nicht auf den Startbildschirm; und ein Link, der fehlgeschlagen ist, kommt beim erneuten Öffnen nicht mehr vorausgefüllt zurück."
+      ],
+      "ja": [
+        "Discord のリッチプレゼンス：開いているボードとリファレンスの数をプロフィールに表示できます。設定 ▸ アカウント で有効にし、行ごとに表示するかを選べます。ボード名は既定で非表示です。アカウントへのサインインは不要で、Discord を閉じていても支障はありません。",
+        "動画のパレットは、再生する範囲全体から 1 枚ではなく 8 枚のフレームを取って抽出します。夜に入っていくショットが、最初の 1 枚の色を返すことはなくなりました。",
+        "アップスケールのプレビューは、最初のフレームではなくショットの中央から始まります。最初のフレームはたいてい黒かディゾルブで、シェーダーの仕事ではなく、冒頭のボケを見ていることになっていました。",
+        "ビフォー ↔ アフターの比較はカーソルの位置を中心にズームし、枠から出ずに移動でき、ダブルクリックで元に戻ります。ウィンドウも大きくなりました。Shift を押している間は、ズームを戻さずに比較できます。",
+        "YouTube 動画に開始点や終了点を置いてもプレイヤーが固まらなくなりました。プレビューはカーソルに追従し、範囲を置いた時点で再生がその中へ飛びます。何分も待つことはありません。",
+        "トリミングスライダーの再生ヘッドが、全域で範囲の端と一致します。トリミングしていないクリップは、トラックの最後まできちんと届きます。",
+        "完全にまっすぐな線や、回転したメディアの上に引いた線が、そのメディアに属するようになりました。これまでは自由なままで、上に浮いていました。",
+        "ピン留めして解除すると、ホーム画面ではなく元のボードに戻ります。失敗したリンクが、次に開いたときに入力欄へ残っていることもなくなりました。"
+      ],
+      "zh": [
+        "Discord Rich Presence：你的个人资料可以显示当前打开的画板和参考数量。在 设置 ▸ 账号 中开启，每一行都可单独选择，画板名称默认隐藏。不需要登录任何账号，Discord 关着也没有影响。",
+        "视频的调色板会在整个播放范围上取样，用八帧而不是一帧：渐入夜色的镜头不会再只给出第一帧的颜色。",
+        "超分辨率预览从镜头中间开始，而不是第一帧，因为第一帧几乎总是黑场或溶解。此前看到的是开头的模糊，而不是着色器的效果。",
+        "前后对比会在光标所指处放大，平移不会跑出画框，双击即可复位，窗口也更大了。按住 Shift 可以在不缩回的情况下对比。",
+        "给 YouTube 视频设置起点或终点不会再让播放器卡死：预览跟随光标，范围一设好播放就跳进去，不用等上好几分钟。",
+        "剪切滑块上的播放头在整条轨道上都与边界对齐，未裁剪的片段也能真正到达轨道末端。",
+        "完全笔直的笔迹，或画在旋转过的媒体上的笔迹，现在会归属于该媒体；此前它们是自由的，浮在上面。",
+        "固定后再取消固定，回到的是你的画板，而不是主屏幕；失败过的链接也不会在下次打开时预填在输入框里。"
       ]
     }
   },
@@ -321,7 +641,11 @@
     "date": "2026-08-16",
     "title": {
       "fr": "Bascule de format sans à-coup, liens sociaux réparés",
-      "en": "A smooth switch of format, social links fixed"
+      "en": "A smooth switch of format, social links fixed",
+      "es": "Cambio de formato sin tirones, enlaces sociales reparados",
+      "de": "Formatwechsel ohne Ruckeln, soziale Links repariert",
+      "ja": "なめらかな表示切り替えと、直った SNS リンク",
+      "zh": "窗口形态切换更顺滑，社交链接修好了"
     },
     "highlights": {
       "fr": [
@@ -339,6 +663,38 @@
         "A colour copied from a palette comes without the `#`: hex fields in drawing applications stop at six characters and rejected the paste.",
         "Two shortcuts in the title bar: the source code on GitHub, and supporting the project.",
         "Window pinning is reapplied at startup: the interface no longer shows its pinned format on a window that is not pinned."
+      ],
+      "es": [
+        "La ventana cambia de formato deslizándose, alrededor del sitio donde la dejaste: se acabó el salto al centro de la pantalla cada vez que la fijas, y el tablero mantiene abiertos su recorte y su paleta durante el cambio.",
+        "Los enlaces de publicaciones (X, TikTok, Reddit, Instagram…) vuelven a descargar el vídeo de verdad: el extractor pasa por el yt-dlp autónomo que instala la aplicación, sin ningún entorno de Python.",
+        "Actualización automática al arrancar, para activar en Ajustes ▸ Actualizaciones: la aplicación instala la versión encontrada al iniciarse y se reinicia sola. Desactivada de forma predeterminada.",
+        "Un color copiado de una paleta llega sin el `#`: los campos hexadecimales de los programas de dibujo se paran en seis caracteres y rechazaban el pegado.",
+        "Dos accesos directos en la barra de título: el código fuente en GitHub y el apoyo al proyecto.",
+        "La fijación de la ventana se vuelve a aplicar al arrancar: la interfaz ya no se muestra en modo fijado sobre una ventana que no lo está."
+      ],
+      "de": [
+        "Das Fenster gleitet von einem Format ins andere, um die Stelle herum, wo du es abgelegt hast: kein Sprung mehr in die Bildschirmmitte bei jedem Anheften, und das Board behält Zuschnitt und Palette über den Wechsel hinweg geöffnet.",
+        "Post-Links (X, TikTok, Reddit, Instagram…) laden wieder das echte Video herunter: Der Extraktor geht über das eigenständige yt-dlp, das die App installiert, ganz ohne Python-Umgebung.",
+        "Automatisches Update beim Start, einzuschalten unter Einstellungen ▸ Updates: Die App installiert die beim Start gefundene Version und startet von selbst neu. Standardmäßig aus.",
+        "Eine aus einer Palette kopierte Farbe kommt ohne `#` an: Die Hexadezimalfelder in Zeichenprogrammen hören nach sechs Zeichen auf und lehnten das Einfügen ab.",
+        "Zwei Verknüpfungen in der Titelleiste: der Quellcode auf GitHub und die Unterstützung des Projekts.",
+        "Das Anheften des Fensters wird beim Start erneut angewendet: Die Oberfläche zeigt sich nicht mehr im angehefteten Zustand auf einem Fenster, das gar nicht angeheftet ist."
+      ],
+      "ja": [
+        "ウィンドウは、置いた場所を中心にすべるように形を変えます。ピン留めのたびに画面中央へ飛ぶことはなくなり、切り替えの間もボードは表示範囲とパレットを開いたまま保ちます。",
+        "投稿のリンク（X、TikTok、Reddit、Instagram など）が、また本当の動画をダウンロードします。抽出はアプリが入れた単体の yt-dlp を通り、Python 環境は一切要りません。",
+        "起動時の自動更新を 設定 ▸ アップデート で有効にできます。起動時に見つかったバージョンをインストールし、アプリが自分で再起動します。既定ではオフです。",
+        "パレットからコピーした色には `#` が付きません。ドローイングソフトの 16 進フィールドは 6 文字で止まるため、貼り付けが拒否されていました。",
+        "タイトルバーに 2 つのショートカットを置きました。GitHub のソースコードと、プロジェクトへの支援です。",
+        "ウィンドウのピン留めは起動時に再適用されます。ピン留めされていないウィンドウに、ピン留めモードの画面が出ることはなくなりました。"
+      ],
+      "zh": [
+        "窗口会以你放置它的位置为中心滑动着改变形态：不会再每次固定都跳到屏幕中央，切换过程中画板也会保留当前视野和打开的调色板。",
+        "帖子链接（X、TikTok、Reddit、Instagram 等）又能下载到真正的视频了：解析走的是应用自己安装的独立 yt-dlp，完全不需要 Python 环境。",
+        "启动时自动更新，可在 设置 ▸ 更新 中开启：应用会安装启动时找到的版本并自行重启。默认关闭。",
+        "从调色板复制的颜色不带 `#`：绘图软件的十六进制输入框只收六个字符，此前会拒绝粘贴。",
+        "标题栏里多了两个入口：GitHub 上的源代码，以及支持这个项目。",
+        "窗口的固定状态会在启动时重新应用：界面不会再在没有固定的窗口上显示固定模式。"
       ]
     }
   },
@@ -348,7 +704,11 @@
     "date": "2026-08-16",
     "title": {
       "fr": "La planche épinglée reste utilisable",
-      "en": "The pinned board stays usable"
+      "en": "The pinned board stays usable",
+      "es": "El tablero fijado sigue siendo utilizable",
+      "de": "Das angeheftete Board bleibt benutzbar",
+      "ja": "ピン留めしたボードもそのまま使える",
+      "zh": "固定后的画板依然好用"
     },
     "highlights": {
       "fr": [
@@ -366,6 +726,38 @@
         "Images and videos take their true shape as soon as they paint: a portrait visual is no longer cropped inside a square box, even when the probe run at import failed.",
         "The placing frame no longer tints a medium sent to the background.",
         "More direct pasting: the preview shows up without waiting for the on-disk path to resolve."
+      ],
+      "es": [
+        "Ventana fijada: la barra de herramientas conserva colocar, dibujar, encuadrar y deshacer en vez de desaparecer; un ajuste la quita para recuperar el tablero desnudo.",
+        "El tamaño de la ventana se recuerda por separado para el modo fijado y el modo normal: el cambio devuelve el último tamaño de cada modo.",
+        "Nuevo ajuste para la barra del elemento seleccionado cuando haces clic en otra aplicación: mantenerla, ocultarla o soltar la selección.",
+        "Las imágenes y los vídeos toman su formato real en cuanto se muestran: un visual vertical ya no se recorta dentro de una caja cuadrada, incluso cuando la medición hecha en la importación ha fallado.",
+        "El marco de la zona de colocación ya no tiñe un medio enviado al fondo.",
+        "Pegado más directo: la vista previa aparece sin esperar a que se resuelva la ruta en el disco."
+      ],
+      "de": [
+        "Angeheftetes Fenster: Die Werkzeugleiste behält Ablegen, Zeichnen, Rahmen und Rückgängig, statt zu verschwinden; eine Einstellung entfernt sie, um das nackte Board zurückzubekommen.",
+        "Die Fenstergröße wird für den angehefteten und den normalen Zustand getrennt gemerkt: Der Wechsel stellt die letzte Größe des jeweiligen Zustands wieder her.",
+        "Neue Einstellung für die Leiste des ausgewählten Elements, wenn du in eine andere Anwendung klickst: behalten, ausblenden oder die Auswahl loslassen.",
+        "Bilder und Videos nehmen ihr echtes Format an, sobald sie erscheinen: Ein hochformatiges Motiv wird nicht mehr in einen quadratischen Kasten geschnitten, auch wenn die Messung beim Import fehlgeschlagen ist.",
+        "Der Rahmen der Ablagezone färbt ein in den Hintergrund geschicktes Medium nicht mehr ein.",
+        "Direkteres Einfügen: Die Vorschau erscheint, ohne auf das Auflösen des Pfads auf der Festplatte zu warten."
+      ],
+      "ja": [
+        "ピン留めしたウィンドウでも、ツールバーは消えずに、配置・描画・フレーム・取り消しを残します。設定でバーを外せば、素のボードに戻ります。",
+        "ウィンドウの大きさは、ピン留めモードと通常モードで別々に記憶します。切り替えると、それぞれの最後の大きさに戻ります。",
+        "別のアプリをクリックしたときに、選択中の要素のバーをどうするかを選べる設定が加わりました。そのまま残す、隠す、選択を解除するの 3 つです。",
+        "画像と動画は、表示された時点で本来の縦横比になります。読み込み時の計測に失敗した場合でも、縦長の素材が正方形の枠で切られることはありません。",
+        "配置エリアの枠が、背面に送ったメディアに色を付けることはなくなりました。",
+        "貼り付けが直接的になりました。ディスク上のパスが決まるのを待たずに、プレビューが出ます。"
+      ],
+      "zh": [
+        "固定窗口时，工具栏不会消失，仍保留放置、绘图、边框和撤销；一个设置可以把它移掉，回到干净的画板。",
+        "窗口大小会按固定模式和普通模式分别记住：切换时各自恢复上一次的尺寸。",
+        "新增一个设置，决定你点到其他应用时所选元素的工具条如何处理：保留、隐藏，或取消选择。",
+        "图片和视频一显示就采用真实的比例：竖构图不会再被裁进方形框里，即使导入时的测量失败也一样。",
+        "放置区域的边框不会再给送到背景层的媒体染上颜色。",
+        "粘贴更直接：预览会立刻出现，不必等磁盘路径解析完成。"
       ]
     }
   },
@@ -375,7 +767,11 @@
     "date": "2026-08-14",
     "title": {
       "fr": "Première beta publique",
-      "en": "First public beta"
+      "en": "First public beta",
+      "es": "Primera beta pública",
+      "de": "Erste öffentliche Beta",
+      "ja": "初の公開ベータ",
+      "zh": "首个公开测试版"
     },
     "highlights": {
       "fr": [
@@ -403,6 +799,58 @@
         "YouTube playback that survives past the first segments: the relay now bounds every upstream request, which a signed URL used to refuse.",
         "Shader upscaling keeps transparency: a PNG with an alpha background comes out with alpha.",
         "Slimmer application: every module inherited from NetsuRush (Resolve, Adobe, timeline, voice, roto) has been removed from the product."
+      ],
+      "es": [
+        "Inicio de sesión con Discord para la beta, con periodo de gracia sin conexión y alternativa sin cuenta cuando no hay ningún despliegue configurado.",
+        "Actualizaciones dentro de la aplicación: comprobación, instalación firmada y las notas de versión mostradas una vez tras actualizar.",
+        "Informe de error integrado: descripción, registro, adjuntos y datos del equipo (GPU, codificadores, ffmpeg) enviados en un clic.",
+        "Tablero más fluido: zoom continuo sin tirones, miniaturas adaptadas al nivel de zoom, y vídeos reproducidos a su tamaño en pantalla y puestos en pausa fuera de campo.",
+        "Instalación inmediata: la base (ffmpeg, shaders, yt-dlp) se descarga sola nada más abrir, sin catálogo ni casillas — solo queda elegir el idioma.",
+        "Generador de paletas: rueda de color, las nueve armonías clásicas, bloqueo por color, tonos y brillo, y una semilla tomada de las imágenes del tablero.",
+        "Marcos enlazables, zoom del texto y menú contextual de copiar/pegar en toda la superficie del tablero.",
+        "Página Cuenta en los ajustes: iniciar sesión, cerrar sesión y avatar de Discord, incluso después de haberse saltado la pantalla de inicio de sesión.",
+        "Reproducción de YouTube fiable hasta el final: el relé acota cada petición hacia el origen, que una URL firmada rechazaba más allá de los primeros segmentos.",
+        "El escalado por shaders conserva la transparencia: un PNG con fondo alfa sale con alfa.",
+        "Aplicación aligerada: todos los módulos heredados de NetsuRush (Resolve, Adobe, timeline, voz, roto) se han quitado del producto."
+      ],
+      "de": [
+        "Discord-Anmeldung für die Beta, mit einer Schonfrist ohne Verbindung und einem Rückfall ohne Konto, wenn keine Bereitstellung eingerichtet ist.",
+        "Updates in der App: Prüfung, signierte Installation und die Versionshinweise, die nach dem Update einmal erscheinen.",
+        "Eingebaute Fehlermeldung: Beschreibung, Protokoll, Anhänge und Systeminfos (GPU, Encoder, ffmpeg) mit einem Klick gesendet.",
+        "Flüssigeres Board: stufenloses Zoomen ohne Ruckeln, Miniaturen passend zur Zoomstufe und Videos, die in ihrer Bildschirmgröße laufen und außerhalb des Bildes pausieren.",
+        "Sofort einsatzbereit: Der Unterbau (ffmpeg, Shader, yt-dlp) lädt sich beim Öffnen von selbst herunter, ohne Katalog und ohne Kästchen – zu wählen bleibt nur die Sprache.",
+        "Palettengenerator: Farbkreis, die neun klassischen Harmonien, Sperre je Farbe, Töne und Helligkeit sowie ein Ausgangswert aus den Bildern des Boards.",
+        "Verknüpfbare Rahmen, Textzoom und ein Kontextmenü zum Kopieren und Einfügen auf der ganzen Fläche des Boards.",
+        "Eine Seite Konto in den Einstellungen: anmelden, abmelden und Discord-Avatar, auch nachdem der Anmeldebildschirm übersprungen wurde.",
+        "Zuverlässige YouTube-Wiedergabe bis zum Ende: Der Relaisdienst begrenzt jede Anfrage an die Quelle, die eine signierte URL jenseits der ersten Segmente ablehnte.",
+        "Das Upscale per Shader erhält die Transparenz: Ein PNG mit Alpha-Hintergrund kommt mit Alpha heraus.",
+        "Schlankere App: Alle von NetsuRush geerbten Module (Resolve, Adobe, Timeline, Stimme, Roto) wurden aus dem Produkt entfernt."
+      ],
+      "ja": [
+        "ベータ版は Discord でサインインします。オフラインの猶予期間があり、デプロイが設定されていないときはアカウントなしで動きます。",
+        "アプリ内でのアップデート：確認、署名付きのインストール、そして更新後に一度だけ表示されるリリースノート。",
+        "バグ報告を内蔵：説明、ログ、添付ファイル、マシンの情報（GPU、エンコーダー、ffmpeg）をワンクリックで送信します。",
+        "ボードがなめらかに：引っかからない連続ズーム、ズーム倍率に合わせたサムネイル、画面上の大きさで再生し、画面外では一時停止する動画。",
+        "すぐに使えるインストール：土台（ffmpeg、シェーダー、yt-dlp）は起動と同時に自動でダウンロードされます。カタログもチェックボックスもなく、選ぶのは言語だけです。",
+        "パレットジェネレーター：カラーホイール、古典的な 9 つの配色、色ごとのロック、トーンと明度、そしてボードの画像から取った種色。",
+        "連結できるフレーム、テキストのズーム、そしてボード全面で使えるコピー／貼り付けのコンテキストメニュー。",
+        "設定に「アカウント」ページ：サインイン、サインアウト、Discord のアバター。ログイン画面をスキップしたあとでも使えます。",
+        "YouTube の再生が最後まで途切れません。リレーが上流へのリクエストに必ず範囲を付けるようになりました。署名付き URL は、最初のセグメントより先では範囲のないリクエストを拒んでいました。",
+        "シェーダーによるアップスケールが透明を保ちます。アルファ背景の PNG は、アルファのまま出てきます。",
+        "アプリを軽くしました。NetsuRush から引き継いだモジュール（Resolve、Adobe、タイムライン、音声、ロト）はすべて製品から外しています。"
+      ],
+      "zh": [
+        "测试版使用 Discord 登录，离线时有宽限期；未配置部署时会退回到无账号模式。",
+        "应用内更新：检查、带签名的安装，以及更新后显示一次的版本说明。",
+        "内置错误反馈：说明、日志、附件和机器快照（GPU、编码器、ffmpeg）一键发送。",
+        "画板更流畅：连续缩放不卡顿、缩略图随缩放级别调整、视频按屏幕上的尺寸播放并在移出画面后暂停。",
+        "即刻可用的安装：基础组件（ffmpeg、着色器、yt-dlp）在打开时自行下载，没有目录也没有复选框，只需选择语言。",
+        "调色板生成器：色轮、九种经典配色、按色块锁定、色调与明度，以及从画板图片中取出的种子色。",
+        "可链接的边框、文字缩放，以及在整个画板表面都能用的复制/粘贴右键菜单。",
+        "设置里的账号页：登录、退出登录和 Discord 头像，跳过登录界面之后也能用。",
+        "YouTube 播放能稳定到最后：中继现在给每个上游请求都加上范围，而签名 URL 过了最前面几个分片之后就会拒绝没有范围的请求。",
+        "着色器超分辨率会保留透明：带 Alpha 背景的 PNG 出来时仍带 Alpha。",
+        "应用更轻了：从 NetsuRush 继承的所有模块（Resolve、Adobe、时间线、语音、转描）都已从产品中移除。"
       ]
     }
   },
@@ -412,7 +860,11 @@
     "date": "2026-08-14",
     "title": {
       "fr": "Première version de NetsuBoard",
-      "en": "First NetsuBoard release"
+      "en": "First NetsuBoard release",
+      "es": "Primera versión de NetsuBoard",
+      "de": "Erste Version von NetsuBoard",
+      "ja": "NetsuBoard の最初のバージョン",
+      "zh": "NetsuBoard 的第一个版本"
     },
     "highlights": {
       "fr": [
@@ -428,6 +880,34 @@
         "Video playback matched to the on-screen size, off-screen items paused, and continuous zoom that stays smooth on large boards.",
         "Standalone and offline: no account, nothing sent anywhere, everything stays on disk.",
         "Interface in six languages, customisable themes, and signed updates verified before installation."
+      ],
+      "es": [
+        "Un tablero de referencia infinito: imágenes, vídeos locales, enlaces de YouTube, incrustaciones, notas y dibujo en una misma superficie.",
+        "Escalado con shaders de GPU (ArtCNN) a través de ffmpeg y libplacebo, sin ningún modelo que descargar.",
+        "Reproducción de vídeo adaptada al tamaño mostrado, pausa de lo que sale de la pantalla y zoom continuo que se mantiene fluido en tableros grandes.",
+        "Aplicación autónoma y sin conexión: ninguna cuenta, ningún dato enviado, todo se queda en el disco.",
+        "Interfaz en seis idiomas, temas personalizables y actualizaciones firmadas que se verifican antes de instalar."
+      ],
+      "de": [
+        "Ein unendliches Referenz-Board: Bilder, lokale Videos, YouTube-Links, Einbettungen, Notizen und Zeichnungen auf einer einzigen Fläche.",
+        "Upscale per GPU-Shader (ArtCNN) über ffmpeg und libplacebo, ohne Modell zum Herunterladen.",
+        "Videowiedergabe passend zur angezeigten Größe, Pause für alles, was den Bildschirm verlässt, und stufenloses Zoomen, das auch auf großen Boards flüssig bleibt.",
+        "Eigenständige App ohne Netz: kein Konto, keine gesendeten Daten, alles bleibt auf der Festplatte.",
+        "Oberfläche in sechs Sprachen, anpassbare Designs und signierte Updates, die vor der Installation geprüft werden."
+      ],
+      "ja": [
+        "無限に広がるリファレンスボード：画像、ローカルの動画、YouTube リンク、埋め込み、ノート、描画を 1 つの面にまとめます。",
+        "GPU シェーダー（ArtCNN）によるアップスケールを ffmpeg と libplacebo で実行します。モデルのダウンロードは不要です。",
+        "動画は表示サイズに合わせて再生し、画面外に出たものは一時停止します。連続ズームは大きなボードでもなめらかです。",
+        "単体で動き、オフラインでも使えます。アカウントは不要、データは送信せず、すべてディスクに残ります。",
+        "インターフェースは 6 言語、テーマはカスタマイズでき、アップデートは署名を検証してからインストールします。"
+      ],
+      "zh": [
+        "无限大的参考画板：图片、本地视频、YouTube 链接、嵌入内容、便签和绘图都在同一个平面上。",
+        "通过 ffmpeg 和 libplacebo 用 GPU 着色器（ArtCNN）做超分辨率，无需下载模型。",
+        "视频按显示尺寸播放，移出屏幕的内容会暂停，连续缩放在大画板上也保持流畅。",
+        "独立且离线运行：不需要账号，不发送任何数据，一切都留在本机磁盘上。",
+        "界面支持六种语言，主题可自定义，更新会在安装前验证签名。"
       ]
     }
   }

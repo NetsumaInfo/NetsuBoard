@@ -12,10 +12,10 @@
     "defaultFolder": "NetsuBoard — Coupes",
     "existingFolders": "Dossiers existants",
     "mediaPoolFolders": "Dossiers du Media Pool",
-    "profile": "Profil",
+    "profile": "Préréglage",
     "profileCustom": "Personnalisé",
-    "optimization": "Optimisation",
-    "speed": "Vitesse",
+    "optimization": "Encodeur",
+    "speed": "Compression",
     "codec": "Codec",
     "audio": "Audio",
     "audioCodec": "Codec audio",
@@ -68,20 +68,20 @@
   },
   "speed": {
     "fast": {
-      "label": "Rapide",
-      "hint": "encodage prioritaire"
+      "label": "Minimale",
+      "hint": "la plus rapide, fichier plus lourd"
     },
     "balanced": {
-      "label": "Équilibré",
+      "label": "Équilibrée",
       "hint": "bon compromis"
     },
     "quality": {
-      "label": "Qualité",
-      "hint": "meilleure compression"
+      "label": "Haute",
+      "hint": "fichier plus léger, encodage plus lent"
     },
     "max": {
       "label": "Maximale",
-      "hint": "plus lent et compact"
+      "hint": "fichier le plus léger, encodage le plus lent"
     }
   },
   "issue": {
@@ -98,7 +98,7 @@
   },
   "workflow": {
     "timeline": "Timeline",
-    "remux": "Copie des flux",
+    "remux": "Remux",
     "encode": "Réencodage"
   },
   "audioMode": {

@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "Language",
-    "subtitle": "Language of the app interface.",
+    "subtitle": "The change applies right away, with no restart.",
     "fieldLabel": "Interface language"
   }
 }

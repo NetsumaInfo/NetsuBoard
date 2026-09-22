@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "Sprache",
-    "subtitle": "Sprache der Programmoberfläche.",
+    "subtitle": "Die Änderung wirkt sofort, ohne Neustart.",
     "fieldLabel": "Oberflächensprache"
   }
 }

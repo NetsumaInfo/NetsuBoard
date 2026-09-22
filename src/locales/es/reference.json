@@ -31,7 +31,8 @@
     "resetRotation": "Rotación",
     "resetFlip": "Volteo",
     "resetCrop": "Recorte",
-    "resetAll": "Restablecer todo"
+    "resetAll": "Restablecer todo",
+    "detach": "Desacoplar"
   },
   "toolbar": {
     "home": "Inicio",
@@ -105,7 +106,7 @@
     "disabled": "Desactivado",
     "placeFrame": "Marco de la zona de colocación",
     "pinnedToolbar": "Barra de herramientas al fijar",
-    "pinnedToolbarHint": "Barra reducida con la ventana fijada. El resto queda en el menú contextual.",
+    "pinnedToolbarHint": "Barra reducida con los botones elegidos abajo. Sin ella, todo pasa por el menú contextual.",
     "decompose": "Descomponer un vídeo en imágenes",
     "decomposeHint": "Coloca una serie de imágenes muestreadas del vídeo en el tablero.",
     "imagesPerSec": "Imágenes / s",
@@ -140,7 +141,7 @@
     "editShortcut": "Modificar el atajo {{label}}",
     "pressLetter": "Pulsa una letra · Esc cancela",
     "keyboardShortcuts": "Atajos de teclado",
-    "pressCombo": "Pulsa la nueva combinación · Supr para desvincular · Esc para cancelar",
+    "pressCombo": "Pulsa la nueva combinación · Supr borra · Esc cancela",
     "gestures": "Gestos",
     "gesturePaste": "Pegar (imagen / enlace / YouTube)",
     "gestureMove": "Mover la selección (Mayús = ×10)",
@@ -179,7 +180,7 @@
     "provider_odysee": "Odysee",
     "provider_rumble": "Rumble",
     "provider_generic": "Otros sitios",
-    "noUpscaleEngine": "Sin motor de escalado: el controlador gráfico no expone Vulkan.",
+    "noUpscaleEngine": "Sin motor de escalado: el controlador gráfico no admite Vulkan.",
     "snapTitle": "Imán",
     "snapEnabled": "Ajustar a los demás elementos",
     "snapThreshold": "Distancia de ajuste (px)",
@@ -484,7 +485,7 @@
     "preview": "Vista previa",
     "validate": "Aplicar",
     "working": "En curso…",
-    "noEngine": "Mejora no disponible: esta GPU no admite Vulkan."
+    "noEngine": "Escalado no disponible: esta GPU no admite Vulkan."
   },
   "scene": {
     "title": "Escenas de referencia",
@@ -601,7 +602,8 @@
     "settings": {
       "title": "Almacenamiento de medios",
       "hint": "Lo que el .netsu incluye de forma predeterminada. Se ajusta medio por medio en el inspector."
-    }
+    },
+    "onlineMedia": "Medio en línea"
   },
   "board": {
     "clipboardEmpty": "Portapapeles vacío o no compatible",
@@ -784,12 +786,10 @@
     "subtitle": "Elige a los amigos que quieres invitar a este proyecto.",
     "signedOut": "Conecta tu cuenta de Discord en Ajustes.",
     "noFriends": "Primero añade amigos en Ajustes › Cuenta.",
-    "invited": "{{n}} invitación(es) enviada(s).",
     "notice": "El tablero se vuelve colaborativo. Las personas invitadas reciben la invitación en su pantalla de inicio.",
     "close": "Cerrar",
     "create": "Crear e invitar",
     "invite": "Invitar",
-    "fileBacked": "Este tablero está abierto desde un archivo .netsu. Un proyecto colaborativo vive en la biblioteca de escenas.",
     "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su escena compartida. Usa la exportación para crear una copia local.",
     "role": {
       "owner": "Propietario",
@@ -822,15 +822,15 @@
       "leaveWarning": "Conservarás lo ya recibido en este dispositivo, pero ya no podrás sincronizar el proyecto.",
       "deleteWarning": "Los datos de conexión, las invitaciones y las copias cifradas se eliminarán para todos. No se puede deshacer."
     },
-    "noScene": "Guarda primero este tablero en la biblioteca de escenas.",
-    "willAdopt": "Este tablero se copiará a la biblioteca de escenas. El archivo .netsu permanece en tu disco.",
-    "failed": "El uso compartido ha fallado.",
+    "noScene": "Guarda primero este tablero como escena de referencia.",
+    "willAdopt": "Este tablero se copiará a tus escenas de referencia. El archivo .netsu permanece en tu disco.",
+    "failed": "No se pudo compartir.",
     "sync": {
       "queued": "Hay cambios en espera. Se enviarán solos en cuanto un dispositivo esté disponible.",
       "upToDate": "Todo está sincronizado.",
-      "peers": "{{count}} dispositivo(s) accesible(s)"
+      "peers_one": "{{count}} dispositivo accesible",
+      "peers_other": "{{count}} dispositivos accesibles"
     },
-    "mediaMissing": "{{count}} archivo(s) multimedia ausente(s) del disco: {{names}}. Están marcados en el tablero — recupéralos desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
     "panel": {
       "title": "Estado del uso compartido",
       "online": "{{count}} en línea",
@@ -845,8 +845,13 @@
       "queued": "Pendiente de envío.",
       "upToDate": "Todo enviado.",
       "rotation": "Hace falta una clave nueva. El propietario debe abrir la app.",
-      "waitingKey": "{{count}} esperan la clave. Sigue en línea.",
-      "nobodyReachable": "Nadie en línea. No se ha enviado nada."
-    }
+      "nobodyReachable": "Nadie en línea. No se ha enviado nada.",
+      "waitingKey_one": "{{count}} espera la clave. Sigue en línea.",
+      "waitingKey_other": "{{count}} esperan la clave. Sigue en línea."
+    },
+    "mediaMissing_one": "{{count}} archivo multimedia no encontrado en el disco: {{names}}. Está marcado en el tablero: recupéralo desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
+    "mediaMissing_other": "{{count}} archivos multimedia no encontrados en el disco: {{names}}. Están marcados en el tablero: recupéralos desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
+    "invited_one": "{{count}} invitación enviada.",
+    "invited_other": "{{count}} invitaciones enviadas."
   }
 }
