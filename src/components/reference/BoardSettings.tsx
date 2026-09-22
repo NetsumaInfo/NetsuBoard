@@ -6,7 +6,7 @@
 // interactif → les réglages (couleur/mode de fond) se voient EN DIRECT pendant qu'on les change.
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Grid2x2, Square, X, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
@@ -34,6 +34,7 @@ import {
 import { FontPicker, NumberSpin, MiniSelect, fontLabel } from "./inspectorControls";
 import { PINNED_SIDES } from "./toolbarButtons";
 import { PinnedBarEditor } from "./PinnedBarEditor";
+import { errorText } from "@/lib/errorText";
 
 const INTERVALS: { label: string; ms: number }[] = [
   { label: "0,5 s", ms: 500 },
@@ -231,7 +232,7 @@ export function BoardSettings({ tab, onCapturingChange }: {
           : result?.error || t("settings.assetSweepFailed"),
       );
     } catch (error) {
-      setSweepResult(error instanceof Error ? error.message : String(error));
+      setSweepResult(errorText(error));
     } finally {
       setSweeping(false);
     }
@@ -427,7 +428,7 @@ export function BoardSettings({ tab, onCapturingChange }: {
         <section className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold text-foreground">{t("settings.favFonts")}</h3>
           {prefs.favFonts.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground">{t("settings.favHintBefore")}<Star className="inline size-3 -mt-0.5" />{t("settings.favHintAfter")}</p>
+            <p className="text-[11px] text-muted-foreground"><Trans t={t} i18nKey="settings.favHint" components={[<Star key="star" className="inline size-3 -mt-0.5" />]} /></p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {prefs.favFonts.map((f) => (

@@ -3,12 +3,7 @@
   "nav": {
     "account": "Cuenta",
     "interface": "Interfaz",
-    "media": "Medios",
-    "ai": "Modelo",
-    "export": "Exportar",
-    "adobe": "Adobe",
     "storage": "Almacenamiento",
-    "system": "Sistema",
     "updates": "Actualizaciones",
     "report": "Informar",
     "about": "Acerca de",
@@ -22,8 +17,8 @@
     },
     "supportTitle": "Apoyar",
     "support": {
-      "github": "Hazte sponsor en GitHub",
-      "coffee": "Invítame un café"
+      "github": "Patrocinar en GitHub",
+      "coffee": "Invitar a un café"
     },
     "legal": "© 2026 Haim Faraj · NetsuBoard se distribuye bajo GNU AGPL v3.0-only · Sin garantía.",
     "licenseLink": "Texto completo de la licencia",
@@ -40,74 +35,6 @@
     "unreachableHint": "Comprueba tu conexión. Un cortafuegos o una red corporativa puede bloquear NetsuBoard.",
     "retry": "Reintentar"
   },
-  "playback": {
-    "title": "Vistas previas y miniaturas",
-    "subtitle": "Configura las vistas previas de vídeo y las miniaturas.",
-    "soundTitle": "Sonido",
-    "playerVolume": "Volumen de los reproductores",
-    "playerVolumeHint": "Compartido por NetsuCut, Colecciones, Voz y Upscale.",
-    "hoverVolume": "Volumen al pasar el ratón",
-    "hoverVolumeHint": "Volumen de la miniatura sobrevolada; las vistas previas en reproducción automática siguen silenciadas.",
-    "globalMuted": "Silenciado por el volumen de los reproductores.",
-    "generation": {
-      "proxyTitle": "Vistas previas animadas",
-      "thumbnailTitle": "Miniaturas fijas",
-      "format": "Formato",
-      "formatHint": {
-        "hevc": "Archivos ligeros si la decodificación HEVC es fluida.",
-        "h264": "Muy compatible y generalmente rápido de reproducir.",
-        "webp": "Vista previa silenciosa para cuadrículas, sin audio."
-      },
-      "engine": "Motor",
-      "engineAuto": "Automático · recomendado",
-      "engineHint": "Auto elige el mejor motor que funciona realmente.",
-      "preset": "Perfil",
-      "presetHint": "Valores FFmpeg reales del motor seleccionado.",
-      "resolution": "Resolución",
-      "resolutionHint": "480p es el ajuste predeterminado para las tarjetas.",
-      "audio": "Audio",
-      "audioHint": "Añade una pista AAC ligera al proxy de vídeo.",
-      "noWebpAudio": "WebP animado no admite sonido.",
-      "audioUnavailable": "La vista previa configurada no tiene audio.",
-      "enabled": "Activado",
-      "disabled": "Desactivado",
-      "thumbnailFormatHint": "WebP suele ocupar menos; JPEG es universal.",
-      "quality": "Calidad de imagen",
-      "qualityLow": "Ligero",
-      "qualityStandard": "Equilibrado",
-      "qualityHigh": "Nítido",
-      "qualityHint": "El nivel ajusta el detalle y la velocidad de generación.",
-      "thumbnailTiming": "La miniatura se toma unas imágenes después del corte en modo rápido.",
-      "cacheHint": "Las cachés existentes se conservan tras un cambio.",
-      "cacheCleared": "Cachés antiguas eliminadas.",
-      "reset": "Restablecer",
-      "clearOld": "Eliminar cachés antiguas"
-    }
-  },
-  "performance": {
-    "indexingTitle": "Análisis de los planos",
-    "accelerationTitle": "Aceleración",
-    "shotDecode": "Extracción agrupada",
-    "shotDecodeHint": "Extrae las imágenes de un plano de una vez en lugar de una por una. Hasta 6× más rápido, con exactamente las mismas imágenes.",
-    "vramProfile": "Perfil de memoria",
-    "vramProfileHint": "Cuánto trabajo se hace a la vez. Bájalo si la aplicación estorba a tu montaje, súbelo si la máquina está libre.",
-    "vram": {
-      "economy": "Ahorro",
-      "balanced": "Equilibrado",
-      "performance": "Rendimiento"
-    },
-    "maxPatches": "Resolución de análisis",
-    "maxPatchesHint": "Nivel de detalle que el modelo ve en cada imagen. Más alto capta los elementos pequeños, pero cuesta tiempo y memoria.",
-    "patchesDefault": "{{value}} (predeterminado)",
-    "reindexWarning": "A esta resolución hay que volver a indexar tus brutos. Volver a 256 recupera el índice original intacto.",
-    "onnxGpu": "Caras y dictado en la GPU",
-    "onnxGpuHint": "Unas 8× más rápido que el procesador, con los mismos resultados. Desactívalo si tu controlador gráfico falla.",
-    "enabled": "Activado",
-    "disabled": "Desactivado",
-    "reset": "Restablecer el rendimiento",
-    "quick": "Rendimiento",
-    "quickMore": "Todos los ajustes…"
-  },
   "appearance": {
     "title": "Tema",
     "subtitle": "Elige una paleta adecuada para tu espacio de trabajo.",
@@ -117,84 +44,38 @@
     },
     "theme": {
       "dark": {
-        "label": "Oscuro",
-        "hint": "Neutro y con buen contraste."
+        "label": "Oscuro"
       },
       "midnight": {
-        "label": "Medianoche",
-        "hint": "Negro puro y superficies discretas."
+        "label": "Medianoche"
       },
       "blue": {
-        "label": "Azul noche",
-        "hint": "Azul intenso y luminoso."
+        "label": "Azul noche"
       },
       "light": {
-        "label": "Claro",
-        "hint": "Blanco limpio y legible."
+        "label": "Claro"
       },
       "soft-light": {
-        "label": "Claro suave",
-        "hint": "Gris azulado con menos reflejos."
+        "label": "Claro suave"
       },
       "graphite": {
-        "label": "Grafito",
-        "hint": "Gris neutro, sin matiz."
+        "label": "Grafito"
       },
       "forest": {
-        "label": "Bosque",
-        "hint": "Verde profundo con acento esmeralda."
+        "label": "Bosque"
       },
       "ember": {
-        "label": "Brasa",
-        "hint": "Carbón cálido con acento ámbar."
+        "label": "Brasa"
       },
       "plum": {
-        "label": "Ciruela",
-        "hint": "Violeta apagado con acento malva."
+        "label": "Ciruela"
       },
       "contrast": {
-        "label": "Alto contraste",
-        "hint": "Negro puro y bordes marcados."
+        "label": "Alto contraste"
       },
       "paper": {
-        "label": "Papel",
-        "hint": "Sepia suave con acento terracota."
+        "label": "Papel"
       }
-    },
-    "wallpaper": {
-      "title": "Fondo",
-      "choose": "Elegir una imagen",
-      "none": "Ninguno",
-      "remove": "Quitar de la biblioteca",
-      "empty": "Aún no hay fondo. Suelta un archivo aquí.",
-      "importFailed": "No se pudo importar.",
-      "blockedByTheme": "El tema Alto contraste no admite fondo.",
-      "blur": "Desenfoque",
-      "opacity": "Opacidad",
-      "saturate": "Saturación",
-      "uiOpacity": "Opacidad de los paneles",
-      "animate": "Animar",
-      "pauseUnfocused": "Congelar en segundo plano",
-      "pauseWhileBusy": "Congelar durante los procesos",
-      "groupFraming": "Encuadre",
-      "groupRender": "Render",
-      "groupReadability": "Legibilidad",
-      "groupMotion": "Animación",
-      "reset": "Restablecer",
-      "openFraming": "Encuadrar la imagen",
-      "framingTitle": "Encuadre del fondo",
-      "rotateLeft": "Girar a la izquierda",
-      "rotateRight": "Girar a la derecha",
-      "flipH": "Voltear horizontal",
-      "flipV": "Voltear vertical",
-      "resetFraming": "Reencuadrar",
-      "cropWidth": "Ancho del recorte",
-      "transform": "Orientación",
-      "applyFraming": "Aplicar",
-      "cropSize": "Tamaño del recorte",
-      "groupScope": "Alcance",
-      "onDetached": "Ventanas separadas",
-      "global": "Compartido por todos los temas"
     },
     "colors": {
       "title": "Colores",
@@ -206,7 +87,7 @@
       "border": "Bordes",
       "restore": "Volver al tema",
       "fromTheme": "Del tema",
-      "resetAll": "Volver al tema",
+      "resetAll": "Devolver todo al tema",
       "resetAllHint": "Quita todos los ajustes de este tema."
     },
     "custom": {
@@ -224,7 +105,7 @@
   },
   "updates": {
     "title": "Actualizaciones",
-    "subtitle": "Comprobadas en GitHub, firma validada antes de instalar.",
+    "subtitle": "Versiones comprobadas en GitHub, con la firma validada antes de instalar.",
     "auto": "Comprobación automática",
     "autoHint": "Busca una nueva versión unos segundos después de iniciar.",
     "autoInstall": "Actualización automática al iniciar",
@@ -265,56 +146,6 @@
       "notOwned": "Versión {{version}} · instalada fuera de la aplicación",
       "failed": "La actualización ha fallado"
     }
-  },
-  "compatibility": {
-    "title": "Compatibilidad de este PC",
-    "gpuFunctions": "Funciones que usan la GPU",
-    "cpuFunctions": "Funciones de CPU o de respaldo",
-    "igpu": "iGPU",
-    "dgpu": "dGPU",
-    "driver": "Controlador",
-    "noHardware": "No se detectaron componentes.",
-    "state": {
-      "gpu": "GPU",
-      "cpu": "CPU",
-      "fallback": "Respaldo CPU",
-      "missing": "No disponible"
-    },
-    "thumbnailEngine": "Se genera intencionadamente en la CPU.",
-    "subtitle": "NetsuBoard usa solo los motores disponibles en este equipo.",
-    "refresh": "Comprobar",
-    "hardware": "Componentes detectados",
-    "gpu": "Tarjeta gráfica",
-    "cpu": "Procesador",
-    "uses": "Funciones",
-    "notInstalled": "No disponible",
-    "available": "Disponible",
-    "unavailable": "No se pudieron comprobar los componentes de este PC.",
-    "features": {
-      "netsucut": "NetsuCut",
-      "torchModels": "Modelos de IA",
-      "onnxModels": "Modelos ONNX",
-      "transcription": "Transcripción",
-      "notebook": "NetsuBook"
-    },
-    "featureHints": {
-      "netsucut": "Crea vistas previas y codifica vídeo.",
-      "torchModels": "Detecta planos, busca y mejora imágenes.",
-      "onnxModels": "Elimina fondos y ejecuta modelos ONNX.",
-      "transcription": "Convierte la voz en texto.",
-      "notebook": "Guarda y organiza notas. No necesita GPU."
-    }
-  },
-  "exportProfiles": {
-    "title": "Perfiles de exportación",
-    "subtitle": "Ajustes de códec aplicados al botón Descargar de miniaturas y resultados.",
-    "new": "Nuevo",
-    "duplicate": "Duplicar",
-    "deleteAria": "Eliminar perfil",
-    "restore": "Restaurar",
-    "restoreHint": "Restaura los preajustes incluidos que faltan en la lista.",
-    "cardButton": "Botón de miniatura",
-    "cardButtonHint": "Acción del botón que aparece al pasar el cursor por una miniatura."
   },
   "console": {
     "title": "Consola",
@@ -403,8 +234,6 @@
       "copy": "Copiar",
       "refresh": "Volver a leer",
       "loading": "Leyendo…",
-      "more": "Ver todo",
-      "less": "Contraer",
       "manual": "Escríbelo tú",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
       "attached": "Datos del equipo adjuntos: se leen enteros en la Consola."
@@ -412,8 +241,6 @@
     "sending": "Enviando…",
     "send": "Enviar",
     "download": "Guardar el mensaje",
-    "logsAttached": "{{count}} líneas de registro adjuntas",
-    "logErrors": "{{count}} errores",
     "sendFailed": "El envío no funcionó. Inténtalo otra vez.",
     "validation": {
       "description": "Cuenta qué pasó antes de enviar.",
@@ -429,42 +256,11 @@
       "add": "Añadir",
       "remove": "Quitar",
       "limit": "{{count}} archivos como máximo"
-    }
-  },
-  "outbox": {
-    "opening": "Abriendo la caché…",
-    "intro": "Cierra Resolve/Premiere Pro para liberar la GPU durante codificaciones pesadas sin perder los envíos: se guardan en caché y se aplican <b>automáticamente al volver a abrir</b>.",
-    "enabled": "Cola activa",
-    "enabledHint": "De lo contrario, enviar a un programa cerrado falla como antes.",
-    "on": "Activada",
-    "off": "Desactivada",
-    "delay": "Espera antes de aplicar",
-    "delayHint": "Da tiempo al programa para terminar de abrirse.",
-    "destination": "Destino de los envíos en caché",
-    "targetNew": "Una línea de tiempo por envío",
-    "targetSingle": "Una sola línea de tiempo",
-    "targetPlaceholder": "Nombre de la línea de tiempo colectora",
-    "targetSingleHint": "Todos los envíos pendientes llegan a una sola línea de tiempo, creada al volver a abrir.",
-    "targetNewHint": "Cada envío crea su propia línea de tiempo, como un envío directo.",
-    "queue": "Cola",
-    "pendingCount": "{{count}} pendientes",
-    "applyNow": "Aplicar ahora",
-    "clearHistory": "Vaciar historial",
-    "empty": "No hay envíos en caché.",
-    "applied": "aplicado",
-    "failed": "fallo",
-    "pending": "pendiente",
-    "offline": {
-      "title": "Caché sin conexión de líneas de tiempo",
-      "upToDate": "al día",
-      "stats": "{{clips}} clips · {{cached}}/{{total}} líneas de tiempo con sus planos.",
-      "none": "No hay caché: con Resolve cerrado, las líneas de tiempo se abren vacías.",
-      "update": "Actualizar",
-      "needResolve": "Resolve debe estar conectado para crear la caché.",
-      "building": "Actualizando en segundo plano (los medios tienen prioridad)…",
-      "auto": "Se actualiza automáticamente en segundo plano y solo lee líneas de tiempo nuevas.",
-      "rebuild": "Recalcular todo"
-    }
+    },
+    "logsAttached_one": "{{count}} línea de registro adjunta",
+    "logsAttached_other": "{{count}} líneas de registro adjuntas",
+    "logErrors_one": "{{count}} error",
+    "logErrors_other": "{{count}} errores"
   },
   "discord": {
     "title": "Presencia de Discord",
@@ -526,211 +322,12 @@
       "orphansHint": "{{count}} archivos · {{size}}. Ya nada los muestra, pero esta es la única copia.",
       "move": "Mover a una carpeta…"
     },
-    "footnote": "Los medios que añadiste desde tu disco nunca se ven afectados: la aplicación solo toca archivos que ha escrito ella misma.",
-    "empty": "Aún no hay caché.",
-    "emptyHint": "Las miniaturas y vistas previas se indexan al navegar por los clips.",
-    "diskFree": "{{free}} libres de {{total}}",
-    "refresh": "Actualizar",
-    "kind": {
-      "thumb": "Miniaturas",
-      "proxy": "Vistas previas de vídeo",
-      "voice": "Audio extraído",
-      "upscaleTest": "Pruebas de procesado",
-      "roto": "Sesiones de roto",
-      "scenes": "Detección de planos",
-      "transcripts": "Transcripciones",
-      "embeddings": "Vectores de búsqueda",
-      "indexThumbs": "Miniaturas del índice",
-      "faces": "Índice de rostros"
-    },
-    "kindHint": {
-      "thumb": "Una imagen por plano. Regenerar en frío es lento.",
-      "proxy": "Extractos cortos codificados en GPU. Se regeneran en un segundo.",
-      "voice": "WAV de 16 kHz para la transcripción y la detección de silencios.",
-      "upscaleTest": "Imágenes a resolución completa de las pruebas «¿y si?».",
-      "roto": "Frames y máscaras de las sesiones de segmentación.",
-      "scenes": "Puntos de corte detectados por IA. Regenerar = una detección.",
-      "transcripts": "Texto y marcas de tiempo de las palabras. Regenerar = una pasada de ASR.",
-      "embeddings": "Un vector por plano: lo que vio el modelo. Regenerar = horas de GPU.",
-      "indexThumbs": "Miniaturas antiguas guardadas en el índice. La búsqueda ya muestra las del corte, así que puedes vaciar lo que queda.",
-      "faces": "Un vector de identidad por rostro detectado. Regenerar = una pasada de detección."
-    },
-    "tree": {
-      "title": "Por proyecto",
-      "desc": "Agrupado por carpeta de origen. Permite vaciar un proyecto terminado sin tocar el resto.",
-      "rushCount_one": "{{count}} clip",
-      "rushCount_other": "{{count}} clips",
-      "unattributed": "Sin asignar",
-      "unattributedHint": "Caché escrito antes del índice, o cuyo clip no se pudo encontrar. Se puede purgar en bloque.",
-      "selected": "Selección: {{count}} · {{size}}",
-      "clearSelection": "Deseleccionar",
-      "purgeSelection": "Vaciar la selección"
-    },
-    "reindex": {
-      "action": "Reindexar",
-      "hint": "Recupera los cachés ya en disco: el índice solo conoce lo escrito desde que existe.",
-      "running": "Reindexando…",
-      "done": "Entradas indexadas: {{added}} · Asociadas a un clip: {{attributed}}.",
-      "scan": "Leyendo los clips conocidos…",
-      "index": "Analizando las carpetas…"
-    },
-    "dir": {
-      "title": "Carpeta del caché",
-      "desc": "Se aplica a las miniaturas y a las vistas previas de vídeo. La base de datos y los modelos no se mueven.",
-      "default": "Ubicación por defecto",
-      "choose": "Elegir…",
-      "reset": "Restablecer",
-      "moveTitle": "¿Mover el caché existente?",
-      "moveDesc": "{{size}} ya están en la carpeta anterior. Moverlos evita regenerarlo todo.",
-      "moveNow": "Mover",
-      "leave": "Dejar donde está",
-      "leaveHint": "La carpeta anterior seguirá aquí y se podrá borrar.",
-      "moving": "Moviendo… {{done}}/{{total}}",
-      "moved": "Archivos movidos: {{count}}.",
-      "movedNone": "Nueva carpeta aplicada."
-    },
-    "lifecycle": {
-      "session": "Temporal de sesión",
-      "sessionDesc": "Fotogramas, máscaras y pruebas usados durante los retoques actuales.",
-      "sessionBadge": "Limpieza automática",
-      "sessionEmpty": "No se ha escrito nada en esta sesión.",
-      "reusable": "Vistas previas reutilizables",
-      "reusableDesc": "Se rehacen solas cuando faltan.",
-      "durable": "Análisis guardados",
-      "durableDesc": "Los resultados costosos solo se eliminan cuando lo pides."
-    },
-    "policy": {
-      "title": "Limpieza automática",
-      "desc": "Las vistas previas rápidas tienen límites por defecto. Los análisis costosos se conservan.",
-      "auto": "Limpieza auto",
-      "quota": "Cuota",
-      "quotaHint": "Al superarla, se van primero las entradas menos usadas.",
-      "age": "Antigüedad máxima",
-      "ageHint": "Borra lo que no se ha usado en ese plazo.",
-      "gb": "GB",
-      "days": "días",
-      "manualOnly": "Solo purga manual",
-      "manualOnlyHint": "Este tipo no registra su uso: no hay purga automática.",
-      "sessionTitle": "Cachés de trabajo",
-      "sessionDesc": "Elige cuándo deja de ser útil cada derivado pesado. Cerrar la aplicación sigue siendo la red de seguridad.",
-      "sequenceTitle": "Secuencias intermedias de modelos",
-      "sequenceHint": "Carpetas de fotogramas creadas solo para alimentar un modelo. Las secuencias exportadas por el usuario nunca se borran.",
-      "trigger": {
-        "roto": "Al cambiar de plano",
-        "upscaleTest": "Al cambiar la fuente o los ajustes",
-        "page": "Al salir de la página",
-        "app": "Al cerrar la aplicación",
-        "immediate": "Justo después de la operación"
-      },
-      "sessionOnly": "Al cerrar la aplicación",
-      "sessionOnlyHint": "La carpeta completa se elimina al cerrar NetsuBoard y se revisa de nuevo al iniciar tras un fallo.",
-      "warnTitle": "Avisarme",
-      "warnCache": "Cuando el caché supere",
-      "warnDisk": "Cuando queden menos de",
-      "warnDiskSuffix": "en el disco",
-      "warnNever": "Solo avisar, sin borrar nada."
-    },
-    "warn": {
-      "cache": "El caché llega a {{size}}.",
-      "disk": "Disco casi lleno: {{size}} libres."
-    },
-    "confirm": {
-      "title": "¿Borrar este caché?",
-      "descKinds": "Se liberarán {{size}}. El contenido se regenera cuando haga falta.",
-      "descSources": "Se liberarán {{size}} de estos clips ({{count}}). Los demás no se tocan.",
-      "descUnattributed": "Se liberarán {{size}} de caché sin asignar.",
-      "expensive": "Incluye el índice de búsqueda: reconstruirlo lleva horas de GPU.",
-      "cancel": "Cancelar",
-      "confirm": "Borrar",
-      "purging": "Borrando…",
-      "done": "Espacio liberado: {{size}} · Archivos: {{files}}",
-      "doneRows": "Espacio liberado: {{size}} · Archivos: {{files}} · Entradas en la base: {{rows}}",
-      "skipped": " · Omitidos por estar bloqueados: {{count}}"
-    },
-    "maintenance": {
-      "title": "Mantenimiento",
-      "desc": "Dos rincones que la limpieza por proyecto no cubre."
-    },
-    "missing": {
-      "title": "Clips no encontrados",
-      "desc": "Basta con desconectar un disco externo para que desaparezcan: no se borra nada sin confirmación.",
-      "purge": "Vaciar su caché",
-      "none": "Todos los clips indexados están accesibles."
-    },
-    "db": {
-      "title": "Base de datos",
-      "unavailable": "Base de datos no encontrada.",
-      "vacuum": "Compactar",
-      "vacuumHint": "Una purga deja el espacio reservado en el archivo. Compactar lo devuelve al disco.",
-      "vacuumDone": "{{size}} devueltos al disco.",
-      "vacuumBusy": "No se puede mientras una tarea usa la base. Hay que cerrar los procesos en curso y reintentar.",
-      "faiss": "Índice vectorial {{size}}"
-    },
-    "projects": {
-      "current": "Abierto",
-      "desc": "La búsqueda se limita al proyecto abierto de forma predeterminada. Un proyecto entra en esta lista cuando NetsuBoard lee su Media Pool. El escaneo abre cada proyecto de Resolve por turnos para recoger sus clips y luego vuelve a abrir el original.",
-      "empty": "Todavía no hay proyectos conocidos.",
-      "forget": "Olvidar",
-      "forgetTooltip": "Quita el proyecto de la lista (el índice y los archivos no se tocan)",
-      "rushCount_one": "{{count}} clip",
-      "rushCount_other": "{{count}} clips",
-      "scan": "Escanear proyectos de Resolve",
-      "scanDone": "{{count}} proyecto(s) recogido(s)",
-      "scanStarting": "Preparando…",
-      "scanning": "{{project}} — {{done}}/{{total}}",
-      "title": "Proyectos conocidos por la búsqueda"
-    }
-  },
-  "navigation": {
-    "title": "Páginas y orden de navegación",
-    "subtitle": "Oculta las páginas que no usas y elige su orden en la barra lateral.",
-    "reset": "Restablecer todo",
-    "required": "Siempre disponible",
-    "visible": "Visible",
-    "hidden": "Oculto",
-    "moveUp": "Subir {{module}}",
-    "moveDown": "Bajar {{module}}",
-    "requiredAria": "{{module}} es obligatorio",
-    "hideAria": "Ocultar {{module}}",
-    "showAria": "Mostrar {{module}}"
-  },
-  "detection": {
-    "reindexHint": "Otro modelo corta los planos de otra manera: los brutos ya indexados habrá que indexarlos de nuevo."
+    "footnote": "Los medios que añadiste desde tu disco nunca se ven afectados: la aplicación solo toca archivos que ha escrito ella misma."
   },
   "tab": {
-    "account": {
-      "profile": "Perfil",
-      "discord": "Discord"
-    },
-    "interface": {
-      "theme": "Tema",
-      "language": "Idioma",
-      "navigation": "Navegación"
-    },
-    "media": {
-      "preview": "Vistas previas"
-    },
-    "ai": {
-      "models": "Vídeo",
-      "dictation": "Dictado",
-      "indexing": "Indexación"
-    },
-    "storage": {
-      "media": "Caché de medios",
-      "cleanup": "Limpieza",
-      "project": "Caché del proyecto",
-      "projects": "Proyectos"
-    },
     "system": {
-      "updates": "Actualizaciones",
-      "compatibility": "Compatibilidad",
       "console": "Consola"
     }
-  },
-  "indexing": {
-    "title": "Indexación",
-    "subtitle": "Los brutos se cortan primero en planos y luego se analiza cada plano. Los ajustes que no cambian nada en los resultados ya están activos.",
-    "cutTitle": "División en planos"
   },
   "collab": {
     "device": {

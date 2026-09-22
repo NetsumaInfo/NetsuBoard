@@ -20,9 +20,7 @@
   },
   "dl": {
     "done": "terminé",
-    "failed": "échec",
     "retry": "reprise…",
-    "skipped": "déjà présent",
     "working": "en cours…"
   },
   "auto": {

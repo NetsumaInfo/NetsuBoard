@@ -31,6 +31,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { ErrorReportButton } from "@/components/common/ErrorReportButton";
+import { errorText } from "@/lib/errorText";
 
 type Phase = "checking" | "language" | "install" | "done";
 // Résultat du provisionnement, indépendant de l'écran affiché : il tourne DERRIÈRE l'écran de langue.
@@ -130,7 +131,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
           setPhase("done");
           return;
         }
-        setError(String(cause));
+        setError(errorText(cause));
         setInstall("error");
         setPhase(needLang ? "language" : "install");
       });
@@ -189,7 +190,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
         setInstall("error");
       }
     } catch (cause) {
-      setError(String(cause));
+      setError(errorText(cause));
       setInstall("error");
     } finally {
       off();

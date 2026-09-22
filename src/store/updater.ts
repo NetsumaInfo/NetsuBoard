@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { errorText } from "@/lib/errorText";
 
 export type UpdatePhase =
   | "idle"
@@ -112,7 +113,7 @@ export const useUpdater = create<UpdateState>((set, get) => ({
       // Sonde de démarrage : un dépôt injoignable ou un réseau coupé n'est pas une information que
       // quelqu'un vient chercher au lancement. On retombe silencieusement sur « rien à proposer ».
       if (options?.silent) set({ phase: "idle" });
-      else set({ phase: "error", error: String(error) });
+      else set({ phase: "error", error: errorText(error) });
     }
   },
   download: async () => {
@@ -142,7 +143,7 @@ export const useUpdater = create<UpdateState>((set, get) => ({
       });
       set({ phase: "downloaded", progress: 100 });
     } catch (error) {
-      set({ phase: "error", error: String(error) });
+      set({ phase: "error", error: errorText(error) });
     }
   },
   install: async () => {
@@ -156,7 +157,7 @@ export const useUpdater = create<UpdateState>((set, get) => ({
       // leaves the running application untouched.
       await pendingUpdate.install();
     } catch (error) {
-      set({ phase: "error", error: String(error) });
+      set({ phase: "error", error: errorText(error) });
     }
   },
 }));

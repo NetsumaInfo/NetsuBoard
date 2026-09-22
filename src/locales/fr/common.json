@@ -4,32 +4,19 @@
     "cancel": "Annuler",
     "delete": "Supprimer",
     "close": "Fermer",
-    "confirm": "Confirmer",
     "back": "Retour",
     "continue": "Continuer",
     "add": "Ajouter",
-    "remove": "Retirer",
-    "rename": "Renommer",
-    "edit": "Modifier",
     "copy": "Copier",
     "cut": "Couper",
     "paste": "Coller",
     "selectAll": "Tout sélectionner",
     "reset": "Réinitialiser",
-    "apply": "Appliquer",
     "open": "Ouvrir",
-    "retry": "Réessayer",
-    "error": "Erreur",
-    "import": "Importer",
-    "decrease": "Diminuer",
-    "increase": "Augmenter",
-    "loading": "Chargement…"
+    "retry": "Réessayer"
   },
   "status": {
-    "loading": "Chargement…",
-    "error": "Erreur",
-    "ok": "OK",
-    "empty": "Rien à afficher"
+    "loading": "Chargement…"
   },
   "color": {
     "hexValue": "Valeur hexadécimale",
@@ -37,79 +24,28 @@
     "choose": "Choisir une couleur",
     "swatch": "Couleur {{color}}"
   },
-  "player": {
-    "scenePreview": "Aperçu du plan",
-    "progress": "Barre de progression",
-    "play": "Lecture",
-    "pause": "Pause",
-    "prevFrame": "Image précédente",
-    "nextFrame": "Image suivante",
-    "prevFrameShortcut": "Image préc. (←)",
-    "nextFrameShortcut": "Image suiv. (→)",
-    "soundOn": "Activer le son",
-    "soundOff": "Couper le son",
-    "volume": "Volume",
-    "muted": "Muet",
-    "fullscreen": "Plein écran",
-    "seek": "Se déplacer dans la vidéo"
-  },
   "fileType": {
-    "video": "Vidéo",
-    "image": "Image",
-    "media": "Médias"
+    "video": "Vidéo"
   },
   "window": {
-    "reference": "NetsuBoard — Référence",
-    "notebook": "NetsuBoard — Carnet"
+    "reference": "NetsuBoard — Référence"
   },
   "mock": {
     "appUnavailable": "Fonction indisponible dans le navigateur.",
-    "outsideApp": "Fonction disponible uniquement dans l'application.",
-    "pageNotFound": "Page introuvable",
-    "collectionNotFound": "Collection introuvable",
-    "archiveUnavailable": "Archivage indisponible hors application.",
-    "folderImportUnavailable": "Import de dossier indisponible hors application.",
-    "emptyFolderName": "Le nom du dossier est vide",
-    "invalidFolderName": "Le nom du dossier ne peut pas contenir « / » ni « \\ »",
-    "folder": "Dossier"
-  },
-  "spell": {
-    "title": "Correction orthographique",
-    "unknownWord": "Mot inconnu",
-    "searching": "Recherche de suggestions…",
-    "noSuggestion": "Aucune suggestion",
-    "addToDictionary": "Ajouter au dictionnaire",
-    "ignoreOnce": "Ignorer dans cette session",
-    "replaceAll": "Remplacer les {{count}} occurrences"
-  },
-  "beta": {
-    "title": "Module en bêta",
-    "body": "Des fonctions manquent encore, d'autres vont changer. Je cherche des testeurs : dis-moi ce qui ne marche pas et ce qu'il te manque.",
-    "modules": {
-      "script": {
-        "title": "Encore un prototype",
-        "body": "NetsuDraft est très incomplet et à peine testé : beaucoup de choses manquent ou ne marchent pas. Dis-moi ce dont tu aurais besoin en premier."
-      },
-      "chat": {
-        "title": "Pas encore fonctionnel",
-        "body": "NetsuPilot est en cours de développement : il ne fait rien d'utile pour l'instant. Suis son avancée sur le Discord."
-      },
-      "voice": {
-        "title": "Pas encore assez testé",
-        "body": "NetsuTalk fonctionne, mais il a très peu servi en conditions réelles. Préviens-moi si quelque chose ne se passe pas comme prévu."
-      },
-      "transfer": {
-        "title": "Pas testé sur toutes les versions",
-        "body": "NetsuBridge n'a été testé que sur quelques versions de Resolve, Premiere Pro et After Effects : selon la tienne, la copie peut fonctionner, ne fonctionner qu'en partie, ou pas du tout. Dis-moi ta version et ce qui ne marche pas."
-      }
-    },
-    "discord": "Rejoindre le Discord",
-    "feedback": "Signaler un souci",
-    "dismiss": "Masquer"
+    "outsideApp": "Fonction disponible uniquement dans l'application."
   },
   "report": {
     "action": "Signaler l'erreur",
-    "sent": "Envoyé, merci !",
+    "sent": "Envoyé, merci !",
     "saved": "Envoi raté. Message enregistré."
+  },
+  "error": {
+    "coreUnreachable": "Le service de NetsuBoard ne répond pas. Réessaie ; si ça dure, redémarre l'app.",
+    "diskFull": "Disque plein. Libère de l'espace, puis réessaie.",
+    "notFound": "Fichier introuvable. Il a peut-être été déplacé ou supprimé.",
+    "permission": "Accès refusé. Le fichier est peut-être en lecture seule ou ouvert dans une autre app.",
+    "busy": "Une autre app utilise le fichier. Ferme-la, puis réessaie.",
+    "timeout": "Pas de réponse à temps. Réessaie.",
+    "internal": "Problème interne de NetsuBoard. Le détail est dans Paramètres › Console."
   }
 }

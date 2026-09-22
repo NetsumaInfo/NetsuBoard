@@ -20,9 +20,7 @@
   },
   "dl": {
     "done": "完了",
-    "failed": "失敗",
     "retry": "再試行中…",
-    "skipped": "インストール済み",
     "working": "実行中…"
   },
   "auto": {

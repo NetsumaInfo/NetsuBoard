@@ -16,15 +16,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { logError } from "@/lib/appLog";
 import { useBoard } from "@/components/reference/useReferenceBoard";
 import { liveMediaRefs } from "@/components/reference/useScenePersistence";
+import { errorText } from "@/lib/errorText";
+import { fmtBytes } from "@/lib/utils";
 
-function humanSize(bytes: number): string {
-  if (!bytes) return "0 o";
-  const units = ["o", "Ko", "Mo", "Go", "To"];
-  let index = 0;
-  let value = bytes;
-  while (value >= 1024 && index < units.length - 1) { value /= 1024; index += 1; }
-  return `${value.toFixed(value < 10 && index > 0 ? 1 : 0)} ${units[index]}`;
-}
+const humanSize = (bytes: number): string => fmtBytes(bytes);
 
 function fileLabel(filePath: string): string {
   return filePath.replace(/^.*[\\/]/, "").replace(/\.netsu$/i, "");
@@ -65,7 +60,7 @@ export function StoragePanel() {
       if (result && !result.ok && result.error) setNotice({ kind: "error", text: result.error });
     } catch (error) {
       logError("settings:storage", `audit échoué — ${String(error)}`);
-      setNotice({ kind: "error", text: String(error) });
+      setNotice({ kind: "error", text: errorText(error) });
     } finally {
       setBusy(null);
     }
@@ -89,7 +84,7 @@ export function StoragePanel() {
         ? { kind: "ok", text: t("settings:storage.freedNotice", { size: humanSize(result.bytes), count: result.files }) }
         : { kind: "error", text: result?.error ?? t("settings:storage.failed") });
     } catch (error) {
-      setNotice({ kind: "error", text: String(error) });
+      setNotice({ kind: "error", text: errorText(error) });
     }
     await scan(null);
   }
@@ -113,7 +108,7 @@ export function StoragePanel() {
         setNotice({ kind: "error", text: result?.error ?? t("settings:storage.failed") });
       }
     } catch (error) {
-      setNotice({ kind: "error", text: String(error) });
+      setNotice({ kind: "error", text: errorText(error) });
     }
     await scan(null);
   }
@@ -129,7 +124,7 @@ export function StoragePanel() {
         ? { kind: "ok", text: t("settings:storage.archivedNotice", { name: fileLabel(destPath) }) }
         : { kind: "error", text: result?.error ?? t("settings:storage.failed") });
     } catch (error) {
-      setNotice({ kind: "error", text: String(error) });
+      setNotice({ kind: "error", text: errorText(error) });
     }
     await scan(null);
   }

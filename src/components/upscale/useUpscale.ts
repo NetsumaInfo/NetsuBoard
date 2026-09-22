@@ -8,6 +8,7 @@ import i18n from "@/i18n";
 import { readPersistedObject, writePersistedObject } from "@/lib/persistedJson";
 import { isUpscaleCompareCompatible, mergeUpscaleModelResult, upscaleTestConfigKey } from "./upscaleCompareState";
 import { processExportPayload } from "./processExport";
+import { errorText } from "@/lib/errorText";
 
 const SETTINGS_KEY = "nr.netsulab.upscale.settings";
 
@@ -114,7 +115,7 @@ export function useUpscale() {
         setTestErr(r.error || i18n.t("upscale:errors.testFailed"));
       }
     } catch (e) {
-      setTestErr(String(e));
+      setTestErr(errorText(e));
     } finally {
       if (seq === testSeq.current) setTesting(false);
     }
@@ -209,7 +210,7 @@ export function useUpscale() {
       setResult({ ok: outputs.length > 0, outputs, imported, failed, error: outputs.length ? null : lastErr });
       if (!outputs.length) setErr(lastErr);
     } catch (e) {
-      setErr(i18n.t("upscale:errors.upscaleUnavailable", { err: String(e) }));
+      setErr(i18n.t("upscale:errors.upscaleUnavailable", { err: errorText(e) }));
     } finally {
       off();
       setBusy(null); setBatch(null);

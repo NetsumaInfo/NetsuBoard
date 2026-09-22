@@ -38,7 +38,7 @@ function Swatch({ theme }: { theme: ThemeId }) {
   );
 }
 
-function ThemeCard({ id, label, hint }: { id: ThemeId; label: string; hint: string }) {
+function ThemeCard({ id, label }: { id: ThemeId; label: string }) {
   const { t } = useTranslation("settings");
   const active = useApp((s) => s.theme === id && !s.customThemeId);
   const setTheme = useApp((s) => s.setTheme);
@@ -57,9 +57,6 @@ function ThemeCard({ id, label, hint }: { id: ThemeId; label: string; hint: stri
         {active && <Check className="size-4 shrink-0 text-primary" />}
       </div>
       <Swatch theme={id} />
-      <span className="text-xs leading-snug text-muted-foreground">
-        {t(`appearance.theme.${id}.hint`, { defaultValue: hint })}
-      </span>
     </button>
   );
 }
@@ -121,7 +118,7 @@ export function InterfacePanel() {
             <h3 className="text-xs font-medium text-muted-foreground">{t(`appearance.group.${mode}`)}</h3>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-2.5">
               {THEMES.filter((theme) => theme.mode === mode).map((theme) => (
-                <ThemeCard key={theme.id} id={theme.id} label={theme.label} hint={theme.hint} />
+                <ThemeCard key={theme.id} id={theme.id} label={theme.label} />
               ))}
             </div>
           </div>

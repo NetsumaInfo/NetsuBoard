@@ -15,17 +15,17 @@ import { APP_VERSION } from "@/lib/release";
 function summarize(ctx: BugContext): string {
   const disk = ctx.storage?.disk;
   return [
-    `NetsuBoard : v${ctx.app.version || APP_VERSION} · langue ${ctx.app.lang || "auto"}`,
-    `OS         : ${ctx.os.label} (${ctx.os.arch})`,
-    `CPU        : ${ctx.cpu.name} · ${ctx.cpu.threads} threads`,
-    `RAM        : ${ctx.memory.totalMB} Mo total · ${ctx.memory.freeMB} Mo libres`,
-    `GPU        : ${ctx.gpu.label ?? "aucun"}`,
+    `NetsuBoard : v${ctx.app.version || APP_VERSION} · langue ${ctx.app.lang || "auto"}`,
+    `OS         : ${ctx.os.label} (${ctx.os.arch})`,
+    `CPU        : ${ctx.cpu.name} · ${ctx.cpu.threads} threads`,
+    `RAM        : ${ctx.memory.totalMB} Mo total · ${ctx.memory.freeMB} Mo libres`,
+    `GPU        : ${ctx.gpu.label ?? "aucun"}`,
     ...ctx.gpu.devices.map((d) => `             ↳ ${d.name} · pilote ${d.driverVersion ?? "?"} · ${d.vendor}/${d.role}`),
-    ctx.gpu.vram ? `VRAM       : ${ctx.gpu.vram.freeMB} Mo libres / ${ctx.gpu.vram.totalMB} Mo` : "",
-    `Node       : ${ctx.runtime.node}`,
-    `ffmpeg     : ${ctx.runtime.ffmpeg ?? "introuvable"}`,
-    ctx.encoding ? `Encodeurs  : h264 ${ctx.encoding.h264 ?? "aucun"} · h265 ${ctx.encoding.h265 ?? "aucun"} · av1 ${ctx.encoding.av1 ?? "aucun"}` : "",
-    `Stockage   : ${disk ? `${disk.freeGB} Go libres / ${disk.totalGB} Go` : "inconnu"}`,
+    ctx.gpu.vram ? `VRAM       : ${ctx.gpu.vram.freeMB} Mo libres / ${ctx.gpu.vram.totalMB} Mo` : "",
+    `Node       : ${ctx.runtime.node}`,
+    `ffmpeg     : ${ctx.runtime.ffmpeg ?? "introuvable"}`,
+    ctx.encoding ? `Encodeurs  : h264 ${ctx.encoding.h264 ?? "aucun"} · h265 ${ctx.encoding.h265 ?? "aucun"} · av1 ${ctx.encoding.av1 ?? "aucun"}` : "",
+    `Stockage   : ${disk ? `${disk.freeGB} Go libres / ${disk.totalGB} Go` : "inconnu"}`,
   ].filter(Boolean).join("\n");
 }
 
@@ -33,9 +33,9 @@ function summarize(ctx: BugContext): string {
 function fallbackSpecs(): string {
   const nav = typeof navigator === "undefined" ? null : navigator;
   return [
-    `NetsuBoard : v${APP_VERSION}`,
-    `Plateforme : ${nav?.platform || "inconnue"}`,
-    `Langue     : ${nav?.language || "inconnue"}`,
+    `NetsuBoard : v${APP_VERSION}`,
+    `Plateforme : ${nav?.platform || "inconnue"}`,
+    `Langue     : ${nav?.language || "inconnue"}`,
     "Service    : hors ligne — machine non lue",
   ].join("\n");
 }

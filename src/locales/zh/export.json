@@ -1,13 +1,6 @@
 {
   "settings": {
-    "title": "导出设置",
-    "new": "新建",
-    "newProfile": "新建预设",
-    "duplicate": "复制",
-    "duplicateProfile": "复制预设",
-    "deleteProfile": "删除预设",
-    "cardButton": "缩略图按钮",
-    "menuLabel": "导出预设"
+    "title": "导出设置"
   },
   "editor": {
     "name": "名称",
@@ -46,7 +39,7 @@
     "mergeToOne": "合并为单个文件",
     "fileName": "文件名",
     "fileNamePlaceholder": "{base}_{index}",
-    "insertToken": "插入标记",
+    "insertToken": "插入占位符",
     "tokens": {
       "base": "基础名称",
       "source": "源文件",
@@ -56,9 +49,9 @@
       "end": "结束",
       "duration": "时长",
       "label": "镜头标签",
-      "profile": "配置名称",
-      "codec": "编解码器",
-      "container": "容器",
+      "profile": "预设名称",
+      "codec": "编码格式",
+      "container": "封装格式",
       "date": "日期",
       "time": "时间"
     },
@@ -80,7 +73,7 @@
     },
     "balanced": {
       "label": "均衡",
-      "hint": "速度与压缩兼顾"
+      "hint": "折中选择"
     },
     "quality": {
       "label": "质量",
@@ -91,45 +84,16 @@
       "hint": "更慢且文件更小"
     }
   },
-  "toggle": {
-    "yes": "是",
-    "no": "否"
-  },
   "issue": {
-    "binTargetRequired": "填写目标文件夹名称",
-    "profileIncomplete": "预设不完整：{{issue}}"
+    "binTargetRequired": "填写目标文件夹名称"
   },
   "audio": {
     "allTracks": "全部轨道",
-    "noAudio": "无（仅视频）",
-    "trackLabel": "轨道 {{n}}{{lang}} · {{channels}} 声道 · {{codec}}",
-    "languageGroup": "语言",
-    "trackGroup": "轨道",
-    "trackN": "轨道 {{n}}",
-    "langResolved": "{{lang}} → 轨道 {{n}}",
-    "langUnresolved": "{{lang}} → 未找到轨道",
-    "timelineHint": "Resolve 导入音频只能全要或全不要。"
-  },
-  "iconPicker": {
-    "search": "搜索图标…",
-    "importedImage": "已导入的图片",
-    "removeFromLibrary": "从库中移除",
-    "importImage": "导入图片 / GIF",
-    "profileIcon": "预设图标",
-    "defaultIcon": "默认图标",
-    "default": "默认",
-    "tabEmojis": "表情",
-    "tabIcons": "图标",
-    "tabImages": "图片"
+    "trackN": "轨道 {{n}}"
   },
   "notice": {
-    "cancelled": "已取消导出：未选择目标文件夹。",
-    "merging": "合并中…",
-    "exporting": "导出中…",
     "exported_one": "已导出 {{count}} 个文件（{{profile}}）→ {{dir}}{{failed}}",
     "exported_other": "已导出 {{count}} 个文件（{{profile}}）→ {{dir}}{{failed}}",
-    "failedSuffix_one": " · {{count}} 个失败",
-    "failedSuffix_other": " · {{count}} 个失败",
     "exportFailed": "导出失败"
   },
   "workflow": {

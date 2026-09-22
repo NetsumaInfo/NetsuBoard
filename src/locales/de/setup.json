@@ -9,7 +9,7 @@
   "done": "Installation abgeschlossen",
   "restartHint": "Starte NetsuBoard neu, um die neue Umgebung zu laden.",
   "restartApp": "App neu starten",
-  "installing": "Installiere…",
+  "installing": "Wird installiert…",
   "update": {
     "action": "Aktualisieren",
     "download": "Update herunterladen"
@@ -20,9 +20,7 @@
   },
   "dl": {
     "done": "fertig",
-    "failed": "fehlgeschlagen",
     "retry": "neuer Versuch…",
-    "skipped": "bereits vorhanden",
     "working": "läuft…"
   },
   "auto": {

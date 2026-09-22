@@ -1,13 +1,6 @@
 {
   "settings": {
-    "title": "Export-Einstellungen",
-    "new": "Neu",
-    "newProfile": "Neues Profil",
-    "duplicate": "Duplizieren",
-    "duplicateProfile": "Profil duplizieren",
-    "deleteProfile": "Profil löschen",
-    "cardButton": "Karten-Schaltfläche",
-    "menuLabel": "Export-Profil"
+    "title": "Export-Einstellungen"
   },
   "editor": {
     "name": "Name",
@@ -27,11 +20,11 @@
     "audio": "Audio",
     "audioCodec": "Audio-Codec",
     "timelineTarget": "Ziel-Timeline",
-    "timelineInsertion": "Einfügemodus — {{host}}",
+    "timelineInsertion": "Einfügemodus – {{host}}",
     "insertionInsert": "Einfügen",
     "insertionOverwrite": "Überschreiben",
     "insertionReplace": "Ersetzen",
-    "insertionFit": "An Rahmen anpassen",
+    "insertionFit": "Ersetzen und Geschwindigkeit anpassen",
     "insertionAbove": "Oben platzieren",
     "insertionEnd": "Am Ende anhängen",
     "insertionRippleOverwrite": "Ripple-Überschreiben",
@@ -50,12 +43,12 @@
     "tokens": {
       "base": "Basisname",
       "source": "Quelldatei",
-      "index": "Nummer der Einstellung",
-      "total": "Anzahl der Einstellungen",
+      "index": "Nummer des Shots",
+      "total": "Anzahl der Shots",
       "start": "Anfang",
       "end": "Ende",
       "duration": "Dauer",
-      "label": "Bezeichnung der Einstellung",
+      "label": "Bezeichnung des Shots",
       "profile": "Profilname",
       "codec": "Codec",
       "container": "Container",
@@ -63,7 +56,7 @@
       "time": "Uhrzeit"
     },
     "mergeGap": "Schwarzpause",
-    "mergeGapHint": "Dauer des Schwarzbilds zwischen zusammengeführten Einstellungen",
+    "mergeGapHint": "Dauer des Schwarzbilds zwischen zusammengeführten Shots",
     "seconds": "s"
   },
   "encoder": {
@@ -91,45 +84,16 @@
       "hint": "langsamer und kompakter"
     }
   },
-  "toggle": {
-    "yes": "Ja",
-    "no": "Nein"
-  },
   "issue": {
-    "binTargetRequired": "Zielordner benennen",
-    "profileIncomplete": "Profil unvollständig: {{issue}}"
+    "binTargetRequired": "Zielordner benennen"
   },
   "audio": {
     "allTracks": "Alle Spuren",
-    "noAudio": "Keine (nur Video)",
-    "trackLabel": "Spur {{n}}{{lang}} · {{channels}} Ch · {{codec}}",
-    "languageGroup": "Sprache",
-    "trackGroup": "Spur",
-    "trackN": "Spur {{n}}",
-    "langResolved": "{{lang}} → Spur {{n}}",
-    "langUnresolved": "{{lang}} → keine Spur gefunden",
-    "timelineHint": "Resolve importiert Audio ganz oder gar nicht."
-  },
-  "iconPicker": {
-    "search": "Icon suchen…",
-    "importedImage": "Importiertes Bild",
-    "removeFromLibrary": "Aus Bibliothek entfernen",
-    "importImage": "Bild / GIF importieren",
-    "profileIcon": "Profil-Icon",
-    "defaultIcon": "Standard-Icon",
-    "default": "Standard",
-    "tabEmojis": "Emojis",
-    "tabIcons": "Icons",
-    "tabImages": "Bilder"
+    "trackN": "Spur {{n}}"
   },
   "notice": {
-    "cancelled": "Export abgebrochen: kein Zielordner gewählt.",
-    "merging": "Zusammenführen…",
-    "exporting": "Export…",
     "exported_one": "{{count}} Datei exportiert ({{profile}}) → {{dir}}{{failed}}",
     "exported_other": "{{count}} Dateien exportiert ({{profile}}) → {{dir}}{{failed}}",
-    "failedSuffix_one": " · {{count}} fehlgeschlagen",
-    "failedSuffix_other": " · {{count}} fehlgeschlagen",
     "exportFailed": "Export fehlgeschlagen"
   },
   "workflow": {
@@ -194,7 +158,7 @@
   },
   "summary": {
     "timelineImport": "Import in die Timeline",
-    "streamCopy": "Stream-Copy",
+    "streamCopy": "Stream-Kopie",
     "merged": " · zusammengeführt"
   },
   "codecUnknown": "Unbekannter Codec"

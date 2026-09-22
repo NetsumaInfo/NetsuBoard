@@ -1,13 +1,6 @@
 {
   "settings": {
-    "title": "Ajustes de exportación",
-    "new": "Nuevo",
-    "newProfile": "Nuevo perfil",
-    "duplicate": "Duplicar",
-    "duplicateProfile": "Duplicar el perfil",
-    "deleteProfile": "Eliminar el perfil",
-    "cardButton": "Botón de miniatura",
-    "menuLabel": "Perfil de exportación"
+    "title": "Ajustes de exportación"
   },
   "editor": {
     "name": "Nombre",
@@ -31,10 +24,10 @@
     "insertionInsert": "Insertar",
     "insertionOverwrite": "Sobrescribir",
     "insertionReplace": "Reemplazar",
-    "insertionFit": "Ajustar al relleno",
+    "insertionFit": "Reemplazar y ajustar la velocidad",
     "insertionAbove": "Colocar encima",
     "insertionEnd": "Añadir al final",
-    "insertionRippleOverwrite": "Sobrescritura con ripple",
+    "insertionRippleOverwrite": "Sobrescribir con desplazamiento",
     "aeftInsertion": {
       "insert": "Insertar y desplazar capas",
       "replace": "Reemplazar capa",
@@ -80,7 +73,7 @@
     },
     "balanced": {
       "label": "Equilibrado",
-      "hint": "buen compromiso"
+      "hint": "buen equilibrio"
     },
     "quality": {
       "label": "Calidad",
@@ -91,51 +84,22 @@
       "hint": "más lento y compacto"
     }
   },
-  "toggle": {
-    "yes": "Sí",
-    "no": "No"
-  },
   "issue": {
-    "binTargetRequired": "Poner nombre a la carpeta de destino",
-    "profileIncomplete": "Perfil incompleto: {{issue}}"
+    "binTargetRequired": "Ponle nombre a la carpeta de destino"
   },
   "audio": {
     "allTracks": "Todas las pistas",
-    "noAudio": "Ninguna (solo vídeo)",
-    "trackLabel": "Pista {{n}}{{lang}} · {{channels}} can. · {{codec}}",
-    "languageGroup": "Idioma",
-    "trackGroup": "Pista",
-    "trackN": "Pista {{n}}",
-    "langResolved": "{{lang}} → Pista {{n}}",
-    "langUnresolved": "{{lang}} → sin pista",
-    "timelineHint": "Resolve importa el audio entero o nada."
-  },
-  "iconPicker": {
-    "search": "Buscar un icono…",
-    "importedImage": "Imagen importada",
-    "removeFromLibrary": "Quitar de la biblioteca",
-    "importImage": "Importar imagen / GIF",
-    "profileIcon": "Icono del perfil",
-    "defaultIcon": "Icono por defecto",
-    "default": "Por defecto",
-    "tabEmojis": "Emojis",
-    "tabIcons": "Iconos",
-    "tabImages": "Imágenes"
+    "trackN": "Pista {{n}}"
   },
   "notice": {
-    "cancelled": "Exportación cancelada: no se eligió carpeta de destino.",
-    "merging": "Uniendo…",
-    "exporting": "Exportando…",
     "exported_one": "{{count}} archivo exportado ({{profile}}) → {{dir}}{{failed}}",
     "exported_other": "{{count}} archivos exportados ({{profile}}) → {{dir}}{{failed}}",
-    "failedSuffix_one": " · {{count}} fallo",
-    "failedSuffix_other": " · {{count}} fallos",
     "exportFailed": "error de exportación"
   },
   "workflow": {
     "timeline": "Timeline",
     "remux": "Remux",
-    "encode": "Recodificar"
+    "encode": "Recodificación"
   },
   "audioMode": {
     "copy": "Copia",
@@ -154,8 +118,8 @@
     "pcm24": "PCM 24 bits"
   },
   "audioGroup": {
-    "lossy": "Con pérdida",
-    "lossless": "Sin pérdida"
+    "lossy": "Con pérdidas",
+    "lossless": "Sin pérdidas"
   },
   "codec": {
     "bitDepth": "{{count}} bits",

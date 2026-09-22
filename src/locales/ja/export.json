@@ -1,13 +1,6 @@
 {
   "settings": {
-    "title": "書き出し設定",
-    "new": "新規",
-    "newProfile": "新規プロファイル",
-    "duplicate": "複製",
-    "duplicateProfile": "プロファイルを複製",
-    "deleteProfile": "プロファイルを削除",
-    "cardButton": "サムネイルのボタン",
-    "menuLabel": "書き出しプロファイル"
+    "title": "書き出し設定"
   },
   "editor": {
     "name": "名前",
@@ -31,7 +24,7 @@
     "insertionInsert": "挿入",
     "insertionOverwrite": "上書き",
     "insertionReplace": "置き換え",
-    "insertionFit": "フィットして上書き",
+    "insertionFit": "置き換えて速度を合わせる",
     "insertionAbove": "上に配置",
     "insertionEnd": "末尾に追加",
     "insertionRippleOverwrite": "リップル上書き",
@@ -43,7 +36,7 @@
       "end": "コンポジションの最後に追加"
     },
     "container": "コンテナ",
-    "mergeToOne": "1つのファイルに結合",
+    "mergeToOne": "1 つのファイルに結合",
     "fileName": "ファイル名",
     "fileNamePlaceholder": "{base}_{index}",
     "insertToken": "トークンを挿入",
@@ -80,7 +73,7 @@
     },
     "balanced": {
       "label": "バランス",
-      "hint": "速度と圧縮の両立"
+      "hint": "ほどよいバランス"
     },
     "quality": {
       "label": "高品質",
@@ -91,45 +84,16 @@
       "hint": "低速で最小サイズ"
     }
   },
-  "toggle": {
-    "yes": "オン",
-    "no": "オフ"
-  },
   "issue": {
-    "binTargetRequired": "書き出し先のフォルダー名を入力",
-    "profileIncomplete": "プロファイルが未完成：{{issue}}"
+    "binTargetRequired": "書き出し先のフォルダー名を入力してください"
   },
   "audio": {
     "allTracks": "すべてのトラック",
-    "noAudio": "なし（映像のみ）",
-    "trackLabel": "トラック {{n}}{{lang}} · {{channels}} ch · {{codec}}",
-    "languageGroup": "言語",
-    "trackGroup": "トラック",
-    "trackN": "トラック {{n}}",
-    "langResolved": "{{lang}} → トラック {{n}}",
-    "langUnresolved": "{{lang}} → 該当トラックなし",
-    "timelineHint": "Resolve はオーディオを全部か全く読み込まないかのどちらかです。"
-  },
-  "iconPicker": {
-    "search": "アイコンを検索…",
-    "importedImage": "読み込んだ画像",
-    "removeFromLibrary": "ライブラリから削除",
-    "importImage": "画像 / GIF を読み込む",
-    "profileIcon": "プロファイルのアイコン",
-    "defaultIcon": "デフォルトのアイコン",
-    "default": "デフォルト",
-    "tabEmojis": "絵文字",
-    "tabIcons": "アイコン",
-    "tabImages": "画像"
+    "trackN": "トラック {{n}}"
   },
   "notice": {
-    "cancelled": "書き出しを中止：書き出し先フォルダーが未選択です。",
-    "merging": "結合中…",
-    "exporting": "書き出し中…",
     "exported_one": "{{count}} 件を書き出しました（{{profile}}）→ {{dir}}{{failed}}",
     "exported_other": "{{count}} 件を書き出しました（{{profile}}）→ {{dir}}{{failed}}",
-    "failedSuffix_one": " · {{count}} 件失敗",
-    "failedSuffix_other": " · {{count}} 件失敗",
     "exportFailed": "書き出し失敗"
   },
   "workflow": {

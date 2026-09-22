@@ -1,13 +1,6 @@
 {
   "settings": {
-    "title": "Export settings",
-    "new": "New",
-    "newProfile": "New profile",
-    "duplicate": "Duplicate",
-    "duplicateProfile": "Duplicate profile",
-    "deleteProfile": "Delete profile",
-    "cardButton": "Card button",
-    "menuLabel": "Export profile"
+    "title": "Export settings"
   },
   "editor": {
     "name": "Name",
@@ -62,8 +55,8 @@
       "date": "Date",
       "time": "Time"
     },
-    "mergeGap": "Black pause",
-    "mergeGapHint": "Duration of the black inserted between each merged shot",
+    "mergeGap": "Black gap",
+    "mergeGapHint": "Duration of black inserted between merged shots",
     "seconds": "s"
   },
   "encoder": {
@@ -80,7 +73,7 @@
     },
     "balanced": {
       "label": "Balanced",
-      "hint": "good compromise"
+      "hint": "good trade-off"
     },
     "quality": {
       "label": "Quality",
@@ -91,45 +84,16 @@
       "hint": "slower and smaller"
     }
   },
-  "toggle": {
-    "yes": "Yes",
-    "no": "No"
-  },
   "issue": {
-    "binTargetRequired": "Name the destination folder",
-    "profileIncomplete": "Incomplete profile: {{issue}}"
+    "binTargetRequired": "Name the destination folder"
   },
   "audio": {
     "allTracks": "All tracks",
-    "noAudio": "None (video only)",
-    "trackLabel": "Track {{n}}{{lang}} · {{channels}} ch · {{codec}}",
-    "languageGroup": "Language",
-    "trackGroup": "Track",
-    "trackN": "Track {{n}}",
-    "langResolved": "{{lang}} → Track {{n}}",
-    "langUnresolved": "{{lang}} → no track found",
-    "timelineHint": "Resolve imports all the audio or none of it."
-  },
-  "iconPicker": {
-    "search": "Search icons…",
-    "importedImage": "Imported image",
-    "removeFromLibrary": "Remove from library",
-    "importImage": "Import an image / GIF",
-    "profileIcon": "Profile icon",
-    "defaultIcon": "Default icon",
-    "default": "Default",
-    "tabEmojis": "Emojis",
-    "tabIcons": "Icons",
-    "tabImages": "Images"
+    "trackN": "Track {{n}}"
   },
   "notice": {
-    "cancelled": "Export cancelled: no destination folder picked.",
-    "merging": "Merging…",
-    "exporting": "Exporting…",
     "exported_one": "{{count}} file exported ({{profile}}) → {{dir}}{{failed}}",
     "exported_other": "{{count}} files exported ({{profile}}) → {{dir}}{{failed}}",
-    "failedSuffix_one": " · {{count}} failed",
-    "failedSuffix_other": " · {{count}} failed",
     "exportFailed": "export failed"
   },
   "workflow": {

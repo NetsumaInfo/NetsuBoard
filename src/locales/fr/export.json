@@ -1,13 +1,6 @@
 {
   "settings": {
-    "title": "Réglages d'export",
-    "new": "Nouveau",
-    "newProfile": "Nouveau profil",
-    "duplicate": "Dupliquer",
-    "duplicateProfile": "Dupliquer le profil",
-    "deleteProfile": "Supprimer le profil",
-    "cardButton": "Bouton de vignette",
-    "menuLabel": "Profil d'export"
+    "title": "Réglages d'export"
   },
   "editor": {
     "name": "Nom",
@@ -27,7 +20,7 @@
     "audio": "Audio",
     "audioCodec": "Codec audio",
     "timelineTarget": "Timeline cible",
-    "timelineInsertion": "Mode d’insertion — {{host}}",
+    "timelineInsertion": "Mode d'insertion — {{host}}",
     "insertionInsert": "Insérer",
     "insertionOverwrite": "Écraser",
     "insertionReplace": "Remplacer",
@@ -91,45 +84,16 @@
       "hint": "plus lent et compact"
     }
   },
-  "toggle": {
-    "yes": "Oui",
-    "no": "Non"
-  },
   "issue": {
-    "binTargetRequired": "Nomme le dossier de destination",
-    "profileIncomplete": "Profil incomplet : {{issue}}"
+    "binTargetRequired": "Nomme le dossier de destination"
   },
   "audio": {
     "allTracks": "Toutes les pistes",
-    "noAudio": "Aucune (vidéo seule)",
-    "trackLabel": "Piste {{n}}{{lang}} · {{channels}} ch · {{codec}}",
-    "languageGroup": "Langue",
-    "trackGroup": "Piste",
-    "trackN": "Piste {{n}}",
-    "langResolved": "{{lang}} → Piste {{n}}",
-    "langUnresolved": "{{lang}} → aucune piste trouvée",
-    "timelineHint": "Resolve importe toutes les pistes audio ou aucune."
-  },
-  "iconPicker": {
-    "search": "Rechercher une icône…",
-    "importedImage": "Image importée",
-    "removeFromLibrary": "Retirer de la bibliothèque",
-    "importImage": "Importer une image / GIF",
-    "profileIcon": "Icône du profil",
-    "defaultIcon": "Icône par défaut",
-    "default": "Défaut",
-    "tabEmojis": "Emojis",
-    "tabIcons": "Icônes",
-    "tabImages": "Images"
+    "trackN": "Piste {{n}}"
   },
   "notice": {
-    "cancelled": "Export annulé : aucun dossier de destination choisi.",
-    "merging": "Fusion…",
-    "exporting": "Export…",
     "exported_one": "{{count}} fichier exporté ({{profile}}) → {{dir}}{{failed}}",
     "exported_other": "{{count}} fichiers exportés ({{profile}}) → {{dir}}{{failed}}",
-    "failedSuffix_one": " · {{count}} échec",
-    "failedSuffix_other": " · {{count}} échecs",
     "exportFailed": "échec export"
   },
   "workflow": {

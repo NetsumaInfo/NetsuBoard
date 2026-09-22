@@ -1,11 +1,8 @@
 {
   "gate": {
-    "title": "Sprache wählen",
-    "subtitle": "Jederzeit in den Einstellungen änderbar.",
-    "continue": "Weiter"
+    "title": "Sprache wählen"
   },
   "settings": {
-    "navLabel": "Sprache",
     "title": "Sprache",
     "subtitle": "Sprache der Programmoberfläche.",
     "fieldLabel": "Oberflächensprache"

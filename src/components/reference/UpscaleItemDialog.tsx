@@ -22,6 +22,7 @@ import { MiniSelect } from "./inspectorControls";
 import { useBoard } from "./useReferenceBoard";
 import { useBoardUpChoices } from "./useBoardUpChoices";
 import { applyUpscaled, canPreviewUpscale, ensureLocalMedia, previewFrameTime, upscaleChoiceFrom } from "./boardUpscale";
+import { errorText } from "@/lib/errorText";
 
 export function UpscaleItemDialog({
   item,
@@ -128,7 +129,7 @@ export function UpscaleItemDialog({
         setPreview({ origUrl: item.src, outUrl: displaySrc("image", r.path), width: r.width || 0, height: r.height || 0, time: 0 });
       }
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     } finally {
       setPreviewing(false);
     }
@@ -153,7 +154,7 @@ export function UpscaleItemDialog({
       if (!r.ok || !r.path) return setError(r.error || t("upscale.upscaleFail"));
       applyMedia(r.path);
     } catch (e) {
-      setError(String(e));
+      setError(errorText(e));
     } finally {
       setBusy(false);
     }

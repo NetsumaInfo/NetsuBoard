@@ -20,9 +20,7 @@
   },
   "dl": {
     "done": "完成",
-    "failed": "失败",
     "retry": "正在重试…",
-    "skipped": "已存在",
     "working": "进行中…"
   },
   "auto": {

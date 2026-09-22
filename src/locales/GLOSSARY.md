@@ -21,7 +21,7 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 | FR (source) | EN | ES | DE | JA | ZH |
 |---|---|---|---|---|---|
 | rush (métrage source) | footage / clip | clip / metraje | Rohmaterial / Clip | 素材 / クリップ | 素材 |
-| plan (unité de découpe) | shot | plano / toma | Einstellung / Shot | ショット / カット | 镜头 |
+| plan (unité de découpe) | shot | plano / toma | Shot (Einstellung = seulement le champ de métadonnées Szene/Einstellung/Take ; au pluriel il se lit « réglages ») | ショット / カット | 镜头 |
 | derush (workflow) | logging | visionado / clasificación | Sichtung | 素材整理 | 素材整理 |
 | découpe / coupe | cut | corte | Schnitt | カット | 剪切 / 切分 |
 | découper (verbe) | to cut / split | cortar / dividir | schneiden | カットする | 切分 |
@@ -62,8 +62,8 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 
 ## Ne PAS traduire (noms propres / produit / technique)
 
-- **Produit / modules** : NetsuBoard, NetsuLab, Derush *(comme titre d'onglet — garder ; en usage
-  descriptif, employer le verbe local ci-dessus)*, Roto Studio.
+- **Produit / modules** : NetsuBoard, NetsuRush, Timeline Live. « Derush » n'en fait pas partie :
+  c'est le métier, traduit par le mot local du tableau ci-dessus.
 - **Hôtes** : DaVinci Resolve, Resolve, Premiere Pro, After Effects, Fusion, Media Pool, Adobe.
 - **Services** : Discord, Convex, YouTube, Hugging Face.
 - **Modèles / moteurs** : SigLIP2, Real-ESRGAN, Real-CUGAN, TransNetV2, OmniShotCut, Whisper,
@@ -71,3 +71,18 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
   YuNet, SFace, MiniMax, Wan, ArtCNN.
 - **Formats / techno** : HEVC, H.264, mp4, mkv, SRT, VTT, FCPXML, ZXP, CEP, NVENC, ffmpeg, GPU, VRAM,
   RAM, FPS, ASR, VAD, HSB/RGB/hex.
+
+## Conventions par langue
+
+- **Menus des logiciels hôtes** : un chemin cité (« Préférences ▸ Système ▸ Mémoire et GPU ») reprend
+  mot pour mot le libellé de Resolve / Premiere / After Effects DANS la langue de l'interface : les
+  trois logiciels existent dans les 6 langues. Vérifié sur Resolve 21.1, Premiere Pro 2026 et
+  After Effects 26 (textes livrés dans les logiciels).
+
+- **ja — espaces** : une espace demi-chasse entre le japonais et les lettres latines, les chiffres
+  ou un placeholder (`NetsuBoard の設定`, `10 GB を超えたら`, `{{count}} 件`) ; aucune contre la
+  ponctuation pleine chasse, les crochets `「」（）` ou le point médian `・` ; `%` reste collé
+  (`75%`). Source : guide de style japonais de Microsoft (§4.1.11), guide de Mozilla.
+- **zh — partager** : 共享 partout (bouton, état 已共享, 与我共享, 共享链接, 共享画板/项目/合集,
+  停止共享) ; collaboration = 协作. 分享 seulement pour un envoi à sens unique vers l'extérieur
+  (réseau social). Source : Microsoft et Apple zh-CN, DaVinci Resolve (共享项目).
