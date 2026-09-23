@@ -852,6 +852,22 @@
     "mediaMissing_one": "{{count}} media file missing from disk: {{names}}. It is marked on the board — find it again (moved folder?) from its card, then share again.",
     "mediaMissing_other": "{{count}} media files missing from disk: {{names}}. They are marked on the board — find them again (moved folder?) from their cards, then share again.",
     "invited_one": "{{count}} invite sent.",
-    "invited_other": "{{count}} invites sent."
+    "invited_other": "{{count}} invites sent.",
+    "error": {
+      "failed": "Sync failed. Try again.",
+      "desktopOnly": "Sharing needs the desktop application.",
+      "authorization": "Access to this shared board was refused. Sign in again, or ask the owner to invite you again.",
+      "conflict": "Another change went through at the same time. Try again in a moment.",
+      "corrupt": "Some shared data that arrived is damaged. If this happens again, send a bug report.",
+      "keyPending": "This board's key hasn't reached this device yet. Stay online: it arrives when another member opens the board.",
+      "network": "Can't reach the sharing server. Check your connection, then try again.",
+      "readOnly": "This board is shared with you as read-only.",
+      "storage": "Can't read or write sharing data on this disk. Check free space, then try again.",
+      "unavailable": "Sharing isn't available right now. Sign in again, then reopen the board.",
+      "validation": "Sharing couldn't process this request. If this happens again, send a bug report.",
+      "server": "The sharing server refused the operation. Try again; if this happens again, send a bug report.",
+      "mediaNotShared_one": "{{count}} media item isn't shared because its file can't be read: {{names}}. Find it (moved folder?).",
+      "mediaNotShared_other": "{{count}} media items aren't shared because their files can't be read: {{names}}. Find them (moved folder?)."
+    }
   }
 }

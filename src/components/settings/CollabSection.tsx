@@ -6,8 +6,8 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/convexApi";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
+import { collabErrorText } from "@/lib/collab/errors";
 import {
-  collabErrorMessage,
   deviceIdentity,
   forgetDevice,
   deleteProject as deleteProjectNative,
@@ -139,7 +139,7 @@ export function CollabSection() {
       .catch((error) => {
         if (!cancelled) {
           setNativeReady(false);
-          setNativeError(collabErrorMessage(error, t("collab.device.unavailable")));
+          setNativeError(collabErrorText(error, t("collab.device.unavailable")));
         }
       });
     return () => { cancelled = true; };
@@ -214,7 +214,7 @@ export function CollabSection() {
       if (!(await refreshNativeCollaborationAuth())) throw new Error(t("collab.device.unavailable"));
       await forgetDevice(deviceId);
     } catch (error) {
-      setNativeError(collabErrorMessage(error, t("collab.device.unavailable")));
+      setNativeError(collabErrorText(error, t("collab.device.unavailable")));
     } finally {
       setBusy(false);
     }
@@ -237,7 +237,7 @@ export function CollabSection() {
       const sceneId = result.id;
       setLinkedScenes((current) => new Map(current).set(projectId, { sceneId, name }));
     } catch (error) {
-      setNativeError(collabErrorMessage(error, t("collab.projects.failed")));
+      setNativeError(collabErrorText(error, t("collab.projects.failed")));
     } finally {
       setBusy(false);
     }
@@ -265,7 +265,7 @@ export function CollabSection() {
       if (useBoard.getState().collabProjectId === projectId) useBoard.getState().newScene();
       setConfirmProject(null);
     } catch (error) {
-      setNativeError(collabErrorMessage(error, t("collab.projects.failed")));
+      setNativeError(collabErrorText(error, t("collab.projects.failed")));
     } finally {
       setBusy(false);
     }

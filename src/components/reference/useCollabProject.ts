@@ -19,8 +19,10 @@ import {
   type ProjectSession,
 } from "@/lib/collab/client";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
-import { collabErrorMessage } from "@/lib/collab/client";
-import { describeUnresolved, importBoardAssets } from "@/lib/collab/media";
+import i18n from "@/i18n";
+import { collabErrorText, unresolvedNames } from "@/lib/collab/errors";
+import { collabFailure } from "@/lib/collab/failure";
+import { importBoardAssets } from "@/lib/collab/media";
 import {
   getCollaborationPerformanceMode,
   getCollaborationPerformanceSettings,
@@ -272,13 +274,13 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
           if (generation === refreshGeneration.current) setItems(renderProjection(native));
         } catch (cause) {
           if (generation === refreshGeneration.current) {
-            setError(collabErrorMessage(cause, "collaboration error"));
+            setError(collabErrorText(cause));
           }
         }
       })();
     } catch (cause) {
       if (generation === refreshGeneration.current) {
-        setError(collabErrorMessage(cause, "collaboration error"));
+        setError(collabErrorText(cause));
       }
     }
   }, [profile, projectId, renderProjection]);
@@ -296,7 +298,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
     void (async () => {
       try {
         if (!(await refreshNativeCollaborationAuth())) {
-          throw new Error("Sign in is required to open a collaborative project");
+          throw collabFailure("sign_in", "sign in is required to open a collaborative project");
         }
         const opened = await openProject(projectId, sceneId ?? projectId, "viewer");
         lease = opened.leaseId;
@@ -317,7 +319,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
         if (cancelled) unlisten();
         else stop = unlisten;
       } catch (cause) {
-        if (!cancelled) setError(collabErrorMessage(cause, "collaboration error"));
+        if (!cancelled) setError(collabErrorText(cause));
       }
     })();
     return () => {
@@ -399,7 +401,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
       // which files are no longer readable.
       const stranded = unresolvedMediaItems();
       setError(stranded.length && assets.missing.length
-        ? `${stranded.length} media not shared: ${describeUnresolved(assets.missing)}`
+        ? i18n.t("reference:collab.error.mediaNotShared", { count: stranded.length, names: unresolvedNames(assets.missing) })
         : null);
       if (!operations.length) return;
       const result = await applyOperations(projectId, operations);
@@ -409,7 +411,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
       if (result.revision) selfRevisions.current.add(result.revision);
       setRevision(result.revision);
     } catch (cause) {
-      setError(collabErrorMessage(cause, "collaboration error"));
+      setError(collabErrorText(cause));
       await refresh();
     }
   }, [projectId, refresh, resolverFor, session?.role]);
@@ -425,7 +427,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
       if (result.revision) selfRevisions.current.add(result.revision);
       await refresh();
     } catch (cause) {
-      setError(collabErrorMessage(cause, "collaboration error"));
+      setError(collabErrorText(cause));
     }
   }, [projectId, refresh, session?.role]);
 

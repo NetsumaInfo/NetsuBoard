@@ -852,6 +852,22 @@
     "mediaMissing_one": "{{count}} Mediendatei fehlt auf der Festplatte: {{names}}. Sie ist auf dem Board markiert – stelle sie über ihre Karte wieder her (Ordner verschoben?) und teile dann erneut.",
     "mediaMissing_other": "{{count}} Mediendateien fehlen auf der Festplatte: {{names}}. Sie sind auf dem Board markiert – stelle sie über ihre Karten wieder her (Ordner verschoben?) und teile dann erneut.",
     "invited_one": "{{count}} Einladung gesendet.",
-    "invited_other": "{{count}} Einladungen gesendet."
+    "invited_other": "{{count}} Einladungen gesendet.",
+    "error": {
+      "failed": "Synchronisierung fehlgeschlagen. Versuch es noch einmal.",
+      "desktopOnly": "Teilen benötigt die Desktop-Anwendung.",
+      "authorization": "Zugriff auf dieses geteilte Board verweigert. Melde dich erneut an oder bitte den Eigentümer, dich noch einmal einzuladen.",
+      "conflict": "Gleichzeitig wurde eine andere Änderung übernommen. Versuch es gleich noch einmal.",
+      "corrupt": "Empfangene geteilte Daten sind beschädigt. Wenn das wieder passiert, sende einen Fehlerbericht.",
+      "keyPending": "Der Schlüssel dieses Boards ist noch nicht auf diesem Gerät angekommen. Bleib online: Er kommt, sobald ein anderes Mitglied das Board öffnet.",
+      "network": "Der Freigabeserver ist nicht erreichbar. Prüfe deine Verbindung und versuch es noch einmal.",
+      "readOnly": "Dieses Board ist schreibgeschützt mit dir geteilt.",
+      "storage": "Freigabedaten können auf diesem Laufwerk nicht gelesen oder geschrieben werden. Prüfe den freien Speicherplatz und versuch es noch einmal.",
+      "unavailable": "Die Freigabe ist gerade nicht verfügbar. Melde dich erneut an und öffne das Board noch einmal.",
+      "validation": "Die Freigabe konnte diese Anfrage nicht verarbeiten. Wenn das wieder passiert, sende einen Fehlerbericht.",
+      "server": "Der Freigabeserver hat den Vorgang abgelehnt. Versuch es noch einmal; wenn das wieder passiert, sende einen Fehlerbericht.",
+      "mediaNotShared_one": "{{count}} Mediendatei wird nicht geteilt, weil sie nicht lesbar ist: {{names}}. Finde sie wieder (Ordner verschoben?).",
+      "mediaNotShared_other": "{{count}} Mediendateien werden nicht geteilt, weil sie nicht lesbar sind: {{names}}. Finde sie wieder (Ordner verschoben?)."
+    }
   }
 }

@@ -852,6 +852,22 @@
     "mediaMissing_one": "{{count}} archivo multimedia no encontrado en el disco: {{names}}. Está marcado en el tablero: recupéralo desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
     "mediaMissing_other": "{{count}} archivos multimedia no encontrados en el disco: {{names}}. Están marcados en el tablero: recupéralos desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
     "invited_one": "{{count}} invitación enviada.",
-    "invited_other": "{{count}} invitaciones enviadas."
+    "invited_other": "{{count}} invitaciones enviadas.",
+    "error": {
+      "failed": "No se pudo sincronizar. Vuelve a intentarlo.",
+      "desktopOnly": "Compartir requiere la aplicación de escritorio.",
+      "authorization": "Acceso denegado a este tablero compartido. Vuelve a iniciar sesión o pide al propietario que te invite de nuevo.",
+      "conflict": "Otro cambio se aplicó al mismo tiempo. Vuelve a intentarlo en un momento.",
+      "corrupt": "Algunos datos compartidos recibidos están dañados. Si vuelve a ocurrir, envía un informe de error.",
+      "keyPending": "La clave de este tablero aún no ha llegado a este dispositivo. Mantente en línea: llegará cuando otro miembro abra el tablero.",
+      "network": "No se puede conectar con el servidor de colaboración. Revisa tu conexión y vuelve a intentarlo.",
+      "readOnly": "Este tablero se comparte contigo en solo lectura.",
+      "storage": "No se pueden leer ni escribir los datos de colaboración en este disco. Comprueba el espacio libre y vuelve a intentarlo.",
+      "unavailable": "La colaboración no está disponible ahora mismo. Vuelve a iniciar sesión y abre de nuevo el tablero.",
+      "validation": "No se pudo procesar esta solicitud de colaboración. Si vuelve a ocurrir, envía un informe de error.",
+      "server": "El servidor de colaboración rechazó la operación. Vuelve a intentarlo; si vuelve a ocurrir, envía un informe de error.",
+      "mediaNotShared_one": "{{count}} archivo multimedia no se comparte porque no se puede leer: {{names}}. Recupéralo (¿carpeta movida?).",
+      "mediaNotShared_other": "{{count}} archivos multimedia no se comparten porque no se pueden leer: {{names}}. Recupéralos (¿carpeta movida?)."
+    }
   }
 }

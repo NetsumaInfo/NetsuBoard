@@ -16,7 +16,6 @@ import { createCollaborativeProject } from "@/lib/collab/session";
 import {
   abortProject,
   cancelInvite,
-  collabErrorMessage,
   deleteProject,
   discardStaleHead,
   inviteMembers,
@@ -27,6 +26,7 @@ import {
   type ProjectStatus,
 } from "@/lib/collab/client";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
+import { collabErrorText, unresolvedNames } from "@/lib/collab/errors";
 import { UnreadableMediaError } from "@/lib/collab/media";
 import { prepareShareMedia } from "./boardMediaActions";
 import { useBoard } from "./useReferenceBoard";
@@ -186,13 +186,9 @@ export function CollaborationDialog({
       // d'erreurs OS ne dit rien d'actionnable. On nomme les fichiers, le board porte les cartes
       // manquantes avec leurs gestes de récupération.
       if (err instanceof UnreadableMediaError) {
-        const names = err.unresolved
-          .slice(0, 3)
-          .map((entry) => entry.ref.split(/[\\/]/).pop() || entry.ref)
-          .join(" · ");
-        setError(t("collab.mediaMissing", { count: err.unresolved.length, names }));
+        setError(t("collab.mediaMissing", { count: err.unresolved.length, names: unresolvedNames(err.unresolved) }));
       } else {
-        setError(collabErrorMessage(err, t("collab.failed")));
+        setError(collabErrorText(err, t("collab.failed")));
       }
     } finally {
       setBusy(false);
@@ -207,7 +203,7 @@ export function CollaborationDialog({
       if (!(await refreshNativeCollaborationAuth())) throw new Error(t("collab.signedOut"));
       await action();
     } catch (err) {
-      setError(collabErrorMessage(err, t("collab.failed")));
+      setError(collabErrorText(err, t("collab.failed")));
     } finally {
       setBusy(false);
     }

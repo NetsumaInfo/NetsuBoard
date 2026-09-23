@@ -8,6 +8,7 @@ import {
   flushCheckpoint,
   openProject,
 } from "./client";
+import { collabFailure } from "./failure";
 import { importBoardAssets, UnreadableMediaError } from "./media";
 import { diffBoard } from "./operations";
 
@@ -16,7 +17,7 @@ export async function createCollaborativeProject(
   sceneId: string,
 ): Promise<{ projectId: string }> {
   if (!(await refreshNativeCollaborationAuth())) {
-    throw new Error("Sign in is required to create a collaborative project");
+    throw collabFailure("sign_in", "sign in is required to create a collaborative project");
   }
   const { projectId } = await createProject();
   const session = await openProject(projectId, sceneId, "owner");
