@@ -25,6 +25,7 @@ import {
   subscribeCollaborationPerformance,
   type CollaborationPerformanceMode,
 } from "@/lib/collab/performance";
+import { uiLocale } from "@/lib/utils";
 
 const PERFORMANCE_MODES: CollaborationPerformanceMode[] = ["live", "balanced", "economy"];
 
@@ -224,7 +225,7 @@ export function CollabSection() {
     setBusy(true);
     try {
       const name = t("collab.projects.unnamed", {
-        date: new Date(createdAt).toLocaleDateString(),
+        date: new Date(createdAt).toLocaleDateString(uiLocale()),
       });
       const result = await nr.reference?.saveScene({
         name,
@@ -526,7 +527,7 @@ export function CollabSection() {
                     {absent.map((project) => projectRow(
                       project,
                       t("collab.projects.unnamed", {
-                        date: new Date(project.createdAt).toLocaleDateString(),
+                        date: new Date(project.createdAt).toLocaleDateString(uiLocale()),
                       }),
                       true,
                     ))}
