@@ -12,7 +12,7 @@ Var NRHome
 
 LangString NRCleanupTitle 1036 "Désinstallation complète"
 LangString NRCleanupTitle 1033 "Complete uninstall"
-LangString NRCleanupSubtitle 1036 "Choisissez ce que NetsuBoard doit supprimer de ce PC."
+LangString NRCleanupSubtitle 1036 "Choisis ce que NetsuBoard doit supprimer de ce PC."
 LangString NRCleanupSubtitle 1033 "Choose what NetsuBoard should remove from this PC."
 LangString NRAppLabel 1036 "Application NetsuBoard"
 LangString NRAppLabel 1033 "NetsuBoard application"
@@ -24,15 +24,15 @@ LangString NRRuntimeHint 1036 "ffmpeg, yt-dlp, shaders GLSL, réglages machine e
 LangString NRRuntimeHint 1033 "ffmpeg, yt-dlp, GLSL shaders, machine settings and previews."
 LangString NRUserDataLabel 1036 "Créations et données personnelles"
 LangString NRUserDataLabel 1033 "Personal creations and data"
-LangString NRUserDataHint 1036 "Fonds d'écran, préférences et historique récent. Vos fichiers .netsu ne sont jamais supprimés."
+LangString NRUserDataHint 1036 "Fonds d'écran, préférences et historique récent. Tes fichiers .netsu ne sont jamais supprimés."
 LangString NRUserDataHint 1033 "Wallpapers, preferences and recent history. Your .netsu files are never deleted."
 LangString NRAllLabel 1036 "Tout supprimer"
 LangString NRAllLabel 1033 "Remove everything"
 LangString NRLockError 1036 "Un fichier de NetsuBoard est resté verrouillé par un autre programme et n'a pas pu être remplacé.$\n$\nFerme NetsuBoard (au besoin depuis le Gestionnaire des tâches), puis relance l'installation."
 LangString NRLockError 1033 "A NetsuBoard file is still locked by another program and could not be replaced.$\n$\nClose NetsuBoard (from Task Manager if needed), then run the installer again."
-LangString NRElevateAsk 1036 "NetsuBoard est installé dans :$\n$INSTDIR$\n$\nCe dossier demande des droits administrateur, que cette installation n'a pas. Continuer en tant qu'administrateur ?"
+LangString NRElevateAsk 1036 "NetsuBoard est installé dans :$\n$INSTDIR$\n$\nCe dossier demande des droits administrateur, que cette installation n'a pas. Continuer en tant qu'administrateur ?"
 LangString NRElevateAsk 1033 "NetsuBoard is installed in:$\n$INSTDIR$\n$\nThat folder requires administrator rights, which this installer does not have. Continue as administrator?"
-LangString NRWriteError 1036 "Impossible d'écrire dans :$\n$INSTDIR$\n$\nRéinstalle NetsuBoard dans un dossier qui t'appartient — le dossier proposé par défaut convient."
+LangString NRWriteError 1036 "Impossible d'écrire dans :$\n$INSTDIR$\n$\nRéinstalle NetsuBoard dans un dossier qui t'appartient — le dossier proposé par défaut convient."
 LangString NRWriteError 1033 "Cannot write to:$\n$INSTDIR$\n$\nReinstall NetsuBoard into a folder you own — the default location works."
 
 UninstPage custom un.NetsuCleanupPage un.NetsuCleanupLeave

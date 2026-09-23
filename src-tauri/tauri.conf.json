@@ -70,7 +70,7 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser",
-        "languages": ["French", "English"],
+        "languages": ["English", "French"],
         "customLanguageFiles": {
           "French": "windows/netsuboard-installer-french.nsh",
           "English": "windows/netsuboard-installer-english.nsh"
