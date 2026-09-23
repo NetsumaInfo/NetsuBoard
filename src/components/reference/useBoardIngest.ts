@@ -33,6 +33,7 @@ import {
 import { useBoard } from "./useReferenceBoard";
 import { boundsOf, computeArrange } from "./boardArrange";
 import { errorText } from "@/lib/errorText";
+import { uiLocale } from "@/lib/utils";
 
 // Longest side of a freshly posed YouTube card. Kept apart from the media posing size (Settings):
 // a YouTube card is a player, not a reference image the user sizes to taste.
@@ -60,7 +61,7 @@ function baseTitle(path: string): string {
 // persistance l'écrit « manquant » (cf. useScenePersistence). Tu le sais MAINTENANT, pas au
 // prochain lancement devant une case vide.
 function assetCopyFailed(name: string, error?: string) {
-  logError("board:ingest", `copie en asset échouée — ${name}: ${error || "?"}`);
+  logError("board:ingest", `asset copy failed: ${name}: ${error || "?"}`);
   useBoard.getState().setNotice({ kind: "error", text: i18n.t("reference:ingest.copyFailed", { name }) });
 }
 
@@ -521,11 +522,11 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
               useBoard.getState().patchItem(c.id, { ref: res.path, src: durable }, false);
               URL.revokeObjectURL(c.src);
             } else {
-              logError("board:ingest", `copie en asset échouée — ${name}: ${res.error || "?"}`);
+              logError("board:ingest", `asset copy failed: ${name}: ${res.error || "?"}`);
               copyFailures.push(name);
             }
           } catch (e) {
-            logError("board:ingest", `copie en asset échouée — ${name}: ${String(e)}`);
+            logError("board:ingest", `asset copy failed: ${name}: ${String(e)}`);
             copyFailures.push(name);
           }
         }
@@ -544,7 +545,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         if (!kids.length) continue;
         let placed = kids;
         if (prefs.autoArrangeOnImport && kids.length > 1) {
-          const pos = computeArrange(kids, prefs.arrangeLayout, { gap: prefs.arrangeGap, sort: prefs.arrangeSort });
+          const pos = computeArrange(kids, prefs.arrangeLayout, { gap: prefs.arrangeGap, sort: prefs.arrangeSort, locale: uiLocale() });
           if (pos.size) placed = kids.map((it) => (pos.has(it.id) ? { ...it, ...pos.get(it.id)! } : it));
         }
         const b = boundsOf(placed);

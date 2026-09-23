@@ -235,7 +235,7 @@ async function callInner(channel: string, args: unknown[] = []): Promise<any> {
   // appelants attrapent et n'affichent qu'une notice, la console ne voyait donc jamais la cause.
   // Le service tourne hors de la webview : sa cause d'arrêt n'est QUE dans son journal (la coquille
   // Tauri release n'a pas de console). Sans ce pointeur, « Failed to fetch » n'était pas actionnable.
-  if (!r) throw fail(channel, `core indisponible (${BASE}) : ${String(networkError || "Failed to fetch")}${isTauri ? " — journal : %LOCALAPPDATA%\\NetsuRush\\logs\\core.log" : ""}`);
+  if (!r) throw fail(channel, `core unreachable (${BASE}): ${String(networkError || "Failed to fetch")}${isTauri ? " — log: %LOCALAPPDATA%\\NetsuRush\\logs\\core.log" : ""}`);
   if (!r.ok) throw fail(channel, `core rpc HTTP ${r.status}: ${r.statusText || "request failed"}`);
   const j = await r.json();
   if (!j || !j.ok) throw fail(channel, (j && j.error) || `core rpc error: ${channel}`);
@@ -339,7 +339,7 @@ function remoteProxyCodec(): "h264" {
     if (browserSupportsMime(v, 'video/mp4; codecs="avc1.42E01E"')) c = "h264";
   } catch { /* garde H.264 */ }
   _remoteCodec = c;
-  try { console.info("[NetsuRush] codec aperçu (remote) :", c); } catch { /* noop */ }
+  try { console.info("[NetsuRush] preview codec (remote):", c); } catch { /* noop */ }
   return c;
 }
 
@@ -361,7 +361,7 @@ function standaloneProxyCodec(): "hevc" | "h264" {
     if (hevcMimes.some((mime) => browserSupportsMime(v, mime))) c = "hevc";
   } catch { /* garde H.264 */ }
   _standaloneCodec = c;
-  try { console.info("[NetsuRush] codec aperçu (WebView2) :", c); } catch { /* noop */ }
+  try { console.info("[NetsuRush] preview codec (WebView2):", c); } catch { /* noop */ }
   return c;
 }
 function requestParentFiles(multiple: boolean, exts: string[]): Promise<string[] | null> {
@@ -510,7 +510,7 @@ const reference: RefApi = {
         // réglage se contenterait de délaver la planche.
         transparent: true,
       });
-      win.once("tauri://error", (e) => console.error("[reference] échec ouverture fenêtre détachée", e));
+      win.once("tauri://error", (e) => console.error("[reference] failed to open the detached window", e));
     })();
   },
   // Depuis la fenêtre détachée : la ferme et redonne le focus à la principale. Le focus est

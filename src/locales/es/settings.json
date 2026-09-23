@@ -236,7 +236,24 @@
       "loading": "Leyendo…",
       "manual": "Escríbelo tú",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Los datos de tu PC van adjuntos: puedes leerlos enteros en la Consola."
+      "attached": "Los datos de tu PC van adjuntos: puedes leerlos enteros en la Consola.",
+      "machine": {
+        "row": "{{label}}: {{value}}",
+        "language": "Idioma",
+        "platform": "Plataforma",
+        "encoders": "Codificadores",
+        "storage": "Disco",
+        "service": "Servicio",
+        "threads_one": "{{count}} hilo",
+        "threads_other": "{{count}} hilos",
+        "ram": "{{total}} en total · {{free}} libres",
+        "freeOfTotal": "{{free}} libres de {{total}}",
+        "driver": "controlador {{version}}",
+        "none": "ninguno",
+        "notFound": "no encontrado",
+        "unknown": "desconocido",
+        "offline": "sin conexión, datos del PC sin leer"
+      }
     },
     "sending": "Enviando…",
     "send": "Enviar",

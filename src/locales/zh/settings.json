@@ -236,7 +236,24 @@
       "loading": "正在读取…",
       "manual": "自己填写",
       "manualPlaceholder": "RTX 3060、Ryzen 5600X、32 GB、Windows 11",
-      "attached": "已附上你的电脑信息，完整内容可在控制台查看。"
+      "attached": "已附上你的电脑信息，完整内容可在控制台查看。",
+      "machine": {
+        "row": "{{label}}：{{value}}",
+        "language": "语言",
+        "platform": "平台",
+        "encoders": "编码器",
+        "storage": "磁盘",
+        "service": "服务",
+        "threads_one": "{{count}} 线程",
+        "threads_other": "{{count}} 线程",
+        "ram": "共 {{total}} · 可用 {{free}}",
+        "freeOfTotal": "可用 {{free}}，共 {{total}}",
+        "driver": "驱动 {{version}}",
+        "none": "无",
+        "notFound": "未找到",
+        "unknown": "未知",
+        "offline": "离线，未读取电脑信息"
+      }
     },
     "sending": "发送中…",
     "send": "发送",

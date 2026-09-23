@@ -59,7 +59,7 @@ export function StoragePanel() {
       setAudit(result ?? null);
       if (result && !result.ok && result.error) setNotice({ kind: "error", text: result.error });
     } catch (error) {
-      logError("settings:storage", `audit échoué — ${String(error)}`);
+      logError("settings:storage", `storage audit failed: ${String(error)}`);
       setNotice({ kind: "error", text: errorText(error) });
     } finally {
       setBusy(null);

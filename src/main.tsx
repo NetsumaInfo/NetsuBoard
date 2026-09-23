@@ -60,7 +60,7 @@ async function boot(): Promise<void> {
   // que l'ErrorBoundary affiche la cause. Rendre l'app SANS gate n'ouvrirait rien — LoginGate lit le
   // même témoin et appelle useConvexAuth, qui échoue faute de provider.
   const tree = await authTree().catch((e) => {
-    console.error("[auth] provider indisponible", e);
+    console.error("[auth] provider unavailable", e);
     return <App />;
   });
   root.render(
