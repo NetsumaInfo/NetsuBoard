@@ -323,11 +323,11 @@ async function runSetup(ev) {
       // setup.ps1 EST le provisionnement complet : plus aucune étape de poids ne le suit, donc sa
       // progression va jusqu'à 100 et la vérification s'enchaîne directement.
       running = false;
-      send({ pct: 99, stage: 'verify', label: 'Vérification de l’installation…' });
+      send({ pct: 99, stage: 'verify', label: t('setupVerifying') });
       const fresh = readInstalledConfig();
       const verified = probeRuntime(fresh);
       if (!ffmpegReady(fresh) || verified !== true && !verified.ok) {
-        resolve({ ok: false, error: verified !== true && verified.error ? verified.error : 'La vérification finale du runtime a échoué' });
+        resolve({ ok: false, error: verified !== true && verified.error ? verified.error : t('setupVerifyFailed') });
         return;
       }
       send({ pct: 100, stage: 'done', label: t('setupDone') });

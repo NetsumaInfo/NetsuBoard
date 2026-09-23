@@ -24,7 +24,7 @@ test('le dossier des shaders manquant est nommé, pas déguisé en ffmpeg introu
   ];
   for (const r of await Promise.all(calls)) {
     assert.equal(r.ok, false);
-    assert.match(r.error, /dossier des shaders absent/);
+    assert.ok(r.error.includes(MISSING), r.error); // le dossier manquant est nommé
     assert.match(r.error, /fetch-shaders/); // la sortie dit quoi lancer pour réparer
   }
 });

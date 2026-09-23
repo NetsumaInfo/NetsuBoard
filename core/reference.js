@@ -27,7 +27,7 @@ const VIDEO_EXTS = new Set(['mp4', 'webm', 'mov', 'mkv', 'm4v', 'avi', 'ogv', 'm
 // GET avec suivi de redirections + User-Agent (certains CDN refusent l'UA par défaut de Node).
 function download(url, redirects) {
   return new Promise((resolve, reject) => {
-    if ((redirects || 0) > 5) return reject(new Error('trop de redirections'));
+    if ((redirects || 0) > 5) return reject(new Error(t('downloadTooManyRedirects')));
     let u;
     try { u = new URL(url); } catch (e) { return reject(e); }
     const mod = u.protocol === 'http:' ? http : https;
@@ -50,7 +50,7 @@ function download(url, redirects) {
       let size = 0;
       res.on('data', (c) => {
         size += c.length;
-        if (size > MAX_ASSET) { req.destroy(); reject(new Error('fichier trop volumineux')); }
+        if (size > MAX_ASSET) { req.destroy(); reject(new Error(t('downloadTooLarge'))); }
         else chunks.push(c);
       });
       res.on('end', () => resolve({
@@ -60,7 +60,7 @@ function download(url, redirects) {
       }));
     });
     req.on('error', reject);
-    req.setTimeout(30000, () => req.destroy(new Error('délai dépassé')));
+    req.setTimeout(30000, () => req.destroy(new Error(t('downloadTimedOut'))));
   });
 }
 
@@ -242,7 +242,7 @@ function createReferenceStore(dataDir) {
         }))
         : [];
       const data = JSON.stringify({ items: scene.items || [], view: scene.view || null, collaboration, media, preview });
-      backend.put(id, scene.name || 'Sans titre', data, ts);
+      backend.put(id, scene.name || t('untitled'), data, ts);
       return { ok: true, id, updatedAt: ts };
     } catch (e) {
       return { ok: false, error: String(e) };
@@ -327,7 +327,7 @@ function createReferenceStore(dataDir) {
       const candidate = (new URL(sourceUrl).pathname.split('.').pop() || '').toLowerCase();
       if (EXT_OK.has(candidate)) ext = candidate;
     }
-    if (!ext) return { ok: false, error: t('unsupportedType') + ': ' + type };
+    if (!ext) return { ok: false, error: t('withDetail', { message: t('unsupportedType'), detail: type }) };
     const kind = type.startsWith('video/') || VIDEO_EXTS.has(ext) ? 'video' : 'image';
     if (options.projectPath) {
       try {
@@ -354,7 +354,7 @@ function createReferenceStore(dataDir) {
   // Renvoie le chemin + le `kind` détecté (image/vidéo) pour que le renderer pose le bon item.
   async function fetchAsset(url, options = {}) {
     try {
-      if (!/^https?:\/\//i.test(String(url || ''))) return { ok: false, error: 'URL invalide' };
+      if (!/^https?:\/\//i.test(String(url || ''))) return { ok: false, error: t('invalidUrl') };
       const downloaded = await download(url);
       return persistDownloaded(downloaded, downloaded.finalUrl || url, options);
     } catch (e) {
@@ -369,7 +369,7 @@ function createReferenceStore(dataDir) {
   // pour un média direct, deux pour une page. Repli renderer : extraction yt-dlp puis carte embed.
   async function resolveMedia(url, options = {}) {
     try {
-      if (!/^https?:\/\//i.test(String(url || ''))) return { ok: false, error: 'URL invalide' };
+      if (!/^https?:\/\//i.test(String(url || ''))) return { ok: false, error: t('invalidUrl') };
       const first = await download(url);
       const downloadMedia = options.download !== false;
       // 1. Réponse déjà un média direct → persiste sans re-télécharger.
@@ -387,7 +387,7 @@ function createReferenceStore(dataDir) {
           if (!downloadMedia) return { ok: true, url: media.url, kind: media.kind };
           const r = await fetchAsset(media.url, options);
           if (r.ok) return r;
-          return { ok: false, error: t('openGraphFailed') + ': ' + (r.error || '') };
+          return { ok: false, error: r.error ? t('withDetail', { message: t('openGraphFailed'), detail: r.error }) : t('openGraphFailed') };
         }
       }
       return { ok: false, error: t('noMediaDetected') };

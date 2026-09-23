@@ -356,7 +356,7 @@ function createRpc() {
       const r = isGif
         ? await shaderUpscale.runShaderGif({ input: src, out, shader, scale })
         : await shaderUpscale.runShaderImage({ input: src, out, shader, scale });
-      if (!r || !r.ok || !r.output) return { ok: false, error: (r && r.error) || "échec upscale image" };
+      if (!r || !r.ok || !r.output) return { ok: false, error: (r && r.error) || t("upscaleFailed") };
       return { ok: true, path: remember(r.output), width: r.width, height: r.height };
     }
 
@@ -366,7 +366,7 @@ function createRpc() {
       input: src, shader, scale, codec: "hevc_nvenc", outDir: refStore.assetsDir,
       whole: !segs, segments: segs, importBack: false, baseName: base,
     });
-    if (!r || !r.ok || !r.outputs || !r.outputs.length) return { ok: false, error: (r && r.error) || "échec upscale vidéo" };
+    if (!r || !r.ok || !r.outputs || !r.outputs.length) return { ok: false, error: (r && r.error) || t("upscaleFailed") };
     return { ok: true, path: remember(r.outputs[0]) };
   }
 
@@ -378,7 +378,7 @@ function createRpc() {
   const assetSweepTimer = setTimeout(() => {
     const swept = refStore.sweepAssets({});
     if (swept.ok && swept.removed) {
-      logbus.emit("core", "info", `[board] ${swept.removed} asset(s) inutilisés retirés (${Math.round(swept.bytes / 1048576)} Mo)`);
+      logbus.emit("core", "info", `[board] ${swept.removed} unused asset(s) removed (${Math.round(swept.bytes / 1048576)} MB)`);
     }
   }, ASSET_SWEEP_DELAY_MS);
   assetSweepTimer.unref?.();

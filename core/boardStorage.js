@@ -38,6 +38,7 @@ const { getThumbDir, getProxyDir, yieldLoop } = require('./config');
 const { diskInfo } = require('./diskUsage');
 const thumbs = require('./thumbs');
 const proxy = require('./proxy');
+const { t } = require('./i18n');
 
 // Sous Windows, quelques milliers de `stat` enchaînés en SÉRIE coûtent des dizaines de secondes —
 // un cache de vignettes de 90 Mo se mesurait en vingt secondes, panneau figé pendant ce temps. Le
@@ -350,16 +351,16 @@ function createBoardStorage({ refStore, netsu }) {
    */
   async function moveOrphans(opts) {
     const destDir = String((opts || {}).destDir || '');
-    if (!destDir) return { ok: false, error: 'destination manquante' };
+    if (!destDir) return { ok: false, error: t('destinationMissing') };
     // Sortir les fichiers DANS le magasin ne les sortirait de rien du tout.
     if (inside(assetsDir, destDir) || path.resolve(destDir).toLowerCase() === path.resolve(assetsDir).toLowerCase()) {
-      return { ok: false, error: 'destination à l\'intérieur du magasin' };
+      return { ok: false, error: t('boardDestInsideStore') };
     }
     try {
       const stat = await fsp.stat(destDir);
-      if (!stat.isDirectory()) return { ok: false, error: 'destination invalide' };
+      if (!stat.isDirectory()) return { ok: false, error: t('targetNotFolder') };
     } catch (_) {
-      return { ok: false, error: 'destination introuvable' };
+      return { ok: false, error: t('folderMissing') };
     }
 
     let bytes = 0;
@@ -410,14 +411,15 @@ function createBoardStorage({ refStore, netsu }) {
   async function archiveScene(opts) {
     const sceneId = String((opts || {}).sceneId || '');
     const destPath = String((opts || {}).destPath || '');
-    if (!sceneId || !destPath) return { ok: false, error: 'scène ou destination manquante' };
-    if (path.extname(destPath).toLowerCase() !== '.netsu') return { ok: false, error: 'destination invalide' };
+    if (!sceneId) return { ok: false, error: t('sceneInvalid') };
+    if (!destPath) return { ok: false, error: t('destinationMissing') };
+    if (path.extname(destPath).toLowerCase() !== '.netsu') return { ok: false, error: t('netsuExtensionRequired') };
     const scene = refStore.loadScene(sceneId);
-    if (!scene) return { ok: false, error: 'scène introuvable' };
+    if (!scene) return { ok: false, error: t('boardMissing') };
     // Un board partagé ne garde aucun item : l'archiver écrirait un projet vide et effacerait la
     // liaison au document, seule autorité sur son contenu.
     if (scene.collaboration && scene.collaboration.projectId) {
-      return { ok: false, error: 'un board partagé ne s\'archive pas en projet' };
+      return { ok: false, error: t('boardSharedNoArchive') };
     }
     return netsu.saveProjectAs(refStore, {
       scene: {

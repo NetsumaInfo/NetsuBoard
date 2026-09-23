@@ -118,24 +118,24 @@ function publishPort(port) {
     fs.mkdirSync(NR_HOME, { recursive: true });
     fs.writeFileSync(path.join(NR_HOME, "core-port.json"), JSON.stringify({ port, pid: process.pid, url: `http://${HOST}:${port}` }));
   } catch (error) {
-    console.warn("core: port non publié (le panneau Adobe devra le chercher)", String(error));
+    console.warn("core: port not published (the Adobe panel will have to search for it)", String(error));
   }
 }
 
 function onListening() {
   activePort = /** @type {any} */ (server.address())?.port || activePort;
   publishPort(activePort);
-  console.log(`NetsuBoard core: http://${HOST}:${activePort} (${rpc.channels.length} canaux)`);
+  console.log(`NetsuBoard core: http://${HOST}:${activePort} (${rpc.channels.length} channels)`);
   // Chauffe la sonde d'encodeurs en arrière-plan : NetsuCut récupère ensuite immédiatement le bon
   // moteur NVENC/AMF/QSV (ou son repli CPU) au premier survol.
   void getCapabilities()
-    .then((caps) => console.log(`Encodeurs vidéo: ${caps.hwEncoders.join(', ') || 'CPU'}`))
-    .catch((error) => console.warn('Sonde encodeurs indisponible, repli CPU:', String(error)));
+    .then((caps) => console.log(`Video encoders: ${caps.hwEncoders.join(', ') || 'CPU'}`))
+    .catch((error) => console.warn('Encoder probe unavailable, falling back to CPU:', String(error)));
   // Refreshes yt-dlp on the first boot of a new application version, and on that boot only. In the
   // background: the check is one HTTPS request, but a version gap downloads a new binary, and no
   // link on a board should wait for that.
   void refreshYtDlpForAppVersion()
-    .catch((error) => console.warn('yt-dlp: mise à jour ignorée:', String(error)));
+    .catch((error) => console.warn('yt-dlp: update skipped:', String(error)));
 }
 
 server.on("listening", onListening);
@@ -150,17 +150,17 @@ server.on("error", (err) => {
   // Quand la coquille impose le port, elle est la seule à savoir lequel le renderer interrogera :
   // en changer ici rendrait le service introuvable — elle en choisit un autre au redémarrage.
   if (FIXED_PORT) {
-    console.error(`core: port ${FIXED_PORT} déjà utilisé ; l'application en choisira un autre au redémarrage.`);
+    console.error(`core: port ${FIXED_PORT} already in use; the application will pick another one on restart.`);
     void shutdown(1);
     return;
   }
   const next = activePort + 1;
   if (next >= PORT_FIRST + PORT_SPAN) {
-    console.error(`core: aucun port libre entre ${PORT_FIRST} et ${PORT_FIRST + PORT_SPAN - 1}.`);
+    console.error(`core: no free port between ${PORT_FIRST} and ${PORT_FIRST + PORT_SPAN - 1}.`);
     void shutdown(1);
     return;
   }
-  console.warn(`core: port ${activePort} occupé, essai sur ${next}.`);
+  console.warn(`core: port ${activePort} busy, trying ${next}.`);
   activePort = next;
   server.listen(activePort, HOST);
 });
@@ -177,7 +177,7 @@ async function shutdown(code = 0) {
   try { rpc.stopDiscord?.(); } catch {}
   // Referme les projets .netsu ouverts : sans ce repli du journal WAL, un `-wal` reste à côté de
   // chaque fichier et la prochaine ouverture repart d'un journal à rejouer.
-  try { rpc.closeProjects?.(); } catch (e) { console.error("netsu: fermeture des projets impossible", e); }
+  try { rpc.closeProjects?.(); } catch (e) { console.error("netsu: could not close projects", e); }
   try { killSidecars(); } catch {} // tue les daemons python avant de supprimer leurs fichiers de travail
   await sessionCache.cleanup();
   await new Promise((resolve) => {

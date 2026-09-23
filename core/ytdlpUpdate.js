@@ -23,6 +23,7 @@ const path = require('node:path');
 const https = require('node:https');
 const { execFile } = require('node:child_process');
 const { CONFIG, DETECT_ENV, saveConfig, ytDlpCommand } = require('./config');
+const { t } = require('./i18n');
 
 // Downloading a new binary over a metered connection must never hold the boot, and a machine behind
 // a proxy that swallows the request must not hang a process either.
@@ -162,23 +163,23 @@ function publishedVersion(installed) {
  */
 async function refreshYtDlpForAppVersion() {
   const version = appVersion();
-  if (!version) return { updated: false, reason: 'version inconnue' };
-  if (CONFIG.ytDlpCheckedFor === version) return { updated: false, reason: 'déjà vérifié' };
+  if (!version) return { updated: false, reason: 'unknown version' };
+  if (CONFIG.ytDlpCheckedFor === version) return { updated: false, reason: 'already checked' };
 
   const bin = ownedBinary();
-  if (!bin) return { updated: false, reason: 'yt-dlp non provisionné' };
+  if (!bin) return { updated: false, reason: 'yt-dlp not provisioned' };
 
   const result = await run(bin, ['-U'], UPDATE_TIMEOUT_MS);
   if (result.error) {
-    console.warn(`yt-dlp: mise à jour impossible (${String(result.error.message || result.error)})`);
-    return { updated: false, reason: 'échec' };
+    console.warn(`yt-dlp: update failed (${String(result.error.message || result.error)})`);
+    return { updated: false, reason: 'failed' };
   }
   // `-U` prints either "yt-dlp is up to date" or the version it moved to; both mean the binary is
   // now current for this application version, so the marker is written in either case.
   // The boot path deliberately spawns nothing else: reading the version back would double the cost
   // of a refresh that runs while the application is starting. The panel reads it on demand instead.
   saveConfig({ ytDlpCheckedFor: version, ytDlpCheckedAt: Date.now() });
-  const line = result.out.split(/\r?\n/).filter(Boolean).pop() || 'à jour';
+  const line = result.out.split(/\r?\n/).filter(Boolean).pop() || 'up to date';
   console.log(`yt-dlp: ${line}`);
   return { updated: true, version };
 }
@@ -208,7 +209,7 @@ async function ytDlpStatus(options = {}) {
     checkedFor: CONFIG.ytDlpCheckedFor || null,
     checkedAt: CONFIG.ytDlpCheckedAt || null,
     appVersion: appVersion(),
-    ...(version ? {} : { reason: 'yt-dlp absent' }),
+    ...(version ? {} : { reason: 'yt-dlp missing' }),
   };
 }
 
@@ -216,24 +217,24 @@ async function ytDlpStatus(options = {}) {
  * Manual update from Settings › Updates. Bypasses the per-release marker — it IS the answer to an
  * installation that has not seen an application update in months — and reports what changed, so the
  * panel can say "already current" rather than leaving the click without an outcome.
- * @returns {Promise<{ ok: boolean, version: string|null, previous: string|null, changed: boolean, error?: string }>}
+ * @returns {Promise<{ ok: boolean, version: string|null, previous: string|null, changed: boolean, error?: string, notOwned?: boolean }>}
  */
 async function updateYtDlpNow() {
   const bin = ownedBinary();
-  if (!bin) return { ok: false, version: await installedVersion(), previous: null, changed: false, error: 'yt-dlp non provisionné' };
+  if (!bin) return { ok: false, version: await installedVersion(), previous: null, changed: false, error: t('ytdlpNotOwned'), notOwned: true };
 
   const previous = await installedVersion();
   const result = await run(bin, ['-U'], UPDATE_TIMEOUT_MS);
   if (result.error) {
     const detail = result.out.split(/\r?\n/).filter(Boolean).pop() || String(result.error.message || result.error);
-    console.warn(`yt-dlp: mise à jour impossible (${detail})`);
+    console.warn(`yt-dlp: update failed (${detail})`);
     return { ok: false, version: previous, previous, changed: false, error: detail };
   }
   const version = await installedVersion();
   // The manual update also satisfies this release: an update that just ran must not be repeated by
   // the boot path on the next restart.
   saveConfig({ ytDlpCheckedFor: appVersion() || CONFIG.ytDlpCheckedFor, ytDlpCheckedAt: Date.now() });
-  console.log(`yt-dlp: ${version ? `version ${version}` : 'mise à jour terminée'}`);
+  console.log(`yt-dlp: ${version ? `version ${version}` : 'update finished'}`);
   return { ok: true, version, previous, changed: Boolean(version && previous && version !== previous) };
 }
 

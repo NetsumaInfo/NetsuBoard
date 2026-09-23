@@ -83,7 +83,7 @@ test('a boot of an already-checked version never launches yt-dlp', () => {
 test('only the provisioned standalone binary is updated', () => {
   const { result } = runScenario(SUCCESS, { ytDlp: 'yt-dlp.exe' });
   assert.deepEqual(result.calls, []);
-  assert.equal(result.first.reason, 'yt-dlp non provisionné');
+  assert.equal(result.first.reason, 'yt-dlp not provisioned');
 });
 
 // The per-release anchor has one hole: an installation nobody updates for months stops refreshing
@@ -135,7 +135,8 @@ test('a yt-dlp from elsewhere is read but never updated', () => {
   const { result } = runScenario(MANUAL, { ytDlp: 'yt-dlp.exe' });
   assert.equal(result.status.owned, false);
   assert.equal(result.update.ok, false);
-  assert.equal(result.update.error, 'yt-dlp non provisionné');
+  assert.equal(result.update.notOwned, true);
+  assert.ok(result.update.error);
   assert.equal(result.calls.filter((c) => !c.args.includes('--version')).length, 0);
 });
 

@@ -37,7 +37,7 @@ function missingRuntime() {
   const absent = RTX_DLLS.filter((dll) => {
     try { return !fs.existsSync(path.join(path.dirname(exe), dll)); } catch (_) { return true; }
   });
-  return absent.length ? `${t('rtxDllMissing')} : ${absent.join(', ')} → ${RTX_DIR}` : null;
+  return absent.length ? t('withDetail', { message: t('rtxDllMissing'), detail: `${absent.join(', ')} → ${RTX_DIR}` }) : null;
 }
 
 function audioArgs(mode, abr) {
@@ -91,7 +91,7 @@ function runOne(event, bin, jobArgs, fileLabel, i, total, frames) {
     };
     cp.stdout.on('data', onChunk);
     cp.stderr.on('data', onChunk);
-    cp.on('error', (e) => resolve({ ok: false, error: `${path.basename(bin)} : ${e.message}` }));
+    cp.on('error', (e) => resolve({ ok: false, error: `${path.basename(bin)}: ${e.message}` }));
     cp.on('close', (code) => {
       if (code === 0) { send(100, 'upscale'); resolve({ ok: true }); }
       else resolve({ ok: false, error: errTail.trim() || `${path.basename(bin)} code ${code}` });
@@ -126,7 +126,7 @@ async function runRtxUpscale(event, opts) {
   if ((scale | 0) !== RTX_SCALE) return { ok: false, error: t('rtxScaleFixed') };
 
   let dims;
-  try { dims = await probeMedia(input); } catch (e) { return { ok: false, error: `source illisible : ${String(e)}` }; }
+  try { dims = await probeMedia(input); } catch (e) { return { ok: false, error: t('sourceUnreadable', { detail: String(e) }) }; }
   if (!dims.width || !dims.height) return { ok: false, error: t('videoDimensionsMissing') };
   if (dims.height >= RTX_MAX_INPUT_HEIGHT) return { ok: false, error: t('rtxInputTooLarge') };
 
@@ -135,7 +135,7 @@ async function runRtxUpscale(event, opts) {
   const base = sanitizeName(customName || baseName || path.basename(input).replace(/\.[^.]+$/, ''));
   const jobs = (whole || !Array.isArray(segments) || !segments.length)
     ? [{ start: undefined, end: undefined, tag: '' }]
-    : segments.map((seg, i) => ({ start: seg.in, end: seg.out, tag: `_plan${i + 1}` }));
+    : segments.map((seg, i) => ({ start: seg.in, end: seg.out, tag: `_${t('shotFileSuffix')}${i + 1}` }));
   const total = jobs.length;
   const qp = clampQp(quality);
   const nvPreset = NVENC_PRESET[String(preset)] || 'p6';
@@ -152,7 +152,7 @@ async function runRtxUpscale(event, opts) {
     const suffix = customName ? '' : `_rtx_${RTX_SCALE}x${trueHdr ? '_hdr' : ''}`;
     const out = path.join(outDir, `${base}${suffix}${j.tag}.mp4`);
     if (path.resolve(out).toLowerCase() === path.resolve(input).toLowerCase()) {
-      return { ok: false, error: 'le nom de sortie écraserait le fichier source', out };
+      return { ok: false, error: t('outputOverwritesSource'), out };
     }
     const frames = await clipFrames(input, j.start, j.end);
     const args = buildArgs({

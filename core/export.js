@@ -199,7 +199,7 @@ async function exportClips(event, opts) {
 
   const ext = profile.container || 'mp4';
   const base = sanitizeName(opts.baseName || 'export') || 'export';
-  const phase = profile.workflow === 'video_encode' ? 'Encode' : 'Découpe';
+  const phase = profile.workflow === 'video_encode' ? 'Encode' : 'Cut';
   const total = clips.length;
   const gpuEncoder = await pickGpuEncoder(profile);
 
@@ -321,7 +321,7 @@ async function buildSpacer(work, firstPart, ext, profile, gpuEncoder) {
     return out;
   } catch (e) {
     // La console du core est branchée sur le journal (logbus) → le repli est TRACÉ, jamais muet.
-    console.warn('export: séparateur de fusion non produit, montage sans noir intercalé —',
+    console.warn('export: merge spacer not produced, joining without black in between:',
       String((e && e.stderr) || e).split('\n').pop());
     return null;
   }
@@ -339,7 +339,7 @@ async function mergeExport(event, opts, ctx) {
   const { ext, base, gpuEncoder, profile } = ctx;
   const total = clips.length;
   const out = opts.savePath || mergeOutputPath(clips, opts.dir || '', ext, base, profile, ctx.now);
-  const send = (pct) => { if (event && event.sender) event.sender.send('export:progress', { jobId: opts.jobId, file: path.basename(out), done: 0, total, pct, phase: 'Fusion' }); };
+  const send = (pct) => { if (event && event.sender) event.sender.send('export:progress', { jobId: opts.jobId, file: path.basename(out), done: 0, total, pct, phase: 'Merge' }); };
 
   const work = await fsp.mkdtemp(path.join(os.tmpdir(), 'netsurush-export-'));
   try {
@@ -421,7 +421,7 @@ async function exportCapabilities(opts = {}) {
 
 // Plan FICTIF de l'aperçu de nommage : des valeurs qui exercent tous les jetons (une source nommée,
 // des bornes non rondes, un lot de plusieurs plans) sans toucher au disque.
-const PREVIEW_CLIP = { input: 'rush-01.mkv', start: 12.34, end: 18.5, label: 'plan' };
+const PREVIEW_CLIP = { input: 'rush-01.mkv', start: 12.34, end: 18.5 };
 const PREVIEW_TOTAL = 3;
 
 /**
@@ -441,7 +441,7 @@ function previewName(opts) {
     total: PREVIEW_TOTAL,
     start: PREVIEW_CLIP.start,
     end: PREVIEW_CLIP.end,
-    label: PREVIEW_CLIP.label,
+    label: t('shotFileSuffix'),
     profile: profile.name,
     codec: profile.workflow === 'video_encode' ? profile.codec : 'copy',
     container: ext,

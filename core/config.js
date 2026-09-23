@@ -278,11 +278,11 @@ function migrateLegacyHome() {
     const config = path.join(LEGACY_DATA_DIR, 'nr.config.json');
     const destConfig = path.join(DATA_DIR, 'nr.config.json');
     if (fs.existsSync(config) && !fs.existsSync(destConfig)) fs.copyFileSync(config, destConfig);
-    console.log(`core: bibliothèque reprise depuis ${LEGACY_DATA_DIR} (copie, l'original est intact)`);
+    console.log(`core: library taken over from ${LEGACY_DATA_DIR} (copied, the original is untouched)`);
   } catch (error) {
     // Une reprise ratée laisse une bibliothèque VIDE, pas une bibliothèque cassée : l'application
     // démarre, et l'ancien dossier reste entier pour une reprise manuelle.
-    console.warn('core: reprise de la bibliothèque impossible', String(error));
+    console.warn('core: library takeover failed', String(error));
   }
 }
 migrateLegacyHome();
