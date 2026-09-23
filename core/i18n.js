@@ -96,6 +96,13 @@ const EXTRA = {
   depthFailed: ['Échec du calcul de profondeur','Depth estimation failed','Error al calcular la profundidad','Tiefenberechnung fehlgeschlagen','深度の推定に失敗しました','深度估计失败'],
   backgroundRemovalFailed: ['Échec du détourage','Background removal failed','Error al quitar el fondo','Freistellen fehlgeschlagen','背景の除去に失敗しました','背景移除失败'],
   shotFileSuffix: ['plan','shot','plano','Shot','ショット','镜头'],
+  setupStageFfmpeg: ['Téléchargement de ffmpeg…','Downloading ffmpeg…','Descargando ffmpeg…','ffmpeg wird heruntergeladen…','ffmpeg をダウンロードしています…','正在下载 ffmpeg…'],
+  setupStageShaders: ['Installation des shaders…','Installing shaders…','Instalando los shaders…','Shader werden installiert…','シェーダーをインストールしています…','正在安装着色器…'],
+  setupStageYtdlp: ['Téléchargement de yt-dlp…','Downloading yt-dlp…','Descargando yt-dlp…','yt-dlp wird heruntergeladen…','yt-dlp をダウンロードしています…','正在下载 yt-dlp…'],
+  setupStageConfig: ['Écriture de la configuration…','Writing the configuration…','Guardando la configuración…','Konfiguration wird geschrieben…','設定を書き込んでいます…','正在写入配置…'],
+  setupFfmpegMissing: ['ffmpeg est introuvable après l’extraction','ffmpeg was not found after extraction','No se encontró ffmpeg después de extraerlo','ffmpeg wurde nach dem Entpacken nicht gefunden','展開後に ffmpeg が見つかりません','解压后找不到 ffmpeg'],
+  setupShadersMissing: ['Shaders introuvables','Shaders not found','No se encontraron los shaders','Shader nicht gefunden','シェーダーが見つかりません','找不到着色器'],
+  setupYtdlpMissing: ['yt-dlp est introuvable après le téléchargement','yt-dlp was not found after the download','No se encontró yt-dlp después de descargarlo','yt-dlp wurde nach dem Download nicht gefunden','ダウンロード後に yt-dlp が見つかりません','下载后找不到 yt-dlp'],
   setupVerifying: ['Vérification de l’installation…','Verifying the installation…','Verificando la instalación…','Installation wird geprüft…','インストールを確認しています…','正在验证安装…'],
   setupVerifyFailed: ['La vérification finale de l’installation a échoué. Relance l’installation.','The final installation check failed. Run the installation again.','La comprobación final de la instalación falló. Vuelve a ejecutar la instalación.','Die abschließende Prüfung der Installation ist fehlgeschlagen. Starte die Installation erneut.','インストールの最終確認に失敗しました。もう一度インストールしてください。','安装的最终检查失败。请重新运行安装。'],
   ytdlpMissing: ['yt-dlp introuvable ({path}). Relance l’installation pour l’ajouter.','yt-dlp not found ({path}). Run the installation again to add it.','No se encontró yt-dlp ({path}). Vuelve a ejecutar la instalación para añadirlo.','yt-dlp nicht gefunden ({path}). Starte die Installation erneut, um es hinzuzufügen.','yt-dlp が見つかりません（{path}）。もう一度インストールを実行して追加してください。','找不到 yt-dlp（{path}）。请重新运行安装以添加它。'],
@@ -146,9 +153,30 @@ const EXTRA = {
   ytdlpNotOwned: ['Ce yt-dlp n’a pas été installé par NetsuBoard : l’app ne le met pas à jour.','This yt-dlp was not installed by NetsuBoard, so the app does not update it.','Este yt-dlp no lo instaló NetsuBoard, así que la app no lo actualiza.','Dieses yt-dlp wurde nicht von NetsuBoard installiert, daher aktualisiert die App es nicht.','この yt-dlp は NetsuBoard がインストールしたものではないため、アプリからは更新しません。','此 yt-dlp 并非由 NetsuBoard 安装，因此应用不会更新它。'],
 };
 
+const SUPPORTED = ['fr', 'en', 'es', 'de', 'ja', 'zh'];
+
+/**
+ * First supported interface language among locale tags (best first), or null.
+ * @param {ReadonlyArray<string | null | undefined>} tags
+ * @returns {string | null}
+ */
+function pickLanguage(tags) {
+  for (const tag of tags) {
+    const code = String(tag || '').trim().toLowerCase().split(/[-_]/)[0];
+    if (SUPPORTED.includes(code)) return code;
+  }
+  return null;
+}
+
+/** The OS locale as Node's ICU sees it ("ja-JP" on a Japanese Windows). */
+function systemLocale() {
+  try { return Intl.DateTimeFormat().resolvedOptions().locale; } catch { return ''; }
+}
+
+// The saved choice, else the OS locale, else English. French is only the source language: a
+// Portuguese or Korean user who never picked a language reads English, not French.
 function language() {
-  const code = String(CONFIG.lang || 'fr').toLowerCase().split(/[-_]/)[0];
-  return Object.prototype.hasOwnProperty.call(MESSAGES, code) ? code : 'fr';
+  return pickLanguage([CONFIG.lang, systemLocale()]) || 'en';
 }
 /**
  * A message in the interface language. `{name}` placeholders are filled from `vars`.
@@ -157,7 +185,7 @@ function language() {
  */
 function t(key, vars) {
   let text;
-  if (EXTRA[key]) text = EXTRA[key][['fr','en','es','de','ja','zh'].indexOf(language())] || EXTRA[key][0];
+  if (EXTRA[key]) text = EXTRA[key][SUPPORTED.indexOf(language())] || EXTRA[key][0];
   else {
     /** @type {Record<string,string>} */ const selected = MESSAGES[language()];
     /** @type {Record<string,string>} */ const fallback = MESSAGES.fr;
@@ -167,4 +195,4 @@ function t(key, vars) {
   return text.replace(/\{(\w+)\}/g, (whole, name) => (Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : whole));
 }
 
-module.exports = { language, t };
+module.exports = { SUPPORTED, pickLanguage, language, t };

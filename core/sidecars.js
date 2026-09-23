@@ -14,7 +14,7 @@ const scheduler = require('./scheduler');
 const { codecExt: upscaleExt, hasFiles, sanitizeName } = require('./utils');
 const { resolveProcessEncoding } = require('./processEncoding');
 const { MANIFEST, modelDir, RIFE_TORCH_DIR, RIFE_ARCH_DIR, GMFSS_DIR, DRBA_DIR, DRBA_ARCH_DIR } = require('./models');   // dossiers de poids gérés (BEN2/MatAnyone…) → env sidecar
-const { t } = require('./i18n');
+const { t, language } = require('./i18n');
 const logbus = require('./logbus'); // journal Console : forward du stderr des sidecars python
 
 // Env du process daemon = DETECT_ENV + chemins des poids gérés par le manager (BEN2/Lucida/MatAnyone) pour
@@ -53,7 +53,7 @@ function procEnv() {
 // workers, tout en conservant intégralement l'environnement ML existant.
 /** @param {NodeJS.ProcessEnv} [extra] @returns {NodeJS.ProcessEnv} */
 function langEnv(extra = {}) {
-  return { ...DETECT_ENV, ...perfEnv(), NR_LANG: CONFIG.lang || 'fr', ...extra };
+  return { ...DETECT_ENV, ...perfEnv(), NR_LANG: language(), ...extra };
 }
 
 // Scripts Python à la racine du dépôt (core/ → ../python). En bundle, surchargeable via env.

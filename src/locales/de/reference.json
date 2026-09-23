@@ -159,6 +159,7 @@
     "keyStroke": "Strich",
     "keyEsc": "Esc",
     "sourceFps": "Quelle",
+    "fpsValue": "{{fps}} B/s",
     "customFps": "Eigene Bildrate (Bilder/s)",
     "downloadProviders": "Plattformen zum Herunterladen",
     "provider_twitter": "X",

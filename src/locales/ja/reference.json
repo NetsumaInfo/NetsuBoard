@@ -159,6 +159,7 @@
     "keyStroke": "描画中",
     "keyEsc": "Esc",
     "sourceFps": "ソース",
+    "fpsValue": "{{fps}} 枚/秒",
     "customFps": "任意のフレームレート（枚/秒）",
     "downloadProviders": "ダウンロード対象のプラットフォーム",
     "provider_twitter": "X",

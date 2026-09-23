@@ -159,6 +159,7 @@
     "keyStroke": "trazo",
     "keyEsc": "Esc",
     "sourceFps": "Origen",
+    "fpsValue": "{{fps}} img/s",
     "customFps": "Cadencia personalizada (imágenes/s)",
     "downloadProviders": "Plataformas de descarga",
     "provider_twitter": "X",

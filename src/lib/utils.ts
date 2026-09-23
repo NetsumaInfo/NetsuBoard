@@ -51,7 +51,35 @@ export function fmtTime(t: number, opts: { centis?: boolean; hours?: boolean; pa
 // The locale every date, time, number and sort order is written in: the interface language,
 // never the OS locale nor a hardcoded "fr-FR".
 export function uiLocale(): string {
-  return i18n.language || "fr";
+  return i18n.language || "en";
+}
+
+// A displayed number in the interface language: "1,5" in French, "1.5" in English, "1.5" in
+// Japanese. Never `toFixed` or `String(n)` for text a person reads.
+export function fmtNumber(n: number, options: Intl.NumberFormatOptions = { maximumFractionDigits: 1 }): string {
+  return new Intl.NumberFormat(uiLocale(), options).format(Number.isFinite(n) ? n : 0);
+}
+
+// Seconds, short, with the unit the language writes: "1,5s", "1.5s", "1,5 Sek.", "1.5秒".
+export function fmtSeconds(n: number, maximumFractionDigits = 1): string {
+  return fmtNumber(n, { style: "unit", unit: "second", unitDisplay: "narrow", maximumFractionDigits });
+}
+
+// A 0–1 ratio as a percentage: "50 %" in French, "50%" in English.
+export function fmtPercent(ratio: number, maximumFractionDigits = 0): string {
+  return fmtNumber(ratio, { style: "percent", maximumFractionDigits });
+}
+
+// A number typed by a person, whatever their locale: "1,5", "1.5", "１．５" (full-width IME input)
+// and "−2" all parse. With both separators, the last one is the decimal mark ("1.234,5",
+// "1,234.5"); spaces and apostrophes group digits. `NaN` when the text starts with no number.
+export function parseDecimal(text: string): number {
+  let s = String(text ?? "").normalize("NFKC").replace(/[\s'’]/g, "").replace(/−/g, "-");
+  const comma = s.lastIndexOf(","), dot = s.lastIndexOf(".");
+  if (comma !== -1 && dot !== -1) s = comma > dot ? s.replace(/\./g, "").replace(",", ".") : s.replace(/,/g, "");
+  else if (comma !== -1) s = s.replace(",", ".");
+  const m = /^[+-]?(\d+(\.\d*)?|\.\d+)/.exec(s);
+  return m ? Number(m[0]) : NaN;
 }
 
 // Bytes → "1,5 Go" in French, "1.5 GB" in English: the unit and the decimal mark follow the UI

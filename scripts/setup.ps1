@@ -12,7 +12,10 @@
 
   Idempotent: every step is skipped when already done. Safe to re-run.
   Output is driven by markers consumed by core/setup.js:
-    STAGE:<id>|<label>   PROGRESS:<0-100>   ERROR:<message>   DL:<state>|<done>|<total>|<name>
+    STAGE:<id>|<label>   PROGRESS:<0-100>   ERROR:<message> or ERROR:#<key>|<label>|<detail>
+    DL:<state>|<done>|<total>|<name>
+  The core shows its own translation of each stage id and error key; the labels below are the
+  fallback for a stage or key it does not know.
 
   NOTE: pure ASCII, like build.ps1. Windows PowerShell 5.1 reads a BOM-less .ps1 as cp1252, so an
   accent here would break the parse. User-facing labels are translated through $T below.
@@ -22,16 +25,24 @@ param(
   # Windows argument quoting broke on some install locations.
   [string]$Home_ = $env:NR_SETUP_HOME,
   [string]$Resource = $env:NR_SETUP_RESOURCE,
-  [string]$Lang = $(if ($env:NR_SETUP_LANG) { $env:NR_SETUP_LANG } else { 'fr' })
+  [string]$Lang = $(if ($env:NR_SETUP_LANG) { $env:NR_SETUP_LANG } else { 'en' })
 )
 
 $ErrorActionPreference = 'Continue'
 $ProgressPreference = 'SilentlyContinue'
+# core/setup.js decodes this output as UTF-8. Left alone, Windows PowerShell writes it in the OEM
+# code page (cp932 on a Japanese Windows), which garbles paths and localized error text.
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
 
 function Stage([string]$id, [string]$label) { Write-Output "STAGE:$id|$label" }
 function Progress([int]$pct) { Write-Output "PROGRESS:$pct" }
 function Info([string]$msg) { Write-Output $msg }
-function Fail([string]$msg) { Write-Output "ERROR:$msg"; exit 1 }
+# `$key` names the message in core/i18n.js ("ffmpegMissing" -> setupFfmpegMissing) so the core
+# shows it in the interface language: ERROR:#<key>|<fallback label>|<detail>.
+function Fail([string]$msg, [string]$key = '', [string]$detail = '') {
+  if ($key) { Write-Output "ERROR:#$key|$msg|$detail" } else { Write-Output "ERROR:$msg" }
+  exit 1
+}
 function Dl([string]$state, [long]$done, [long]$total, [string]$name) {
   [Console]::Out.WriteLine(('DL:{0}|{1}|{2}|{3}' -f $state, [Math]::Max(0, $done), [Math]::Max(0, $total), $name))
 }
@@ -47,7 +58,7 @@ $L = @{
   ja = @{ ffmpeg='ffmpeg download...'; shaders='shader install...'; ytdlp='yt-dlp download...'; config='config write...'; done='done'; ffmpegMissing='ffmpeg not found after extraction'; shadersMissing='shaders not found'; ytdlpMissing='yt-dlp not found after download' }
   zh = @{ ffmpeg='ffmpeg download...'; shaders='shader install...'; ytdlp='yt-dlp download...'; config='config write...'; done='done'; ffmpegMissing='ffmpeg not found after extraction'; shadersMissing='shaders not found'; ytdlpMissing='yt-dlp not found after download' }
 }
-$T = if ($L.ContainsKey($Lang)) { $L[$Lang] } else { $L['fr'] }
+$T = if ($L.ContainsKey($Lang)) { $L[$Lang] } else { $L['en'] }
 
 if (-not $Home_) { Fail 'NR_SETUP_HOME is missing' }
 $runtime = Join-Path $Home_ 'runtime'
@@ -222,7 +233,7 @@ if (-not (Test-FfmpegVersionValue $ffCurrent $FfmpegAccepted)) {
   }
 
   $bin = Get-ChildItem -Path $stage -Recurse -Filter ffmpeg.exe | Select-Object -First 1
-  if (-not $bin) { Fail $T.ffmpegMissing }
+  if (-not $bin) { Fail $T.ffmpegMissing 'ffmpegMissing' }
   New-Item -ItemType Directory -Force -Path $ffDir | Out-Null
   # Everything sitting NEXT TO ffmpeg.exe is installed, not just the two executables: the mirror is a
   # shared build (ffprobe costs 300 kB instead of a second full static binary) and will not start
@@ -233,8 +244,8 @@ if (-not (Test-FfmpegVersionValue $ffCurrent $FfmpegAccepted)) {
   Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
   $ffCurrent = Get-FfmpegVersion $ffExe
 }
-if (-not (Test-Path $ffExe)) { Fail $T.ffmpegMissing }
-if (-not (Test-Path $ffProbe)) { Fail $T.ffmpegMissing }
+if (-not (Test-Path $ffExe)) { Fail $T.ffmpegMissing 'ffmpegMissing' }
+if (-not (Test-Path $ffProbe)) { Fail $T.ffmpegMissing 'ffmpegMissing' }
 Progress 60
 
 # -- 2. GLSL shaders (the upscale engine) ---------------------------------------------------------
@@ -264,7 +275,7 @@ if (-not (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyC
   $fetch = if ($scriptDir) { Join-Path $scriptDir 'fetch-shaders.ps1' } else { '' }
   if ($fetch -and (Test-Path $fetch)) { & $fetch -Dest $shaderDir 2>&1 | ForEach-Object { Info ([string]$_) } }
 }
-if (-not (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyContinue)) { Fail $T.shadersMissing }
+if (-not (Get-ChildItem -Path $shaderDir -Filter '*.glsl' -ErrorAction SilentlyContinue)) { Fail $T.shadersMissing 'shadersMissing' }
 Progress 85
 
 # -- 3. yt-dlp (online media behind a link) -------------------------------------------------------
@@ -273,8 +284,8 @@ Progress 85
 # When this was best effort, a skipped download produced an install that looked complete and failed
 # months later on a bare `spawn yt-dlp.exe ENOENT`, with nothing in the setup log to explain it.
 Stage 'ytdlp' $T.ytdlp
-try { Download $YtDlpUrl $ytDlp } catch { Fail "$($T.ytdlpMissing): $($_.Exception.Message)" }
-if (-not (Test-Path $ytDlp)) { Fail $T.ytdlpMissing }
+try { Download $YtDlpUrl $ytDlp } catch { Fail $T.ytdlpMissing 'ytdlpMissing' $_.Exception.Message }
+if (-not (Test-Path $ytDlp)) { Fail $T.ytdlpMissing 'ytdlpMissing' }
 Progress 95
 
 # -- 4. Configuration ------------------------------------------------------------------------------

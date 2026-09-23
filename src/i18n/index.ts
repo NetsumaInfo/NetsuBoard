@@ -9,6 +9,7 @@
 // Dans un composant : useTranslation("derush") puis t("home.title"). Namespace « common » par défaut.
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { pickLanguage } from "./pickLanguage";
 
 export type LangCode = "fr" | "en" | "es" | "de" | "ja" | "zh";
 
@@ -29,7 +30,10 @@ export const LANGUAGES: LangDef[] = [
 ];
 
 const SUPPORTED: LangCode[] = LANGUAGES.map((l) => l.code);
+// Source language: the text shown for a key missing from the active catalogue.
 const FALLBACK_LANG: LangCode = "fr";
+// Interface language when nothing the user prefers is supported.
+const DEFAULT_LANG: LangCode = "en";
 export const LANG_STORAGE_KEY = "nr-lang";
 
 // Namespaces = un fichier JSON par feature et par langue (src/locales/<lang>/<ns>.json).
@@ -45,6 +49,7 @@ export const NAMESPACES = [
   "dictate",
   "reference",
   "upscale",
+
   "export",
   "settings",
   "models",
@@ -79,7 +84,7 @@ const loadedLangs = new Set<LangCode>(["fr"]);
  * fr est déjà en mémoire. Idempotent : une langue déjà chargée ne re-fetch pas.
  */
 export async function activateLanguage(lng: LangCode): Promise<void> {
-  const target: LangCode = SUPPORTED.includes(lng) ? lng : FALLBACK_LANG;
+  const target: LangCode = SUPPORTED.includes(lng) ? lng : DEFAULT_LANG;
   if (!loadedLangs.has(target)) {
     const jobs: Promise<void>[] = [];
     for (const [path, loader] of Object.entries(lazy)) {
@@ -98,17 +103,21 @@ export async function activateLanguage(lng: LangCode): Promise<void> {
   if (typeof document !== "undefined") document.documentElement.setAttribute("lang", target);
 }
 
-/** Langue de démarrage : préférence sauvegardée, sinon locale système mappée, sinon fr. */
+/**
+ * Startup language: the saved choice, else the first supported language in the system's
+ * preference list (`navigator.languages`, not only its first entry), else English.
+ */
 export function detectDefaultLang(): LangCode {
   if (typeof localStorage !== "undefined") {
     const saved = localStorage.getItem(LANG_STORAGE_KEY) as LangCode | null;
     if (saved && SUPPORTED.includes(saved)) return saved;
   }
   if (typeof navigator !== "undefined") {
-    const nav = (navigator.language || "").slice(0, 2).toLowerCase() as LangCode;
-    if (SUPPORTED.includes(nav)) return nav;
+    const prefs = navigator.languages?.length ? navigator.languages : [navigator.language];
+    const picked = pickLanguage(prefs, SUPPORTED);
+    if (picked) return picked;
   }
-  return FALLBACK_LANG;
+  return DEFAULT_LANG;
 }
 
 /** true si l'utilisateur n'a jamais choisi de langue (→ afficher l'écran de premier lancement). */

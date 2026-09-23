@@ -25,7 +25,7 @@ import { hasChosenLang, LANGUAGES, type LangCode } from "@/i18n";
 import { useApp } from "@/store";
 import { FlagIcon } from "@/components/language/FlagIcon";
 import { GateFrame } from "@/components/auth/GateFrame";
-import { cn } from "@/lib/utils";
+import { cn, fmtBytes } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -363,8 +363,8 @@ function DownloadRow({ dl }: { dl: ActiveDownload }) {
     : dl.state === "work"
       ? t("setup:dl.working")
       : [
-        known ? `${fmtSize(dl.done)} / ${fmtSize(dl.total)}` : dl.done > 0 ? fmtSize(dl.done) : t("setup:dl.working"),
-        dl.speed > 0 ? `${fmtSize(dl.speed)}/s` : null,
+        known ? `${fmtBytes(dl.done)} / ${fmtBytes(dl.total)}` : dl.done > 0 ? fmtBytes(dl.done) : t("setup:dl.working"),
+        dl.speed > 0 ? `${fmtBytes(dl.speed)}/s` : null,
       ].filter(Boolean).join(" · ");
   return (
     <div className="flex flex-col gap-1 py-1">
@@ -382,15 +382,6 @@ function DownloadRow({ dl }: { dl: ActiveDownload }) {
   );
 }
 
-// Octets → texte court. Vivait dans le registre de modèles, supprimé avec lui ; seul le journal
-// d'installation en a encore besoin.
-export function fmtSize(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) return "0 o";
-  const units = ["o", "Ko", "Mo", "Go"];
-  const index = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
-  const value = bytes / 1024 ** index;
-  return `${value >= 100 || index === 0 ? Math.round(value) : value.toFixed(1)} ${units[index]}`;
-}
 
 async function relaunchApp() {
   try {

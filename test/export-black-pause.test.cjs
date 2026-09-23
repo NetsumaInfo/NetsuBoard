@@ -50,7 +50,7 @@ test("le champ numérique partagé évite la validation native et accepte les pa
   assert.equal(clampSteppedNumber(-1, 0, 10, 0.1), 0);
   assert.match(source, /type="text"/);
   assert.match(source, /role="spinbutton"/);
-  assert.match(source, /parseFloat\(draft\)/);
+  assert.match(source, /parseDecimal\(draft\)/);
   assert.match(source, /clampSteppedNumber\(v, min, max, step\)/);
 });
 

@@ -14,6 +14,7 @@ const path = require('path');
 const { language, t } = require('./i18n');
 const fs = require('fs');
 const { spawn, spawnSync } = require('child_process');
+const { StringDecoder } = require('string_decoder');
 const { CONFIG, NR_HOME } = require('./config');
 const { detectHardware } = require('./hardware');
 const CONFIG_PATH = path.join(NR_HOME, 'nr.config.json');
@@ -235,6 +236,22 @@ async function setupStatus() {
   };
 }
 
+const SETUP_ERROR_KEYS = { ffmpegMissing: 'setupFfmpegMissing', shadersMissing: 'setupShadersMissing', ytdlpMissing: 'setupYtdlpMissing' };
+
+/**
+ * The text of an `ERROR:` marker from setup.ps1, in the interface language. `#<key>|<label>|<detail>`
+ * names a known message; anything else is shown as written.
+ * @param {string} payload
+ */
+function setupErrorText(payload) {
+  const m = /^#(\w+)\|([^|]*)\|?(.*)$/.exec(payload.trim());
+  if (!m) return payload.trim();
+  const key = /** @type {Record<string, string>} */ (SETUP_ERROR_KEYS)[m[1]];
+  const message = key ? t(key) : m[2].trim();
+  const detail = m[3].trim();
+  return detail ? t('withDetail', { message, detail }) : message;
+}
+
 // Localise setup.ps1 : ressources bundlées (release) puis dépôt (dev).
 function setupScript() {
   for (const p of [
@@ -285,6 +302,8 @@ async function runSetup(ev) {
     ], { windowsHide: true, env });
 
     let errTail = '';
+    /** @type {Record<string, string>} */
+    const STAGE_KEYS = { ffmpeg: 'setupStageFfmpeg', shaders: 'setupStageShaders', ytdlp: 'setupStageYtdlp', config: 'setupStageConfig', done: 'setupDone' };
     const onLine = (raw) => {
       const line = raw.trim();
       if (!line) return;
@@ -296,19 +315,27 @@ async function runSetup(ev) {
       const mDl = line.match(/^DL:([a-z]+)\|(\d+)\|(\d+)\|(.*)$/);
       // Suivi par élément = état vivant, pas une ligne de journal de plus.
       if (mDl) { send({ dl: { state: mDl[1], done: Number(mDl[2]), total: Number(mDl[3]), name: mDl[4].trim() } }); return; }
-      if (mErr) { errTail = mErr[1].trim(); send({ stage: 'error', label: errTail }); return; }
-      if (mStage) { send({ stage: mStage[1].trim(), label: (mStage[2] || '').trim() }); return; }
+      if (mErr) { errTail = setupErrorText(mErr[1]); send({ stage: 'error', label: errTail }); return; }
+      if (mStage) {
+        const id = mStage[1].trim();
+        send({ stage: id, label: STAGE_KEYS[id] ? t(STAGE_KEYS[id]) : (mStage[2] || '').trim() });
+        return;
+      }
       if (mProg) { send({ pct: Math.min(100, parseInt(mProg[1], 10)) }); return; }
       send({ line });
     };
+    // setup.ps1 writes UTF-8. One decoder per stream: a character split across two chunks
+    // (any Japanese path or message) is held back instead of turning into two U+FFFD.
     let buf = '';
-    const pump = (d) => {
-      buf += d.toString();
+    const outDecoder = new StringDecoder('utf8');
+    const errDecoder = new StringDecoder('utf8');
+    const pump = (text) => {
+      buf += text;
       let nl;
       while ((nl = buf.indexOf('\n')) >= 0) { onLine(buf.slice(0, nl)); buf = buf.slice(nl + 1); }
     };
-    ps.stdout.on('data', pump);
-    ps.stderr.on('data', (d) => { errTail = (errTail + d.toString()).slice(-1000); pump(d); });
+    ps.stdout.on('data', (d) => pump(outDecoder.write(d)));
+    ps.stderr.on('data', (d) => { const text = errDecoder.write(d); errTail = (errTail + text).slice(-1000); pump(text); });
 
     ps.on('error', (e) => { running = false; resolve({ ok: false, error: String(e) }); });
     ps.on('close', (code) => {
@@ -337,7 +364,7 @@ async function runSetup(ev) {
 }
 
 module.exports = {
-  mlEngineName, videoEngineName, quickSetupReady, probeRuntime, setupStatus, runSetup,
+  mlEngineName, videoEngineName, quickSetupReady, probeRuntime, setupStatus, runSetup, setupErrorText,
   // Exportés pour les tests : `test/packaging.test.cjs` vérifie que cette liste ne diverge pas de
   // $FfmpegAccepted dans scripts/setup.ps1, `test/setup-quick-ready.test.cjs` exerce le contrôle rapide.
   SETUP_RUNTIME_VERSION, FFMPEG_ACCEPTED_VERSIONS, ffmpegVersionAccepted,

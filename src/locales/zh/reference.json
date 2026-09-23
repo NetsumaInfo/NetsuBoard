@@ -159,6 +159,7 @@
     "keyStroke": "绘制时",
     "keyEsc": "Esc",
     "sourceFps": "源",
+    "fpsValue": "{{fps}} 张/秒",
     "customFps": "自定义帧率（张/秒）",
     "downloadProviders": "自动下载的平台",
     "provider_twitter": "X",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn, fmtNumber, parseDecimal } from "@/lib/utils";
 import { clampSteppedNumber } from "./numberSpinValue";
 
 /**
@@ -24,14 +24,14 @@ export function NumberSpin({
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const clamp = (v: number) => clampSteppedNumber(v, min, max, step);
-  const shown = draft ?? String(value);
+  const shown = draft ?? fmtNumber(value, { maximumFractionDigits: 6, useGrouping: false });
   return (
     <input
       type="text" inputMode="decimal" role="spinbutton"
       aria-valuemin={min} aria-valuemax={max} aria-valuenow={value}
       aria-label={ariaLabel} value={shown} disabled={disabled}
       onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => { if (draft != null) { const v = parseFloat(draft); onCommit(isNaN(v) ? value : clamp(v)); setDraft(null); } }}
+      onBlur={() => { if (draft != null) { const v = parseDecimal(draft); onCommit(isNaN(v) ? value : clamp(v)); setDraft(null); } }}
       // `stopPropagation` : la molette pilote ici la valeur, elle ne doit pas aussi faire défiler la
       // page ni zoomer le board sous-jacent.
       onWheel={(e) => { e.stopPropagation(); if (!disabled) onCommit(clamp(value + (e.deltaY < 0 ? step : -step))); }}

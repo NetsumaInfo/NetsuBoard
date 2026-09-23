@@ -159,6 +159,7 @@
     "keyStroke": "stroke",
     "keyEsc": "Esc",
     "sourceFps": "Source",
+    "fpsValue": "{{fps}} fps",
     "customFps": "Custom frame rate (frames/s)",
     "downloadProviders": "Download from",
     "provider_twitter": "X",

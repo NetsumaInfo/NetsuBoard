@@ -8,7 +8,7 @@
 
 const path = require("path");
 const { CONFIG, DATA_DIR, saveConfig } = require("./config");
-const { t } = require("./i18n");
+const { t, pickLanguage } = require("./i18n");
 const ffmpeg = require("./ffmpeg");
 const thumbs = require("./thumbs");
 const proxy = require("./proxy");
@@ -123,8 +123,7 @@ function createRpc() {
     // applique le changement immédiatement via localStorage ; ici c'est la persistance de fond. ---
     "config:get": () => ({ lang: CONFIG.lang || null }),
     "config:setLang": ([lang]) => {
-      const code = String(lang || "fr").toLowerCase().split(/[-_]/)[0];
-      return saveConfig({ lang: ["fr", "en", "es", "de", "ja", "zh"].includes(code) ? code : "fr" });
+      return saveConfig({ lang: pickLanguage([lang]) || "en" });
     },
 
     // --- Provisionnement 1er lancement (app packagée) : ffmpeg + shaders GLSL + yt-dlp ---
