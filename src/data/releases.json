@@ -1,5 +1,74 @@
 [
   {
+    "id": "netsuboard-0.5.2",
+    "version": "0.5.2",
+    "date": "2026-10-10",
+    "title": {
+      "fr": "Une installation plus sûre, et une interface entièrement dans ta langue",
+      "en": "A safer install, and an interface fully in your language",
+      "es": "Una instalación más segura y una interfaz totalmente en tu idioma",
+      "de": "Eine sicherere Installation und eine Oberfläche ganz in deiner Sprache",
+      "ja": "より安全なインストールと、選んだ言語で統一された画面",
+      "zh": "更稳妥的安装，界面完全使用你的语言"
+    },
+    "changes": [
+      {
+        "kind": "fix",
+        "fr": "La première installation ne lance plus de copie temporaire de l’application. Certains antivirus bloquaient cette étape et arrêtaient l’installation.",
+        "en": "A first install no longer runs a temporary copy of the application. Some antivirus tools blocked that step and stopped the install.",
+        "es": "La primera instalación ya no ejecuta una copia temporal de la aplicación. Algunos antivirus bloqueaban ese paso y detenían la instalación.",
+        "de": "Die Erstinstallation startet keine temporäre Kopie der App mehr. Manche Antivirenprogramme blockierten diesen Schritt und brachen die Installation ab.",
+        "ja": "初回インストールで、アプリの一時コピーを起動しなくなりました。一部のウイルス対策ソフトがこの手順をブロックし、インストールが止まっていました。",
+        "zh": "首次安装不再运行应用的临时副本。部分杀毒软件会拦截这一步，导致安装中断。"
+      },
+      {
+        "kind": "fix",
+        "fr": "Le téléchargement du premier lancement démarre même quand Windows ne trouve plus PowerShell par son nom.",
+        "en": "The first-launch download starts even when Windows can no longer find PowerShell by name.",
+        "es": "La descarga del primer inicio arranca aunque Windows ya no encuentre PowerShell por su nombre.",
+        "de": "Der Download beim ersten Start beginnt auch dann, wenn Windows PowerShell nicht mehr über den Namen findet.",
+        "ja": "Windows が PowerShell を名前で見つけられない場合でも、初回起動時のダウンロードが始まります。",
+        "zh": "即使 Windows 无法按名称找到 PowerShell，首次启动的下载也能开始。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Quand l’installation du premier lancement échoue, le détail est écrit dans le journal de NetsuBoard, et le message d’erreur indique le bon dossier.",
+        "en": "When the first-launch install fails, the details are written to NetsuBoard’s log, and the error message points to the right folder.",
+        "es": "Si la instalación del primer inicio falla, el detalle se guarda en el registro de NetsuBoard y el mensaje de error indica la carpeta correcta.",
+        "de": "Schlägt die Installation beim ersten Start fehl, stehen die Details im NetsuBoard-Protokoll, und die Fehlermeldung nennt den richtigen Ordner.",
+        "ja": "初回起動時のインストールに失敗した場合、詳細が NetsuBoard のログに記録され、エラーメッセージは正しいフォルダーを示します。",
+        "zh": "首次启动的安装失败时，详细信息会写入 NetsuBoard 的日志，错误提示也会指向正确的文件夹。"
+      },
+      {
+        "kind": "fix",
+        "fr": "Les raccourcis clavier fonctionnent sur les claviers AZERTY, QWERTY et QWERTZ, et les touches sont nommées dans ta langue.",
+        "en": "Keyboard shortcuts work on AZERTY, QWERTY and QWERTZ keyboards, and keys are named in your language.",
+        "es": "Los atajos de teclado funcionan en teclados AZERTY, QWERTY y QWERTZ, y las teclas se nombran en tu idioma.",
+        "de": "Tastenkürzel funktionieren auf AZERTY-, QWERTY- und QWERTZ-Tastaturen, und die Tasten heißen wie in deiner Sprache.",
+        "ja": "キーボードショートカットが AZERTY、QWERTY、QWERTZ 配列で動作し、キー名は選んだ言語で表示されます。",
+        "zh": "键盘快捷键可在 AZERTY、QWERTY 和 QWERTZ 键盘上使用，按键名称以你的语言显示。"
+      },
+      {
+        "kind": "fix",
+        "fr": "Toute l’interface suit la langue choisie : messages d’erreur, collaboration, dates, heures, nombres et ordre de tri. Plus de français qui apparaît dans une autre langue.",
+        "en": "The whole interface follows the chosen language: error messages, collaboration, dates, times, numbers and sort order. No more French showing up in another language.",
+        "es": "Toda la interfaz sigue el idioma elegido: mensajes de error, colaboración, fechas, horas, números y orden. Ya no aparece francés en otro idioma.",
+        "de": "Die ganze Oberfläche folgt der gewählten Sprache: Fehlermeldungen, Zusammenarbeit, Datum, Uhrzeit, Zahlen und Sortierung. Kein Französisch mehr in einer anderen Sprache.",
+        "ja": "画面全体が選んだ言語に従います。エラーメッセージ、共同作業、日付、時刻、数値、並び順が対象です。他の言語でフランス語が出ることはなくなりました。",
+        "zh": "整个界面都跟随所选语言：错误提示、协作、日期、时间、数字和排序。其他语言下不再出现法语。"
+      },
+      {
+        "kind": "fix",
+        "fr": "Sur un Windows dans une langue que NetsuBoard ne propose pas, l’application et l’installeur s’affichent en anglais.",
+        "en": "On a Windows set to a language NetsuBoard does not offer, the application and the installer show in English.",
+        "es": "En un Windows con un idioma que NetsuBoard no ofrece, la aplicación y el instalador se muestran en inglés.",
+        "de": "Auf einem Windows in einer Sprache, die NetsuBoard nicht anbietet, erscheinen App und Installer auf Englisch.",
+        "ja": "NetsuBoard が対応していない言語の Windows では、アプリとインストーラーが英語で表示されます。",
+        "zh": "如果 Windows 使用的是 NetsuBoard 未提供的语言，应用和安装程序会以英文显示。"
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.5.1",
     "version": "0.5.1",
     "date": "2026-09-14",
