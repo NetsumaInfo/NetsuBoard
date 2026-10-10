@@ -235,7 +235,7 @@ async function callInner(channel: string, args: unknown[] = []): Promise<any> {
   // appelants attrapent et n'affichent qu'une notice, la console ne voyait donc jamais la cause.
   // Le service tourne hors de la webview : sa cause d'arrêt n'est QUE dans son journal (la coquille
   // Tauri release n'a pas de console). Sans ce pointeur, « Failed to fetch » n'était pas actionnable.
-  if (!r) throw fail(channel, `core unreachable (${BASE}): ${String(networkError || "Failed to fetch")}${isTauri ? " — log: %LOCALAPPDATA%\\NetsuRush\\logs\\core.log" : ""}`);
+  if (!r) throw fail(channel, `core unreachable (${BASE}): ${String(networkError || "Failed to fetch")}${isTauri ? " — log: %LOCALAPPDATA%\\NetsuBoard\\logs\\core.log" : ""}`);
   if (!r.ok) throw fail(channel, `core rpc HTTP ${r.status}: ${r.statusText || "request failed"}`);
   const j = await r.json();
   if (!j || !j.ok) throw fail(channel, (j && j.error) || `core rpc error: ${channel}`);

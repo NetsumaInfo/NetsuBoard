@@ -122,10 +122,19 @@ function buildHardwareProfile(gpus, opts = {}) {
   return { gpus, cpus, vendors, primaryVendor, initialMlBackend, initialOnnxBackend, windowsBuild, label };
 }
 
+// Windows PowerShell by absolute path: a bare `powershell` is resolved through PATH, and a PATH that
+// lost System32\WindowsPowerShell\v1.0 turns first-run setup into `spawn powershell ENOENT`.
+/** @returns {string} */
+function powershellPath() {
+  const root = process.env.SystemRoot || process.env.windir;
+  const exe = root ? path.join(root, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe') : '';
+  return exe && fs.existsSync(exe) ? exe : 'powershell';
+}
+
 /** @param {string} command @returns {Promise<string>} */
 function runPowerShell(command) {
   return new Promise((resolve, reject) => {
-    const ps = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', command], { windowsHide: true });
+    const ps = spawn(powershellPath(), ['-NoProfile', '-NonInteractive', '-Command', command], { windowsHide: true });
     let out = '';
     ps.stdout.on('data', (chunk) => { out += chunk.toString(); });
     ps.on('error', reject);
@@ -231,5 +240,5 @@ function detectHardware(opts = {}) {
 
 module.exports = {
   classifyGpu, normalizeGpuInventory, supportsRocmWindows, supportsIntelXpuWindows,
-  buildHardwareProfile, queryWindowsCpuNames, detectHardware,
+  buildHardwareProfile, queryWindowsCpuNames, detectHardware, powershellPath,
 };

@@ -139,6 +139,14 @@ FunctionEnd
   ;
   ; InitPluginsDir is mandatory: until something initialises it, $PLUGINSDIR expands to nothing and
   ; the copy lands in $INSTDIR under a leading backslash, where the command below never finds it.
+  ;
+  ; A first install has none of the three images, so nothing can hold a lock: the helper is not
+  ; even extracted. An unsigned executable written to %TEMP% and run from there is what antivirus
+  ; behaviour shields block, and a new user is the one who can least afford that.
+  IfFileExists "$INSTDIR\${MAINBINARYNAME}.exe" netsu_release_locks
+  IfFileExists "$INSTDIR\app.exe" netsu_release_locks
+  IfFileExists "$INSTDIR\resources\bin\node.exe" netsu_release_locks netsu_locks_released
+  netsu_release_locks:
   InitPluginsDir
   File /oname=$PLUGINSDIR\netsuboard-release-lock.exe "${MAINBINARYSRCPATH}"
   nsExec::ExecToLog '"$PLUGINSDIR\netsuboard-release-lock.exe" --release-lock "$INSTDIR\${MAINBINARYNAME}.exe"'
@@ -148,6 +156,7 @@ FunctionEnd
   nsExec::ExecToLog '"$PLUGINSDIR\netsuboard-release-lock.exe" --release-lock "$INSTDIR\resources\bin\node.exe"'
   Pop $0
   Delete "$PLUGINSDIR\netsuboard-release-lock.exe"
+  netsu_locks_released:
 
   ; 4. The exit code of the calls above is deliberately ignored: Restart Manager can be unavailable,
   ; or refuse a process it cannot touch, on a machine where nothing holds the files at all. The only

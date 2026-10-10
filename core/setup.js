@@ -16,7 +16,7 @@ const fs = require('fs');
 const { spawn, spawnSync } = require('child_process');
 const { StringDecoder } = require('string_decoder');
 const { CONFIG, NR_HOME } = require('./config');
-const { detectHardware } = require('./hardware');
+const { detectHardware, powershellPath } = require('./hardware');
 const CONFIG_PATH = path.join(NR_HOME, 'nr.config.json');
 
 // Dossier des ressources bundlées (renseigné par la coquille Tauri en release). En dev, le dépôt.
@@ -297,7 +297,7 @@ async function runSetup(ev) {
     // The UTF-8 the scriptblock used to force now comes from the script's BOM, which is what
     // Windows PowerShell 5.1 reads; scripts/build.ps1 rewrites the staged copy with one too.
     // `Bypass` stays until setup.ps1 is Authenticode-signed — see docs/code-signing.md.
-    const ps = spawn('powershell', [
+    const ps = spawn(powershellPath(), [
       '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script,
     ], { windowsHide: true, env });
 
@@ -315,6 +315,9 @@ async function runSetup(ev) {
       const mDl = line.match(/^DL:([a-z]+)\|(\d+)\|(\d+)\|(.*)$/);
       // Suivi par élément = état vivant, pas une ligne de journal de plus.
       if (mDl) { send({ dl: { state: mDl[1], done: Number(mDl[2]), total: Number(mDl[3]), name: mDl[4].trim() } }); return; }
+      // Everything but the per-tick download and progress markers goes to core.log: a setup that
+      // fails on someone else's machine is otherwise only ever seen on their screen.
+      if (!mProg) console.log(`[setup] ${line}`);
       if (mErr) { errTail = setupErrorText(mErr[1]); send({ stage: 'error', label: errTail }); return; }
       if (mStage) {
         const id = mStage[1].trim();
@@ -337,9 +340,10 @@ async function runSetup(ev) {
     ps.stdout.on('data', (d) => pump(outDecoder.write(d)));
     ps.stderr.on('data', (d) => { const text = errDecoder.write(d); errTail = (errTail + text).slice(-1000); pump(text); });
 
-    ps.on('error', (e) => { running = false; resolve({ ok: false, error: String(e) }); });
+    ps.on('error', (e) => { running = false; console.error(`[setup] cannot start PowerShell: ${e}`); resolve({ ok: false, error: String(e) }); });
     ps.on('close', (code) => {
       if (buf.trim()) onLine(buf);
+      console.log(`[setup] setup.ps1 exited with code ${code}`);
       if (code !== 0) {
         running = false;
         const prefix = { fr:'setup.ps1 a échoué', en:'setup.ps1 failed', es:'setup.ps1 falló', de:'setup.ps1 ist fehlgeschlagen', ja:'setup.ps1 に失敗しました', zh:'setup.ps1 失败' }[language()];

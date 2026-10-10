@@ -22,6 +22,8 @@ test('Tauri packages the staged runtime tree', () => {
   // $PLUGINSDIR expands to nothing until it is initialised: without this line the helper is
   // extracted into $INSTDIR and the command below runs on a path that holds no file.
   assert.match(preinstall, /InitPluginsDir[\s\S]*File \/oname=\$PLUGINSDIR\\netsuboard-release-lock\.exe/);
+  // A first install holds no lock: the helper must not be extracted to %TEMP% and run at all.
+  assert.match(preinstall, /IfFileExists "\$INSTDIR\\resources\\bin\\node\.exe" netsu_release_locks netsu_locks_released[\s\S]*InitPluginsDir[\s\S]*netsu_locks_released:/);
   // The lock is released on the application itself, not only on its background service: app.exe is
   // the first file the install section writes, and the one that fails when it is still held.
   assert.match(preinstall, /--release-lock "\$INSTDIR\\app\.exe"/);
