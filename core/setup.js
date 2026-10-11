@@ -206,6 +206,20 @@ function probeRuntime(config = CONFIG) {
   };
 }
 
+/** Files a COMPLETED setup wrote and that are gone again. An antivirus that quarantines yt-dlp or
+ * ffmpeg after the fact produces exactly this, and re-running the setup only downloads what will be
+ * removed once more: the install screen has to name the file instead of looping on it.
+ * @param {any} config @returns {string[]} */
+function vanishedRuntimeFiles(config = CONFIG) {
+  if (!PACKAGED || !config || !config.setupCompletedAt) return [];
+  if (Number(config.setupRuntimeVersion) !== SETUP_RUNTIME_VERSION) return [];
+  const gone = [config.ffmpeg, config.ffprobe, config.ytDlp]
+    .filter((file) => file && !exists(file))
+    .map((file) => path.basename(String(file)));
+  if (!shadersReady(config)) gone.push('shaders');
+  return gone;
+}
+
 // État du provisionnement (aucune installation déclenchée).
 async function setupStatus() {
   const installed = readInstalledConfig();
@@ -221,9 +235,13 @@ async function setupStatus() {
   const online = quickReady || runtime === true || ytDlpReady(installed);
   const hardware = await detectHardware();
   const labels = SETUP_LABELS[language()] || SETUP_LABELS.fr;
+  const ready = ffmpeg && shaders && online;
+  const missing = ready ? [] : vanishedRuntimeFiles(installed);
+  if (!ready) console.warn(`[setup] runtime not ready (ffmpeg=${ffmpeg}, shaders=${shaders}, yt-dlp=${online}${missing.length ? `, gone since the last setup: ${missing.join(', ')}` : ''})`);
   return {
     // « prêt » = de quoi afficher un board, agrandir un média ET résoudre un lien en ligne.
-    ready: ffmpeg && shaders && online,
+    ready,
+    missing,
     ffmpeg, shaders, online,
     hardware,
     runtime,
@@ -371,5 +389,5 @@ module.exports = {
   mlEngineName, videoEngineName, quickSetupReady, probeRuntime, setupStatus, runSetup, setupErrorText,
   // Exportés pour les tests : `test/packaging.test.cjs` vérifie que cette liste ne diverge pas de
   // $FfmpegAccepted dans scripts/setup.ps1, `test/setup-quick-ready.test.cjs` exerce le contrôle rapide.
-  SETUP_RUNTIME_VERSION, FFMPEG_ACCEPTED_VERSIONS, ffmpegVersionAccepted,
+  SETUP_RUNTIME_VERSION, FFMPEG_ACCEPTED_VERSIONS, ffmpegVersionAccepted, vanishedRuntimeFiles,
 };

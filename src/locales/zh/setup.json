@@ -4,6 +4,7 @@
     "running": "正在检查安装和 GPU…"
   },
   "installFailed": "安装失败",
+  "vanished": "安装后消失的文件：{{files}}。很可能被杀毒软件隔离了。",
   "running": "正在安装基础环境…",
   "log": "安装日志",
   "done": "安装完成",

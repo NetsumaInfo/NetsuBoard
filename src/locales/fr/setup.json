@@ -4,6 +4,7 @@
     "running": "Analyse de l'installation et du GPU…"
   },
   "installFailed": "Échec de l'installation",
+  "vanished": "Fichiers disparus après l'installation : {{files}}. Un antivirus les a sûrement mis en quarantaine.",
   "running": "Installation des prérequis…",
   "log": "Journal d'installation",
   "done": "Installation terminée",

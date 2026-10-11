@@ -296,6 +296,8 @@ export interface SetupItem {
 }
 export interface SetupStatus {
   ready: boolean;    // ffmpeg + venv présents → fonctions cœur opérationnelles
+  // Files a completed setup installed and that are gone again (antivirus quarantine, usually).
+  missing?: string[];
   venv: boolean;
   transnet?: boolean;
   ffmpeg: boolean;

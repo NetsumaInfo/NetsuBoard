@@ -4,6 +4,7 @@
     "running": "Installation und GPU werden geprüft…"
   },
   "installFailed": "Installation fehlgeschlagen",
+  "vanished": "Nach der Installation verschwundene Dateien: {{files}}. Wahrscheinlich hat ein Antivirenprogramm sie in Quarantäne verschoben.",
   "running": "Voraussetzungen werden installiert…",
   "log": "Installationsprotokoll",
   "done": "Installation abgeschlossen",

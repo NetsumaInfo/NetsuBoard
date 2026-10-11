@@ -120,6 +120,13 @@ export function SetupGate({ children }: { children: ReactNode }) {
           return;
         }
         setPhase(needLang ? "language" : "install");
+        // Installed, then gone: downloading again would only feed the same removal, and the user
+        // would watch the install restart at every launch. Name the file and let them retry.
+        if (next.missing?.length) {
+          setError(t("setup:vanished", { files: next.missing.join(", ") }));
+          setInstall("error");
+          return;
+        }
         void runInstall();
       })
       .catch((cause) => {

@@ -4,6 +4,7 @@
     "running": "Analizando la instalación y la GPU…"
   },
   "installFailed": "Error de instalación",
+  "vanished": "Archivos desaparecidos tras la instalación: {{files}}. Seguramente un antivirus los puso en cuarentena.",
   "running": "Instalando requisitos…",
   "log": "Registro de instalación",
   "done": "Instalación terminada",
