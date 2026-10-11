@@ -1,5 +1,38 @@
 [
   {
+    "id": "netsuboard-0.5.21",
+    "version": "0.5.21",
+    "date": "2026-10-11",
+    "title": {
+      "fr": "L’installation ne tourne plus en boucle",
+      "en": "The install no longer loops",
+      "es": "La instalación ya no entra en bucle",
+      "de": "Die Installation läuft nicht mehr im Kreis",
+      "ja": "インストールが繰り返されなくなりました",
+      "zh": "安装不再反复重来"
+    },
+    "changes": [
+      {
+        "kind": "fix",
+        "fr": "Quand un antivirus retire un fichier juste après l’installation, NetsuBoard ne relance plus l’installation à chaque démarrage. L’écran indique quel fichier a disparu et propose de réessayer.",
+        "en": "When an antivirus removes a file right after the install, NetsuBoard no longer restarts the install at every launch. The screen names the missing file and offers to retry.",
+        "es": "Cuando un antivirus elimina un archivo justo después de la instalación, NetsuBoard ya no reinicia la instalación en cada arranque. La pantalla indica qué archivo falta y permite reintentar.",
+        "de": "Entfernt ein Antivirenprogramm direkt nach der Installation eine Datei, startet NetsuBoard die Installation nicht mehr bei jedem Start neu. Der Bildschirm nennt die fehlende Datei und bietet einen neuen Versuch an.",
+        "ja": "インストール直後にウイルス対策ソフトがファイルを削除しても、起動のたびにインストールをやり直すことはなくなりました。消えたファイル名が表示され、再試行できます。",
+        "zh": "如果杀毒软件在安装后立刻移除了某个文件，NetsuBoard 不会再在每次启动时重新安装。界面会显示缺少的文件，并可重试。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Le journal de NetsuBoard indique à chaque démarrage ce qui manque quand l’application n’est pas prête.",
+        "en": "NetsuBoard’s log says at every launch what is missing when the application is not ready.",
+        "es": "El registro de NetsuBoard indica en cada arranque qué falta cuando la aplicación no está lista.",
+        "de": "Das NetsuBoard-Protokoll nennt bei jedem Start, was fehlt, wenn die App nicht bereit ist.",
+        "ja": "アプリの準備ができていない場合、起動のたびに不足しているものが NetsuBoard のログに記録されます。",
+        "zh": "应用未就绪时，NetsuBoard 的日志会在每次启动时记录缺少的内容。"
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.5.2",
     "version": "0.5.2",
     "date": "2026-10-10",
