@@ -627,6 +627,7 @@ export interface LoopExportOpts {
   fps?: number;
   width?: number;
   quality?: number;
+  lossless?: boolean;
   crop?: { x: number; y: number; w: number; h: number };
   flipH?: boolean;
   flipV?: boolean;
@@ -682,11 +683,14 @@ export interface RefApi {
   // `fps` omis ou ≤ 0 = cadence de la source ; la réponse renvoie celle réellement employée.
   extractFrames(opts: { path: string; fps?: number; max?: number; height?: number; in?: number; out?: number; projectPath?: string; title?: string }): Promise<{ ok: boolean; frames?: string[]; fps?: number; error?: string }>;
   // A local clip written as a looping animated image at `out`. `in/end` = range in seconds (whole
-  // file when omitted), `fps`/`width` omitted or 0 = those of the source, `quality` (1–100) is WebP
-  // only. One export at a time; `cancelExportLoop` stops it and the call resolves `cancelled`.
+  // file when omitted), `fps`/`width` omitted or 0 = those of the source, `quality` (1–100) and
+  // `lossless` are WebP only. One export at a time; `cancelExportLoop` stops it and the call resolves `cancelled`.
   exportLoop(opts: LoopExportOpts): Promise<{ ok: boolean; path?: string; bytes?: number; cancelled?: boolean; error?: string }>;
   cancelExportLoop(): Promise<{ ok: boolean; cancelled?: boolean }>;
   onLoopProgress(cb: (p: { pct: number }) => void): () => void;
+  // Weight the export would have, from a real encode of a short sample. A newer call replaces the
+  // one in flight, which resolves `stale`.
+  estimateLoop(opts: Omit<LoopExportOpts, "out">): Promise<{ ok: boolean; bytes?: number; stale?: boolean; error?: string }>;
   // Partage « .netsu » : exporte la scène (items + vue) dans une archive à `destPath` selon `opts`
   // (mode complet / léger / liens, seuil d'embarquement, gel des liens distants). Importe une archive
   // → scène reconstruite (tokens d'assets → chemins locaux ; gros médias non retrouvés = placeholders).
@@ -1174,6 +1178,7 @@ const mock: NrApi = {
       exportLoop: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       cancelExportLoop: async () => ({ ok: true, cancelled: false }),
       onLoopProgress: () => () => {},
+      estimateLoop: async () => ({ ok: false, stale: true }),
       exportBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       importBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       onShareProgress: () => () => {},

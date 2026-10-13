@@ -14,15 +14,20 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { fmtBytes } from "@/lib/utils";
 import { errorText } from "@/lib/errorText";
-import type { BoardItem } from "./referenceShared";
+import { isCoreFileRef, type BoardItem } from "./referenceShared";
 import { MiniSelect } from "./inspectorControls";
 import { useBoard } from "./useReferenceBoard";
 import { ensureLocalMedia } from "./boardUpscale";
 import {
   LOOP_FORMATS, LOOP_FPS, LOOP_QUALITY_DEFAULT, LOOP_WIDTHS, MAX_LOOP_SEC, loopFileName, loopSpan,
 } from "./boardLoopExport";
+
+const LOSSLESS_ID = "loop-export-lossless";
 
 export function ExportLoopDialog({
   item,
@@ -43,8 +48,35 @@ export function ExportLoopDialog({
   const [pct, setPct] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const [lossless, setLossless] = useState(false);
+  // undefined = being measured, null = no estimate available.
+  const [estimate, setEstimate] = useState<number | null | undefined>(null);
+
   const span = loopSpan(item);
   const tooLong = span.sec != null && span.sec > MAX_LOOP_SEC;
+  const { in: spanIn, end: spanEnd } = span;
+  const { ref, crop, flipH, flipV } = item;
+
+  // Estimated weight, re-measured when a setting changes. Only for a file already on disk: fetching
+  // a remote medium is the export's job, not a side effect of opening the dialog.
+  useEffect(() => {
+    const api = nr.reference;
+    if (!open || busy || tooLong || !api || !isCoreFileRef(ref)) return setEstimate(null);
+    let live = true;
+    setEstimate(undefined);
+    const timer = setTimeout(() => {
+      void api.estimateLoop({
+        path: ref, format, in: spanIn, end: spanEnd,
+        fps: fps || undefined, width: width || undefined,
+        quality: format === "webp" ? quality : undefined,
+        lossless: format === "webp" && lossless,
+        crop, flipH, flipV,
+      }).then((r) => {
+        if (live && !r.stale) setEstimate(r.ok && r.bytes ? r.bytes : null);
+      }).catch(() => { if (live) setEstimate(null); });
+    }, 350);
+    return () => { live = false; clearTimeout(timer); };
+  }, [open, busy, tooLong, ref, format, width, fps, quality, lossless, spanIn, spanEnd, crop, flipH, flipV]);
 
   useEffect(() => {
     if (!busy) return;
@@ -67,6 +99,7 @@ export function ExportLoopDialog({
         in: span.in, end: span.end,
         fps: fps || undefined, width: width || undefined,
         quality: format === "webp" ? quality : undefined,
+        lossless: format === "webp" && lossless,
         crop: item.crop, flipH: item.flipH, flipV: item.flipV,
       });
       if (r.cancelled) return;
@@ -128,26 +161,43 @@ export function ExportLoopDialog({
           </div>
 
           {format === "webp" && (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{t("exportLoop.quality")}</span>
-                <span className="text-xs tabular-nums text-muted-foreground">{quality}</span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Checkbox id={LOSSLESS_ID} checked={lossless} disabled={busy} onCheckedChange={(v) => setLossless(!!v)} />
+                <Label htmlFor={LOSSLESS_ID} className="text-sm font-normal">{t("exportLoop.lossless")}</Label>
               </div>
-              <Slider
-                value={[quality]}
-                min={40} max={100} step={5} disabled={busy}
-                onValueChange={(v) => setQuality(Array.isArray(v) ? v[0] : v)}
-              />
+              {!lossless && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{t("exportLoop.quality")}</span>
+                    <span className="text-xs tabular-nums text-muted-foreground">{quality}</span>
+                  </div>
+                  <Slider
+                    value={[quality]}
+                    min={40} max={100} step={5} disabled={busy}
+                    onValueChange={(v) => setQuality(Array.isArray(v) ? v[0] : v)}
+                  />
+                </div>
+              )}
             </div>
           )}
 
-          {span.sec != null && (
-            <p className={`text-xs ${tooLong ? "text-destructive" : "text-muted-foreground"}`}>
-              {tooLong
-                ? t("exportLoop.tooLong", { max: MAX_LOOP_SEC })
-                : t("exportLoop.duration", { sec: span.sec.toFixed(1) })}
-            </p>
-          )}
+          <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            {span.sec != null && (
+              <span className={tooLong ? "text-destructive" : undefined}>
+                {tooLong
+                  ? t("exportLoop.tooLong", { max: MAX_LOOP_SEC })
+                  : t("exportLoop.duration", { sec: span.sec.toFixed(1) })}
+              </span>
+            )}
+            {estimate !== null && !busy && (
+              <span className="ml-auto flex items-center gap-1.5 tabular-nums">
+                {estimate === undefined
+                  ? <><Spinner className="size-3" /> {t("exportLoop.estimating")}</>
+                  : t("exportLoop.estimate", { size: fmtBytes(estimate) })}
+              </span>
+            )}
+          </div>
           {busy && <Progress value={pct} />}
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>

@@ -232,6 +232,7 @@ function createRpc() {
     // A board clip written as a looping animated image (WebP or GIF) at a path the user chose.
     "reference:exportLoop": ([opts]) => loopExport.exportLoop(ev, opts || {}),
     "reference:exportLoopCancel": () => loopExport.cancelLoopExport(),
+    "reference:estimateLoop": ([opts]) => loopExport.estimateLoop(opts || {}),
     "reference:push": ([payload]) => {
       broadcast("reference:push", payload);
       return null;

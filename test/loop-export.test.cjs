@@ -27,6 +27,19 @@ test('WebP is animated, lossy at the asked quality, and loops forever', () => {
   assert.ok(args.includes('-an'));
 });
 
+test('lossless WebP hands RGB frames over and ignores the quality setting', () => {
+  const args = loopArgs({ input: 'a.mp4', out: 'b.webp.part', format: 'webp', quality: 40, lossless: true });
+  const at = (flag) => args[args.indexOf(flag) + 1];
+  assert.equal(at('-lossless'), '1');
+  assert.equal(at('-pix_fmt'), 'bgra');
+  assert.equal(at('-q:v'), '75');
+  // GIF has no lossless mode: the flag changes nothing there.
+  assert.deepEqual(
+    loopArgs({ input: 'a.mp4', out: 'b.gif.part', format: 'gif', lossless: true }),
+    loopArgs({ input: 'a.mp4', out: 'b.gif.part', format: 'gif' }),
+  );
+});
+
 test('GIF goes through a palette built from the clip itself', () => {
   const args = loopArgs({ input: 'a.mp4', out: 'b.gif.part', format: 'gif', filters: ['fps=15.000'] });
   const graph = args[args.indexOf('-filter_complex') + 1];
