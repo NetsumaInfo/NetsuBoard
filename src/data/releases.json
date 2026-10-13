@@ -1,5 +1,83 @@
 [
   {
+    "id": "netsuboard-0.6.0",
+    "version": "0.6.0",
+    "date": "2026-10-13",
+    "title": {
+      "fr": "Export animé du board",
+      "en": "Animated board export",
+      "es": "Exportación animada del tablero",
+      "de": "Animierter Board-Export",
+      "ja": "ボードのアニメーション書き出し",
+      "zh": "画板动画导出"
+    },
+    "changes": [
+      {
+        "kind": "feature",
+        "fr": "Export du board en WebP animé ou GIF : vidéos, YouTube, GIF et séquences jouent en boucle.",
+        "en": "Board export as animated WebP or GIF: videos, YouTube, GIFs and sequences play in a loop.",
+        "es": "Exportación del tablero en WebP animado o GIF: vídeos, YouTube, GIF y secuencias se reproducen en bucle.",
+        "de": "Board-Export als animiertes WebP oder GIF: Videos, YouTube, GIFs und Sequenzen laufen als Loop.",
+        "ja": "ボードをアニメーション WebP または GIF で書き出し：動画、YouTube、GIF、連番画像がループ再生されます。",
+        "zh": "画板可导出为 WebP 动图或 GIF：视频、YouTube、GIF 和序列循环播放。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Durée calée sur la boucle la plus longue, boucles sans saut.",
+        "en": "Length set by the longest loop, loops without a jump.",
+        "es": "Duración ajustada al bucle más largo, bucles sin salto.",
+        "de": "Dauer nach dem längsten Loop, Loops ohne Sprung.",
+        "ja": "長さは最長のループに合わせ、つなぎ目なくループします。",
+        "zh": "时长取最长循环，循环无跳变。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Export d’une vidéo en boucle, en WebP animé ou GIF, avec poids estimé.",
+        "en": "Export of one video as a loop, animated WebP or GIF, with estimated size.",
+        "es": "Exportación de un vídeo en bucle, en WebP animado o GIF, con tamaño estimado.",
+        "de": "Export eines Videos als Loop, animiertes WebP oder GIF, mit geschätzter Größe.",
+        "ja": "動画 1 本をループとして書き出し（アニメーション WebP または GIF）、サイズの見積もり付き。",
+        "zh": "单个视频可导出为循环（WebP 动图或 GIF），并显示预计大小。"
+      },
+      {
+        "kind": "feature",
+        "fr": "WebP : qualité réglable, sans perte, fond transparent. GIF : haute qualité.",
+        "en": "WebP: adjustable quality, lossless, transparent background. GIF: high quality.",
+        "es": "WebP: calidad ajustable, sin pérdidas, fondo transparente. GIF: alta calidad.",
+        "de": "WebP: einstellbare Qualität, verlustfrei, transparenter Hintergrund. GIF: hohe Qualität.",
+        "ja": "WebP：画質調整、ロスレス、透明な背景。GIF：高画質。",
+        "zh": "WebP：质量可调、无损、透明背景。GIF：高质量。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Textes de l’interface raccourcis.",
+        "en": "Shorter interface text.",
+        "es": "Textos de la interfaz más cortos.",
+        "de": "Kürzere Texte in der Oberfläche.",
+        "ja": "インターフェースの文言を短くしました。",
+        "zh": "界面文字更简短。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Infobulles : libellé et raccourci sur une ligne.",
+        "en": "Tooltips: label and shortcut on one line.",
+        "es": "Información emergente: etiqueta y atajo en una línea.",
+        "de": "Tooltips: Beschriftung und Tastenkürzel in einer Zeile.",
+        "ja": "ツールチップ：ラベルとショートカットを 1 行に。",
+        "zh": "提示：标签和快捷键显示在一行。"
+      },
+      {
+        "kind": "fix",
+        "fr": "Export PNG, JPG et SVG : la fenêtre d’enregistrement propose la bonne extension.",
+        "en": "PNG, JPG and SVG export: the save dialog offers the right extension.",
+        "es": "Exportación PNG, JPG y SVG: el cuadro de guardado propone la extensión correcta.",
+        "de": "PNG-, JPG- und SVG-Export: Der Speichern-Dialog schlägt die richtige Endung vor.",
+        "ja": "PNG・JPG・SVG の書き出し：保存ダイアログが正しい拡張子を提示します。",
+        "zh": "PNG、JPG 和 SVG 导出：保存对话框提供正确的扩展名。"
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.5.21",
     "version": "0.5.21",
     "date": "2026-10-11",

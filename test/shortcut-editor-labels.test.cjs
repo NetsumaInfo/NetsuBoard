@@ -32,7 +32,7 @@ test('an action can be unbound, and the unbinding survives a reload', () => {
   assert.match(editor, /if \(e\.key === "Delete" \|\| e\.key === "Backspace"\) \{/);
   assert.match(editor, /onChange\(\{ \.\.\.keys, \[capturing\]: "" \}\)/);
   // mergeKeys ne doit PAS traiter la chaîne vide comme une absence.
-  assert.match(lib, /if \(action in defaults && typeof combo === "string"\) out\[action\] = combo;/);
+  assert.match(lib, /if \(action in defaults && typeof combo === "string"\) out\[action\] = combo \? normalizeCombo\(combo\) : combo;/);
 });
 
 test('one frame step drives both the film strip and a video player', () => {
