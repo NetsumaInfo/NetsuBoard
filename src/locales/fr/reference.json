@@ -435,7 +435,7 @@
     "image": "Image",
     "video": "Vidéo",
     "imageSequence": "Séquence",
-    "onlineVideo": "Vidéo en ligne",
+    "onlineVideo": "Lien",
     "text": "Texte",
     "frame": "Cadre",
     "paste": "Coller",
@@ -452,16 +452,16 @@
     "folder": "Dossier"
   },
   "linkDialog": {
-    "title": "Ajouter une vidéo en ligne",
+    "title": "Ajouter un lien",
     "placeholder": "YouTube, Vimeo, TikTok, Twitter/X, Instagram, Reddit ou tout lien",
-    "notFound": "Lien non reconnu ou média introuvable : vérifie l'URL.",
+    "notFound": "Lien non reconnu. Vérifie l'URL.",
     "adding": "Ajout"
   },
   "export": {
     "title": "Exporter le board",
-    "subtitle": "Ce que le fichier emporte des vidéos.",
+    "subtitle": "Vidéos incluses dans le fichier",
     "freezeLinks": "Inclure aussi les images web",
-    "freezeHint": "Sinon elles disparaîtront du board quand leur page tombe.",
+    "freezeHint": "Sinon perdues si leur page disparaît.",
     "weighing": "Calcul",
     "export": "Exporter",
     "exporting": "Export",
@@ -480,8 +480,8 @@
     "fetchingLocal": "Récupération",
     "genPreviewVideo": "Aperçu",
     "genPreviewImage": "Aperçu",
-    "upscaling": "Upscale en cours",
-    "upscalingPct": "Upscale en cours {{pct}} %",
+    "upscaling": "Upscale",
+    "upscalingPct": "Upscale {{pct}} %",
     "upscaled": "Média upscalé",
     "preview": "Aperçu",
     "validate": "Valider",
@@ -510,7 +510,7 @@
     "resume": "Reprendre la session",
     "currentBoard": "Board en cours",
     "openProject": "Ouvrir un projet",
-    "openProjectHint": "Ouvrir un .netsu : il devient le document de travail",
+    "openProjectHint": "Ouvrir un fichier .netsu",
     "openProjectFile": "Ouvrir le projet",
     "openProjectLocation": "Ouvrir l'emplacement",
     "forgetProject": "Retirer de la liste",
@@ -565,7 +565,7 @@
   },
   "youtube": {
     "notEmbeddable": "Vidéo non intégrable",
-    "blocked": "YouTube bloque la lecture intégrée de cette vidéo.",
+    "blocked": "Lecture bloquée par YouTube.",
     "openOnYouTube": "Ouvrir sur YouTube",
     "preparing": "Préparation"
   },
@@ -579,8 +579,8 @@
     },
     "hint": {
       "link": "Pas de vidéo incluse. Fichiers d'origine requis pour l'ouvrir.",
-      "preview": "La boucle jouée sur le board, réencodée légère.",
-      "margin": "Boucle et quelques secondes autour, pour la rallonger plus tard.",
+      "preview": "Boucle du board, en léger.",
+      "margin": "Boucle + quelques secondes autour.",
       "full": "Fichiers source complets, tels quels."
     },
     "quality": {
@@ -609,7 +609,7 @@
   "board": {
     "clipboardEmpty": "Presse-papiers vide ou non pris en charge",
     "clipboardEmptyLink": "Presse-papiers vide ou lien non reconnu",
-    "emptyTitle": "Glisse des images, vidéos ou un lien YouTube ici",
+    "emptyTitle": "Dépose images, vidéos ou liens",
     "emptyHint": "Coller (Ctrl+V) · molette : zoom · glisser le fond : naviguer",
     "pastedItems_one": "{{count}} élément collé",
     "pastedItems_other": "{{count}} éléments collés",

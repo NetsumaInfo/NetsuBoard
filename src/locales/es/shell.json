@@ -17,7 +17,7 @@
     "aria_other": "{{count}} errores — abrir la consola"
   },
   "errorBoundary": {
-    "title": "NetsuBoard falló al renderizar",
+    "title": "NetsuBoard se ha bloqueado",
     "reload": "Recargar"
   }
 }

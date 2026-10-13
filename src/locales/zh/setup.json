@@ -8,7 +8,7 @@
   "running": "正在安装基础环境",
   "log": "安装日志",
   "done": "安装完成",
-  "restartHint": "重启 NetsuBoard 以加载新环境。",
+  "restartHint": "请重启 NetsuBoard。",
   "restartApp": "重新启动应用",
   "installing": "正在安装",
   "update": {

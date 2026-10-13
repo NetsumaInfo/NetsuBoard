@@ -435,7 +435,7 @@
     "image": "Bild",
     "video": "Video",
     "imageSequence": "Sequenz",
-    "onlineVideo": "Online-Video",
+    "onlineVideo": "Link",
     "text": "Text",
     "frame": "Rahmen",
     "paste": "Einfügen",
@@ -452,16 +452,16 @@
     "folder": "Ordner"
   },
   "linkDialog": {
-    "title": "Online-Video hinzufügen",
+    "title": "Link hinzufügen",
     "placeholder": "YouTube, Vimeo, TikTok, Twitter/X, Instagram, Reddit oder ein beliebiger Link",
-    "notFound": "Link nicht erkannt oder Medium nicht gefunden: URL prüfen.",
+    "notFound": "Link nicht erkannt. URL prüfen.",
     "adding": "Wird hinzugefügt"
   },
   "export": {
     "title": "Board exportieren",
-    "subtitle": "Was von den Videos in die Datei eingebettet wird.",
+    "subtitle": "Videos in der Datei",
     "freezeLinks": "Auch Bilder aus dem Web einbetten",
-    "freezeHint": "Sonst verschwinden sie vom Board, sobald ihre Seite offline geht.",
+    "freezeHint": "Sonst weg, wenn ihre Seite verschwindet.",
     "weighing": "Berechnung",
     "export": "Exportieren",
     "exporting": "Export",
@@ -510,7 +510,7 @@
     "resume": "Sitzung fortsetzen",
     "currentBoard": "Aktuelles Board",
     "openProject": "Projekt öffnen",
-    "openProjectHint": ".netsu-Datei öffnen – sie wird zum Arbeitsdokument",
+    "openProjectHint": ".netsu-Datei öffnen",
     "openProjectFile": "Projekt öffnen",
     "openProjectLocation": "Dateispeicherort öffnen",
     "forgetProject": "Aus der Liste entfernen",
@@ -565,7 +565,7 @@
   },
   "youtube": {
     "notEmbeddable": "Video nicht einbettbar",
-    "blocked": "YouTube sperrt die eingebettete Wiedergabe dieses Videos.",
+    "blocked": "Wiedergabe von YouTube blockiert.",
     "openOnYouTube": "Auf YouTube öffnen",
     "preparing": "Vorbereitung"
   },
@@ -579,8 +579,8 @@
     },
     "hint": {
       "link": "Kein Video enthalten. Zum Öffnen: Originaldateien nötig.",
-      "preview": "Die auf dem Board laufende Schleife, platzsparend neu kodiert.",
-      "margin": "Schleife plus ein paar Sekunden, zum späteren Verlängern.",
+      "preview": "Loop des Boards, leicht.",
+      "margin": "Loop plus einige Sekunden davor und danach.",
       "full": "Vollständige Quelldateien, unverändert."
     },
     "quality": {
@@ -609,7 +609,7 @@
   "board": {
     "clipboardEmpty": "Zwischenablage leer oder nicht unterstützt",
     "clipboardEmptyLink": "Zwischenablage leer oder Link nicht erkannt",
-    "emptyTitle": "Bilder, Videos oder einen YouTube-Link hierher ziehen",
+    "emptyTitle": "Bilder, Videos oder Links ablegen",
     "emptyHint": "Einfügen (Strg+V) · Mausrad: Zoom · Hintergrund ziehen: Navigieren",
     "pastedItems_one": "{{count}} Element eingefügt",
     "pastedItems_other": "{{count}} Elemente eingefügt",

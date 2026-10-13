@@ -435,7 +435,7 @@
     "image": "Imagen",
     "video": "Vídeo",
     "imageSequence": "Secuencia",
-    "onlineVideo": "Vídeo en línea",
+    "onlineVideo": "Enlace",
     "text": "Texto",
     "frame": "Marco",
     "paste": "Pegar",
@@ -452,16 +452,16 @@
     "folder": "Carpeta"
   },
   "linkDialog": {
-    "title": "Añadir un vídeo en línea",
+    "title": "Añadir un enlace",
     "placeholder": "YouTube, Vimeo, TikTok, Twitter/X, Instagram, Reddit o cualquier enlace",
-    "notFound": "Enlace no reconocido o medio no encontrado: revisa la URL.",
+    "notFound": "Enlace no reconocido. Comprueba la URL.",
     "adding": "Añadiendo"
   },
   "export": {
     "title": "Exportar el tablero",
-    "subtitle": "Qué parte de los vídeos incluye el archivo.",
+    "subtitle": "Vídeos incluidos en el archivo",
     "freezeLinks": "Incluir también imágenes web",
-    "freezeHint": "Si no, desaparecerán del tablero cuando caiga su página.",
+    "freezeHint": "Si no, se pierden si su página desaparece.",
     "weighing": "Calculando",
     "export": "Exportar",
     "exporting": "Exportando",
@@ -510,7 +510,7 @@
     "resume": "Reanudar la sesión",
     "currentBoard": "Tablero en curso",
     "openProject": "Abrir proyecto",
-    "openProjectHint": "Abrir un archivo .netsu: pasa a ser el documento de trabajo",
+    "openProjectHint": "Abrir un archivo .netsu",
     "openProjectFile": "Abrir proyecto",
     "openProjectLocation": "Abrir ubicación del archivo",
     "forgetProject": "Quitar de la lista",
@@ -565,7 +565,7 @@
   },
   "youtube": {
     "notEmbeddable": "Vídeo no incrustable",
-    "blocked": "YouTube bloquea la reproducción incrustada de este vídeo.",
+    "blocked": "Reproducción bloqueada por YouTube.",
     "openOnYouTube": "Abrir en YouTube",
     "preparing": "Preparando"
   },
@@ -579,8 +579,8 @@
     },
     "hint": {
       "link": "Sin vídeos. Hacen falta los archivos originales para abrirlo.",
-      "preview": "El bucle que se reproduce en el tablero, recodificado en versión ligera.",
-      "margin": "Bucle más unos segundos, para alargarlo después.",
+      "preview": "El bucle del tablero, ligero.",
+      "margin": "Bucle y unos segundos alrededor.",
       "full": "Archivos de origen completos, tal cual."
     },
     "quality": {
@@ -609,7 +609,7 @@
   "board": {
     "clipboardEmpty": "Portapapeles vacío o no compatible",
     "clipboardEmptyLink": "Portapapeles vacío o enlace no reconocido",
-    "emptyTitle": "Arrastra imágenes, vídeos o un enlace de YouTube aquí",
+    "emptyTitle": "Suelta imágenes, vídeos o enlaces",
     "emptyHint": "Pegar (Ctrl+V) · rueda: zoom · arrastrar el fondo: navegar",
     "pastedItems_one": "{{count}} elemento pegado",
     "pastedItems_other": "{{count}} elementos pegados",

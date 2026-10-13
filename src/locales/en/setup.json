@@ -8,7 +8,7 @@
   "running": "Installing prerequisites",
   "log": "Install log",
   "done": "Installation complete",
-  "restartHint": "Restart NetsuBoard to load the new environment.",
+  "restartHint": "Restart NetsuBoard.",
   "restartApp": "Restart app",
   "installing": "Installing",
   "update": {

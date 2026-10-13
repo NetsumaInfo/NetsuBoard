@@ -40,10 +40,10 @@
     "saved": "Sending failed. Message saved."
   },
   "error": {
-    "coreUnreachable": "NetsuBoard’s background service isn’t responding. Try again; if it keeps happening, restart the app.",
+    "coreUnreachable": "NetsuBoard isn't responding. Retry, or restart the app.",
     "diskFull": "The disk is full. Free up some space, then try again.",
-    "notFound": "File not found. It may have been moved or deleted.",
-    "permission": "Access denied. The file may be read-only or open in another app.",
+    "notFound": "File not found: moved or deleted?",
+    "permission": "Access denied: read-only or open elsewhere?",
     "busy": "Another app is using the file. Close it, then try again.",
     "timeout": "No response in time. Try again.",
     "internal": "Internal NetsuBoard error. Details: Settings › Console."

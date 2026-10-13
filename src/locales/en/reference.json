@@ -435,7 +435,7 @@
     "image": "Image",
     "video": "Video",
     "imageSequence": "Sequence",
-    "onlineVideo": "Online video",
+    "onlineVideo": "Link",
     "text": "Text",
     "frame": "Frame",
     "paste": "Paste",
@@ -452,16 +452,16 @@
     "folder": "Folder"
   },
   "linkDialog": {
-    "title": "Add an online video",
+    "title": "Add a link",
     "placeholder": "YouTube, Vimeo, TikTok, Twitter/X, Instagram, Reddit or any link",
-    "notFound": "Link not recognized or media not found: check the URL.",
+    "notFound": "Link not recognized. Check the URL.",
     "adding": "Adding"
   },
   "export": {
     "title": "Export board",
-    "subtitle": "How much of each video goes into the file.",
+    "subtitle": "Videos included in the file",
     "freezeLinks": "Also include web images",
-    "freezeHint": "Otherwise they vanish from the board when their page goes down.",
+    "freezeHint": "Otherwise lost if their page goes away.",
     "weighing": "Measuring",
     "export": "Export",
     "exporting": "Exporting",
@@ -510,7 +510,7 @@
     "resume": "Resume session",
     "currentBoard": "Current board",
     "openProject": "Open project",
-    "openProjectHint": "Open a .netsu file: it becomes the working document",
+    "openProjectHint": "Open a .netsu file",
     "openProjectFile": "Open project",
     "openProjectLocation": "Open file location",
     "forgetProject": "Remove from list",
@@ -565,7 +565,7 @@
   },
   "youtube": {
     "notEmbeddable": "Video can't be embedded",
-    "blocked": "YouTube blocks embedded playback for this video.",
+    "blocked": "Playback blocked by YouTube.",
     "openOnYouTube": "Open on YouTube",
     "preparing": "Preparing"
   },
@@ -579,8 +579,8 @@
     },
     "hint": {
       "link": "No video included. Original files needed to open it.",
-      "preview": "The loop playing on the board, re-encoded to a small file.",
-      "margin": "Loop plus a few seconds around it, to extend later.",
+      "preview": "The board's loop, lightweight.",
+      "margin": "Loop plus a few seconds around.",
       "full": "Full source files, untouched."
     },
     "quality": {
@@ -609,7 +609,7 @@
   "board": {
     "clipboardEmpty": "Clipboard empty or not supported",
     "clipboardEmptyLink": "Clipboard empty or link not recognized",
-    "emptyTitle": "Drag images, videos or a YouTube link here",
+    "emptyTitle": "Drop images, videos or links",
     "emptyHint": "Paste (Ctrl+V) · wheel: zoom · drag background: navigate",
     "pastedItems_one": "{{count}} item pasted",
     "pastedItems_other": "{{count}} items pasted",

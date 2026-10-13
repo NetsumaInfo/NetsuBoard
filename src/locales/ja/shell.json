@@ -17,7 +17,7 @@
     "aria_other": "エラー {{count}} 件 — コンソールを開く"
   },
   "errorBoundary": {
-    "title": "NetsuBoard の描画がクラッシュしました",
+    "title": "NetsuBoard がクラッシュしました",
     "reload": "再読み込み"
   }
 }

@@ -40,10 +40,10 @@
     "saved": "El envío falló. Mensaje guardado."
   },
   "error": {
-    "coreUnreachable": "El servicio de NetsuBoard no responde. Vuelve a intentarlo; si sigue pasando, reinicia la app.",
+    "coreUnreachable": "NetsuBoard no responde. Reintenta o reinicia la app.",
     "diskFull": "Disco lleno. Libera espacio y vuelve a intentarlo.",
-    "notFound": "No se encuentra el archivo. Puede que se haya movido o eliminado.",
-    "permission": "Acceso denegado. Puede que el archivo sea de solo lectura o esté abierto en otra app.",
+    "notFound": "Archivo no encontrado: ¿movido o eliminado?",
+    "permission": "Acceso denegado: ¿solo lectura o abierto en otra app?",
     "busy": "Otra app está usando el archivo. Ciérrala y vuelve a intentarlo.",
     "timeout": "No hubo respuesta a tiempo. Vuelve a intentarlo.",
     "internal": "Error interno de NetsuBoard. Detalles en Ajustes › Consola."

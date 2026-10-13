@@ -17,7 +17,7 @@
     "aria_other": "{{count}} errors — open the console"
   },
   "errorBoundary": {
-    "title": "NetsuBoard crashed while rendering",
+    "title": "NetsuBoard crashed",
     "reload": "Reload"
   }
 }

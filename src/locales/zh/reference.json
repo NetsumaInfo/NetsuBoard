@@ -435,7 +435,7 @@
     "image": "图片",
     "video": "视频",
     "imageSequence": "序列",
-    "onlineVideo": "在线视频",
+    "onlineVideo": "链接",
     "text": "文字",
     "frame": "边框",
     "paste": "粘贴",
@@ -452,16 +452,16 @@
     "folder": "文件夹"
   },
   "linkDialog": {
-    "title": "添加在线视频",
+    "title": "添加链接",
     "placeholder": "YouTube、Vimeo、TikTok、Twitter/X、Instagram、Reddit 或任意链接",
-    "notFound": "链接无法识别或找不到媒体，请检查网址。",
+    "notFound": "无法识别链接。请检查 URL。",
     "adding": "添加中"
   },
   "export": {
     "title": "导出画板",
-    "subtitle": "文件中包含视频的哪些内容。",
+    "subtitle": "文件包含的视频",
     "freezeLinks": "同时打包网络图片",
-    "freezeHint": "否则原网页失效后，画板上的图也会消失。",
+    "freezeHint": "否则原网页消失后会丢失。",
     "weighing": "计算中",
     "export": "导出",
     "exporting": "导出中",
@@ -510,7 +510,7 @@
     "resume": "继续上次",
     "currentBoard": "当前画板",
     "openProject": "打开项目",
-    "openProjectHint": "打开 .netsu 文件，作为当前工作文档",
+    "openProjectHint": "打开 .netsu 文件",
     "openProjectFile": "打开项目",
     "openProjectLocation": "打开文件位置",
     "forgetProject": "从列表中移除",
@@ -565,7 +565,7 @@
   },
   "youtube": {
     "notEmbeddable": "视频无法嵌入",
-    "blocked": "YouTube 禁止嵌入播放该视频。",
+    "blocked": "YouTube 阻止了播放。",
     "openOnYouTube": "在 YouTube 打开",
     "preparing": "准备中"
   },
@@ -579,8 +579,8 @@
     },
     "hint": {
       "link": "不含视频。打开时需要原始文件。",
-      "preview": "只保留画板上循环播放的那段，轻量重新编码。",
-      "margin": "循环段前后各留几秒，方便以后加长。",
+      "preview": "画板上的循环，轻量版。",
+      "margin": "循环及前后几秒。",
       "full": "完整源文件，原样保留。"
     },
     "quality": {
@@ -609,7 +609,7 @@
   "board": {
     "clipboardEmpty": "剪贴板为空或不支持",
     "clipboardEmptyLink": "剪贴板为空或链接无法识别",
-    "emptyTitle": "把图片、视频或 YouTube 链接拖到这里",
+    "emptyTitle": "拖入图片、视频或链接",
     "emptyHint": "粘贴（Ctrl+V）· 滚轮缩放 · 拖动背景平移",
     "pastedItems_one": "已粘贴 {{count}} 个元素",
     "pastedItems_other": "已粘贴 {{count}} 个元素",

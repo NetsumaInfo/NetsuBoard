@@ -8,7 +8,7 @@
   "running": "Instalando requisitos",
   "log": "Registro de instalación",
   "done": "Instalación terminada",
-  "restartHint": "Reinicia NetsuBoard para cargar el nuevo entorno.",
+  "restartHint": "Reinicia NetsuBoard.",
   "restartApp": "Reiniciar la aplicación",
   "installing": "Instalando",
   "update": {

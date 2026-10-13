@@ -17,7 +17,7 @@
     "aria_other": "{{count}} erreurs — ouvrir la console"
   },
   "errorBoundary": {
-    "title": "NetsuBoard a planté au rendu",
+    "title": "NetsuBoard a planté",
     "reload": "Recharger"
   }
 }

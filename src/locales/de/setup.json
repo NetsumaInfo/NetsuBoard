@@ -8,7 +8,7 @@
   "running": "Voraussetzungen werden installiert",
   "log": "Installationsprotokoll",
   "done": "Installation abgeschlossen",
-  "restartHint": "Starte NetsuBoard neu, um die neue Umgebung zu laden.",
+  "restartHint": "NetsuBoard neu starten.",
   "restartApp": "App neu starten",
   "installing": "Wird installiert",
   "update": {

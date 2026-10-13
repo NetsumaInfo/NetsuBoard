@@ -435,7 +435,7 @@
     "image": "画像",
     "video": "動画",
     "imageSequence": "連番画像",
-    "onlineVideo": "オンライン動画",
+    "onlineVideo": "リンク",
     "text": "テキスト",
     "frame": "フレーム",
     "paste": "貼り付け",
@@ -452,16 +452,16 @@
     "folder": "フォルダー"
   },
   "linkDialog": {
-    "title": "オンライン動画を追加",
+    "title": "リンクを追加",
     "placeholder": "YouTube、Vimeo、TikTok、Twitter/X、Instagram、Reddit などのリンク",
-    "notFound": "リンクを認識できないか、メディアが見つかりません。URLを確認してください。",
+    "notFound": "リンクを認識できません。URL を確認してください。",
     "adding": "追加中"
   },
   "export": {
     "title": "ボードを書き出し",
-    "subtitle": "動画のうち、ファイルに含める内容。",
+    "subtitle": "ファイルに含める動画",
     "freezeLinks": "Web の画像もファイルに含める",
-    "freezeHint": "そのままだと、元ページが消えたときにボードからも消えます。",
+    "freezeHint": "含めないと、元のページが消えたら失われます。",
     "weighing": "計算中",
     "export": "書き出し",
     "exporting": "書き出し中",
@@ -510,7 +510,7 @@
     "resume": "セッションを再開",
     "currentBoard": "作業中のボード",
     "openProject": "プロジェクトを開く",
-    "openProjectHint": ".netsu ファイルを開くと作業ドキュメントになります",
+    "openProjectHint": ".netsu ファイルを開く",
     "openProjectFile": "プロジェクトを開く",
     "openProjectLocation": "ファイルの場所を開く",
     "forgetProject": "一覧から削除",
@@ -565,7 +565,7 @@
   },
   "youtube": {
     "notEmbeddable": "埋め込み不可の動画",
-    "blocked": "YouTube がこの動画の埋め込み再生をブロックしています。",
+    "blocked": "YouTube により再生がブロックされています。",
     "openOnYouTube": "YouTube で開く",
     "preparing": "準備中"
   },
@@ -579,8 +579,8 @@
     },
     "hint": {
       "link": "動画は入りません。開くには元ファイルが必要です。",
-      "preview": "ボードで再生しているループだけを、軽く再エンコードします。",
-      "margin": "再生範囲に前後数秒を足して、あとから伸ばせます。",
+      "preview": "ボードのループ、軽量版。",
+      "margin": "ループと前後数秒。",
       "full": "元のファイルをそのまま含めます。"
     },
     "quality": {
@@ -609,7 +609,7 @@
   "board": {
     "clipboardEmpty": "クリップボードが空か、未対応の形式です",
     "clipboardEmptyLink": "クリップボードが空か、リンクを認識できません",
-    "emptyTitle": "画像・動画・YouTube のリンクをここにドラッグ",
+    "emptyTitle": "画像・動画・リンクをドロップ",
     "emptyHint": "貼り付け（Ctrl+V）· ホイール：拡大縮小 · 背景をドラッグ：移動",
     "pastedItems_one": "{{count}} 件を貼り付けました",
     "pastedItems_other": "{{count}} 件を貼り付けました",

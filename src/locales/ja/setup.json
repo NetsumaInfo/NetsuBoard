@@ -8,7 +8,7 @@
   "running": "前提環境をインストール中",
   "log": "インストールログ",
   "done": "インストールが完了しました",
-  "restartHint": "新しい環境を読み込むため、NetsuBoard を再起動してください。",
+  "restartHint": "NetsuBoard を再起動してください。",
   "restartApp": "アプリを再起動",
   "installing": "インストール中",
   "update": {

@@ -17,7 +17,7 @@
     "aria_other": "{{count}} Fehler – Konsole öffnen"
   },
   "errorBoundary": {
-    "title": "NetsuBoard ist beim Anzeigen abgestürzt",
+    "title": "NetsuBoard ist abgestürzt",
     "reload": "Neu laden"
   }
 }
