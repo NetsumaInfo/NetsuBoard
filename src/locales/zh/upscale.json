@@ -8,7 +8,7 @@
     "leftModel": "左侧结果",
     "rightModel": "右侧结果",
     "close": "关闭",
-    "loadingCompare": "正在加载对比…",
+    "loadingCompare": "正在加载对比",
     "previewMissing": "找不到预览，请重新测试。",
     "hintZoomed": "拖动画面平移 · Shift+拖动 = 对比 · 滚轮 = 缩放 · 双击重置。",
     "hintNotZoomed": "拖动滑柄对比 · 滚轮 = 缩放 · 双击放大该处。"

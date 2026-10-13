@@ -1,16 +1,16 @@
 {
   "title": "NetsuBoard einrichten",
   "scan": {
-    "running": "Installation und GPU werden geprüft…"
+    "running": "Installation und GPU werden geprüft"
   },
   "installFailed": "Installation fehlgeschlagen",
   "vanished": "Nach der Installation verschwundene Dateien: {{files}}. Wahrscheinlich hat ein Antivirenprogramm sie in Quarantäne verschoben.",
-  "running": "Voraussetzungen werden installiert…",
+  "running": "Voraussetzungen werden installiert",
   "log": "Installationsprotokoll",
   "done": "Installation abgeschlossen",
   "restartHint": "Starte NetsuBoard neu, um die neue Umgebung zu laden.",
   "restartApp": "App neu starten",
-  "installing": "Wird installiert…",
+  "installing": "Wird installiert",
   "update": {
     "action": "Aktualisieren",
     "download": "Update herunterladen"
@@ -21,11 +21,11 @@
   },
   "dl": {
     "done": "fertig",
-    "retry": "neuer Versuch…",
-    "working": "läuft…"
+    "retry": "neuer Versuch",
+    "working": "läuft"
   },
   "auto": {
-    "running": "Umgebung wird installiert…",
+    "running": "Umgebung wird installiert",
     "ready": "Umgebung installiert."
   }
 }

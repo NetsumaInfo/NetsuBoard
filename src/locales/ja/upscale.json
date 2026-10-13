@@ -8,7 +8,7 @@
     "leftModel": "左の結果",
     "rightModel": "右の結果",
     "close": "閉じる",
-    "loadingCompare": "比較を読み込み中…",
+    "loadingCompare": "比較を読み込み中",
     "previewMissing": "プレビューが見つかりません — テストをやり直してください。",
     "hintZoomed": "画像をドラッグで移動 · Shift+ドラッグ = 比較 · ホイール = ズーム · ダブルクリックでリセット。",
     "hintNotZoomed": "ハンドルをドラッグで比較 · ホイール = ズーム · ダブルクリックでその位置を拡大。"

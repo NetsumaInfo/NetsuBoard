@@ -16,7 +16,7 @@
     "retry": "Erneut versuchen"
   },
   "status": {
-    "loading": "Wird geladen…"
+    "loading": "Wird geladen"
   },
   "color": {
     "hexValue": "Hexadezimalwert",

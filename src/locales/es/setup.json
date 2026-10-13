@@ -1,16 +1,16 @@
 {
   "title": "Configurar NetsuBoard",
   "scan": {
-    "running": "Analizando la instalación y la GPU…"
+    "running": "Analizando la instalación y la GPU"
   },
   "installFailed": "Error de instalación",
   "vanished": "Archivos desaparecidos tras la instalación: {{files}}. Seguramente un antivirus los puso en cuarentena.",
-  "running": "Instalando requisitos…",
+  "running": "Instalando requisitos",
   "log": "Registro de instalación",
   "done": "Instalación terminada",
   "restartHint": "Reinicia NetsuBoard para cargar el nuevo entorno.",
   "restartApp": "Reiniciar la aplicación",
-  "installing": "Instalando…",
+  "installing": "Instalando",
   "update": {
     "action": "Actualizar",
     "download": "Descargar la actualización"
@@ -21,11 +21,11 @@
   },
   "dl": {
     "done": "completado",
-    "retry": "reintentando…",
-    "working": "en curso…"
+    "retry": "reintentando",
+    "working": "en curso"
   },
   "auto": {
-    "running": "Instalando el entorno…",
+    "running": "Instalando el entorno",
     "ready": "Entorno instalado."
   }
 }

@@ -1,16 +1,16 @@
 {
   "title": "配置 NetsuBoard",
   "scan": {
-    "running": "正在检查安装和 GPU…"
+    "running": "正在检查安装和 GPU"
   },
   "installFailed": "安装失败",
   "vanished": "安装后消失的文件：{{files}}。很可能被杀毒软件隔离了。",
-  "running": "正在安装基础环境…",
+  "running": "正在安装基础环境",
   "log": "安装日志",
   "done": "安装完成",
   "restartHint": "重启 NetsuBoard 以加载新环境。",
   "restartApp": "重新启动应用",
-  "installing": "正在安装…",
+  "installing": "正在安装",
   "update": {
     "action": "更新",
     "download": "下载更新"
@@ -21,11 +21,11 @@
   },
   "dl": {
     "done": "完成",
-    "retry": "正在重试…",
-    "working": "进行中…"
+    "retry": "正在重试",
+    "working": "进行中"
   },
   "auto": {
-    "running": "正在安装运行环境…",
+    "running": "正在安装运行环境",
     "ready": "运行环境已安装。"
   }
 }

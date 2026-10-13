@@ -16,7 +16,7 @@
     "retry": "Retry"
   },
   "status": {
-    "loading": "Loading…"
+    "loading": "Loading"
   },
   "color": {
     "hexValue": "Hex value",

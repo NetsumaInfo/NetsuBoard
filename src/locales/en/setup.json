@@ -1,16 +1,16 @@
 {
   "title": "Set up NetsuBoard",
   "scan": {
-    "running": "Scanning the installation and GPU…"
+    "running": "Scanning the installation and GPU"
   },
   "installFailed": "Installation failed",
   "vanished": "Files gone after the install: {{files}}. An antivirus most likely quarantined them.",
-  "running": "Installing prerequisites…",
+  "running": "Installing prerequisites",
   "log": "Install log",
   "done": "Installation complete",
   "restartHint": "Restart NetsuBoard to load the new environment.",
   "restartApp": "Restart app",
-  "installing": "Installing…",
+  "installing": "Installing",
   "update": {
     "action": "Update",
     "download": "Download the update"
@@ -21,11 +21,11 @@
   },
   "dl": {
     "done": "complete",
-    "retry": "retrying…",
-    "working": "in progress…"
+    "retry": "retrying",
+    "working": "in progress"
   },
   "auto": {
-    "running": "Installing the environment…",
+    "running": "Installing the environment",
     "ready": "Environment installed."
   }
 }

@@ -8,7 +8,7 @@
     "leftModel": "Left result",
     "rightModel": "Right result",
     "close": "Close",
-    "loadingCompare": "Loading the comparison…",
+    "loadingCompare": "Loading the comparison",
     "previewMissing": "Preview not found — run the test again.",
     "hintZoomed": "Drag the image to pan · Shift-drag to compare · wheel = zoom · double-click to reset.",
     "hintNotZoomed": "Drag the handle to compare · wheel = zoom · double-click to zoom in on a spot."

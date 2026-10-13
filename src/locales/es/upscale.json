@@ -8,7 +8,7 @@
     "leftModel": "Resultado izquierdo",
     "rightModel": "Resultado derecho",
     "close": "Cerrar",
-    "loadingCompare": "Cargando la comparación…",
+    "loadingCompare": "Cargando la comparación",
     "previewMissing": "Vista previa no encontrada — repite la prueba.",
     "hintZoomed": "Arrastra la imagen para navegar · Mayús+arrastrar = comparar · rueda = zoom · doble clic = restablecer.",
     "hintNotZoomed": "Arrastra el tirador para comparar · rueda = zoom · doble clic amplía ese punto."

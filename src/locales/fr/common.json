@@ -16,7 +16,7 @@
     "retry": "Réessayer"
   },
   "status": {
-    "loading": "Chargement…"
+    "loading": "Chargement"
   },
   "color": {
     "hexValue": "Valeur hexadécimale",

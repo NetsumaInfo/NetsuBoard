@@ -16,7 +16,7 @@
     "retry": "重试"
   },
   "status": {
-    "loading": "加载中…"
+    "loading": "加载中"
   },
   "color": {
     "hexValue": "十六进制颜色值",

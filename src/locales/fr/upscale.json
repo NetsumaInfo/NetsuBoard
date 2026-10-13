@@ -8,7 +8,7 @@
     "leftModel": "Résultat à gauche",
     "rightModel": "Résultat à droite",
     "close": "Fermer",
-    "loadingCompare": "Chargement de la comparaison…",
+    "loadingCompare": "Chargement de la comparaison",
     "previewMissing": "Aperçu introuvable — recommence le test.",
     "hintZoomed": "Glisse l'image pour naviguer · Maj+glisser = comparer · molette = zoom · double-clic = réinitialiser.",
     "hintNotZoomed": "Glisse la poignée pour comparer · molette = zoom · double-clic = zoomer sur un point."
