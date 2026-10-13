@@ -744,17 +744,21 @@
     "doneSkipped_other": "{{count}} colores extraídos · {{skipped}} medios omitidos"
   },
   "exportImage": {
-    "menu": "Exportar como imagen…",
+    "menu": "Exportar el tablero…",
     "title": "Exportar el tablero",
-    "subtitle": "Renderiza el tablero como imagen o SVG.",
+    "subtitle": "Renderiza el tablero como imagen, SVG o bucle animado.",
     "width": "Anchura",
     "height": "Altura",
+    "duration": "Duración (s)",
     "selectionOnly": "Solo la selección ({{count}})",
     "transparent": "Fondo transparente",
     "export": "Exportar",
     "done": "Tablero exportado",
+    "doneSize": "Tablero exportado · {{size}}",
     "failed": "No se pudo exportar: {{error}}",
     "hint": "El renderizado parte del contenido del tablero: los vídeos salen con su fotograma actual y los reproductores en línea como tarjeta.",
+    "hintLoop": "Los vídeos se reproducen en bucle, el resto es fijo. Los reproductores en línea salen como etiqueta.",
+    "noVideo": "No hay ningún vídeo que animar.",
     "noBridge": "La escritura en disco no está disponible fuera de la aplicación"
   },
   "exportLoop": {

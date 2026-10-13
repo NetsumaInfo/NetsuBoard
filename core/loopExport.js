@@ -63,25 +63,97 @@ function loopArgs(o) {
   if (Number(o.duration) > 0) args.push('-t', String(o.duration));
   args.push('-an', '-sn');
   if (o.format === 'gif') {
-    // `stats_mode=diff` weights the palette towards what moves, `diff_mode=rectangle` rewrites only
-    // the changed area of each frame: same recipe as the GIF upscale (core/shaderUpscale.js).
     const head = filters.length ? `[0:v:0]${filters.join(',')},split[a][b]` : '[0:v:0]split[a][b]';
-    args.push('-filter_complex',
-      `${head};[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
-      '-loop', '0', '-f', 'gif', o.out);
+    args.push('-filter_complex', `${head};${GIF_PALETTE}`, '-loop', '0', '-f', 'gif', o.out);
     return args;
   }
   args.push('-map', '0:v:0');
   if (filters.length) args.push('-vf', filters.join(','));
+  args.push(...webpCodec(o), o.out);
+  return args;
+}
+
+// Palette pass of a GIF, fed by two copies `[a]` `[b]` of the picture. `stats_mode=diff` weights
+// the palette towards what moves, `diff_mode=rectangle` rewrites only the changed area of each frame.
+const GIF_PALETTE = '[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle';
+
+/** @param {{ quality?: number, lossless?: boolean }} o */
+function webpCodec(o) {
+  const args = ['-c:v', 'libwebp_anim'];
   if (o.lossless) {
     // Lossless is exact against RGB, so the frames are handed over as such. `-q:v` then only sets
     // how hard the encoder searches, not what the picture looks like.
-    args.push('-c:v', 'libwebp_anim', '-pix_fmt', 'bgra', '-lossless', '1', '-q:v', '75');
+    args.push('-pix_fmt', 'bgra', '-lossless', '1', '-q:v', '75');
   } else {
     const quality = Math.min(100, Math.max(1, Math.round(Number(o.quality) || 80)));
-    args.push('-c:v', 'libwebp_anim', '-lossless', '0', '-q:v', String(quality));
+    args.push('-lossless', '0', '-q:v', String(quality));
   }
-  args.push('-compression_level', '4', '-loop', '0', '-f', 'webp', o.out);
+  args.push('-compression_level', '4', '-loop', '0', '-f', 'webp');
+  return args;
+}
+
+/**
+ * @typedef {{ type: 'image', file: string }} BoardLayer
+ * @typedef {{ type: 'video', file: string, start: number, len: number, x: number, y: number, w: number, h: number, crop?: { x: number, y: number, w: number, h: number } | null, flipH?: boolean, flipV?: boolean, rotation?: number, opacity?: number }} BoardClip
+ */
+
+/**
+ * ffmpeg arguments of a whole-board export: still layers and playing clips stacked in z order.
+ *
+ * The board is not captured, it is composed again: each still layer is a full-size picture of the
+ * items between two clips, each clip is placed where its item sits (`x`,`y` = centre, in output
+ * pixels) and loops over its own range for as long as the export lasts. The first entry is always
+ * a still layer — it carries the background and sets the size.
+ * @param {{ stack: Array<BoardLayer | BoardClip>, fps: number, duration: number, format: 'webp' | 'gif', out: string, quality?: number, lossless?: boolean }} o
+ */
+function boardLoopArgs(o) {
+  const fps = Number(o.fps).toFixed(3);
+  const args = ['-y', '-hide_banner', '-loglevel', 'error', '-progress', 'pipe:1', '-nostats'];
+  const graph = [];
+  let top = '';
+  o.stack.forEach((entry, i) => {
+    const label = `c${i}`;
+    if (entry.type === 'image') {
+      args.push('-loop', '1', '-framerate', fps, '-i', entry.file);
+      if (!top) graph.push(`[${i}:v]format=rgba[${label}]`);
+      else graph.push(`[${i}:v]format=rgba[l${i}]`, `[${top}][l${i}]overlay=0:0:format=rgb[${label}]`);
+    } else {
+      if (entry.start > 0) args.push('-ss', String(entry.start)); // seek before -i: fast
+      args.push('-t', String(entry.len), '-i', entry.file);
+      const chain = [`fps=${fps}`];
+      const c = entry.crop;
+      if (c && Number(c.w) > 0 && Number(c.h) > 0) {
+        chain.push(`crop=iw*${frac(c.w)}:ih*${frac(c.h)}:iw*${frac(c.x)}:ih*${frac(c.y)}`);
+      }
+      chain.push(`scale=${Math.max(1, Math.round(entry.w))}:${Math.max(1, Math.round(entry.h))}:flags=lanczos`);
+      // A clip shorter than the export replays its range. The frames are buffered at their placed
+      // size and before the RGBA conversion: that is what keeps a board of many clips in memory.
+      if (entry.len < o.duration - 1 / Number(o.fps)) {
+        const frames = Math.max(1, Math.round(entry.len * Number(o.fps)));
+        chain.push(`loop=loop=-1:size=${frames}:start=0`, `setpts=N/(${fps}*TB)`);
+      }
+      chain.push('format=rgba');
+      if (entry.flipH) chain.push('hflip');
+      if (entry.flipV) chain.push('vflip');
+      const opacity = Number(entry.opacity);
+      if (opacity >= 0 && opacity < 1) chain.push(`colorchannelmixer=aa=${opacity.toFixed(3)}`);
+      const angle = ((Number(entry.rotation) || 0) * Math.PI) / 180;
+      if (angle) chain.push(`rotate=${angle.toFixed(6)}:ow='rotw(${angle.toFixed(6)})':oh='roth(${angle.toFixed(6)})':c=none`);
+      // `w`/`h` are the placed clip's own size, rotation included: the item stays centred.
+      graph.push(`[${i}:v]${chain.join(',')}[v${i}]`,
+        `[${top}][v${i}]overlay=x=${Math.round(entry.x)}-w/2:y=${Math.round(entry.y)}-h/2:format=rgb[${label}]`);
+    }
+    top = label;
+  });
+  // Still layers and looped clips never end: the picture is cut INSIDE the graph. An output `-t`
+  // would leave `palettegen`, which reads its whole input before emitting anything, buffering forever.
+  graph.push(`[${top}]trim=duration=${o.duration}[cut]`);
+  if (o.format === 'gif') {
+    args.push('-filter_complex', `${graph.join(';')};[cut]split[a][b];${GIF_PALETTE}`,
+      '-loop', '0', '-f', 'gif', o.out);
+    return args;
+  }
+  args.push('-filter_complex', graph.join(';'), '-map', '[cut]', ...webpCodec(o), o.out);
   return args;
 }
 
@@ -214,6 +286,81 @@ async function exportLoop(event, opts) {
 }
 
 /**
+ * Whole board as a looping animated image. `stack` is the board in z order, as the renderer
+ * composed it: `{ png }` still layers (base64, all the size of the output) and `{ path, … }` clips.
+ * @param {{ sender?: { send: (channel: string, payload: unknown) => void } } | null} event
+ * @param {{ out?: string, format?: string, fps?: number, duration?: number, quality?: number, lossless?: boolean, stack?: any[] }} opts
+ */
+async function exportBoardLoop(event, opts) {
+  const o = opts || {};
+  const format = String(o.format || 'webp');
+  const stack = Array.isArray(o.stack) ? o.stack : [];
+  if (!o.out || !stack.length || !stack[0].png) return { ok: false, error: t('sourceMissing') };
+  if (!FORMATS.has(format)) return { ok: false, error: t('loopFormatUnknown', { format }) };
+  if (running) return { ok: false, error: t('loopBusy') };
+  const duration = Number(o.duration) || 0;
+  if (!(duration > 0)) return { ok: false, error: t('noFrames') };
+  if (duration > MAX_LOOP_SEC + 0.05) return { ok: false, error: t('loopTooLong', { max: MAX_LOOP_SEC }) };
+  const fps = Math.min(MAX_FPS[format], Number(o.fps) > 0 ? Number(o.fps) : 24);
+
+  let out = path.resolve(String(o.out));
+  if (path.extname(out).toLowerCase() !== `.${format}`) out += `.${format}`;
+  const tmp = `${out}.part`;
+  const send = (pct) => { if (event?.sender) event.sender.send('reference:loopProgress', { pct }); };
+
+  let work = '';
+  try {
+    await fsp.mkdir(SEQ_DIR, { recursive: true });
+    work = await fsp.mkdtemp(path.join(SEQ_DIR, 'board-loop-'));
+    /** @type {Array<BoardLayer | BoardClip>} */
+    const entries = [];
+    for (let i = 0; i < stack.length; i += 1) {
+      const e = stack[i] || {};
+      if (e.png) {
+        const file = path.join(work, `layer-${i}.png`);
+        await fsp.writeFile(file, Buffer.from(String(e.png), 'base64'));
+        entries.push({ type: 'image', file });
+        continue;
+      }
+      const file = String(e.path || '');
+      if (!file || /^(https?:|data:|blob:)/i.test(file)) return { ok: false, error: t('localMediaRequired') };
+      const start = Math.max(0, Number(e.in) || 0);
+      const end = Number(e.end) > start ? Number(e.end) : (await probeMedia(file)).duration || 0;
+      const len = Math.min(duration, end - start);
+      if (!(len > 0)) continue; // nothing to play: the still layers already show the rest
+      entries.push({ type: 'video', file, start, len, x: e.x, y: e.y, w: e.w, h: e.h,
+        crop: e.crop, flipH: e.flipH, flipV: e.flipV, rotation: e.rotation, opacity: e.opacity });
+    }
+
+    const args = boardLoopArgs({ stack: entries, fps, duration, format: /** @type {'webp' | 'gif'} */ (format),
+      out: tmp, quality: o.quality, lossless: o.lossless });
+    await fsp.mkdir(path.dirname(out), { recursive: true });
+    estimateSeq += 1;
+    stopEstimate();
+    cancelled = false;
+    send(0);
+    const r = await runFfmpeg(args,
+      (sec) => send(Math.min(99, Math.round((sec / duration) * 100))),
+      (cp) => { running = cp; });
+    running = null;
+    if (!r.ok) {
+      await fsp.rm(tmp, { force: true }).catch(() => {});
+      return cancelled ? { ok: false, cancelled: true } : r;
+    }
+    await fsp.rm(out, { force: true });
+    await fsp.rename(tmp, out);
+    send(100);
+    return { ok: true, path: out, bytes: (await fsp.stat(out)).size };
+  } catch (e) {
+    running = null;
+    await fsp.rm(tmp, { force: true }).catch(() => {});
+    return { ok: false, error: String((e && e.stderr) || (e && e.message) || e) };
+  } finally {
+    if (work) await fsp.rm(work, { recursive: true, force: true }).catch(() => {});
+  }
+}
+
+/**
  * Weight the export would have, from a real encode of a short sample with the same settings,
  * scaled to the full range. No formula predicts either format: both depend on how much the picture
  * moves. A newer request replaces the one in flight, which then resolves `stale`.
@@ -249,4 +396,4 @@ async function estimateLoop(opts) {
   }
 }
 
-module.exports = { exportLoop, estimateLoop, cancelLoopExport, loopArgs, loopFilters, MAX_LOOP_SEC };
+module.exports = { exportLoop, exportBoardLoop, estimateLoop, cancelLoopExport, loopArgs, boardLoopArgs, loopFilters, MAX_LOOP_SEC };

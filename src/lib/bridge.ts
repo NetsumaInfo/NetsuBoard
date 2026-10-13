@@ -632,6 +632,15 @@ export interface LoopExportOpts {
   flipH?: boolean;
   flipV?: boolean;
 }
+// One entry of a whole-board export: a still layer, or a video placed by its centre (output pixels).
+export type BoardLoopEntry =
+  | { png: string }
+  | {
+      path: string; in?: number; end?: number;
+      x: number; y: number; w: number; h: number;
+      crop?: { x: number; y: number; w: number; h: number };
+      flipH?: boolean; flipV?: boolean; rotation?: number; opacity?: number;
+    };
 
 export interface RefApi {
   listScenes(): Promise<RefSceneMeta[]>;
@@ -691,6 +700,10 @@ export interface RefApi {
   // Weight the export would have, from a real encode of a short sample. A newer call replaces the
   // one in flight, which resolves `stale`.
   estimateLoop(opts: Omit<LoopExportOpts, "out">): Promise<{ ok: boolean; bytes?: number; stale?: boolean; error?: string }>;
+  // The whole board as a looping animated image. `stack` is the board bottom first: still layers
+  // (PNG, base64, each the size of the output) and the videos that play between them. Progress and
+  // cancellation are those of `exportLoop`.
+  exportBoardLoop(opts: { out: string; format: LoopFormat; fps: number; duration: number; quality?: number; lossless?: boolean; stack: BoardLoopEntry[] }): Promise<{ ok: boolean; path?: string; bytes?: number; cancelled?: boolean; error?: string }>;
   // Partage « .netsu » : exporte la scène (items + vue) dans une archive à `destPath` selon `opts`
   // (mode complet / léger / liens, seuil d'embarquement, gel des liens distants). Importe une archive
   // → scène reconstruite (tokens d'assets → chemins locaux ; gros médias non retrouvés = placeholders).
@@ -1181,6 +1194,7 @@ const mock: NrApi = {
       estimateLoop: async () => ({ ok: false, stale: true }),
       exportBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       importBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      exportBoardLoop: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       onShareProgress: () => () => {},
       relocateFrom: async () => ({ ok: false, found: [], scanned: 0, error: i18n.t("common:mock.appUnavailable") }),
       // Forme COMPLÈTE mais vide : le dialogue d'export rend ses quatre niveaux à 0 o au lieu de

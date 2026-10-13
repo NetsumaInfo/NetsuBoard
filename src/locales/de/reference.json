@@ -744,17 +744,21 @@
     "doneSkipped_other": "{{count}} Farben extrahiert · {{skipped}} Medien übersprungen"
   },
   "exportImage": {
-    "menu": "Als Bild exportieren…",
+    "menu": "Board exportieren…",
     "title": "Board exportieren",
-    "subtitle": "Das Board als Bild oder SVG rendern.",
+    "subtitle": "Das Board als Bild, SVG oder animierten Loop rendern.",
     "width": "Breite",
     "height": "Höhe",
+    "duration": "Dauer (s)",
     "selectionOnly": "Nur Auswahl ({{count}})",
     "transparent": "Transparenter Hintergrund",
     "export": "Exportieren",
     "done": "Board exportiert",
+    "doneSize": "Board exportiert · {{size}}",
     "failed": "Export fehlgeschlagen: {{error}}",
     "hint": "Gerendert wird der Board-Inhalt: Videos mit ihrem aktuellen Bild, Online-Player als Karte.",
+    "hintLoop": "Videos laufen als Loop, der Rest ist statisch. Online-Player erscheinen als Beschriftung.",
+    "noVideo": "Kein Video zum Animieren.",
     "noBridge": "Schreiben auf die Festplatte ist außerhalb der App nicht verfügbar"
   },
   "exportLoop": {

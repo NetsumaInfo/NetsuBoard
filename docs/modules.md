@@ -92,3 +92,13 @@ A video item can be written as an **animated image that loops on its own** where
 - **Lossless is WebP only** (`-lossless 1` on `bgra` frames): exact against the decoded picture and several times heavier, so it is an option, not the default. GIF has no such mode.
 - **The weight shown before exporting is measured, not computed** (`estimateLoop`): the core encodes one second from the middle of the range with the chosen settings and scales it to the full length. No formula predicts either format — both depend on how much the picture moves. A newer request replaces the one in flight, an export stops it, and only a file already on disk is measured: opening the dialog never downloads a remote medium.
 - Width is a ceiling, never an enlargement. Both encoders ship in the provisioned ffmpeg runtime, so the feature adds no dependency.
+
+## Loop export of the whole board (`boardLoopRender.ts` + `ExportImageDialog.tsx`)
+
+"Export board" also writes the board as an animated WebP or GIF: its videos play, everything else is still.
+
+- **The board is composed again, not captured.** A playing `<video>` cannot be painted into a canvas frame by frame at a useful speed, so the renderer cuts the z order at each video (`loopRuns`): what lies between two videos is painted once as a full-size transparent PNG layer by `renderBoardCanvas` (`paint` restricts what is drawn without changing the framing), and each video travels as a clip with its place, crop, mirror, rotation and opacity. `boardLoopArgs` stacks layers and clips with `overlay` in one ffmpeg pass.
+- **Only a video the core can read from disk plays.** Online players, shared media and image sequences come out still, exactly as in the PNG export.
+- **Each clip loops over its own range for the length of the export**, which defaults to the longest loop on the board and is capped at 60 s. A looped clip is buffered at its placed size, before the RGBA conversion — that is what keeps a board of many clips in memory.
+- **The cut is inside the filter graph** (`trim=duration`), never an output `-t`: still layers and looped clips are endless inputs, and `palettegen` reads its whole input before emitting anything.
+- A transparent background survives in WebP; GIF always gets the board colour.

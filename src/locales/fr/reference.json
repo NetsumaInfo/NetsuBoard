@@ -744,17 +744,21 @@
     "doneSkipped_other": "{{count}} couleurs extraites · médias ignorés : {{skipped}}"
   },
   "exportImage": {
-    "menu": "Exporter en image…",
+    "menu": "Exporter le board…",
     "title": "Exporter le board",
-    "subtitle": "Rendu de la planche en image ou en SVG.",
+    "subtitle": "Rendu de la planche en image, en SVG ou en boucle animée.",
     "width": "Largeur",
     "height": "Hauteur",
+    "duration": "Durée (s)",
     "selectionOnly": "Sélection seule ({{count}})",
     "transparent": "Fond transparent",
     "export": "Exporter",
     "done": "Board exporté",
+    "doneSize": "Board exporté · {{size}}",
     "failed": "Export impossible : {{error}}",
     "hint": "Le rendu repart du contenu du board : les vidéos sortent sur leur image courante, les lecteurs en ligne en cartouche.",
+    "hintLoop": "Les vidéos jouent en boucle, le reste est fixe. Les lecteurs en ligne sortent en cartouche.",
+    "noVideo": "Aucune vidéo à animer.",
     "noBridge": "Écriture disque indisponible hors de l'application"
   },
   "exportLoop": {

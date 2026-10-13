@@ -468,6 +468,7 @@ const reference: RefApi = {
   cancelExportLoop: () => call("reference:exportLoopCancel", []),
   onLoopProgress: (cb) => on("reference:loopProgress", cb as (p: unknown) => void),
   estimateLoop: (opts) => call("reference:estimateLoop", [opts]),
+  exportBoardLoop: (opts) => call("reference:exportBoardLoop", [opts]),
   exportBoard: (scene, destPath, opts) => call("netsu:export", [scene, destPath, opts]),
   importBoard: (srcPath) => call("netsu:import", [srcPath]),
   onShareProgress: (cb) => on("netsu:progress", cb as (p: unknown) => void),

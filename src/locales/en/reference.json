@@ -744,17 +744,21 @@
     "doneSkipped_other": "{{count}} colors extracted · {{skipped}} media skipped"
   },
   "exportImage": {
-    "menu": "Export as image…",
+    "menu": "Export board…",
     "title": "Export board",
-    "subtitle": "Render the board as an image or SVG.",
+    "subtitle": "Render the board as an image, SVG or animated loop.",
     "width": "Width",
     "height": "Height",
+    "duration": "Length (s)",
     "selectionOnly": "Selection only ({{count}})",
     "transparent": "Transparent background",
     "export": "Export",
     "done": "Board exported",
+    "doneSize": "Board exported · {{size}}",
     "failed": "Export failed: {{error}}",
     "hint": "The render comes from the board content: videos export their current frame, online players export as a card.",
+    "hintLoop": "Videos play in a loop, the rest is still. Online players come out as a label.",
+    "noVideo": "No video to animate.",
     "noBridge": "Disk writing is unavailable outside the app"
   },
   "exportLoop": {

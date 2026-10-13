@@ -744,17 +744,21 @@
     "doneSkipped_other": "已提取 {{count}} 种颜色 · 跳过 {{skipped}} 个媒体"
   },
   "exportImage": {
-    "menu": "导出为图片…",
+    "menu": "导出画板…",
     "title": "导出画板",
-    "subtitle": "将画板渲染为图片或 SVG。",
+    "subtitle": "将画板渲染为图片、SVG 或循环动图。",
     "width": "宽度",
     "height": "高度",
+    "duration": "时长（秒）",
     "selectionOnly": "仅所选（{{count}}）",
     "transparent": "透明背景",
     "export": "导出",
     "done": "画板已导出",
+    "doneSize": "画板已导出 · {{size}}",
     "failed": "导出失败：{{error}}",
     "hint": "按画板当前内容渲染：视频导出当前帧，在线播放器导出为卡片。",
+    "hintLoop": "视频循环播放，其余内容静止。在线播放器以标签形式输出。",
+    "noVideo": "没有可动画的视频。",
     "noBridge": "在应用之外无法写入磁盘"
   },
   "exportLoop": {

@@ -233,6 +233,8 @@ function createRpc() {
     "reference:exportLoop": ([opts]) => loopExport.exportLoop(ev, opts || {}),
     "reference:exportLoopCancel": () => loopExport.cancelLoopExport(),
     "reference:estimateLoop": ([opts]) => loopExport.estimateLoop(opts || {}),
+    // The whole board as a looping animated image: still layers and playing clips, stacked.
+    "reference:exportBoardLoop": ([opts]) => loopExport.exportBoardLoop(ev, opts || {}),
     "reference:push": ([payload]) => {
       broadcast("reference:push", payload);
       return null;
