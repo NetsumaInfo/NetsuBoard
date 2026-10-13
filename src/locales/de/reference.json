@@ -757,6 +757,25 @@
     "hint": "Gerendert wird der Board-Inhalt: Videos mit ihrem aktuellen Bild, Online-Player als Karte.",
     "noBridge": "Schreiben auf die Festplatte ist außerhalb der App nicht verfügbar"
   },
+  "exportLoop": {
+    "menu": "Als Loop exportieren…",
+    "title": "Als Loop exportieren",
+    "subtitle": "Animiertes Bild, das von selbst wiederholt wird, wie ein GIF.",
+    "hint": {
+      "webp": "Gute Qualität, kleine Datei.",
+      "gif": "Läuft überall. 256 Farben, große Datei."
+    },
+    "width": "Breite",
+    "fps": "Bilder/s",
+    "source": "Quelle",
+    "quality": "Qualität",
+    "duration": "Dauer: {{sec}} s",
+    "tooLong": "Zu lang: max. {{max}} s. Loop kürzen.",
+    "export": "Exportieren",
+    "exporting": "Export…",
+    "done": "Loop exportiert · {{size}}",
+    "failed": "Export fehlgeschlagen"
+  },
   "ingest": {
     "folderUnavailable": "Ordnerimport nicht verfügbar",
     "folderScanning": "Ordner wird gelesen…",

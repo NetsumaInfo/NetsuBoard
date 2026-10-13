@@ -757,6 +757,25 @@
     "hint": "按画板当前内容渲染：视频导出当前帧，在线播放器导出为卡片。",
     "noBridge": "在应用之外无法写入磁盘"
   },
+  "exportLoop": {
+    "menu": "导出为循环…",
+    "title": "导出为循环",
+    "subtitle": "像 GIF 一样自动循环的动图。",
+    "hint": {
+      "webp": "画质好，文件小。",
+      "gif": "到处都能用。256 色，文件大。"
+    },
+    "width": "宽度",
+    "fps": "帧/秒",
+    "source": "源",
+    "quality": "质量",
+    "duration": "时长：{{sec}} 秒",
+    "tooLong": "过长：最长 {{max}} 秒。请缩短循环。",
+    "export": "导出",
+    "exporting": "正在导出…",
+    "done": "循环已导出 · {{size}}",
+    "failed": "导出失败"
+  },
   "ingest": {
     "folderUnavailable": "文件夹导入不可用",
     "folderScanning": "正在读取文件夹…",

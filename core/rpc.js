@@ -16,6 +16,7 @@ const sidecars = require("./sidecars");
 const turbo = require("./turbo"); // panier temps réel : shader GLSL libplacebo, RTX VSR ou ArtCNN R ONNX
 const shaderUpscale = require("./shaderUpscale"); // moteur d'upscale unique de NetsuBoard (GPU, sans IA)
 const exportMod = require("./export"); // export fichier piloté par profil (remux/encode, GPU/CPU, merge)
+const loopExport = require("./loopExport"); // board clip → looping animated image (animated WebP, GIF)
 const audioLang = require("./audioLang"); // normalisation des étiquettes de langue des pistes audio
 const { createReferenceStore, scanFolder, writeExportFile } = require("./reference");
 const { createUpscaleLedger } = require("./upscaleLedger"); // registre des sorties d'upscale (anti double production)
@@ -228,6 +229,9 @@ function createRpc() {
     "reference:extractMedia": ([url, options]) => extract.extractMedia(url, options || {}),
     // Décompose une vidéo locale en frames image → assets disque → liste de chemins.
     "reference:extractFrames": ([opts]) => extractBoardFrames(opts),
+    // A board clip written as a looping animated image (WebP or GIF) at a path the user chose.
+    "reference:exportLoop": ([opts]) => loopExport.exportLoop(ev, opts || {}),
+    "reference:exportLoopCancel": () => loopExport.cancelLoopExport(),
     "reference:push": ([payload]) => {
       broadcast("reference:push", payload);
       return null;

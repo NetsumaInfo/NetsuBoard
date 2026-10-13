@@ -757,6 +757,25 @@
     "hint": "The render comes from the board content: videos export their current frame, online players export as a card.",
     "noBridge": "Disk writing is unavailable outside the app"
   },
+  "exportLoop": {
+    "menu": "Export as loop…",
+    "title": "Export as loop",
+    "subtitle": "Animated image that loops on its own, like a GIF.",
+    "hint": {
+      "webp": "Good quality, small file.",
+      "gif": "Works everywhere. 256 colors, large file."
+    },
+    "width": "Width",
+    "fps": "Frames/s",
+    "source": "Source",
+    "quality": "Quality",
+    "duration": "Length: {{sec}} s",
+    "tooLong": "Too long: {{max}} s max. Shorten the loop.",
+    "export": "Export",
+    "exporting": "Exporting…",
+    "done": "Loop exported · {{size}}",
+    "failed": "Export failed"
+  },
   "ingest": {
     "folderUnavailable": "Folder import unavailable",
     "folderScanning": "Reading folder…",

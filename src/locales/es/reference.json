@@ -757,6 +757,25 @@
     "hint": "El renderizado parte del contenido del tablero: los vídeos salen con su fotograma actual y los reproductores en línea como tarjeta.",
     "noBridge": "La escritura en disco no está disponible fuera de la aplicación"
   },
+  "exportLoop": {
+    "menu": "Exportar en bucle…",
+    "title": "Exportar en bucle",
+    "subtitle": "Imagen animada que se repite sola, como un GIF.",
+    "hint": {
+      "webp": "Buena calidad, archivo ligero.",
+      "gif": "Funciona en todas partes. 256 colores, archivo pesado."
+    },
+    "width": "Ancho",
+    "fps": "Imágenes/s",
+    "source": "Origen",
+    "quality": "Calidad",
+    "duration": "Duración: {{sec}} s",
+    "tooLong": "Demasiado largo: {{max}} s máx. Acorta el bucle.",
+    "export": "Exportar",
+    "exporting": "Exportando…",
+    "done": "Bucle exportado · {{size}}",
+    "failed": "No se pudo exportar"
+  },
   "ingest": {
     "folderUnavailable": "Importación de carpeta no disponible",
     "folderScanning": "Leyendo la carpeta…",

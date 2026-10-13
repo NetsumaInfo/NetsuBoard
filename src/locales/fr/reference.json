@@ -757,6 +757,25 @@
     "hint": "Le rendu repart du contenu du board : les vidéos sortent sur leur image courante, les lecteurs en ligne en cartouche.",
     "noBridge": "Écriture disque indisponible hors de l'application"
   },
+  "exportLoop": {
+    "menu": "Exporter en boucle…",
+    "title": "Exporter en boucle",
+    "subtitle": "Image animée qui boucle toute seule, comme un GIF.",
+    "hint": {
+      "webp": "Bonne qualité, fichier léger.",
+      "gif": "Marche partout. 256 couleurs, fichier lourd."
+    },
+    "width": "Largeur",
+    "fps": "Images/s",
+    "source": "Source",
+    "quality": "Qualité",
+    "duration": "Durée : {{sec}} s",
+    "tooLong": "Trop long : {{max}} s max. Raccourcis la boucle.",
+    "export": "Exporter",
+    "exporting": "Export…",
+    "done": "Boucle exportée · {{size}}",
+    "failed": "Export impossible"
+  },
   "ingest": {
     "folderUnavailable": "Import de dossier indisponible",
     "folderScanning": "Lecture du dossier…",

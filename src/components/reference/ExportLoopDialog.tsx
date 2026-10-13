@@ -1,0 +1,164 @@
+// Export of a video item as a looping animated image: animated WebP (default) or GIF.
+//
+// The export follows what the board shows of the clip — its loop bounds, crop and mirror — and is
+// written where the user chooses. The item itself is left untouched.
+
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Repeat } from "lucide-react";
+import { nr, type LoopFormat } from "@/lib/bridge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Progress } from "@/components/ui/progress";
+import { Slider } from "@/components/ui/slider";
+import { fmtBytes } from "@/lib/utils";
+import { errorText } from "@/lib/errorText";
+import type { BoardItem } from "./referenceShared";
+import { MiniSelect } from "./inspectorControls";
+import { useBoard } from "./useReferenceBoard";
+import { ensureLocalMedia } from "./boardUpscale";
+import {
+  LOOP_FORMATS, LOOP_FPS, LOOP_QUALITY_DEFAULT, LOOP_WIDTHS, MAX_LOOP_SEC, loopFileName, loopSpan,
+} from "./boardLoopExport";
+
+export function ExportLoopDialog({
+  item,
+  open,
+  onOpenChange,
+}: {
+  item: BoardItem;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const { t } = useTranslation("reference");
+  const setNotice = useBoard((s) => s.setNotice);
+  const [format, setFormat] = useState<LoopFormat>("webp");
+  const [width, setWidth] = useState(0);
+  const [fps, setFps] = useState(0);
+  const [quality, setQuality] = useState(LOOP_QUALITY_DEFAULT);
+  const [busy, setBusy] = useState(false);
+  const [pct, setPct] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const span = loopSpan(item);
+  const tooLong = span.sec != null && span.sec > MAX_LOOP_SEC;
+
+  useEffect(() => {
+    if (!busy) return;
+    return nr.reference?.onLoopProgress((p) => setPct(p.pct));
+  }, [busy]);
+
+  async function run() {
+    const api = nr.reference;
+    if (!api) return setError(t("upscale.moduleUnavailable"));
+    setError(null);
+    const out = await nr.saveFile(loopFileName(item.title, format));
+    if (!out) return;
+    setBusy(true);
+    setPct(0);
+    try {
+      const input = await ensureLocalMedia(item.ref);
+      if (!input) return setError(t("upscale.remoteFail"));
+      const r = await api.exportLoop({
+        path: input, out, format,
+        in: span.in, end: span.end,
+        fps: fps || undefined, width: width || undefined,
+        quality: format === "webp" ? quality : undefined,
+        crop: item.crop, flipH: item.flipH, flipV: item.flipV,
+      });
+      if (r.cancelled) return;
+      if (!r.ok) return setError(r.error || t("exportLoop.failed"));
+      setNotice({ kind: "ok", text: t("exportLoop.done", { size: fmtBytes(r.bytes) }) });
+      onOpenChange(false);
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Closing while an export runs stops it: nothing would be left to report its end to.
+  function close() {
+    if (busy) void nr.reference?.cancelExportLoop();
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) close(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Repeat className="size-4" /> {t("exportLoop.title")}
+          </DialogTitle>
+          <DialogDescription>{t("exportLoop.subtitle")}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <ToggleGroup value={[format]} onValueChange={(v) => v[0] && setFormat(v[0] as LoopFormat)}>
+              {LOOP_FORMATS.map((f) => (
+                <ToggleGroupItem key={f} value={f} disabled={busy}>{f === "webp" ? "WebP" : "GIF"}</ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <p className="text-xs leading-snug text-muted-foreground">{t(`exportLoop.hint.${format}`)}</p>
+          </div>
+
+          <div className={`flex gap-3 ${busy ? "pointer-events-none opacity-60" : ""}`}>
+            <div className="flex-1 space-y-1.5">
+              <span className="text-xs text-muted-foreground">{t("exportLoop.width")}</span>
+              <MiniSelect
+                ariaLabel={t("exportLoop.width")} className="w-full"
+                value={width}
+                onChange={(v) => setWidth(Number(v))}
+                items={LOOP_WIDTHS.map((w) => ({ value: String(w), label: w ? `${w} px` : t("exportLoop.source") }))}
+              />
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <span className="text-xs text-muted-foreground">{t("exportLoop.fps")}</span>
+              <MiniSelect
+                ariaLabel={t("exportLoop.fps")} className="w-full"
+                value={fps}
+                onChange={(v) => setFps(Number(v))}
+                items={LOOP_FPS.map((f) => ({ value: String(f), label: f ? String(f) : t("exportLoop.source") }))}
+              />
+            </div>
+          </div>
+
+          {format === "webp" && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{t("exportLoop.quality")}</span>
+                <span className="text-xs tabular-nums text-muted-foreground">{quality}</span>
+              </div>
+              <Slider
+                value={[quality]}
+                min={40} max={100} step={5} disabled={busy}
+                onValueChange={(v) => setQuality(Array.isArray(v) ? v[0] : v)}
+              />
+            </div>
+          )}
+
+          {span.sec != null && (
+            <p className={`text-xs ${tooLong ? "text-destructive" : "text-muted-foreground"}`}>
+              {tooLong
+                ? t("exportLoop.tooLong", { max: MAX_LOOP_SEC })
+                : t("exportLoop.duration", { sec: span.sec.toFixed(1) })}
+            </p>
+          )}
+          {busy && <Progress value={pct} />}
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={close}>{t("common:action.cancel")}</Button>
+          <Button onClick={() => void run()} disabled={busy || tooLong}>
+            {busy ? t("exportLoop.exporting") : t("exportLoop.export")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

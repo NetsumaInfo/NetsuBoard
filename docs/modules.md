@@ -81,3 +81,12 @@ Upscaling an item is a board action, not a module: pick a shader and a factor, t
 - **A still frame is read without `-ss`.** An input seek to 0 on the image2 demuxer eats the only frame: ffmpeg writes nothing and still exits 0, so the board ended up pointing at a file that was never created. `writeFrame` also refuses an empty output rather than reporting success.
 - **`libplacebo` drops alpha** whatever `format=` asks for. A transparent source is split (`alphaGraph`): colour through the shader, alpha scaled beside it with lanczos, `alphamerge` at the end — and for a GIF, a reserved palette entry (`reserve_transparent`, `alpha_threshold`).
 - There is **no AI engine and no fallback to one**. `core/upscaleArgs.js`, `core/upscaleLedger.js` and the `netsulab-*` tests still describe NetsuRush's Python upscaler; they are inherited, not a second engine to reach for.
+
+## Loop export of a board clip (`boardLoopExport.ts` + `ExportLoopDialog.tsx`)
+
+A video item can be written as an **animated image that loops on its own** wherever an image is shown — a chat message, a web page — which a video file does not. The export follows what the board shows of the clip (loop bounds, crop, mirror), goes to a path the user picks, and leaves the item untouched.
+
+- **Animated WebP is the default, GIF is the compatibility format.** WebP keeps 24-bit colour at a fraction of the weight; a GIF is capped at 256 colours per frame by the format, so its palette pass (`palettegen=stats_mode=diff` + `paletteuse … diff_mode=rectangle`, the recipe of the GIF upscale) is the best it can give, not a match for WebP.
+- `core/loopExport.js` runs **one ffmpeg pass** (`libwebp_anim`, or the `gif` muxer) into `<out>.part`, renamed on success: a cancelled or failed export never leaves a truncated file at the chosen path. One export at a time; closing the dialog cancels it.
+- **Capped at 60 s** (`MAX_LOOP_SEC`, checked on both sides): an animated image has no seeking and is decoded whole by whatever displays it. Cadence is capped at 60 fps for WebP and 50 for GIF, whose delays are stored in hundredths of a second.
+- Width is a ceiling, never an enlargement. Both encoders ship in the provisioned ffmpeg runtime, so the feature adds no dependency.

@@ -313,7 +313,14 @@ async function trustedFileOpen(
 async function dlgSave(defaultPath?: string): Promise<string | null> {
   if (!isTauri) return null;
   const { save } = await import("@tauri-apps/plugin-dialog");
-  return await save({ defaultPath, filters: [{ name: i18n.t("common:fileType.video"), extensions: ["mp4", "mov", "mkv"] }] });
+  // The filter follows the proposed name: a `.webp` or `.png` export offered under a video-only
+  // filter would be saved with the wrong extension appended.
+  const video = ["mp4", "mov", "mkv"];
+  const ext = /\.([a-z0-9]+)$/i.exec(defaultPath || "")?.[1].toLowerCase();
+  const filters = !ext || video.includes(ext)
+    ? [{ name: i18n.t("common:fileType.video"), extensions: video }]
+    : [{ name: ext.toUpperCase(), extensions: [ext] }];
+  return await save({ defaultPath, filters });
 }
 
 // Rendu « en remote » (iframe dans le panneau CEP Adobe) : pas de dialogue Tauri. On demande au
@@ -457,6 +464,9 @@ const reference: RefApi = {
   playInfo: (p) => call("reference:playInfo", [p]),
   extractMedia: (url, options) => call("reference:extractMedia", [url, options || {}]),
   extractFrames: (opts) => call("reference:extractFrames", [opts]),
+  exportLoop: (opts) => call("reference:exportLoop", [opts]),
+  cancelExportLoop: () => call("reference:exportLoopCancel", []),
+  onLoopProgress: (cb) => on("reference:loopProgress", cb as (p: unknown) => void),
   exportBoard: (scene, destPath, opts) => call("netsu:export", [scene, destPath, opts]),
   importBoard: (srcPath) => call("netsu:import", [srcPath]),
   onShareProgress: (cb) => on("netsu:progress", cb as (p: unknown) => void),
