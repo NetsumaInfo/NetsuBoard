@@ -32,7 +32,7 @@
   },
   "mock": {
     "appUnavailable": "Diese Funktion ist im Browser nicht verfügbar.",
-    "outsideApp": "Diese Funktion ist nur in der App verfügbar."
+    "outsideApp": "Nur in der App verfügbar."
   },
   "report": {
     "action": "Fehler melden",
@@ -46,7 +46,7 @@
     "permission": "Zugriff verweigert. Die Datei ist vielleicht schreibgeschützt oder in einer anderen App geöffnet.",
     "busy": "Eine andere App verwendet die Datei. Schließe sie und versuch es dann noch einmal.",
     "timeout": "Keine Antwort in der vorgesehenen Zeit. Versuch es noch einmal.",
-    "internal": "Interner Fehler in NetsuBoard. Details findest du unter Einstellungen › Konsole."
+    "internal": "Interner Fehler in NetsuBoard. Details: Einstellungen › Konsole."
   },
   "keys": {
     "Ctrl": "Strg",

@@ -66,7 +66,7 @@
     "fillTint": "淡色",
     "fillSolid": "不透明",
     "placeSize": "放置尺寸",
-    "placeSizeHint": "刚放到画板上的图片和视频的尺寸。",
+    "placeSizeHint": "新放到画板上的图片和视频的尺寸。",
     "sizeS": "小",
     "sizeM": "中",
     "sizeL": "大",
@@ -98,7 +98,7 @@
     "keepPlaying": "继续播放",
     "fitOnOpen": "打开时适配",
     "blurBehavior": "失去焦点时的选择栏",
-    "blurBehaviorHint": "点击其他应用程序时。",
+    "blurBehaviorHint": "点击其他应用时。",
     "blurKeep": "保留",
     "blurHide": "隐藏",
     "blurDeselect": "取消选择",
@@ -106,9 +106,9 @@
     "disabled": "关",
     "placeFrame": "放置区边框",
     "pinnedToolbar": "固定后的工具栏",
-    "pinnedToolbarHint": "精简工具栏，只显示下方选择的按钮。关闭后，所有操作都通过右键菜单。",
+    "pinnedToolbarHint": "精简工具栏，只显示下方选中的按钮。关闭后全部用右键菜单。",
     "decompose": "把视频拆成图片",
-    "decomposeHint": "把从视频里抽取的一组图片放到画板上。",
+    "decomposeHint": "把视频抽取的图片放到画板上。",
     "imagesPerSec": "图片 / 秒",
     "quality": "画质",
     "qualityLow": "低",
@@ -194,7 +194,7 @@
     "penNav": "手写笔与手指导航",
     "penGestures": "双指捏合缩放，双指拖动平移",
     "penDragPans": "在空白处拖动即平移",
-    "penDragPansHint": "自动：在没有鼠标的触控设备上启用。否则拖动为框选。",
+    "penDragPansHint": "自动：仅限无鼠标的触控设备。否则拖动为框选。",
     "penBarrel": "笔身侧键",
     "penBarrelMenu": "右键菜单",
     "penBarrelPan": "平移",
@@ -237,12 +237,12 @@
     "pinnedRemove": "从工具栏移除 {{label}}",
     "barButtons": "工具栏",
     "assetSweep": "未使用的媒体",
-    "assetSweepHint": "删除没有任何场景引用的文件。画板上的内容不受影响。",
+    "assetSweepHint": "删除无场景引用的文件。画板内容不受影响。",
     "assetSweepAction": "清理",
     "assetSweepFailed": "清理失败。",
     "assetSweepDone_one": "已移除 {{count}} 个文件，释放 {{mb}} MB。",
     "assetSweepDone_other": "已移除 {{count}} 个文件，释放 {{mb}} MB。",
-    "favHint": "在字体选择器中点击字体旁的 <0/>，即可固定到这里。"
+    "favHint": "点击字体旁的 <0/>，即可固定到这里。"
   },
   "inspector": {
     "ytPlayer": "YouTube 播放器",
@@ -327,7 +327,7 @@
     "chooseFile": "选择文件",
     "targetItem": "目标项目",
     "remove": "移除链接",
-    "sharedFile": "这个文件属于共享画板，在本机磁盘上没有对应位置。"
+    "sharedFile": "共享画板的文件，本机磁盘上没有。"
   },
   "font": {
     "label": "字体",
@@ -461,7 +461,7 @@
     "title": "导出画板",
     "subtitle": "文件中包含视频的哪些内容。",
     "freezeLinks": "同时打包网络图片",
-    "freezeHint": "否则原网页一失效，画板上的图也会跟着消失。",
+    "freezeHint": "否则原网页失效后，画板上的图也会消失。",
     "weighing": "计算中",
     "export": "导出",
     "exporting": "导出中",
@@ -486,7 +486,7 @@
     "preview": "预览",
     "validate": "确定",
     "working": "处理中",
-    "noEngine": "无法使用超分辨率：此 GPU 不支持 Vulkan。"
+    "noEngine": "无法使用超分辨率：GPU 不支持 Vulkan。"
   },
   "scene": {
     "title": "参考场景",
@@ -516,7 +516,7 @@
     "forgetProject": "从列表中移除",
     "deleteProject": "彻底删除",
     "deleteProjectTitle": "删除“{{name}}”？",
-    "deleteProjectWarning": ".netsu 文件及其 .medias 文件夹将被永久删除。外部素材不受影响。",
+    "deleteProjectWarning": ".netsu 文件和 .medias 文件夹将被永久删除。外部媒体不受影响。",
     "projectMissing": "找不到文件",
     "invites": {
       "body": "邀请你加入共享画板",
@@ -578,10 +578,10 @@
       "full": "完整视频"
     },
     "hint": {
-      "link": "文件里不含视频。打开时仍需要原始文件。",
+      "link": "不含视频。打开时需要原始文件。",
       "preview": "只保留画板上循环播放的那段，轻量重新编码。",
-      "margin": "循环那段再前后各留几秒，方便以后加长。",
-      "full": "完整的源文件，原样保留。"
+      "margin": "循环段前后各留几秒，方便以后加长。",
+      "full": "完整源文件，原样保留。"
     },
     "quality": {
       "label": "画质",
@@ -594,8 +594,8 @@
       "seconds": "{{count}} 秒"
     },
     "warn": {
-      "heavy": "{{size}}：太大，不便直接发送。多数情况下选“片段”就够了。",
-      "long": "有一段视频的范围非常长——请检查它的循环边界。"
+      "heavy": "{{size}}：太大，不便发送。多数情况下选“片段”即可。",
+      "long": "有段视频范围非常长，请检查其循环边界。"
     },
     "useDefault": "画板设置",
     "itemTitle": "这段视频保留什么",
@@ -645,7 +645,7 @@
     "boardImported": "画板已导入",
     "projectSaved": "已保存“{{name}}”",
     "projectOpened": "已打开“{{name}}”",
-    "projectOpenedLegacy": "已打开“{{name}}”（旧格式：用“另存为”把它存成项目）",
+    "projectOpenedLegacy": "已打开“{{name}}”（旧格式：用“另存为”存成项目）",
     "openFailedWith": "无法打开：{{error}}",
     "dropProjectFailed": "无法打开“{{name}}”，请使用“打开项目”。",
     "noProjectFile": "此画板未关联任何文件",
@@ -802,13 +802,13 @@
     "reading_other": "正在读取 {{count}} 个文件",
     "done_one": "已导入 {{count}} 个媒体",
     "done_other": "已导入 {{count}} 个媒体",
-    "copyFailedBatch_one": "{{count}} 个媒体复制失败（包括“{{name}}”）：关闭应用后这些媒体将丢失",
-    "copyFailedBatch_other": "{{count}} 个媒体复制失败（包括“{{name}}”）：关闭应用后这些媒体将丢失"
+    "copyFailedBatch_one": "{{count}} 个媒体复制失败（含“{{name}}”）：关闭应用后将丢失",
+    "copyFailedBatch_other": "{{count}} 个媒体复制失败（含“{{name}}”）：关闭应用后将丢失"
   },
   "mouseThrough": {
     "on": "鼠标穿透",
     "off": "收回鼠标",
-    "warning": "点击和滚轮将传给下方应用，窗口保持在最前。要收回：重新让它获得焦点（Alt+Tab）。",
+    "warning": "点击和滚轮传给下方应用，窗口保持在最前。收回：重新获得焦点（Alt+Tab）。",
     "dontAskAgain": "不再询问"
   },
   "collab": {
@@ -817,24 +817,24 @@
     "subtitle": "选择要邀请到此项目的好友。",
     "signedOut": "请在设置中连接你的 Discord 账号。",
     "noFriends": "请先在“设置 › 账号”中添加好友。",
-    "notice": "画板将变为协作模式。受邀者会在主屏幕上收到邀请。",
+    "notice": "画板将变为协作模式。受邀者会在主屏幕收到邀请。",
     "close": "关闭",
     "create": "创建并邀请",
     "invite": "邀请",
-    "saveAsBlocked": "协作项目仍由共享场景管理。请使用导出来创建本地副本。",
+    "saveAsBlocked": "协作项目仍由共享场景管理。请使用导出创建本地副本。",
     "role": {
       "owner": "所有者",
       "editor": "可编辑",
       "viewer": "仅查看"
     },
-    "rotationPending": "撤销已记录。新发布会等待所有者设备完成密钥轮换。",
+    "rotationPending": "撤销已记录。新发布等待所有者设备完成密钥轮换。",
     "staleHead": {
       "title": "过期的恢复分支",
       "warning": "某台设备已超过 30 天未合并此分支。",
       "detail": "{{days}} 天 · 已加密 {{size}}",
       "discard": "丢弃",
       "confirmTitle": "丢弃此分支？",
-      "confirmWarning": "仅由此设备发布的更改将永久丢失。只有在该设备无法再重新连接时才继续。"
+      "confirmWarning": "仅由此设备发布的更改将永久丢失。仅当该设备无法再连接时才继续。"
     },
     "status": {
       "pending": "等待同步",
@@ -850,14 +850,14 @@
       "delete": "删除项目",
       "leaveTitle": "退出此项目？",
       "deleteTitle": "删除此项目？",
-      "leaveWarning": "此设备已收到的内容会保留，但你将无法再同步此项目。",
-      "deleteWarning": "将删除所有成员的连接数据、邀请和加密恢复副本。此操作无法撤销。"
+      "leaveWarning": "已收到的内容会保留，但无法再同步此项目。",
+      "deleteWarning": "将删除所有成员的连接数据、邀请和加密恢复副本。无法撤销。"
     },
     "noScene": "请先将此画板保存为参考场景。",
     "willAdopt": "此画板将复制到参考场景。.netsu 文件仍保留在你的磁盘上。",
     "failed": "共享失败。",
     "sync": {
-      "queued": "有改动等待发送。一旦有设备可达，将自动发送。",
+      "queued": "有改动等待中。有设备可连接时将自动发送。",
       "upToDate": "一切已同步。",
       "peers_one": "{{count}} 台可达设备",
       "peers_other": "{{count}} 台可达设备"
@@ -875,23 +875,23 @@
       "unknownMember": "成员",
       "queued": "等待发送。",
       "upToDate": "已全部发送。",
-      "rotation": "需要新密钥。请所有者打开应用。",
+      "rotation": "需要新密钥。所有者需打开应用。",
       "nobodyReachable": "无人在线，尚未发送。",
       "waitingKey_one": "{{count}} 人在等待密钥。请保持在线。",
       "waitingKey_other": "{{count}} 人在等待密钥。请保持在线。"
     },
-    "mediaMissing_one": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。已在画板上标记，可从卡片找回（文件夹是否移动过？），然后重新共享。",
-    "mediaMissing_other": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。已在画板上标记，可从卡片找回（文件夹是否移动过？），然后重新共享。",
+    "mediaMissing_one": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。请从卡片重新找回（文件夹是否移动过？），然后重新共享。",
+    "mediaMissing_other": "磁盘上找不到 {{count}} 个媒体文件：{{names}}。请从卡片重新找回（文件夹是否移动过？），然后重新共享。",
     "invited_one": "已发送 {{count}} 个邀请。",
     "invited_other": "已发送 {{count}} 个邀请。",
     "error": {
       "failed": "无法同步。请重试。",
       "desktopOnly": "共享需要桌面应用。",
-      "authorization": "无权访问此共享画板。请重新登录，或请所有者再次邀请你。",
-      "conflict": "另一项修改同时生效了。请稍后重试。",
-      "corrupt": "收到的共享数据已损坏。如果再次出现，请发送错误报告。",
-      "keyPending": "此画板的密钥尚未到达本设备。请保持在线：其他成员打开该画板时，密钥就会送达。",
-      "network": "无法连接共享服务器。请检查网络连接后重试。",
+      "authorization": "无权访问此共享画板。请重新登录，或请所有者重新邀请你。",
+      "conflict": "另一项修改同时生效。请重试。",
+      "corrupt": "收到的共享数据已损坏。如再次出现，请发送错误报告。",
+      "keyPending": "尚未收到此画板的密钥。请保持在线：其他成员打开画板后即会送达。",
+      "network": "无法连接共享服务器。请检查网络后重试。",
       "readOnly": "此画板以只读方式与你共享。",
       "storage": "无法在此磁盘上读写共享数据。请检查可用空间后重试。",
       "unavailable": "共享暂时不可用。请重新登录，然后重新打开画板。",

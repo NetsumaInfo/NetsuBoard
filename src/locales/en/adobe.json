@@ -6,7 +6,7 @@
     "alreadyOpen": "App already open",
     "panelUnreachable": "Can't reach the panel",
     "installFailed": "Install failed",
-    "installedRestart": "Panel installed. RESTART {{apps}}, then Window ▸ Extensions ▸ NetsuBoard.",
+    "installedRestart": "Panel installed. Restart {{apps}}, then Window ▸ Extensions ▸ NetsuBoard.",
     "installedOpen": "Panel installed. Open Premiere Pro/After Effects, then Window ▸ Extensions ▸ NetsuBoard.",
     "autoUpdateFailed": "Could not change the update setting"
   }

@@ -32,7 +32,7 @@
   },
   "mock": {
     "appUnavailable": "Fonction indisponible dans le navigateur.",
-    "outsideApp": "Fonction disponible uniquement dans l'application."
+    "outsideApp": "Disponible uniquement dans l'application."
   },
   "report": {
     "action": "Signaler l'erreur",
@@ -43,10 +43,10 @@
     "coreUnreachable": "Le service de NetsuBoard ne répond pas. Réessaie ; si ça dure, redémarre l'app.",
     "diskFull": "Disque plein. Libère de l'espace, puis réessaie.",
     "notFound": "Fichier introuvable. Il a peut-être été déplacé ou supprimé.",
-    "permission": "Accès refusé. Le fichier est peut-être en lecture seule ou ouvert dans une autre app.",
+    "permission": "Accès refusé. Fichier peut-être en lecture seule ou ouvert dans une autre app.",
     "busy": "Une autre app utilise le fichier. Ferme-la, puis réessaie.",
     "timeout": "Pas de réponse à temps. Réessaie.",
-    "internal": "Problème interne de NetsuBoard. Le détail est dans Paramètres › Console."
+    "internal": "Erreur interne de NetsuBoard. Détails : Paramètres › Console."
   },
   "keys": {
     "Ctrl": "Ctrl",

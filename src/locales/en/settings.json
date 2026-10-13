@@ -37,7 +37,7 @@
   },
   "appearance": {
     "title": "Theme",
-    "subtitle": "Choose a palette that suits your workspace.",
+    "subtitle": "Choose a palette.",
     "group": {
       "dark": "Dark",
       "light": "Light"
@@ -163,7 +163,7 @@
   },
   "bugReport": {
     "title": "Report a problem",
-    "subtitle": "Describe what happened. The log and your machine details are attached.",
+    "subtitle": "Describe what happened. The log and machine details are attached.",
     "type": "What is happening?",
     "module": "Where?",
     "modules": {
@@ -219,11 +219,11 @@
     "description": "Tell us what happened",
     "descriptionPlaceholder": "What you did, and what went wrong",
     "descriptionIdea": "Tell us your idea",
-    "descriptionIdeaPlaceholder": "What you'd like to do, and why",
+    "descriptionIdeaPlaceholder": "What you want to do, and why",
     "steps": "How can we make it happen again?",
     "stepsPlaceholder": "1. I open… 2. I click… 3. …",
     "expected": "What should it have done?",
-    "expectedPlaceholder": "The result you expected",
+    "expectedPlaceholder": "Expected result",
     "videoSource": "Link to the video",
     "videoPlaceholder": "a link we can download it from",
     "discord": "Your Discord",
@@ -236,7 +236,7 @@
       "loading": "Reading",
       "manual": "Type it yourself",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "Your PC details are attached — you can read them in full in the Console.",
+      "attached": "PC details attached. Read them in full in the Console.",
       "machine": {
         "row": "{{label}}: {{value}}",
         "language": "Language",
@@ -258,15 +258,15 @@
     "sending": "Sending",
     "send": "Send",
     "download": "Save the message",
-    "sendFailed": "Sending didn't work. Try again.",
+    "sendFailed": "Sending failed. Try again.",
     "validation": {
-      "description": "Tell us what happened before sending.",
+      "description": "Describe what happened before sending.",
       "detail": "Say in a few words what it is about.",
       "tooLarge": "A file is over {{size}} MB."
     },
     "noWebhook": "Sending is off: no channel. Set <c1>bugWebhook</c1> in nr.config.json, or deploy the Convex relay (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Tell us more",
-    "descriptionOtherPlaceholder": "Your question, or whatever you want to tell us",
+    "descriptionOtherPlaceholder": "Your question or message",
     "files": {
       "label": "Attachments",
       "choose": "Attach a file",
@@ -290,7 +290,7 @@
     "off": "Off",
     "status": {
       "connected": "Visible on {{user}}'s profile.",
-      "searching": "Can't find Discord — presence shows up once it's open.",
+      "searching": "Discord not found. Presence shows once it's open.",
       "disabled": "Your profile shows nothing.",
       "noAppId": "No Discord application set."
     },
@@ -309,37 +309,37 @@
     "disk": "{{free}} free of {{total}}",
     "scanning": "Scanning storage",
     "failed": "That didn't go through. Try again.",
-    "archivedNotice": "Board saved to “{{name}}”: its media now live in the project folder",
+    "archivedNotice": "Board saved to “{{name}}”. Media is now in the project folder.",
     "settling": "{{count}} still being written",
-    "settlingHint": "A file written moments ago may belong to an import the board has not placed yet. It will be checked on the next pass.",
+    "settlingHint": "A file written just now may belong to an import not yet placed on the board. Checked on the next pass.",
     "safe": {
       "title": "Safe to free",
-      "hint": "Checked file by file: these files can be rebuilt, or already exist inside a project folder.",
+      "hint": "Checked file by file. Rebuildable, or already in a project folder.",
       "caches": "Display caches",
-      "cachesHint": "Thumbnails and proxies. The app rebuilds them on demand.",
+      "cachesHint": "Thumbnails and proxies. Rebuilt on demand.",
       "duplicated": "Media already filed in a project ({{count}})",
-      "duplicatedHint": "The files are already in a project's folder, for example “{{project}}”.",
+      "duplicatedHint": "Already in a project folder, for example “{{project}}”.",
       "duplicatedNone": "No duplicate found yet.",
       "action": "Free up"
     },
     "sole": {
       "title": "Save these somewhere first",
-      "hint": "These media exist nowhere else. Nothing here deletes them: save them first and they move to the section above.",
-      "empty": "Nothing at risk: everything the app keeps also exists elsewhere.",
+      "hint": "These media exist nowhere else. Nothing here deletes them. Save first: they move to the section above.",
+      "empty": "Nothing at risk: everything here also exists elsewhere.",
       "untitled": "Untitled board",
       "shared": "Shared board",
-      "sharedHint": "A shared board has no project version: its document is authoritative and collaboration handles its media.",
+      "sharedHint": "A shared board has no project version. Its document is authoritative; collaboration manages its media.",
       "openBoard": "Board open",
       "openBoardHint": "This board is open: use “Save as” from its toolbar.",
       "archive": "Save as project",
       "orphans": "Media no board uses",
       "move": "Move to a folder",
-      "orphansHint_one": "{{count}} file · {{size}}. Nothing displays it anymore, but this is the only copy.",
-      "orphansHint_other": "{{count}} files · {{size}}. Nothing displays them anymore, but this is the only copy.",
+      "orphansHint_one": "{{count}} file · {{size}}. Nothing shows it, but this is the only copy.",
+      "orphansHint_other": "{{count}} files · {{size}}. Nothing shows them, but this is the only copy.",
       "sceneCount_one": "{{count}} media file only the app holds · {{size}}",
       "sceneCount_other": "{{count}} media files only the app holds · {{size}}"
     },
-    "footnote": "Media you added from your own disk is never affected: the app only touches files it wrote itself.",
+    "footnote": "Media you added from your disk is never affected. The app only touches files it wrote.",
     "freedNotice_one": "Freed {{size}} ({{count}} file)",
     "freedNotice_other": "Freed {{size}} ({{count}} files)",
     "movedNotice_one": "Moved {{size}} ({{count}} file)",
@@ -377,7 +377,7 @@
         },
         "economy": {
           "title": "Light",
-          "description": "Slow or limited connection. Media is downloaded when you see it."
+          "description": "Slow or limited connection. Media downloads when you see it."
         }
       }
     },
@@ -425,7 +425,7 @@
       "leave": "Leave",
       "confirmDelete": "Delete for everyone?",
       "confirmLeave": "Leave this board?",
-      "subtitle": "The boards shared with your account. The ones on this machine open from the home screen.",
+      "subtitle": "Boards shared with your account. Boards on this machine open from the home screen.",
       "absent_one": "{{count}} board not on this machine",
       "absent_other": "{{count}} boards not on this machine"
     },

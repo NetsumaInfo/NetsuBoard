@@ -13,7 +13,11 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
    `Ctrl+Z` → convention locale si usuelle, sinon garder), identifiants techniques.
 4. **Ton** : concis, direct, registre logiciel pro (comme Resolve/Premiere localisés). Pas de
    familiarité excessive, pas de calque de l'anglais.
-5. **Ponctuation** : garder `…` (points de suspension), `«      »`/guillemets adaptés à la langue cible
+5. **Longueur** : le minimum de mots qui dit exactement ce que fait la chose. Mots courants, un seul
+   mot par notion (« qualité », pas « couleurs » pour la même chose). Garder tout fait utile :
+   nombres, limites, ce qui sera perdu, quoi faire ensuite.
+6. **Ponctuation** : aucun `…` (points de suspension), sauf dans un exemple que l'utilisateur
+   remplace ; pas de point final sur un libellé ; `«      »`/guillemets adaptés à la langue cible
    (ja「」, zh 中文引号, de „“, es «» ou "", en "").
 
 ## Termes verrouillés

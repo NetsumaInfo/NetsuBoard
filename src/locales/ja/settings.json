@@ -37,7 +37,7 @@
   },
   "appearance": {
     "title": "テーマ",
-    "subtitle": "作業環境に合う配色を選択します。",
+    "subtitle": "配色を選択します。",
     "group": {
       "dark": "ダーク",
       "light": "ライト"
@@ -219,7 +219,7 @@
     "description": "何があったか教えてください",
     "descriptionPlaceholder": "やったこと、うまくいかなかったこと",
     "descriptionIdea": "アイデアを教えてください",
-    "descriptionIdeaPlaceholder": "できるようになってほしいこと、その理由",
+    "descriptionIdeaPlaceholder": "やりたいこと、その理由",
     "steps": "もう一度やるには？",
     "stepsPlaceholder": "1. 開く… 2. 押す… 3. …",
     "expected": "本来はどうなるはずでしたか？",
@@ -236,7 +236,7 @@
       "loading": "読み取り中",
       "manual": "自分で書く",
       "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 GB, Windows 11",
-      "attached": "このパソコンの情報を添付しました。全文はコンソールで読めます。",
+      "attached": "パソコンの情報を添付しました。全文はコンソールで確認できます。",
       "machine": {
         "row": "{{label}}：{{value}}",
         "language": "言語",
@@ -266,7 +266,7 @@
     },
     "noWebhook": "送信は無効：チャネル未設定。nr.config.json に <c1>bugWebhook</c1> を設定するか、Convex リレー（<c2>VITE_CONVEX_SITE_URL</c2>）をデプロイしてください。",
     "descriptionOther": "くわしく教えてください",
-    "descriptionOtherPlaceholder": "質問や、伝えたいことを書いてください",
+    "descriptionOtherPlaceholder": "質問や、伝えたいこと",
     "files": {
       "label": "添付ファイル",
       "choose": "ファイルを添付",
@@ -311,21 +311,21 @@
     "failed": "実行できませんでした。もう一度お試しください。",
     "archivedNotice": "ボードを「{{name}}」に保存しました。メディアはプロジェクトフォルダーにあります",
     "settling": "{{count}} 件を書き込み中",
-    "settlingHint": "たった今書かれたファイルは、ボードがまだ配置していない読み込みのものかもしれません。次回の点検で判定します。",
+    "settlingHint": "たった今書かれたファイルは、まだ配置していない読み込みの可能性があります。次回の点検で判定します。",
     "safe": {
       "title": "安全に解放できます",
-      "hint": "1 ファイルずつ確認済みです。これらは作り直せるか、すでにプロジェクトフォルダーの中にあります。",
+      "hint": "1 ファイルずつ確認済み。作り直せるか、すでにプロジェクトフォルダーにあるファイルです。",
       "caches": "表示キャッシュ",
-      "cachesHint": "サムネイルとプロキシ。アプリが必要に応じて作り直します。",
+      "cachesHint": "サムネイルとプロキシ。必要に応じて作り直されます。",
       "duplicated": "すでにプロジェクトに収められたメディア（{{count}} 件）",
-      "duplicatedHint": "ファイルはすでにプロジェクトのフォルダーにあります（例：「{{project}}」）。",
+      "duplicatedHint": "すでにプロジェクトのフォルダーにあります（例：「{{project}}」）。",
       "duplicatedNone": "今のところ複製は見つかりません。",
       "action": "解放"
     },
     "sole": {
       "title": "先に安全な場所へ",
-      "hint": "これらのメディアはここにしかありません。削除する手段は用意していません。まず保存すれば、上のセクションに移ります。",
-      "empty": "退避が必要なものはありません。アプリが保持するものはすべて他の場所にもあります。",
+      "hint": "ここにしかないメディアです。削除する機能はありません。先に保存すると上のセクションに移ります。",
+      "empty": "退避が必要なものはありません。すべて他の場所にもあります。",
       "untitled": "無題のボード",
       "shared": "共有ボード",
       "sharedHint": "共有ボードにプロジェクト版はありません。ドキュメント自体が基準となり、メディアはコラボレーション機能が管理します。",
@@ -334,8 +334,8 @@
       "archive": "プロジェクトとして保存",
       "orphans": "どのボードでも使われていないメディア",
       "move": "フォルダーへ移動",
-      "orphansHint_one": "{{count}} 件 · {{size}}。もう表示されませんが、これが唯一のコピーです。",
-      "orphansHint_other": "{{count}} 件 · {{size}}。もう表示されませんが、これが唯一のコピーです。",
+      "orphansHint_one": "{{count}} 件 · {{size}}。表示されませんが、唯一のコピーです。",
+      "orphansHint_other": "{{count}} 件 · {{size}}。表示されませんが、唯一のコピーです。",
       "sceneCount_one": "アプリだけが保持するメディア {{count}} 件 · {{size}}",
       "sceneCount_other": "アプリだけが保持するメディア {{count}} 件 · {{size}}"
     },

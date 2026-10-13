@@ -106,9 +106,9 @@
     "disabled": "Deaktiviert",
     "placeFrame": "Rahmen der Platzierungszone",
     "pinnedToolbar": "Werkzeugleiste im angehefteten Zustand",
-    "pinnedToolbarHint": "Verkleinerte Leiste mit den unten gewählten Schaltflächen. Ohne sie läuft alles über das Rechtsklickmenü.",
+    "pinnedToolbarHint": "Verkleinerte Leiste mit den unten gewählten Schaltflächen. Aus: alles per Rechtsklick.",
     "decompose": "Video in Bilder zerlegen",
-    "decomposeHint": "Legt eine Reihe von Einzelbildern aus dem Video auf das Board.",
+    "decomposeHint": "Legt Einzelbilder aus dem Video auf das Board.",
     "imagesPerSec": "Bilder / s",
     "quality": "Qualität",
     "qualityLow": "Niedrig",
@@ -121,7 +121,7 @@
     "upscaleQuick": "Schnell",
     "upscaleAsk": "Benutzerdefiniert",
     "upscaleQuickHint": "Der Button „Hochskalieren“ startet direkt mit diesen Einstellungen.",
-    "upscaleAskHint": "Der Button „Hochskalieren“ öffnet das Fenster: Modell, Skalierung, Vorschau.",
+    "upscaleAskHint": "„Hochskalieren“ öffnet das Fenster: Modell, Skalierung, Vorschau.",
     "model": "Modell",
     "upscaleModelDefault": "Standardmodell fürs Hochskalieren",
     "factor": "Faktor",
@@ -194,24 +194,24 @@
     "penNav": "Navigation mit Stift und Finger",
     "penGestures": "Zum Zoomen zusammenziehen, mit zwei Fingern navigieren",
     "penDragPans": "Ziehen auf leerer Fläche navigiert",
-    "penDragPansHint": "Auto: auf Touch-Geräten ohne Maus aktiv. Sonst erstellt Ziehen eine Lasso-Auswahl.",
+    "penDragPansHint": "Auto: auf Touch-Geräten ohne Maus. Sonst: Ziehen = Lasso-Auswahl.",
     "penBarrel": "Seitentaste des Stifts",
     "penBarrelMenu": "Kontextmenü",
     "penBarrelPan": "Navigieren",
     "penPalm": "Handballenerkennung",
-    "penPalmHint": "Kurz nach dem Einsatz des Stifts werden Fingereingaben ignoriert.",
+    "penPalmHint": "Kurz nach dem Stift werden Fingereingaben ignoriert.",
     "penStroke": "Stiftstrich",
     "penPressure": "Druck",
     "penMinWidth": "Strichstärke ohne Druck",
     "penTilt": "Neigung",
     "penEraser": "Radiererseite des Stifts",
-    "penStrokeHint": "Druck und Neigung werden beim Zeichnen übernommen: Eine Änderung zeichnet nichts neu.",
+    "penStrokeHint": "Druck und Neigung gelten beim Zeichnen: Änderungen zeichnen nichts neu.",
     "penUi": "Oberfläche",
     "penTouchUi": "Bedienelemente immer sichtbar",
-    "penTouchUiHint": "Auto: sobald ein Stift erkannt wird, oder auf einem Touch-Gerät.",
+    "penTouchUiHint": "Auto: bei erkanntem Stift oder auf Touch-Gerät.",
     "penBigTargets": "Größere Bedienelemente",
     "penProbe": "Erkannte Hardware",
-    "penProbeHint": "Fahre mit dem Stift darüber: Die Werte erscheinen, ohne dass etwas gezeichnet wird.",
+    "penProbeHint": "Mit dem Stift darüberfahren: Werte erscheinen, ohne zu zeichnen.",
     "penProbePen": "Stift",
     "penProbePressure": "Druck",
     "penProbeTilt": "Neigung",
@@ -237,12 +237,12 @@
     "pinnedRemove": "{{label}} aus der Leiste entfernen",
     "barButtons": "Werkzeugleiste",
     "assetSweep": "Ungenutzte Medien",
-    "assetSweepHint": "Entfernt Dateien, die keine Szene referenziert. Nichts aus deinen Boards wird angetastet.",
+    "assetSweepHint": "Entfernt Dateien ohne Szenenbezug. Deine Boards bleiben unverändert.",
     "assetSweepAction": "Aufräumen",
     "assetSweepFailed": "Aufräumen fehlgeschlagen.",
     "assetSweepDone_one": "{{count}} Datei entfernt, {{mb}} MB freigegeben.",
     "assetSweepDone_other": "{{count}} Dateien entfernt, {{mb}} MB freigegeben.",
-    "favHint": "Klicke im Auswahlfeld neben einer Schrift auf <0/>, um sie hier anzuheften."
+    "favHint": "Klicke neben einer Schrift auf <0/>, um sie hier anzuheften."
   },
   "inspector": {
     "ytPlayer": "YouTube-Player",
@@ -327,7 +327,7 @@
     "chooseFile": "Datei wählen",
     "targetItem": "Zielelement",
     "remove": "Link entfernen",
-    "sharedFile": "Diese Datei gehört zum geteilten Board und liegt nicht auf dieser Festplatte."
+    "sharedFile": "Datei vom geteilten Board: nicht auf dieser Festplatte."
   },
   "font": {
     "label": "Schrift",
@@ -454,7 +454,7 @@
   "linkDialog": {
     "title": "Online-Video hinzufügen",
     "placeholder": "YouTube, Vimeo, TikTok, Twitter/X, Instagram, Reddit oder ein beliebiger Link",
-    "notFound": "Link nicht erkannt oder Medium nicht gefunden – URL prüfen.",
+    "notFound": "Link nicht erkannt oder Medium nicht gefunden: URL prüfen.",
     "adding": "Wird hinzugefügt"
   },
   "export": {
@@ -486,7 +486,7 @@
     "preview": "Vorschau",
     "validate": "Übernehmen",
     "working": "Läuft",
-    "noEngine": "Upscale nicht verfügbar: Diese GPU unterstützt kein Vulkan."
+    "noEngine": "Upscale nicht verfügbar: GPU ohne Vulkan."
   },
   "scene": {
     "title": "Referenzszenen",
@@ -516,7 +516,7 @@
     "forgetProject": "Aus der Liste entfernen",
     "deleteProject": "Vollständig löschen",
     "deleteProjectTitle": "„{{name}}“ löschen?",
-    "deleteProjectWarning": "Die .netsu-Datei und ihr .medias-Ordner werden endgültig gelöscht. Externe Quelldateien bleiben erhalten.",
+    "deleteProjectWarning": "Die .netsu-Datei und der .medias-Ordner werden endgültig gelöscht. Externe Medien bleiben erhalten.",
     "projectMissing": "Datei nicht gefunden",
     "invites": {
       "body": "lädt dich zu einem geteilten Board ein",
@@ -578,10 +578,10 @@
       "full": "Ganze Videos"
     },
     "hint": {
-      "link": "Kein Video enthalten. Zum Öffnen brauchst du die Originaldateien.",
+      "link": "Kein Video enthalten. Zum Öffnen: Originaldateien nötig.",
       "preview": "Die auf dem Board laufende Schleife, platzsparend neu kodiert.",
-      "margin": "Die Schleife plus ein paar Sekunden drumherum, zum späteren Verlängern.",
-      "full": "Die vollständigen Quelldateien, unverändert."
+      "margin": "Schleife plus ein paar Sekunden, zum späteren Verlängern.",
+      "full": "Vollständige Quelldateien, unverändert."
     },
     "quality": {
       "label": "Qualität",
@@ -595,14 +595,14 @@
     },
     "warn": {
       "heavy": "{{size}}: zu groß für einen einfachen Versand. „Ausschnitte“ reicht meistens.",
-      "long": "Ein Video deckt einen sehr langen Bereich ab – prüfe seine Schleifengrenzen."
+      "long": "Ein Video deckt einen sehr langen Bereich ab: Schleifengrenzen prüfen."
     },
     "useDefault": "Board-Einstellung",
     "itemTitle": "Was von diesem Video bleibt",
     "itemLabel": "Teilen: {{level}}",
     "settings": {
       "title": "Medienspeicherung",
-      "hint": "Was die .netsu-Datei standardmäßig enthält. Pro Medium im Inspektor einstellbar."
+      "hint": "Standardinhalt der .netsu-Datei. Pro Medium im Inspektor einstellbar."
     },
     "onlineMedia": "Online-Medium"
   },
@@ -610,7 +610,7 @@
     "clipboardEmpty": "Zwischenablage leer oder nicht unterstützt",
     "clipboardEmptyLink": "Zwischenablage leer oder Link nicht erkannt",
     "emptyTitle": "Bilder, Videos oder einen YouTube-Link hierher ziehen",
-    "emptyHint": "Einfügen (Strg+V) · Mausrad zum Zoomen · Hintergrund ziehen zum Navigieren",
+    "emptyHint": "Einfügen (Strg+V) · Mausrad: Zoom · Hintergrund ziehen: Navigieren",
     "pastedItems_one": "{{count}} Element eingefügt",
     "pastedItems_other": "{{count}} Elemente eingefügt",
     "copiedDone_one": "{{count}} Element kopiert",
@@ -645,9 +645,9 @@
     "boardImported": "Board importiert",
     "projectSaved": "„{{name}}“ gespeichert",
     "projectOpened": "„{{name}}“ geöffnet",
-    "projectOpenedLegacy": "„{{name}}“ geöffnet (altes Format – mit „Speichern unter“ in ein Projekt umwandeln)",
+    "projectOpenedLegacy": "„{{name}}“ geöffnet (altes Format: mit „Speichern unter“ zum Projekt machen)",
     "openFailedWith": "Öffnen fehlgeschlagen: {{error}}",
-    "dropProjectFailed": "„{{name}}“ konnte nicht geöffnet werden – nutze „Projekt öffnen“.",
+    "dropProjectFailed": "„{{name}}“ nicht öffnbar – „Projekt öffnen“ nutzen.",
     "noProjectFile": "Dieses Board ist mit keiner Datei verknüpft",
     "relocating": "Suche ({{count}})",
     "relocatedNone": "Keine Medien in diesem Ordner erkannt",
@@ -793,8 +793,8 @@
     "folderEmpty": "Keine Medien in diesem Ordner",
     "progress": "Import {{done}}/{{total}}",
     "importing": "{{name}} wird importiert",
-    "copyFailed": "„{{name}}“ konnte nicht kopiert werden: Dieses Medium geht beim Schließen der App verloren",
-    "folderTruncated": "Ordner zu groß: Die ersten {{count}} Medien wurden importiert",
+    "copyFailed": "„{{name}}“ nicht kopiert: geht beim Schließen der App verloren",
+    "folderTruncated": "Ordner zu groß: erste {{count}} Medien importiert",
     "fetching": "Abrufen",
     "linkDone": "Medium importiert",
     "fetchingFrom": "Wird von {{source}} geladen",
@@ -802,39 +802,39 @@
     "reading_other": "{{count}} Dateien werden gelesen",
     "done_one": "{{count}} Medium importiert",
     "done_other": "{{count}} Medien importiert",
-    "copyFailedBatch_one": "{{count}} Kopie fehlgeschlagen („{{name}}“): Dieses Medium geht beim Schließen der App verloren",
-    "copyFailedBatch_other": "{{count}} Kopien fehlgeschlagen (u. a. „{{name}}“): Diese Medien gehen beim Schließen der App verloren"
+    "copyFailedBatch_one": "{{count}} Kopie fehlgeschlagen („{{name}}“): geht beim Schließen der App verloren",
+    "copyFailedBatch_other": "{{count}} Kopien fehlgeschlagen (u. a. „{{name}}“): gehen beim Schließen der App verloren"
   },
   "mouseThrough": {
     "on": "Für die Maus transparent",
     "off": "Maus zurückholen",
-    "warning": "Klicks und Scrollen gehen an die Anwendung darunter, das Fenster bleibt im Vordergrund. Zurückholen: dem Fenster wieder den Fokus geben (Alt+Tab).",
+    "warning": "Klicks und Scrollen gehen an die Anwendung darunter, das Fenster bleibt vorn. Zurückholen: Fokus geben (Alt+Tab).",
     "dontAskAgain": "Nicht mehr fragen"
   },
   "collab": {
     "menu": "Zusammenarbeiten",
     "title": "Zusammenarbeiten",
-    "subtitle": "Wähle die Freunde aus, die du zu diesem Projekt einlädst.",
+    "subtitle": "Freunde zum Einladen in dieses Projekt wählen.",
     "signedOut": "Verbinde dein Discord-Konto in den Einstellungen.",
     "noFriends": "Füge zuerst Freunde unter Einstellungen › Konto hinzu.",
-    "notice": "Das Board wird kollaborativ. Eingeladene erhalten die Einladung auf ihrem Startbildschirm.",
+    "notice": "Das Board wird kollaborativ. Eingeladene erhalten sie auf dem Startbildschirm.",
     "close": "Schließen",
     "create": "Erstellen und einladen",
     "invite": "Einladen",
-    "saveAsBlocked": "Ein kollaboratives Projekt bleibt an seine geteilte Szene gebunden. Exportiere es für eine lokale Kopie.",
+    "saveAsBlocked": "Kollaboratives Projekt bleibt an seine geteilte Szene gebunden. Für eine lokale Kopie exportieren.",
     "role": {
       "owner": "Eigentümer",
       "editor": "Darf bearbeiten",
       "viewer": "Nur ansehen"
     },
-    "rotationPending": "Der Widerruf ist gespeichert. Neue Veröffentlichungen warten, bis ein Eigentümergerät die Schlüsselrotation beendet.",
+    "rotationPending": "Widerruf gespeichert. Neue Veröffentlichungen warten auf die Schlüsselrotation eines Eigentümergeräts.",
     "staleHead": {
       "title": "Veralteter Wiederherstellungszweig",
       "warning": "Ein Gerät hat diesen Zweig seit mehr als 30 Tagen nicht zusammengeführt.",
       "detail": "{{days}} Tage · {{size}} verschlüsselt",
       "discard": "Verwerfen",
       "confirmTitle": "Diesen Zweig verwerfen?",
-      "confirmWarning": "Änderungen, die nur von diesem Gerät veröffentlicht wurden, gehen endgültig verloren. Fahre nur fort, wenn dieses Gerät keine Verbindung mehr herstellen kann."
+      "confirmWarning": "Änderungen, die nur von diesem Gerät veröffentlicht wurden, gehen endgültig verloren. Fahre nur fort, wenn es sich nicht mehr verbinden kann."
     },
     "status": {
       "pending": "Synchronisierung ausstehend",
@@ -850,14 +850,14 @@
       "delete": "Projekt löschen",
       "leaveTitle": "Dieses Projekt verlassen?",
       "deleteTitle": "Dieses Projekt löschen?",
-      "leaveWarning": "Bereits empfangene Daten bleiben auf diesem Gerät, aber das Projekt wird nicht mehr synchronisiert.",
+      "leaveWarning": "Bereits empfangene Daten bleiben auf diesem Gerät. Das Projekt wird nicht mehr synchronisiert.",
       "deleteWarning": "Vermittlungsdaten, Einladungen und verschlüsselte Sicherungen werden für alle Mitglieder unwiderruflich gelöscht."
     },
     "noScene": "Speichere dieses Board zuerst als Referenzszene.",
     "willAdopt": "Dieses Board wird in deine Referenzszenen kopiert. Die .netsu-Datei bleibt auf deiner Festplatte.",
     "failed": "Freigabe fehlgeschlagen.",
     "sync": {
-      "queued": "Änderungen warten hier. Sie werden automatisch gesendet, sobald ein Gerät erreichbar ist.",
+      "queued": "Änderungen warten. Sie werden gesendet, sobald ein Gerät erreichbar ist.",
       "upToDate": "Alles ist synchronisiert.",
       "peers_one": "{{count}} erreichbares Gerät",
       "peers_other": "{{count}} erreichbare Geräte"
@@ -880,21 +880,21 @@
       "waitingKey_one": "Warten auf den Schlüssel: {{count}}. Bleib online.",
       "waitingKey_other": "Warten auf den Schlüssel: {{count}}. Bleib online."
     },
-    "mediaMissing_one": "{{count}} Mediendatei fehlt auf der Festplatte: {{names}}. Sie ist auf dem Board markiert – stelle sie über ihre Karte wieder her (Ordner verschoben?) und teile dann erneut.",
-    "mediaMissing_other": "{{count}} Mediendateien fehlen auf der Festplatte: {{names}}. Sie sind auf dem Board markiert – stelle sie über ihre Karten wieder her (Ordner verschoben?) und teile dann erneut.",
+    "mediaMissing_one": "{{count}} Mediendatei fehlt auf der Festplatte: {{names}}. Stelle sie über ihre Karte wieder her (Ordner verschoben?) und teile dann erneut.",
+    "mediaMissing_other": "{{count}} Mediendateien fehlen auf der Festplatte: {{names}}. Stelle sie über ihre Karten wieder her (Ordner verschoben?) und teile dann erneut.",
     "invited_one": "{{count}} Einladung gesendet.",
     "invited_other": "{{count}} Einladungen gesendet.",
     "error": {
       "failed": "Synchronisierung fehlgeschlagen. Versuch es noch einmal.",
       "desktopOnly": "Teilen benötigt die Desktop-Anwendung.",
-      "authorization": "Zugriff auf dieses geteilte Board verweigert. Melde dich erneut an oder bitte den Eigentümer, dich noch einmal einzuladen.",
-      "conflict": "Gleichzeitig wurde eine andere Änderung übernommen. Versuch es gleich noch einmal.",
-      "corrupt": "Empfangene geteilte Daten sind beschädigt. Wenn das wieder passiert, sende einen Fehlerbericht.",
-      "keyPending": "Der Schlüssel dieses Boards ist noch nicht auf diesem Gerät angekommen. Bleib online: Er kommt, sobald ein anderes Mitglied das Board öffnet.",
-      "network": "Der Freigabeserver ist nicht erreichbar. Prüfe deine Verbindung und versuch es noch einmal.",
+      "authorization": "Zugriff auf dieses geteilte Board verweigert. Melde dich erneut an oder bitte den Eigentümer um eine neue Einladung.",
+      "conflict": "Gleichzeitig wurde eine andere Änderung übernommen. Versuch es erneut.",
+      "corrupt": "Empfangene geteilte Daten sind beschädigt. Wenn das erneut passiert, sende einen Fehlerbericht.",
+      "keyPending": "Schlüssel des Boards noch nicht empfangen. Bleib online: Er kommt, wenn ein anderes Mitglied das Board öffnet.",
+      "network": "Der Freigabeserver ist nicht erreichbar. Prüfe deine Verbindung und versuch es erneut.",
       "readOnly": "Dieses Board ist schreibgeschützt mit dir geteilt.",
-      "storage": "Freigabedaten können auf diesem Laufwerk nicht gelesen oder geschrieben werden. Prüfe den freien Speicherplatz und versuch es noch einmal.",
-      "unavailable": "Die Freigabe ist gerade nicht verfügbar. Melde dich erneut an und öffne das Board noch einmal.",
+      "storage": "Freigabedaten lassen sich auf diesem Laufwerk nicht lesen oder schreiben. Prüfe den freien Speicher und versuch es erneut.",
+      "unavailable": "Freigabe gerade nicht verfügbar. Melde dich erneut an und öffne das Board neu.",
       "validation": "Die Freigabe konnte diese Anfrage nicht verarbeiten. Wenn das wieder passiert, sende einen Fehlerbericht.",
       "server": "Der Freigabeserver hat den Vorgang abgelehnt. Versuch es noch einmal; wenn das wieder passiert, sende einen Fehlerbericht.",
       "mediaNotShared_one": "{{count}} Mediendatei wird nicht geteilt, weil sie nicht lesbar ist: {{names}}. Finde sie wieder (Ordner verschoben?).",

@@ -66,7 +66,7 @@
     "fillTint": "うすい色",
     "fillSolid": "不透明",
     "placeSize": "配置サイズ",
-    "placeSizeHint": "ボードに置いたばかりの画像・動画のサイズ。",
+    "placeSizeHint": "ボードに新しく置く画像・動画のサイズ。",
     "sizeS": "小",
     "sizeM": "中",
     "sizeL": "大",
@@ -98,7 +98,7 @@
     "keepPlaying": "再生を続ける",
     "fitOnOpen": "開いたら全体表示",
     "blurBehavior": "フォーカス外の選択バー",
-    "blurBehaviorHint": "他のアプリケーションをクリックしたとき。",
+    "blurBehaviorHint": "他のアプリをクリックしたとき。",
     "blurKeep": "保持",
     "blurHide": "非表示",
     "blurDeselect": "選択を解除",
@@ -106,7 +106,7 @@
     "disabled": "オフ",
     "placeFrame": "配置エリアの枠",
     "pinnedToolbar": "ピン留め中のツールバー",
-    "pinnedToolbarHint": "下で選んだボタンだけの縮小バーです。オフにすると、すべて右クリックメニューから操作します。",
+    "pinnedToolbarHint": "下で選んだボタンだけの縮小バーです。オフなら右クリックメニューから操作します。",
     "decompose": "動画を連番画像に分解",
     "decomposeHint": "動画から抜き出した連番画像をボードに置きます。",
     "imagesPerSec": "画像 / 秒",
@@ -121,7 +121,7 @@
     "upscaleQuick": "クイック",
     "upscaleAsk": "カスタム",
     "upscaleQuickHint": "「アップスケール」ボタンはこの設定ですぐに実行します。",
-    "upscaleAskHint": "「アップスケール」ボタンでウィンドウを開き、モデル・倍率・プレビューを選びます。",
+    "upscaleAskHint": "「アップスケール」ボタンは、モデル・倍率・プレビューを選ぶウィンドウを開きます。",
     "model": "モデル",
     "upscaleModelDefault": "デフォルトのアップスケールモデル",
     "factor": "倍率",
@@ -141,7 +141,7 @@
     "editShortcut": "{{label}} のショートカットを変更",
     "pressLetter": "文字キーを押してください · Esc でキャンセル",
     "keyboardShortcuts": "キーボードショートカット",
-    "pressCombo": "新しいキーの組み合わせを押してください · Delete で削除 · Esc でキャンセル",
+    "pressCombo": "新しいキーの組み合わせ · Delete で削除 · Esc でキャンセル",
     "gestures": "操作",
     "gesturePaste": "貼り付け（画像 / リンク / YouTube）",
     "gestureMove": "選択を移動（Shift = ×10）",
@@ -194,7 +194,7 @@
     "penNav": "ペンと指の操作",
     "penGestures": "ピンチでズーム、2 本指で移動",
     "penDragPans": "空白のドラッグで移動",
-    "penDragPansHint": "自動：マウスのないタッチデバイスで有効になります。無効のときは、ドラッグで範囲選択します。",
+    "penDragPansHint": "自動：マウスのないタッチデバイスでのみ有効。それ以外はドラッグで範囲選択。",
     "penBarrel": "ペンのサイドボタン",
     "penBarrelMenu": "コンテキストメニュー",
     "penBarrelPan": "移動",
@@ -205,10 +205,10 @@
     "penMinWidth": "筆圧ゼロのときの太さ",
     "penTilt": "傾き",
     "penEraser": "ペンの消しゴム側",
-    "penStrokeHint": "筆圧と傾きは描いた時点で確定します。設定を変えても、描いた線は変わりません。",
+    "penStrokeHint": "筆圧と傾きは描いた時点で確定。設定を変えても描いた線は変わりません。",
     "penUi": "インターフェース",
     "penTouchUi": "操作を常に表示",
-    "penTouchUiHint": "自動：ペンを検出したとき、またはタッチデバイスで有効になります。",
+    "penTouchUiHint": "自動：ペン検出時、またはタッチデバイスで有効。",
     "penBigTargets": "タッチ領域を大きく",
     "penProbe": "検出されたハードウェア",
     "penProbeHint": "ペンをかざすと、描かなくても値が入ります。",
@@ -237,12 +237,12 @@
     "pinnedRemove": "{{label}} をバーから削除",
     "barButtons": "ツールバー",
     "assetSweep": "未使用のメディア",
-    "assetSweepHint": "どのシーンも参照していないファイルを削除します。ボードの内容には触れません。",
+    "assetSweepHint": "どのシーンも使っていないファイルを削除します。ボードは変更されません。",
     "assetSweepAction": "クリーンアップ",
     "assetSweepFailed": "クリーンアップに失敗しました。",
     "assetSweepDone_one": "{{count}} 件のファイルを削除し、{{mb}} MB を解放しました。",
     "assetSweepDone_other": "{{count}} 件のファイルを削除し、{{mb}} MB を解放しました。",
-    "favHint": "フォント選択でフォントの横の <0/> を押すと、ここにピン留めされます。"
+    "favHint": "フォントの横の <0/> を押すと、ここにピン留めされます。"
   },
   "inspector": {
     "ytPlayer": "YouTube プレーヤー",
@@ -327,7 +327,7 @@
     "chooseFile": "ファイルを選択",
     "targetItem": "リンク先のアイテム",
     "remove": "リンクを削除",
-    "sharedFile": "このファイルは共有ボードのものです。このディスク上に場所がありません。"
+    "sharedFile": "共有ボードのファイルです。このディスクにはありません。"
   },
   "font": {
     "label": "フォント",
@@ -454,14 +454,14 @@
   "linkDialog": {
     "title": "オンライン動画を追加",
     "placeholder": "YouTube、Vimeo、TikTok、Twitter/X、Instagram、Reddit などのリンク",
-    "notFound": "リンクを認識できないか、メディアが見つかりません。URL を確認してください。",
+    "notFound": "リンクを認識できないか、メディアが見つかりません。URLを確認してください。",
     "adding": "追加中"
   },
   "export": {
     "title": "ボードを書き出し",
     "subtitle": "動画のうち、ファイルに含める内容。",
     "freezeLinks": "Web の画像もファイルに含める",
-    "freezeHint": "そのままだと、元ページが消えた日にボードからも消えます。",
+    "freezeHint": "そのままだと、元ページが消えたときにボードからも消えます。",
     "weighing": "計算中",
     "export": "書き出し",
     "exporting": "書き出し中",
@@ -486,7 +486,7 @@
     "preview": "プレビュー",
     "validate": "決定",
     "working": "処理中",
-    "noEngine": "アップスケールは利用できません：この GPU は Vulkan に非対応です。"
+    "noEngine": "アップスケールは利用できません：GPU が Vulkan に非対応です。"
   },
   "scene": {
     "title": "リファレンスシーン",
@@ -510,13 +510,13 @@
     "resume": "セッションを再開",
     "currentBoard": "作業中のボード",
     "openProject": "プロジェクトを開く",
-    "openProjectHint": ".netsu ファイルを開くと、そのファイルが作業ドキュメントになります",
+    "openProjectHint": ".netsu ファイルを開くと作業ドキュメントになります",
     "openProjectFile": "プロジェクトを開く",
     "openProjectLocation": "ファイルの場所を開く",
     "forgetProject": "一覧から削除",
     "deleteProject": "完全に削除",
     "deleteProjectTitle": "「{{name}}」を削除しますか？",
-    "deleteProjectWarning": ".netsu ファイルと .medias フォルダーは完全に削除されます。外部の素材は削除されません。",
+    "deleteProjectWarning": ".netsu ファイルと .medias フォルダーを完全に削除します。外部メディアは削除されません。",
     "projectMissing": "ファイルが見つかりません",
     "invites": {
       "body": "共有ボードに招待しています",
@@ -535,7 +535,7 @@
     "doubleClickEdit": "ダブルクリックで編集",
     "frameDefault": "フレーム",
     "missingMedia": "メディアがありません",
-    "mediaWaiting": "メディア待ち — このメディアがあるデバイスを起動してください",
+    "mediaWaiting": "メディア待ち：このメディアを持つデバイスを開いてください",
     "mediaRemoved": "プロジェクトから削除されたメディア",
     "mediaSize": "{{size}}",
     "retryMedia": "再試行",
@@ -581,7 +581,7 @@
       "link": "動画は入りません。開くには元ファイルが必要です。",
       "preview": "ボードで再生しているループだけを、軽く再エンコードします。",
       "margin": "再生範囲に前後数秒を足して、あとから伸ばせます。",
-      "full": "元のファイルをそのまま丸ごと含めます。"
+      "full": "元のファイルをそのまま含めます。"
     },
     "quality": {
       "label": "画質",
@@ -594,7 +594,7 @@
       "seconds": "{{count}} 秒"
     },
     "warn": {
-      "heavy": "{{size}}：気軽に送るには重すぎます。たいていは「抜き出し」で足ります。",
+      "heavy": "{{size}}：送るには重すぎます。たいていは「抜き出し」で足ります。",
       "long": "とても長い範囲の動画があります。ループの範囲を確認してください。"
     },
     "useDefault": "ボードの設定",
@@ -602,7 +602,7 @@
     "itemLabel": "共有：{{level}}",
     "settings": {
       "title": "メディアの保存",
-      "hint": ".netsu に既定で含める内容。メディアごとにインスペクターで変更できます。"
+      "hint": ".netsu の既定の内容。メディアごとにインスペクターで変更できます。"
     },
     "onlineMedia": "オンラインメディア"
   },
@@ -610,7 +610,7 @@
     "clipboardEmpty": "クリップボードが空か、未対応の形式です",
     "clipboardEmptyLink": "クリップボードが空か、リンクを認識できません",
     "emptyTitle": "画像・動画・YouTube のリンクをここにドラッグ",
-    "emptyHint": "貼り付け（Ctrl+V）· ホイールで拡大縮小 · 背景をドラッグで移動",
+    "emptyHint": "貼り付け（Ctrl+V）· ホイール：拡大縮小 · 背景をドラッグ：移動",
     "pastedItems_one": "{{count}} 件を貼り付けました",
     "pastedItems_other": "{{count}} 件を貼り付けました",
     "copiedDone_one": "{{count}} 件をコピーしました",
@@ -645,9 +645,9 @@
     "boardImported": "ボードを読み込みました",
     "projectSaved": "「{{name}}」を保存しました",
     "projectOpened": "「{{name}}」を開きました",
-    "projectOpenedLegacy": "「{{name}}」を開きました（旧形式：名前を付けて保存するとプロジェクトになります）",
+    "projectOpenedLegacy": "「{{name}}」を開きました（旧形式：名前を付けて保存でプロジェクト化）",
     "openFailedWith": "開けませんでした：{{error}}",
-    "dropProjectFailed": "「{{name}}」を開けませんでした。「プロジェクトを開く」をお使いください。",
+    "dropProjectFailed": "「{{name}}」を開けません。「プロジェクトを開く」を使ってください。",
     "noProjectFile": "このボードはファイルに紐づいていません",
     "relocating": "検索中（{{count}}）",
     "relocatedNone": "このフォルダーで認識できるメディアはありません",
@@ -689,7 +689,7 @@
     "empty": "色がありません",
     "working": "抽出中",
     "failed": "使える色がありません",
-    "failedCore": "ファイルを読み取れません — ウィンドウを再起動してください",
+    "failedCore": "ファイルを読み取れません。ウィンドウを再起動してください。",
     "noSource": "選択に使えるメディアがありません",
     "sourcesGone": "元のメディアはボード上にありません",
     "regenerate": "再生成",
@@ -740,8 +740,8 @@
     },
     "done_one": "{{count}} 色を抽出しました",
     "done_other": "{{count}} 色を抽出しました",
-    "doneSkipped_one": "{{count}} 色を抽出 ・ {{skipped}} 件のメディアを除外",
-    "doneSkipped_other": "{{count}} 色を抽出 ・ {{skipped}} 件のメディアを除外"
+    "doneSkipped_one": "{{count}} 色を抽出 · {{skipped}} 件を除外",
+    "doneSkipped_other": "{{count}} 色を抽出 · {{skipped}} 件を除外"
   },
   "exportImage": {
     "menu": "書き出す",
@@ -793,7 +793,7 @@
     "folderEmpty": "このフォルダーにメディアがありません",
     "progress": "読み込み中 {{done}}/{{total}}",
     "importing": "{{name}} を読み込み中",
-    "copyFailed": "「{{name}}」をコピーできませんでした。このメディアはアプリを閉じると失われます",
+    "copyFailed": "「{{name}}」をコピーできません。アプリを閉じるとこのメディアは失われます",
     "folderTruncated": "フォルダーが大きすぎます：先頭 {{count}} 件を読み込みました",
     "fetching": "取得中",
     "linkDone": "メディアを読み込みました",
@@ -802,13 +802,13 @@
     "reading_other": "{{count}} 件のファイルを読み込み中",
     "done_one": "{{count}} 件のメディアを読み込みました",
     "done_other": "{{count}} 件のメディアを読み込みました",
-    "copyFailedBatch_one": "{{count}} 件のコピーに失敗しました（「{{name}}」など）。これらのメディアはアプリを閉じると失われます",
-    "copyFailedBatch_other": "{{count}} 件のコピーに失敗しました（「{{name}}」など）。これらのメディアはアプリを閉じると失われます"
+    "copyFailedBatch_one": "{{count}} 件のコピーに失敗（「{{name}}」など）。アプリを閉じると失われます",
+    "copyFailedBatch_other": "{{count}} 件のコピーに失敗（「{{name}}」など）。アプリを閉じると失われます"
   },
   "mouseThrough": {
     "on": "マウスを透過",
     "off": "マウスを戻す",
-    "warning": "クリックとホイールは下のアプリに届き、ウィンドウは最前面に残ります。操作を戻すには、このウィンドウをアクティブにしてください（Alt+Tab）。",
+    "warning": "クリックとホイールは下のアプリに届き、ウィンドウは最前面のままです。戻すには、このウィンドウをアクティブにしてください（Alt+Tab）。",
     "dontAskAgain": "次回から表示しない"
   },
   "collab": {
@@ -817,7 +817,7 @@
     "subtitle": "このプロジェクトに招待するフレンドを選びます。",
     "signedOut": "設定で Discord アカウントを接続してください。",
     "noFriends": "先に「設定 › アカウント」でフレンドを追加してください。",
-    "notice": "ボードは共同編集になります。招待された人はホーム画面で招待を受け取ります。",
+    "notice": "ボードは共同編集になります。招待された人はホーム画面で受け取ります。",
     "close": "閉じる",
     "create": "作成して招待",
     "invite": "招待",
@@ -827,14 +827,14 @@
       "editor": "編集可",
       "viewer": "閲覧のみ"
     },
-    "rotationPending": "取り消しは記録済みです。所有者のデバイスが鍵のローテーションを完了するまで新しい公開は待機します。",
+    "rotationPending": "取り消しを記録しました。所有者のデバイスで鍵のローテーションが終わるまで、新しい公開は待機します。",
     "staleHead": {
       "title": "古い復旧ブランチ",
       "warning": "このブランチはデバイスから 30 日以上マージされていません。",
       "detail": "{{days}} 日 · 暗号化済み {{size}}",
       "discard": "破棄",
       "confirmTitle": "このブランチを破棄しますか？",
-      "confirmWarning": "このデバイスだけが公開した変更は完全に失われます。そのデバイスが再接続できない場合にのみ続行してください。"
+      "confirmWarning": "このデバイスだけが公開した変更は完全に失われます。再接続できない場合のみ続行してください。"
     },
     "status": {
       "pending": "同期を保留中",
@@ -850,14 +850,14 @@
       "delete": "プロジェクトを削除",
       "leaveTitle": "このプロジェクトを退出しますか？",
       "deleteTitle": "このプロジェクトを削除しますか？",
-      "leaveWarning": "このデバイスが受信済みの内容は残りますが、以後このプロジェクトを同期できません。",
+      "leaveWarning": "受信済みの内容は残りますが、このプロジェクトはもう同期できません。",
       "deleteWarning": "接続情報、招待、暗号化された復旧コピーが全メンバー分削除されます。元に戻せません。"
     },
     "noScene": "先にこのボードをリファレンスシーンとして保存してください。",
     "willAdopt": "このボードはリファレンスシーンにコピーされます。.netsu ファイルはディスクに残ります。",
     "failed": "共有に失敗しました。",
     "sync": {
-      "queued": "送信待ちの変更があります。デバイスに接続でき次第、自動的に送信されます。",
+      "queued": "送信待ちの変更があります。デバイスに接続でき次第、自動で送信されます。",
       "upToDate": "すべて同期済みです。",
       "peers_one": "接続可能なデバイス {{count}} 台",
       "peers_other": "接続可能なデバイス {{count}} 台"
@@ -875,26 +875,26 @@
       "unknownMember": "メンバー",
       "queued": "送信待ちです。",
       "upToDate": "すべて送信済みです。",
-      "rotation": "新しい鍵が必要です。所有者がアプリを開く必要があります。",
+      "rotation": "新しい鍵が必要です。所有者がアプリを開いてください。",
       "nobodyReachable": "オンラインの人がいません。まだ送信されていません。",
       "waitingKey_one": "{{count}} 人が鍵を待っています。オンラインのままにしてください。",
       "waitingKey_other": "{{count}} 人が鍵を待っています。オンラインのままにしてください。"
     },
-    "mediaMissing_one": "ディスク上に見つからないメディアが {{count}} 件あります：{{names}}。ボード上にマークが付いているので、カードから探し直して（フォルダーを移動しましたか？）、もう一度共有してください。",
-    "mediaMissing_other": "ディスク上に見つからないメディアが {{count}} 件あります：{{names}}。ボード上にマークが付いているので、カードから探し直して（フォルダーを移動しましたか？）、もう一度共有してください。",
+    "mediaMissing_one": "ディスク上に見つからないメディアが {{count}} 件あります：{{names}}。カードから探し直し（フォルダーを移動しましたか？）、もう一度共有してください。",
+    "mediaMissing_other": "ディスク上に見つからないメディアが {{count}} 件あります：{{names}}。カードから探し直し（フォルダーを移動しましたか？）、もう一度共有してください。",
     "invited_one": "{{count}} 件の招待を送信しました。",
     "invited_other": "{{count}} 件の招待を送信しました。",
     "error": {
       "failed": "同期できませんでした。もう一度お試しください。",
       "desktopOnly": "共有にはデスクトップアプリが必要です。",
-      "authorization": "この共有ボードへのアクセスが拒否されました。サインインし直すか、オーナーにもう一度招待してもらってください。",
-      "conflict": "別の変更が同時に反映されました。少し待ってから、もう一度お試しください。",
-      "corrupt": "受信した共有データが破損しています。繰り返し発生する場合は、バグレポートを送信してください。",
-      "keyPending": "このボードの鍵がまだこのデバイスに届いていません。オンラインのままお待ちください。ほかのメンバーがボードを開くと届きます。",
+      "authorization": "この共有ボードへのアクセスが拒否されました。サインインし直すか、オーナーに再招待を依頼してください。",
+      "conflict": "同時に別の変更が反映されました。もう一度お試しください。",
+      "corrupt": "受信した共有データが破損しています。再発する場合はバグレポートを送信してください。",
+      "keyPending": "このボードの鍵はまだ受信していません。オンラインのままにしてください。別のメンバーがボードを開くと届きます。",
       "network": "共有サーバーに接続できません。接続を確認して、もう一度お試しください。",
       "readOnly": "このボードは読み取り専用で共有されています。",
       "storage": "このディスクで共有データを読み書きできません。空き容量を確認して、もう一度お試しください。",
-      "unavailable": "現在、共有を利用できません。サインインし直してから、ボードを開き直してください。",
+      "unavailable": "現在、共有は利用できません。サインインし直して、ボードを開き直してください。",
       "validation": "共有でこのリクエストを処理できませんでした。繰り返し発生する場合は、バグレポートを送信してください。",
       "server": "共有サーバーが操作を拒否しました。もう一度お試しください。繰り返し発生する場合は、バグレポートを送信してください。",
       "mediaNotShared_one": "読み込めないため共有されていないメディアが {{count}} 件あります：{{names}}。場所を確認してください（フォルダーを移動しましたか？）。",

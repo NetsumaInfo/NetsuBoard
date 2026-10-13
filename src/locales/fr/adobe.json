@@ -6,8 +6,8 @@
     "alreadyOpen": "Application déjà ouverte",
     "panelUnreachable": "Panneau injoignable",
     "installFailed": "Installation impossible",
-    "installedRestart": "Panneau installé. REDÉMARRE {{apps}}, puis Fenêtre ▸ Extensions ▸ NetsuBoard.",
-    "installedOpen": "Panneau installé. Ouvre Premiere Pro/After Effects puis Fenêtre ▸ Extensions ▸ NetsuBoard.",
+    "installedRestart": "Panneau installé. Redémarre {{apps}}, puis Fenêtre ▸ Extensions ▸ NetsuBoard.",
+    "installedOpen": "Panneau installé. Ouvre Premiere Pro/After Effects, puis Fenêtre ▸ Extensions ▸ NetsuBoard.",
     "autoUpdateFailed": "Réglage de mise à jour impossible"
   }
 }

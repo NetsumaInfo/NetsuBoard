@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "Language",
-    "subtitle": "The change applies right away, with no restart.",
+    "subtitle": "Applies right away. No restart.",
     "fieldLabel": "Interface language"
   }
 }

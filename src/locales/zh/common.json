@@ -32,7 +32,7 @@
   },
   "mock": {
     "appUnavailable": "浏览器中无法使用此功能。",
-    "outsideApp": "此功能仅可在应用中使用。"
+    "outsideApp": "仅可在应用中使用。"
   },
   "report": {
     "action": "报告错误",

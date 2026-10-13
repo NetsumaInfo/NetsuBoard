@@ -4,7 +4,7 @@
   },
   "settings": {
     "title": "Langue",
-    "subtitle": "Le changement s'applique tout de suite, sans redémarrer.",
+    "subtitle": "Effet immédiat, sans redémarrage.",
     "fieldLabel": "Langue de l'interface"
   }
 }

@@ -66,7 +66,7 @@
     "fillTint": "Tintado",
     "fillSolid": "Opaco",
     "placeSize": "Tamaño al colocar",
-    "placeSizeHint": "Tamaño de las imágenes y vídeos recién colocados en el tablero.",
+    "placeSizeHint": "Tamaño de imágenes y vídeos nuevos en el tablero.",
     "sizeS": "Pequeño",
     "sizeM": "Mediano",
     "sizeL": "Grande",
@@ -106,9 +106,9 @@
     "disabled": "Desactivado",
     "placeFrame": "Marco de la zona de colocación",
     "pinnedToolbar": "Barra de herramientas al fijar",
-    "pinnedToolbarHint": "Barra reducida con los botones elegidos abajo. Sin ella, todo pasa por el menú contextual.",
+    "pinnedToolbarHint": "Barra reducida con los botones de abajo. Sin ella, todo va por el menú contextual.",
     "decompose": "Descomponer un vídeo en imágenes",
-    "decomposeHint": "Coloca una serie de imágenes muestreadas del vídeo en el tablero.",
+    "decomposeHint": "Coloca imágenes tomadas del vídeo en el tablero.",
     "imagesPerSec": "Imágenes / s",
     "quality": "Calidad",
     "qualityLow": "Baja",
@@ -121,7 +121,7 @@
     "upscaleQuick": "Rápido",
     "upscaleAsk": "Personalizado",
     "upscaleQuickHint": "El botón Escalar lanza el escalado directamente con estos ajustes.",
-    "upscaleAskHint": "El botón Escalar abre la ventana: modelo, escala, vista previa.",
+    "upscaleAskHint": "Escalar abre la ventana: modelo, escala, vista previa.",
     "model": "Modelo",
     "upscaleModelDefault": "Modelo de escalado predeterminado",
     "factor": "Factor",
@@ -141,7 +141,7 @@
     "editShortcut": "Modificar el atajo {{label}}",
     "pressLetter": "Pulsa una letra · Esc cancela",
     "keyboardShortcuts": "Atajos de teclado",
-    "pressCombo": "Pulsa la nueva combinación · Supr borra · Esc cancela",
+    "pressCombo": "Nueva combinación · Supr borra · Esc cancela",
     "gestures": "Gestos",
     "gesturePaste": "Pegar (imagen / enlace / YouTube)",
     "gestureMove": "Mover la selección (Mayús = ×10)",
@@ -194,7 +194,7 @@
     "penNav": "Navegación con lápiz y con el dedo",
     "penGestures": "Pellizcar para hacer zoom, dos dedos para navegar",
     "penDragPans": "Arrastrar sobre el fondo navega",
-    "penDragPansHint": "Auto: activado en una pantalla táctil sin ratón. Si no, arrastrar selecciona con lazo.",
+    "penDragPansHint": "Auto: en pantalla táctil sin ratón. Si no, arrastrar selecciona con lazo.",
     "penBarrel": "Botón lateral del lápiz",
     "penBarrelMenu": "Menú contextual",
     "penBarrelPan": "Navegar",
@@ -205,13 +205,13 @@
     "penMinWidth": "Grosor con presión cero",
     "penTilt": "Inclinación",
     "penEraser": "Punta borradora del lápiz",
-    "penStrokeHint": "Presión e inclinación quedan fijadas al trazar: cambiar un ajuste no redibuja nada.",
+    "penStrokeHint": "Presión e inclinación se fijan al trazar: cambiar un ajuste no redibuja nada.",
     "penUi": "Interfaz",
     "penTouchUi": "Controles siempre visibles",
-    "penTouchUiHint": "Auto: en cuanto se detecta un lápiz, o en una pantalla táctil.",
+    "penTouchUiHint": "Auto: al detectar un lápiz o en pantalla táctil.",
     "penBigTargets": "Controles más grandes",
     "penProbe": "Hardware detectado",
-    "penProbeHint": "Pasa el lápiz por encima: los valores se rellenan sin dibujar.",
+    "penProbeHint": "Pasa el lápiz sin tocar: se leen los valores sin dibujar.",
     "penProbePen": "Lápiz",
     "penProbePressure": "Presión",
     "penProbeTilt": "Inclinación",
@@ -237,12 +237,12 @@
     "pinnedRemove": "Quitar {{label}} de la barra",
     "barButtons": "Barra de herramientas",
     "assetSweep": "Medios sin usar",
-    "assetSweepHint": "Elimina los archivos que no usa ninguna escena. No se toca nada de lo que hay en tus tableros.",
+    "assetSweepHint": "Elimina los archivos que no usa ninguna escena. Tus tableros no se tocan.",
     "assetSweepAction": "Limpiar",
     "assetSweepFailed": "La limpieza ha fallado.",
     "assetSweepDone_one": "{{count}} archivo retirado, {{mb}} MB liberados.",
     "assetSweepDone_other": "{{count}} archivos retirados, {{mb}} MB liberados.",
-    "favHint": "Pulsa <0/> junto a una fuente en el selector para fijarla aquí."
+    "favHint": "Pulsa <0/> junto a una fuente para fijarla aquí."
   },
   "inspector": {
     "ytPlayer": "Reproductor de YouTube",
@@ -327,7 +327,7 @@
     "chooseFile": "Elegir un archivo",
     "targetItem": "Elemento de destino",
     "remove": "Quitar el enlace",
-    "sharedFile": "Este archivo pertenece al tablero compartido: no tiene ubicación en este disco."
+    "sharedFile": "Archivo del tablero compartido: sin ubicación en este disco."
   },
   "font": {
     "label": "Fuente",
@@ -454,14 +454,14 @@
   "linkDialog": {
     "title": "Añadir un vídeo en línea",
     "placeholder": "YouTube, Vimeo, TikTok, Twitter/X, Instagram, Reddit o cualquier enlace",
-    "notFound": "Enlace no reconocido o medio no encontrado — revisa la URL.",
+    "notFound": "Enlace no reconocido o medio no encontrado: revisa la URL.",
     "adding": "Añadiendo"
   },
   "export": {
     "title": "Exportar el tablero",
     "subtitle": "Qué parte de los vídeos incluye el archivo.",
-    "freezeLinks": "Incluir también las imágenes de la web",
-    "freezeHint": "Si no, desaparecerán del tablero el día que caiga su página.",
+    "freezeLinks": "Incluir también imágenes web",
+    "freezeHint": "Si no, desaparecerán del tablero cuando caiga su página.",
     "weighing": "Calculando",
     "export": "Exportar",
     "exporting": "Exportando",
@@ -474,7 +474,7 @@
     "scale": "Escala",
     "denoise": "Reducción de ruido",
     "moduleUnavailable": "módulo de referencia no disponible",
-    "remoteFail": "medio remoto: no se pudo obtener un archivo local",
+    "remoteFail": "medio remoto: archivo local no disponible",
     "previewFail": "no se pudo generar la vista previa",
     "upscaleFail": "error al escalar",
     "fetchingLocal": "Obteniendo",
@@ -486,7 +486,7 @@
     "preview": "Vista previa",
     "validate": "Aplicar",
     "working": "En curso",
-    "noEngine": "Escalado no disponible: esta GPU no admite Vulkan."
+    "noEngine": "Escalado no disponible: GPU sin Vulkan."
   },
   "scene": {
     "title": "Escenas de referencia",
@@ -516,7 +516,7 @@
     "forgetProject": "Quitar de la lista",
     "deleteProject": "Eliminar por completo",
     "deleteProjectTitle": "¿Eliminar «{{name}}»?",
-    "deleteProjectWarning": "El archivo .netsu y su carpeta .medias se eliminarán de forma permanente. Los medios de origen externos no se tocarán.",
+    "deleteProjectWarning": "Archivo .netsu y carpeta .medias eliminados de forma permanente. Los medios externos no se tocarán.",
     "projectMissing": "Archivo no encontrado",
     "invites": {
       "body": "te invita a un tablero compartido",
@@ -543,7 +543,7 @@
     "reloadMedia": "Volver a descargar",
     "downloading": "Descargando",
     "mediaFallback": "medio",
-    "interactiveActive": "Interactivo — clic fuera para mover",
+    "interactiveActive": "Interactivo: clic fuera para mover",
     "interactiveHint": "Doble clic para interactuar",
     "relocateAll": "Relocalizar todo ({{count}})"
   },
@@ -578,10 +578,10 @@
       "full": "Vídeos completos"
     },
     "hint": {
-      "link": "No incluye vídeos. Harán falta los archivos originales para abrirlo.",
+      "link": "Sin vídeos. Hacen falta los archivos originales para abrirlo.",
       "preview": "El bucle que se reproduce en el tablero, recodificado en versión ligera.",
-      "margin": "El bucle más unos segundos alrededor, para alargarlo después.",
-      "full": "Los archivos de origen completos, tal cual."
+      "margin": "Bucle más unos segundos, para alargarlo después.",
+      "full": "Archivos de origen completos, tal cual."
     },
     "quality": {
       "label": "Calidad",
@@ -594,7 +594,7 @@
       "seconds": "{{count}} s"
     },
     "warn": {
-      "heavy": "{{size}}: demasiado pesado para enviarlo sin más. «Extractos» basta en la mayoría de los casos.",
+      "heavy": "{{size}}: demasiado pesado para enviar. «Extractos» suele bastar.",
       "long": "Un vídeo cubre un rango muy largo: revisa sus límites de bucle."
     },
     "useDefault": "Ajuste del tablero",
@@ -602,7 +602,7 @@
     "itemLabel": "Compartir: {{level}}",
     "settings": {
       "title": "Almacenamiento de medios",
-      "hint": "Lo que el .netsu incluye de forma predeterminada. Se ajusta medio por medio en el inspector."
+      "hint": "Contenido predeterminado del .netsu. Se ajusta por medio en el inspector."
     },
     "onlineMedia": "Medio en línea"
   },
@@ -610,7 +610,7 @@
     "clipboardEmpty": "Portapapeles vacío o no compatible",
     "clipboardEmptyLink": "Portapapeles vacío o enlace no reconocido",
     "emptyTitle": "Arrastra imágenes, vídeos o un enlace de YouTube aquí",
-    "emptyHint": "Pegar (Ctrl+V) · rueda para zoom · arrastrar el fondo para navegar",
+    "emptyHint": "Pegar (Ctrl+V) · rueda: zoom · arrastrar el fondo: navegar",
     "pastedItems_one": "{{count}} elemento pegado",
     "pastedItems_other": "{{count}} elementos pegados",
     "copiedDone_one": "{{count}} elemento copiado",
@@ -635,7 +635,7 @@
     "saveFailed": "Error al guardar",
     "autosaveFailed": "Error en el guardado automático: {{error}}",
     "failedWith": "Error: {{error}}",
-    "exported": "Exportado · Incluidos: {{bundled}} · Referenciados: {{referenced}}",
+    "exported": "Exportado · incluidos: {{bundled}} · referenciados: {{referenced}}",
     "boardExported": "Tablero exportado",
     "exportFailed": "Error al exportar",
     "exportFailedWith": "Error al exportar: {{error}}",
@@ -776,7 +776,7 @@
     "fps": "Imágenes/s",
     "source": "Origen",
     "quality": "Calidad",
-    "lossless": "Sin pérdida",
+    "lossless": "Sin pérdidas",
     "gifFine": "Alta calidad",
     "duration": "Duración: {{sec}} s",
     "estimate": "≈ {{size}}",
@@ -793,7 +793,7 @@
     "folderEmpty": "No hay medios en esta carpeta",
     "progress": "Importando {{done}}/{{total}}",
     "importing": "Importando {{name}}",
-    "copyFailed": "No se pudo copiar «{{name}}»: este medio se perderá al cerrar la aplicación",
+    "copyFailed": "No se pudo copiar «{{name}}»: se perderá al cerrar la aplicación",
     "folderTruncated": "Carpeta demasiado grande: importados los primeros {{count}} medios",
     "fetching": "Obteniendo",
     "linkDone": "Medio importado",
@@ -802,39 +802,39 @@
     "reading_other": "Leyendo {{count}} archivos",
     "done_one": "{{count}} medio importado",
     "done_other": "{{count}} medios importados",
-    "copyFailedBatch_one": "{{count}} copia fallida («{{name}}»): este medio se perderá al cerrar la aplicación",
-    "copyFailedBatch_other": "{{count}} copias fallidas (incluida «{{name}}»): estos medios se perderán al cerrar la aplicación"
+    "copyFailedBatch_one": "{{count}} copia fallida («{{name}}»): se perderá al cerrar la aplicación",
+    "copyFailedBatch_other": "{{count}} copias fallidas (incluida «{{name}}»): se perderán al cerrar la aplicación"
   },
   "mouseThrough": {
     "on": "Transparente al ratón",
     "off": "Recuperar el ratón",
-    "warning": "Los clics y la rueda irán a la aplicación de debajo, y la ventana se mantiene encima. Para recuperar el control: vuelve a darle el foco (Alt+Tab).",
+    "warning": "Clics y rueda van a la aplicación de debajo; la ventana sigue encima. Para recuperar el control: foco en ella (Alt+Tab).",
     "dontAskAgain": "No preguntar de nuevo"
   },
   "collab": {
     "menu": "Colaborar",
     "title": "Colaborar",
-    "subtitle": "Elige a los amigos que quieres invitar a este proyecto.",
+    "subtitle": "Elige los amigos a invitar a este proyecto.",
     "signedOut": "Conecta tu cuenta de Discord en Ajustes.",
     "noFriends": "Primero añade amigos en Ajustes › Cuenta.",
-    "notice": "El tablero se vuelve colaborativo. Las personas invitadas reciben la invitación en su pantalla de inicio.",
+    "notice": "El tablero se vuelve colaborativo. Los invitados la reciben en su pantalla de inicio.",
     "close": "Cerrar",
     "create": "Crear e invitar",
     "invite": "Invitar",
-    "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su escena compartida. Usa la exportación para crear una copia local.",
+    "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su escena compartida. Usa la exportación para una copia local.",
     "role": {
       "owner": "Propietario",
       "editor": "Puede editar",
       "viewer": "Solo lectura"
     },
-    "rotationPending": "La revocación está registrada. Las nuevas publicaciones esperan a que un dispositivo del propietario termine la rotación de clave.",
+    "rotationPending": "Revocación registrada. Las nuevas publicaciones esperan a que un dispositivo del propietario complete la rotación de clave.",
     "staleHead": {
       "title": "Rama de recuperación obsoleta",
       "warning": "Un dispositivo no ha fusionado esta rama durante más de 30 días.",
       "detail": "{{days}} días · {{size}} cifrados",
       "discard": "Descartar",
       "confirmTitle": "¿Descartar esta rama?",
-      "confirmWarning": "Los cambios publicados únicamente por este dispositivo se perderán para siempre. Continúa solo si ese dispositivo ya no puede volver a conectarse."
+      "confirmWarning": "Se perderán para siempre los cambios publicados solo por este dispositivo. Continúa solo si ya no puede volver a conectarse."
     },
     "status": {
       "pending": "sincronización pendiente",
@@ -850,14 +850,14 @@
       "delete": "Eliminar proyecto",
       "leaveTitle": "¿Salir de este proyecto?",
       "deleteTitle": "¿Eliminar este proyecto?",
-      "leaveWarning": "Conservarás lo ya recibido en este dispositivo, pero ya no podrás sincronizar el proyecto.",
+      "leaveWarning": "Conservas lo ya recibido en este dispositivo. Ya no podrás sincronizar el proyecto.",
       "deleteWarning": "Los datos de conexión, las invitaciones y las copias cifradas se eliminarán para todos. No se puede deshacer."
     },
     "noScene": "Guarda primero este tablero como escena de referencia.",
     "willAdopt": "Este tablero se copiará a tus escenas de referencia. El archivo .netsu permanece en tu disco.",
     "failed": "No se pudo compartir.",
     "sync": {
-      "queued": "Hay cambios en espera. Se enviarán solos en cuanto un dispositivo esté disponible.",
+      "queued": "Cambios en espera. Se enviarán automáticamente cuando haya un dispositivo disponible.",
       "upToDate": "Todo está sincronizado.",
       "peers_one": "{{count}} dispositivo accesible",
       "peers_other": "{{count}} dispositivos accesibles"
@@ -880,21 +880,21 @@
       "waitingKey_one": "{{count}} espera la clave. Sigue en línea.",
       "waitingKey_other": "{{count}} esperan la clave. Sigue en línea."
     },
-    "mediaMissing_one": "{{count}} archivo multimedia no encontrado en el disco: {{names}}. Está marcado en el tablero: recupéralo desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
-    "mediaMissing_other": "{{count}} archivos multimedia no encontrados en el disco: {{names}}. Están marcados en el tablero: recupéralos desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
+    "mediaMissing_one": "{{count}} archivo multimedia no encontrado en el disco: {{names}}. Recupéralo desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
+    "mediaMissing_other": "{{count}} archivos multimedia no encontrados en el disco: {{names}}. Recupéralos desde su tarjeta (¿carpeta movida?) y vuelve a compartir.",
     "invited_one": "{{count}} invitación enviada.",
     "invited_other": "{{count}} invitaciones enviadas.",
     "error": {
       "failed": "No se pudo sincronizar. Vuelve a intentarlo.",
       "desktopOnly": "Compartir requiere la aplicación de escritorio.",
       "authorization": "Acceso denegado a este tablero compartido. Vuelve a iniciar sesión o pide al propietario que te invite de nuevo.",
-      "conflict": "Otro cambio se aplicó al mismo tiempo. Vuelve a intentarlo en un momento.",
-      "corrupt": "Algunos datos compartidos recibidos están dañados. Si vuelve a ocurrir, envía un informe de error.",
-      "keyPending": "La clave de este tablero aún no ha llegado a este dispositivo. Mantente en línea: llegará cuando otro miembro abra el tablero.",
+      "conflict": "Otro cambio se aplicó al mismo tiempo. Vuelve a intentarlo.",
+      "corrupt": "Los datos compartidos recibidos están dañados. Si vuelve a pasar, envía un informe de error.",
+      "keyPending": "Aún no se ha recibido la clave del tablero. Mantente en línea: llegará cuando otro miembro abra el tablero.",
       "network": "No se puede conectar con el servidor de colaboración. Revisa tu conexión y vuelve a intentarlo.",
       "readOnly": "Este tablero se comparte contigo en solo lectura.",
-      "storage": "No se pueden leer ni escribir los datos de colaboración en este disco. Comprueba el espacio libre y vuelve a intentarlo.",
-      "unavailable": "La colaboración no está disponible ahora mismo. Vuelve a iniciar sesión y abre de nuevo el tablero.",
+      "storage": "No se pueden leer ni escribir datos de colaboración en este disco. Comprueba el espacio libre y vuelve a intentarlo.",
+      "unavailable": "La colaboración no está disponible ahora. Vuelve a iniciar sesión y abre de nuevo el tablero.",
       "validation": "No se pudo procesar esta solicitud de colaboración. Si vuelve a ocurrir, envía un informe de error.",
       "server": "El servidor de colaboración rechazó la operación. Vuelve a intentarlo; si vuelve a ocurrir, envía un informe de error.",
       "mediaNotShared_one": "{{count}} archivo multimedia no se comparte porque no se puede leer: {{names}}. Recupéralo (¿carpeta movida?).",

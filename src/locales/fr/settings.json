@@ -10,7 +10,7 @@
     "discord": "Discord"
   },
   "about": {
-    "tagline": "Board de référence infini : images, vidéos, réseaux sociaux, notes et dessin.",
+    "tagline": "Board de référence infini : images, vidéos, réseaux sociaux, notes et dessin.",
     "socialTitle": "Réseaux sociaux",
     "social": {
       "discord": "Rejoindre le serveur"
@@ -37,7 +37,7 @@
   },
   "appearance": {
     "title": "Thème",
-    "subtitle": "Choisis une palette adaptée à ton espace de travail.",
+    "subtitle": "Choisis une palette.",
     "group": {
       "dark": "Sombres",
       "light": "Clairs"
@@ -92,7 +92,7 @@
     },
     "custom": {
       "title": "Mes thèmes",
-      "subtitle": "Enregistre l'apparence actuelle : palette et couleurs.",
+      "subtitle": "Enregistre l'apparence actuelle : palette et couleurs.",
       "create": "Nouveau thème",
       "save": "Enregistrer",
       "delete": "Supprimer ce thème",
@@ -100,7 +100,7 @@
       "namePlaceholder": "Nom du thème",
       "confirm": "Valider",
       "rename": "Renommer",
-      "unsaved": "« {{name}} » a des modifications non enregistrées."
+      "unsaved": "« {{name}} » a des modifications non enregistrées."
     }
   },
   "updates": {
@@ -134,7 +134,7 @@
       "performance": "Performances"
     },
     "ytdlp": {
-      "hint": "Bibliothèque qui résout les liens vidéo. Ses extracteurs cassent souvent : elle se met à jour sans attendre la prochaine version de NetsuBoard.",
+      "hint": "Bibliothèque qui résout les liens vidéo. Ses extracteurs cassent souvent : elle se met à jour sans attendre la prochaine version de NetsuBoard.",
       "update": "Mettre à jour",
       "updating": "Mise à jour",
       "checking": "Lecture de la version",
@@ -163,8 +163,8 @@
   },
   "bugReport": {
     "title": "Signaler un souci",
-    "subtitle": "Décris ce qui s'est passé. Le journal et les infos de ta machine sont joints.",
-    "type": "Il se passe quoi ?",
+    "subtitle": "Décris ce qui s'est passé. Le journal et les infos machine sont joints.",
+    "type": "Il se passe quoi ?",
     "module": "Où ça ?",
     "modules": {
       "board": "Le board",
@@ -174,7 +174,7 @@
       "setup": "Installation"
     },
     "detail": "Dis-le en quelques mots",
-    "detailPlaceholder": "ex : le bouton Envoyer ne fait rien",
+    "detailPlaceholder": "ex : le bouton Envoyer ne fait rien",
     "severity": "C'est grave ?",
     "frequency": "Ça arrive",
     "groups": {
@@ -219,11 +219,11 @@
     "description": "Raconte ce qui s'est passé",
     "descriptionPlaceholder": "Ce que tu as fait, et ce qui a cloché",
     "descriptionIdea": "Raconte ton idée",
-    "descriptionIdeaPlaceholder": "Ce que tu aimerais faire, et pourquoi",
+    "descriptionIdeaPlaceholder": "Ce que tu veux faire, et pourquoi",
     "steps": "Comment le refaire ?",
     "stepsPlaceholder": "1. J'ouvre… 2. Je clique sur… 3. …",
-    "expected": "Ça aurait dû faire quoi ?",
-    "expectedPlaceholder": "Le résultat que tu attendais",
+    "expected": "Ça aurait dû faire quoi ?",
+    "expectedPlaceholder": "Le résultat attendu",
     "videoSource": "Lien de la vidéo",
     "videoPlaceholder": "un lien pour la télécharger",
     "discord": "Ton Discord",
@@ -235,8 +235,8 @@
       "refresh": "Relire",
       "loading": "Lecture en cours",
       "manual": "Écris-le toi-même",
-      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 Go, Windows 11",
-      "attached": "Les infos de ton PC sont jointes — tu peux les lire en entier dans la Console.",
+      "manualPlaceholder": "RTX 3060, Ryzen 5600X, 32 Go, Windows 11",
+      "attached": "Infos de ton PC jointes, lisibles en entier dans la Console.",
       "machine": {
         "row": "{{label}} : {{value}}",
         "language": "Langue",
@@ -258,15 +258,15 @@
     "sending": "Envoi",
     "send": "Envoyer",
     "download": "Enregistrer le message",
-    "sendFailed": "L'envoi n'a pas marché. Réessaie.",
+    "sendFailed": "Envoi échoué. Réessaie.",
     "validation": {
-      "description": "Raconte ce qui s'est passé avant d'envoyer.",
+      "description": "Décris ce qui s'est passé avant l'envoi.",
       "detail": "Dis en quelques mots de quoi il s'agit.",
       "tooLarge": "Un fichier dépasse {{size}} Mo."
     },
-    "noWebhook": "Envoi désactivé : aucun canal. Renseigne <c1>bugWebhook</c1> dans nr.config.json, ou déploie le relais Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
+    "noWebhook": "Envoi désactivé : aucun canal. Renseigne <c1>bugWebhook</c1> dans nr.config.json, ou déploie le relais Convex (<c2>VITE_CONVEX_SITE_URL</c2>).",
     "descriptionOther": "Explique ta demande",
-    "descriptionOtherPlaceholder": "Ta question, ou ce que tu veux nous dire",
+    "descriptionOtherPlaceholder": "Ta question, ou ton message",
     "files": {
       "label": "Pièces jointes",
       "choose": "Joindre un fichier",
@@ -290,7 +290,7 @@
     "off": "Désactivée",
     "status": {
       "connected": "Visible sur le profil de {{user}}.",
-      "searching": "Discord introuvable — la présence apparaîtra à son ouverture.",
+      "searching": "Discord introuvable. La présence apparaîtra à son ouverture.",
       "disabled": "Ton profil n'affiche rien.",
       "noAppId": "Application Discord non renseignée."
     },
@@ -309,37 +309,37 @@
     "disk": "{{free}} libres sur {{total}}",
     "scanning": "Analyse du stockage",
     "failed": "Opération impossible. Réessaie.",
-    "archivedNotice": "Board enregistré dans « {{name}} » : ses médias sont désormais dans le dossier du projet",
+    "archivedNotice": "Board enregistré dans « {{name}} ». Médias dans le dossier du projet.",
     "settling": "{{count}} en cours d'écriture",
-    "settlingHint": "Un fichier écrit à l'instant peut appartenir à un import que le board n'a pas encore posé. Il sera jugé au prochain passage.",
+    "settlingHint": "Fichier écrit à l'instant : il peut appartenir à un import pas encore placé. Vérifié au prochain passage.",
     "safe": {
       "title": "Libérable sans risque",
-      "hint": "Vérifié fichier par fichier : ces fichiers se refabriquent, ou existent déjà dans le dossier d'un projet.",
+      "hint": "Vérifié fichier par fichier. Ces fichiers se refont, ou existent déjà dans un dossier de projet.",
       "caches": "Caches d'affichage",
-      "cachesHint": "Vignettes et proxies. L'application les refabrique à la demande.",
+      "cachesHint": "Vignettes et proxies. Refabriqués à la demande.",
       "duplicated": "Médias déjà rangés dans un projet ({{count}})",
-      "duplicatedHint": "Leurs fichiers sont déjà dans le dossier d'un projet, par exemple « {{project}} ».",
-      "duplicatedNone": "Aucun double détecté pour l'instant.",
+      "duplicatedHint": "Déjà dans le dossier d'un projet, par exemple « {{project}} ».",
+      "duplicatedNone": "Aucun double pour l'instant.",
       "action": "Libérer"
     },
     "sole": {
       "title": "À mettre à l'abri d'abord",
-      "hint": "Ces médias n'existent nulle part ailleurs. Aucun bouton ne les supprime : enregistre-les d'abord, ils passeront alors dans la section du dessus.",
-      "empty": "Rien à mettre à l'abri : tout ce que garde l'application existe ailleurs.",
+      "hint": "Ces médias n'existent nulle part ailleurs. Aucun bouton ne les supprime : enregistre-les d'abord, ils passeront dans la section du dessus.",
+      "empty": "Rien à mettre à l'abri : tout existe ailleurs.",
       "untitled": "Board sans titre",
       "shared": "Board partagé",
-      "sharedHint": "Un board partagé n'a pas de version « projet » : son document fait foi et la collaboration gère ses médias.",
+      "sharedHint": "Un board partagé n'a pas de version « projet ». Son document fait foi, la collaboration gère ses médias.",
       "openBoard": "Board ouvert",
-      "openBoardHint": "Ce board est ouvert : passe par « Enregistrer sous » dans la barre d'outils.",
+      "openBoardHint": "Board ouvert : utilise « Enregistrer sous » dans la barre d'outils.",
       "archive": "Enregistrer en projet",
       "orphans": "Médias qu'aucun board ne réclame",
       "move": "Déplacer vers un dossier",
-      "orphansHint_one": "{{count}} fichier · {{size}}. Plus rien ne l'affiche, mais cette copie est la seule.",
-      "orphansHint_other": "{{count}} fichiers · {{size}}. Plus rien ne les affiche, mais cette copie est la seule.",
-      "sceneCount_one": "{{count}} média que l'application est seule à garder · {{size}}",
-      "sceneCount_other": "{{count}} médias que l'application est seule à garder · {{size}}"
+      "orphansHint_one": "{{count}} fichier · {{size}}. Rien ne l'affiche, mais c'est la seule copie.",
+      "orphansHint_other": "{{count}} fichiers · {{size}}. Rien ne les affiche, mais c'est la seule copie.",
+      "sceneCount_one": "{{count}} média gardé seulement par l'app · {{size}}",
+      "sceneCount_other": "{{count}} médias gardés seulement par l'app · {{size}}"
     },
-    "footnote": "Les médias que tu as ajoutés depuis ton disque ne sont jamais concernés : l'app ne touche qu'aux fichiers qu'elle a écrits elle-même.",
+    "footnote": "Les médias ajoutés depuis ton disque ne sont jamais touchés : l'app ne modifie que ses propres fichiers.",
     "freedNotice_one": "{{size}} libérés ({{count}} fichier)",
     "freedNotice_other": "{{size}} libérés ({{count}} fichiers)",
     "movedNotice_one": "{{size}} déplacés ({{count}} fichier)",
@@ -355,7 +355,7 @@
   "collab": {
     "device": {
       "title": "Cet appareil",
-      "subtitle": "Sa clé publique sert à t'identifier auprès de tes collaborateurs. La clé privée ne quitte jamais cette machine.",
+      "subtitle": "Sa clé publique t'identifie auprès de tes collaborateurs. La clé privée ne quitte jamais cette machine.",
       "failed": "Identité illisible : {{error}}",
       "ready": "Identité native protégée et prête.",
       "unavailable": "La collaboration native n'est pas disponible.",
@@ -377,7 +377,7 @@
         },
         "economy": {
           "title": "Économe",
-          "description": "Connexion lente ou limitée. Les médias sont téléchargés quand tu les vois."
+          "description": "Connexion lente ou limitée. Médias téléchargés quand tu les vois."
         }
       }
     },
@@ -425,7 +425,7 @@
       "leave": "Quitter",
       "confirmDelete": "Supprimer pour tous ?",
       "confirmLeave": "Quitter ce board ?",
-      "subtitle": "Les boards partagés avec ton compte. Ceux de cette machine s'ouvrent depuis l'accueil.",
+      "subtitle": "Boards partagés avec ton compte. Ceux de cette machine s'ouvrent depuis l'accueil.",
       "absent_one": "{{count}} board absent de cette machine",
       "absent_other": "{{count}} boards absents de cette machine"
     },
@@ -441,7 +441,7 @@
     },
     "peers": {
       "title": "Connexions",
-      "subtitle": "Appareils de tes amis autorisés à se connecter au tien. « Tester » ouvre une vraie connexion chiffrée.",
+      "subtitle": "Appareils de tes amis autorisés à se connecter au tien. « Tester » ouvre une vraie connexion chiffrée.",
       "test": "Tester",
       "direct": "Connexion directe",
       "relayed": "Via relais"

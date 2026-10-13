@@ -32,7 +32,7 @@
   },
   "mock": {
     "appUnavailable": "Esta función no está disponible en el navegador.",
-    "outsideApp": "Esta función solo está disponible en la aplicación."
+    "outsideApp": "Solo disponible en la aplicación."
   },
   "report": {
     "action": "Informar del error",
@@ -46,7 +46,7 @@
     "permission": "Acceso denegado. Puede que el archivo sea de solo lectura o esté abierto en otra app.",
     "busy": "Otra app está usando el archivo. Ciérrala y vuelve a intentarlo.",
     "timeout": "No hubo respuesta a tiempo. Vuelve a intentarlo.",
-    "internal": "Error interno de NetsuBoard. El detalle está en Ajustes › Consola."
+    "internal": "Error interno de NetsuBoard. Detalles en Ajustes › Consola."
   },
   "keys": {
     "Ctrl": "Ctrl",
