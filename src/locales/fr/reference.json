@@ -770,13 +770,14 @@
     "subtitle": "Image animée qui boucle toute seule, comme un GIF.",
     "hint": {
       "webp": "Bonne qualité, fichier léger.",
-      "gif": "Marche partout. 256 couleurs, fichier lourd."
+      "gif": "Marche partout. 256 couleurs par image, fichier lourd."
     },
     "width": "Largeur",
     "fps": "Images/s",
     "source": "Source",
     "quality": "Qualité",
     "lossless": "Sans perte",
+    "gifFine": "Meilleures couleurs (fichier plus lourd)",
     "duration": "Durée : {{sec}} s",
     "estimate": "≈ {{size}}",
     "estimating": "Calcul du poids…",

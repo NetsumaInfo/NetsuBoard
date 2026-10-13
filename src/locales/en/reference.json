@@ -770,13 +770,14 @@
     "subtitle": "Animated image that loops on its own, like a GIF.",
     "hint": {
       "webp": "Good quality, small file.",
-      "gif": "Works everywhere. 256 colors, large file."
+      "gif": "Works everywhere. 256 colors per frame, large file."
     },
     "width": "Width",
     "fps": "Frames/s",
     "source": "Source",
     "quality": "Quality",
     "lossless": "Lossless",
+    "gifFine": "Better colors (larger file)",
     "duration": "Length: {{sec}} s",
     "estimate": "≈ {{size}}",
     "estimating": "Measuring size…",

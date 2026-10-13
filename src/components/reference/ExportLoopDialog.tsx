@@ -28,6 +28,7 @@ import {
 } from "./boardLoopExport";
 
 const LOSSLESS_ID = "loop-export-lossless";
+const GIF_FINE_ID = "loop-export-gif-fine";
 
 export function ExportLoopDialog({
   item,
@@ -49,6 +50,7 @@ export function ExportLoopDialog({
   const [error, setError] = useState<string | null>(null);
 
   const [lossless, setLossless] = useState(false);
+  const [gifFine, setGifFine] = useState(true);
   // undefined = being measured, null = no estimate available.
   const [estimate, setEstimate] = useState<number | null | undefined>(null);
 
@@ -70,13 +72,14 @@ export function ExportLoopDialog({
         fps: fps || undefined, width: width || undefined,
         quality: format === "webp" ? quality : undefined,
         lossless: format === "webp" && lossless,
+        gifPalette: gifFine ? "frame" : "global",
         crop, flipH, flipV,
       }).then((r) => {
         if (live && !r.stale) setEstimate(r.ok && r.bytes ? r.bytes : null);
       }).catch(() => { if (live) setEstimate(null); });
     }, 350);
     return () => { live = false; clearTimeout(timer); };
-  }, [open, busy, tooLong, ref, format, width, fps, quality, lossless, spanIn, spanEnd, crop, flipH, flipV]);
+  }, [open, busy, tooLong, ref, format, width, fps, quality, lossless, gifFine, spanIn, spanEnd, crop, flipH, flipV]);
 
   useEffect(() => {
     if (!busy) return;
@@ -100,6 +103,7 @@ export function ExportLoopDialog({
         fps: fps || undefined, width: width || undefined,
         quality: format === "webp" ? quality : undefined,
         lossless: format === "webp" && lossless,
+        gifPalette: gifFine ? "frame" : "global",
         crop: item.crop, flipH: item.flipH, flipV: item.flipV,
       });
       if (r.cancelled) return;
@@ -179,6 +183,13 @@ export function ExportLoopDialog({
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {format === "gif" && (
+            <div className="flex items-center gap-2">
+              <Checkbox id={GIF_FINE_ID} checked={gifFine} disabled={busy} onCheckedChange={(v) => setGifFine(!!v)} />
+              <Label htmlFor={GIF_FINE_ID} className="text-sm font-normal">{t("exportLoop.gifFine")}</Label>
             </div>
           )}
 

@@ -65,6 +65,7 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
   const [preparing, setPreparing] = useState(false);
   const [quality, setQuality] = useState(LOOP_QUALITY_DEFAULT);
   const [lossless, setLossless] = useState(false);
+  const [gifFine, setGifFine] = useState(true);
   const [pct, setPct] = useState(0);
 
   const animated = format === "webp" || format === "gif";
@@ -134,6 +135,7 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
           duration: ownDuration && duration > 0 ? duration : undefined,
           quality: format === "webp" ? quality : undefined,
           lossless: format === "webp" && lossless,
+          gifPalette: gifFine ? "frame" : "global",
         });
         if (res.cancelled) return;
         if (!res.ok) throw new Error(res.error || "export failed");
@@ -279,6 +281,12 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
               <div className="flex items-center gap-2">
                 <Checkbox id="nr-export-seamless" checked={seamless} onCheckedChange={(v) => setSeamless(!!v)} />
                 <Label htmlFor="nr-export-seamless" className="text-sm font-normal">{t("exportImage.seamless")}</Label>
+              </div>
+            )}
+            {format === "gif" && (
+              <div className="flex items-center gap-2">
+                <Checkbox id="nr-export-gif-fine" checked={gifFine} onCheckedChange={(v) => setGifFine(!!v)} />
+                <Label htmlFor="nr-export-gif-fine" className="text-sm font-normal">{t("exportLoop.gifFine")}</Label>
               </div>
             )}
             {format === "webp" && (

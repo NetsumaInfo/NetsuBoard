@@ -770,13 +770,14 @@
     "subtitle": "Animiertes Bild, das von selbst wiederholt wird, wie ein GIF.",
     "hint": {
       "webp": "Gute Qualität, kleine Datei.",
-      "gif": "Läuft überall. 256 Farben, große Datei."
+      "gif": "Läuft überall. 256 Farben pro Bild, große Datei."
     },
     "width": "Breite",
     "fps": "Bilder/s",
     "source": "Quelle",
     "quality": "Qualität",
     "lossless": "Verlustfrei",
+    "gifFine": "Bessere Farben (größere Datei)",
     "duration": "Dauer: {{sec}} s",
     "estimate": "≈ {{size}}",
     "estimating": "Größe wird berechnet…",

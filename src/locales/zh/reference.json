@@ -770,13 +770,14 @@
     "subtitle": "像 GIF 一样自动循环的动图。",
     "hint": {
       "webp": "画质好，文件小。",
-      "gif": "到处都能用。256 色，文件大。"
+      "gif": "到处都能用。每帧 256 色，文件大。"
     },
     "width": "宽度",
     "fps": "帧/秒",
     "source": "源",
     "quality": "质量",
     "lossless": "无损",
+    "gifFine": "更好的色彩（文件更大）",
     "duration": "时长：{{sec}} 秒",
     "estimate": "≈ {{size}}",
     "estimating": "正在计算大小…",

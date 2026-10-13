@@ -43,7 +43,12 @@ test('lossless WebP hands RGB frames over and ignores the quality setting', () =
 test('GIF goes through a palette built from the clip itself', () => {
   const args = loopArgs({ input: 'a.mp4', out: 'b.gif.part', format: 'gif', filters: ['fps=15.000'] });
   const graph = args[args.indexOf('-filter_complex') + 1];
-  assert.match(graph, /^\[0:v:0\]fps=15\.000,split\[a\]\[b\];\[a\]palettegen=stats_mode=diff\[p\];\[b\]\[p\]paletteuse=/);
+  // Default: a palette per frame, every frame written whole.
+  assert.equal(graph, '[0:v:0]fps=15.000,split[a][b];[a]palettegen=stats_mode=single[p];[b][p]paletteuse=new=1:dither=bayer:bayer_scale=5');
+  // Light: one palette, changed areas only. The two never mix — it corrupts the untouched pixels.
+  const light = loopArgs({ input: 'a.mp4', out: 'b.gif.part', format: 'gif', gifPalette: 'global' });
+  assert.match(light[light.indexOf('-filter_complex') + 1], /palettegen=stats_mode=diff\[p\];\[b\]\[p\]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle$/);
+  assert.doesNotMatch(graph, /diff_mode/);
   assert.equal(args[args.indexOf('-f') + 1], 'gif');
   assert.equal(args.includes('-ss'), false); // no `-ss 0`
   const bare = loopArgs({ input: 'a.mp4', out: 'b.gif.part', format: 'gif' });
@@ -119,4 +124,15 @@ test('a sequence travels as a frame list, a card keeps its video whole, only the
   assert.equal(clipSource('http://127.0.0.1:5123/ytstream?id=abc'), 'http://127.0.0.1:5123/ytstream?id=abc');
   assert.equal(clipSource('https://example.com/a.mp4'), '');
   assert.equal(clipSource('http://127.0.0.1:5123/media?p=C:/secret'), '');
+});
+
+test('a GIF is encoded at a cadence it can store, so it plays at the speed asked', () => {
+  const { playableFps } = require('../core/loopExport.js');
+  // Delays are whole hundredths of a second: 24 fps would be written as 4 cs and play at 25.
+  assert.equal(playableFps('gif', 24), 25);
+  assert.equal(playableFps('gif', 12), 12.5);
+  assert.equal(playableFps('gif', 10), 10);
+  assert.equal(playableFps('gif', 60), 50);
+  assert.equal(playableFps('webp', 24), 24);
+  assert.equal(playableFps('webp', 120), 60);
 });

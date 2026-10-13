@@ -26,7 +26,7 @@ const ESTIMATE_SEC = 1;
 
 /**
  * @typedef {{ input: string, format: 'webp' | 'gif', start: number, duration: number, filters: string[] }} LoopPlan
- * @typedef {{ path?: string, out?: string, format?: string, in?: number, end?: number, fps?: number, width?: number, quality?: number, lossless?: boolean, crop?: any, flipH?: boolean, flipV?: boolean }} LoopOpts
+ * @typedef {{ path?: string, out?: string, format?: string, in?: number, end?: number, fps?: number, width?: number, quality?: number, lossless?: boolean, gifPalette?: string, crop?: any, flipH?: boolean, flipV?: boolean }} LoopOpts
  */
 
 const frac = (v) => Math.min(1, Math.max(0, Number(v) || 0)).toFixed(6);
@@ -53,7 +53,7 @@ function loopFilters(o) {
 /**
  * ffmpeg arguments of one export. `out` is the file actually written (the temporary name), so the
  * muxer is named explicitly instead of being guessed from an extension.
- * @param {{ input: string, out: string, format: 'webp' | 'gif', start?: number, duration?: number, filters?: string[], quality?: number, lossless?: boolean }} o
+ * @param {{ input: string, out: string, format: 'webp' | 'gif', start?: number, duration?: number, filters?: string[], quality?: number, lossless?: boolean, gifPalette?: string }} o
  */
 function loopArgs(o) {
   const filters = o.filters || [];
@@ -64,7 +64,7 @@ function loopArgs(o) {
   args.push('-an', '-sn');
   if (o.format === 'gif') {
     const head = filters.length ? `[0:v:0]${filters.join(',')},split[a][b]` : '[0:v:0]split[a][b]';
-    args.push('-filter_complex', `${head};${GIF_PALETTE}`, '-loop', '0', '-f', 'gif', o.out);
+    args.push('-filter_complex', `${head};${gifPalette(o.gifPalette)}`, '-loop', '0', '-f', 'gif', o.out);
     return args;
   }
   args.push('-map', '0:v:0');
@@ -73,9 +73,29 @@ function loopArgs(o) {
   return args;
 }
 
-// Palette pass of a GIF, fed by two copies `[a]` `[b]` of the picture. `stats_mode=diff` weights
-// the palette towards what moves, `diff_mode=rectangle` rewrites only the changed area of each frame.
-const GIF_PALETTE = '[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle';
+// Palette pass of a GIF, fed by two copies `[a]` `[b]` of the picture. A GIF holds 256 colours
+// per frame, and the two recipes spend them differently:
+//  - "frame" (default): each frame gets a palette of its own. A picture with many hues at once — a
+//    board, a busy shot — keeps far more of them. Every frame is then written whole, so a picture
+//    that barely moves weighs several times more.
+//  - "global": one palette for the whole clip, weighted towards what moves (`stats_mode=diff`), and
+//    only the changed area of each frame is rewritten (`diff_mode=rectangle`). Light, flatter colours.
+// The two do not combine: a changed-area frame painted with its own palette corrupts what it leaves.
+const GIF_PALETTES = {
+  frame: '[a]palettegen=stats_mode=single[p];[b][p]paletteuse=new=1:dither=bayer:bayer_scale=5',
+  global: '[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+};
+const gifPalette = (mode) => GIF_PALETTES[mode === 'global' ? 'global' : 'frame'];
+
+/**
+ * Cadence a format can really play. A GIF stores each delay in hundredths of a second: 24 fps is
+ * written as 4 cs and plays at 25, 30 as 3 cs and plays at 33. Encoding at the rate the file will
+ * be played at keeps the clip's speed and its loop length exact.
+ */
+function playableFps(format, fps) {
+  const capped = Math.min(MAX_FPS[format], fps);
+  return format === 'gif' && capped > 0 ? 100 / Math.max(2, Math.round(100 / capped)) : capped;
+}
 
 /** @param {{ quality?: number, lossless?: boolean }} o */
 function webpCodec(o) {
@@ -105,7 +125,7 @@ function webpCodec(o) {
  * pixels) and loops over its own range for as long as the export lasts. The first entry is always
  * a still layer — it carries the background and sets the size. A clip fills its item as the board
  * shows it (cover), or fits inside it (`contain`) when the item is a card of another shape.
- * @param {{ stack: Array<BoardLayer | BoardClip>, fps: number, duration: number, format: 'webp' | 'gif', out: string, quality?: number, lossless?: boolean }} o
+ * @param {{ stack: Array<BoardLayer | BoardClip>, fps: number, duration: number, format: 'webp' | 'gif', out: string, quality?: number, lossless?: boolean, gifPalette?: string }} o
  */
 function boardLoopArgs(o) {
   const fps = Number(o.fps).toFixed(3);
@@ -158,7 +178,7 @@ function boardLoopArgs(o) {
   // would leave `palettegen`, which reads its whole input before emitting anything, buffering forever.
   graph.push(`[${top}]trim=duration=${o.duration}[cut]`);
   if (o.format === 'gif') {
-    args.push('-filter_complex', `${graph.join(';')};[cut]split[a][b];${GIF_PALETTE}`,
+    args.push('-filter_complex', `${graph.join(';')};[cut]split[a][b];${gifPalette(o.gifPalette)}`,
       '-loop', '0', '-f', 'gif', o.out);
     return args;
   }
@@ -250,7 +270,7 @@ async function planLoop(o) {
   if (duration > MAX_LOOP_SEC + 0.05) return { error: t('loopTooLong', { max: MAX_LOOP_SEC }) };
 
   const wanted = Number(o.fps) > 0 ? Number(o.fps) : sourceFps;
-  const fps = wanted > 0 ? Math.min(MAX_FPS[format], wanted) : 0;
+  const fps = wanted > 0 ? playableFps(format, wanted) : 0;
   const filters = loopFilters({ crop: o.crop, flipH: o.flipH, flipV: o.flipV, fps, width: o.width });
   return { plan: { input, format: /** @type {'webp' | 'gif'} */ (format), start, duration, filters } };
 }
@@ -301,7 +321,7 @@ async function exportLoop(event, opts) {
   let out = path.resolve(String(o.out));
   if (path.extname(out).toLowerCase() !== `.${format}`) out += `.${format}`;
   const tmp = `${out}.part`;
-  const args = loopArgs({ ...plan, out: tmp, quality: o.quality, lossless: o.lossless });
+  const args = loopArgs({ ...plan, out: tmp, quality: o.quality, lossless: o.lossless, gifPalette: o.gifPalette });
   const send = (pct) => { if (event?.sender) event.sender.send('reference:loopProgress', { pct }); };
 
   await fsp.mkdir(path.dirname(out), { recursive: true });
@@ -339,7 +359,7 @@ async function exportLoop(event, opts) {
  * Clips rarely share a length. The export lasts as long as the longest (`duration` omitted), and
  * with `seamless` each other clip is nudged to play a whole number of times in it (`loopSpeed`).
  * @param {{ sender?: { send: (channel: string, payload: unknown) => void } } | null} event
- * @param {{ out?: string, format?: string, fps?: number, duration?: number, seamless?: boolean, quality?: number, lossless?: boolean, stack?: any[] }} opts
+ * @param {{ out?: string, format?: string, fps?: number, duration?: number, seamless?: boolean, quality?: number, lossless?: boolean, gifPalette?: string, stack?: any[] }} opts
  */
 async function exportBoardLoop(event, opts) {
   const o = opts || {};
@@ -350,7 +370,7 @@ async function exportBoardLoop(event, opts) {
   if (running) return { ok: false, error: t('loopBusy') };
   if (Number(o.duration) > MAX_LOOP_SEC + 0.05) return { ok: false, error: t('loopTooLong', { max: MAX_LOOP_SEC }) };
   let duration = Number(o.duration) > 0 ? Number(o.duration) : 0;
-  const fps = Math.min(MAX_FPS[format], Number(o.fps) > 0 ? Number(o.fps) : 24);
+  const fps = playableFps(format, Number(o.fps) > 0 ? Number(o.fps) : 24);
 
   let out = path.resolve(String(o.out));
   if (path.extname(out).toLowerCase() !== `.${format}`) out += `.${format}`;
@@ -399,7 +419,7 @@ async function exportBoardLoop(event, opts) {
     }
 
     const args = boardLoopArgs({ stack: entries, fps, duration, format: /** @type {'webp' | 'gif'} */ (format),
-      out: tmp, quality: o.quality, lossless: o.lossless });
+      out: tmp, quality: o.quality, lossless: o.lossless, gifPalette: o.gifPalette });
     await fsp.mkdir(path.dirname(out), { recursive: true });
     estimateSeq += 1;
     stopEstimate();
@@ -445,7 +465,7 @@ async function estimateLoop(opts) {
   const tmp = path.join(SEQ_DIR, `loop-estimate-${process.pid}-${seq}.${plan.format}`);
   const args = loopArgs({
     ...plan, start: plan.start + (plan.duration - sample) / 2, duration: sample,
-    out: tmp, quality: o.quality, lossless: o.lossless,
+    out: tmp, quality: o.quality, lossless: o.lossless, gifPalette: o.gifPalette,
   });
   try {
     await fsp.mkdir(SEQ_DIR, { recursive: true });
@@ -462,4 +482,4 @@ async function estimateLoop(opts) {
   }
 }
 
-module.exports = { exportLoop, exportBoardLoop, estimateLoop, cancelLoopExport, loopArgs, boardLoopArgs, loopFilters, loopSpeed, clipSource, concatList, MAX_LOOP_SEC };
+module.exports = { exportLoop, exportBoardLoop, estimateLoop, cancelLoopExport, loopArgs, boardLoopArgs, loopFilters, loopSpeed, clipSource, concatList, playableFps, MAX_LOOP_SEC };

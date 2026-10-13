@@ -618,6 +618,9 @@ export interface ResolvedOnlineMedia {
 }
 
 export type LoopFormat = "webp" | "gif";
+// How a GIF spends its 256 colours: "frame" = a palette per frame (best colours, heavier, the
+// default), "global" = one palette for the whole clip (light). Cf. core/loopExport.js.
+export type GifPalette = "frame" | "global";
 export interface LoopExportOpts {
   path: string;
   out: string;
@@ -628,6 +631,7 @@ export interface LoopExportOpts {
   width?: number;
   quality?: number;
   lossless?: boolean;
+  gifPalette?: GifPalette;
   crop?: { x: number; y: number; w: number; h: number };
   flipH?: boolean;
   flipV?: boolean;
@@ -708,7 +712,7 @@ export interface RefApi {
   // cancellation are those of `exportLoop`.
   // `duration` omitted = the longest loop of the stack. `seamless` bends each clip's speed a little
   // so that it plays a whole number of times and the file wraps without a jump.
-  exportBoardLoop(opts: { out: string; format: LoopFormat; fps: number; duration?: number; seamless?: boolean; quality?: number; lossless?: boolean; stack: BoardLoopEntry[] }): Promise<{ ok: boolean; path?: string; bytes?: number; duration?: number; cancelled?: boolean; error?: string }>;
+  exportBoardLoop(opts: { out: string; format: LoopFormat; fps: number; duration?: number; seamless?: boolean; quality?: number; lossless?: boolean; gifPalette?: GifPalette; stack: BoardLoopEntry[] }): Promise<{ ok: boolean; path?: string; bytes?: number; duration?: number; cancelled?: boolean; error?: string }>;
   // Partage « .netsu » : exporte la scène (items + vue) dans une archive à `destPath` selon `opts`
   // (mode complet / léger / liens, seuil d'embarquement, gel des liens distants). Importe une archive
   // → scène reconstruite (tokens d'assets → chemins locaux ; gros médias non retrouvés = placeholders).

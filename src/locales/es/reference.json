@@ -770,13 +770,14 @@
     "subtitle": "Imagen animada que se repite sola, como un GIF.",
     "hint": {
       "webp": "Buena calidad, archivo ligero.",
-      "gif": "Funciona en todas partes. 256 colores, archivo pesado."
+      "gif": "Funciona en todas partes. 256 colores por imagen, archivo pesado."
     },
     "width": "Ancho",
     "fps": "Imágenes/s",
     "source": "Origen",
     "quality": "Calidad",
     "lossless": "Sin pérdida",
+    "gifFine": "Mejores colores (archivo más pesado)",
     "duration": "Duración: {{sec}} s",
     "estimate": "≈ {{size}}",
     "estimating": "Calculando el tamaño…",
