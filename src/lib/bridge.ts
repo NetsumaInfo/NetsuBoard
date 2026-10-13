@@ -636,7 +636,10 @@ export interface LoopExportOpts {
 export type BoardLoopEntry =
   | { png: string }
   | {
-      path: string; in?: number; end?: number;
+      // `path`: a file, or the core's YouTube relay URL. `frames` + `fps`: an image sequence.
+      path?: string; frames?: string[]; fps?: number; in?: number; end?: number;
+      // Fit inside the rectangle instead of filling it (a card is not the shape of its video).
+      contain?: boolean;
       x: number; y: number; w: number; h: number;
       crop?: { x: number; y: number; w: number; h: number };
       flipH?: boolean; flipV?: boolean; rotation?: number; opacity?: number;
@@ -703,7 +706,9 @@ export interface RefApi {
   // The whole board as a looping animated image. `stack` is the board bottom first: still layers
   // (PNG, base64, each the size of the output) and the videos that play between them. Progress and
   // cancellation are those of `exportLoop`.
-  exportBoardLoop(opts: { out: string; format: LoopFormat; fps: number; duration: number; quality?: number; lossless?: boolean; stack: BoardLoopEntry[] }): Promise<{ ok: boolean; path?: string; bytes?: number; cancelled?: boolean; error?: string }>;
+  // `duration` omitted = the longest loop of the stack. `seamless` bends each clip's speed a little
+  // so that it plays a whole number of times and the file wraps without a jump.
+  exportBoardLoop(opts: { out: string; format: LoopFormat; fps: number; duration?: number; seamless?: boolean; quality?: number; lossless?: boolean; stack: BoardLoopEntry[] }): Promise<{ ok: boolean; path?: string; bytes?: number; duration?: number; cancelled?: boolean; error?: string }>;
   // Partage « .netsu » : exporte la scène (items + vue) dans une archive à `destPath` selon `opts`
   // (mode complet / léger / liens, seuil d'embarquement, gel des liens distants). Importe une archive
   // → scène reconstruite (tokens d'assets → chemins locaux ; gros médias non retrouvés = placeholders).

@@ -750,6 +750,8 @@
     "width": "Anchura",
     "height": "Altura",
     "duration": "Duración (s)",
+    "longest": "Bucle más largo: {{sec}} s",
+    "seamless": "Bucles sin salto (velocidad ajustada)",
     "selectionOnly": "Solo la selección ({{count}})",
     "transparent": "Fondo transparente",
     "export": "Exportar",
@@ -757,8 +759,9 @@
     "doneSize": "Tablero exportado · {{size}}",
     "failed": "No se pudo exportar: {{error}}",
     "hint": "El renderizado parte del contenido del tablero: los vídeos salen con su fotograma actual y los reproductores en línea como tarjeta.",
-    "hintLoop": "Los vídeos se reproducen en bucle, el resto es fijo. Los reproductores en línea salen como etiqueta.",
-    "noVideo": "No hay ningún vídeo que animar.",
+    "hintLoop": "Vídeos, YouTube, GIF y secuencias se reproducen en bucle. El resto es fijo.",
+    "noVideo": "Nada que animar aquí.",
+    "preparing": "Preparando los medios…",
     "noBridge": "La escritura en disco no está disponible fuera de la aplicación"
   },
   "exportLoop": {

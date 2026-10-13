@@ -750,6 +750,8 @@
     "width": "Breite",
     "height": "Höhe",
     "duration": "Dauer (s)",
+    "longest": "Längster Loop: {{sec}} s",
+    "seamless": "Loops ohne Sprung (Tempo angepasst)",
     "selectionOnly": "Nur Auswahl ({{count}})",
     "transparent": "Transparenter Hintergrund",
     "export": "Exportieren",
@@ -757,8 +759,9 @@
     "doneSize": "Board exportiert · {{size}}",
     "failed": "Export fehlgeschlagen: {{error}}",
     "hint": "Gerendert wird der Board-Inhalt: Videos mit ihrem aktuellen Bild, Online-Player als Karte.",
-    "hintLoop": "Videos laufen als Loop, der Rest ist statisch. Online-Player erscheinen als Beschriftung.",
-    "noVideo": "Kein Video zum Animieren.",
+    "hintLoop": "Videos, YouTube, GIFs und Sequenzen laufen als Loop. Der Rest ist statisch.",
+    "noVideo": "Hier gibt es nichts zu animieren.",
+    "preparing": "Medien werden vorbereitet…",
     "noBridge": "Schreiben auf die Festplatte ist außerhalb der App nicht verfügbar"
   },
   "exportLoop": {

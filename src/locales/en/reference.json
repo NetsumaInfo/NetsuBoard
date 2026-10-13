@@ -750,6 +750,8 @@
     "width": "Width",
     "height": "Height",
     "duration": "Length (s)",
+    "longest": "Longest loop: {{sec}} s",
+    "seamless": "Loops without a jump (speed adjusted)",
     "selectionOnly": "Selection only ({{count}})",
     "transparent": "Transparent background",
     "export": "Export",
@@ -757,8 +759,9 @@
     "doneSize": "Board exported · {{size}}",
     "failed": "Export failed: {{error}}",
     "hint": "The render comes from the board content: videos export their current frame, online players export as a card.",
-    "hintLoop": "Videos play in a loop, the rest is still. Online players come out as a label.",
-    "noVideo": "No video to animate.",
+    "hintLoop": "Videos, YouTube, GIFs and sequences play in a loop. The rest is still.",
+    "noVideo": "Nothing to animate here.",
+    "preparing": "Preparing media…",
     "noBridge": "Disk writing is unavailable outside the app"
   },
   "exportLoop": {

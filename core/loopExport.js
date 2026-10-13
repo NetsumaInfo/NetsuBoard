@@ -94,7 +94,7 @@ function webpCodec(o) {
 
 /**
  * @typedef {{ type: 'image', file: string }} BoardLayer
- * @typedef {{ type: 'video', file: string, start: number, len: number, x: number, y: number, w: number, h: number, crop?: { x: number, y: number, w: number, h: number } | null, flipH?: boolean, flipV?: boolean, rotation?: number, opacity?: number }} BoardClip
+ * @typedef {{ type: 'video', file: string, concat?: boolean, start: number, len: number, speed?: number, contain?: boolean, x: number, y: number, w: number, h: number, crop?: { x: number, y: number, w: number, h: number } | null, flipH?: boolean, flipV?: boolean, rotation?: number, opacity?: number }} BoardClip
  */
 
 /**
@@ -103,7 +103,8 @@ function webpCodec(o) {
  * The board is not captured, it is composed again: each still layer is a full-size picture of the
  * items between two clips, each clip is placed where its item sits (`x`,`y` = centre, in output
  * pixels) and loops over its own range for as long as the export lasts. The first entry is always
- * a still layer — it carries the background and sets the size.
+ * a still layer — it carries the background and sets the size. A clip fills its item as the board
+ * shows it (cover), or fits inside it (`contain`) when the item is a card of another shape.
  * @param {{ stack: Array<BoardLayer | BoardClip>, fps: number, duration: number, format: 'webp' | 'gif', out: string, quality?: number, lossless?: boolean }} o
  */
 function boardLoopArgs(o) {
@@ -118,18 +119,26 @@ function boardLoopArgs(o) {
       if (!top) graph.push(`[${i}:v]format=rgba[${label}]`);
       else graph.push(`[${i}:v]format=rgba[l${i}]`, `[${top}][l${i}]overlay=0:0:format=rgb[${label}]`);
     } else {
-      if (entry.start > 0) args.push('-ss', String(entry.start)); // seek before -i: fast
+      if (entry.concat) args.push('-f', 'concat', '-safe', '0'); // image sequence, as a frame list
+      else if (entry.start > 0) args.push('-ss', String(entry.start)); // seek before -i: fast
       args.push('-t', String(entry.len), '-i', entry.file);
-      const chain = [`fps=${fps}`];
+      const speed = Number(entry.speed) > 0 ? Number(entry.speed) : 1;
+      const chain = [];
+      if (speed !== 1) chain.push(`setpts=PTS/${speed.toFixed(6)}`);
+      chain.push(`fps=${fps}`);
       const c = entry.crop;
       if (c && Number(c.w) > 0 && Number(c.h) > 0) {
         chain.push(`crop=iw*${frac(c.w)}:ih*${frac(c.h)}:iw*${frac(c.x)}:ih*${frac(c.y)}`);
       }
-      chain.push(`scale=${Math.max(1, Math.round(entry.w))}:${Math.max(1, Math.round(entry.h))}:flags=lanczos`);
+      const w = Math.max(1, Math.round(entry.w));
+      const h = Math.max(1, Math.round(entry.h));
+      if (entry.contain) chain.push(`scale=${w}:${h}:force_original_aspect_ratio=decrease:flags=lanczos`);
+      else chain.push(`scale=${w}:${h}:force_original_aspect_ratio=increase:flags=lanczos`, `crop=${w}:${h}`);
       // A clip shorter than the export replays its range. The frames are buffered at their placed
       // size and before the RGBA conversion: that is what keeps a board of many clips in memory.
-      if (entry.len < o.duration - 1 / Number(o.fps)) {
-        const frames = Math.max(1, Math.round(entry.len * Number(o.fps)));
+      const play = entry.len / speed; // seconds one pass of the range lasts in the export
+      if (play < o.duration - 1 / Number(o.fps)) {
+        const frames = Math.max(1, Math.round(play * Number(o.fps)));
         chain.push(`loop=loop=-1:size=${frames}:start=0`, `setpts=N/(${fps}*TB)`);
       }
       chain.push('format=rgba');
@@ -155,6 +164,42 @@ function boardLoopArgs(o) {
   }
   args.push('-filter_complex', graph.join(';'), '-map', '[cut]', ...webpCodec(o), o.out);
   return args;
+}
+
+// How far a clip's speed may be bent for its loops to fall exactly on the export's own loop.
+const SEAMLESS_TOLERANCE = 0.12;
+
+/**
+ * Speed at which a range of `len` seconds plays a whole number of times in `duration`, so that
+ * the exported file wraps on a loop point of that clip instead of cutting it mid-way. Returns 1
+ * when that would bend the speed past the tolerance: a visibly sped-up clip is worse than a cut.
+ */
+function loopSpeed(len, duration) {
+  if (!(len > 0) || !(duration > 0)) return 1;
+  const loops = Math.max(1, Math.round(duration / len));
+  const speed = (loops * len) / duration;
+  return Math.abs(speed - 1) <= SEAMLESS_TOLERANCE ? speed : 1;
+}
+
+/** A clip source the core may open: a file on disk, or this core's own YouTube relay. */
+function clipSource(value) {
+  const raw = String(value || '');
+  if (!raw) return '';
+  if (!/^(https?:|data:|blob:)/i.test(raw)) return raw;
+  try {
+    const u = new URL(raw);
+    if (u.protocol === 'http:' && u.hostname === '127.0.0.1' && u.pathname === '/ytstream') return raw;
+  } catch (_) { /* not a URL */ }
+  return '';
+}
+
+/** Frame list of an image sequence, in the concat demuxer's own format. */
+function concatList(frames, fps) {
+  const line = (p) => `file '${String(p).replace(/\\/g, '/').replace(/'/g, "'\\''")}'`;
+  const lines = ['ffconcat version 1.0'];
+  for (const frame of frames) lines.push(line(frame), `duration ${(1 / fps).toFixed(6)}`);
+  lines.push(line(frames[frames.length - 1])); // the demuxer drops the last duration without it
+  return lines.join('\n') + '\n';
 }
 
 /** @type {import('child_process').ChildProcess | null} */
@@ -287,9 +332,14 @@ async function exportLoop(event, opts) {
 
 /**
  * Whole board as a looping animated image. `stack` is the board in z order, as the renderer
- * composed it: `{ png }` still layers (base64, all the size of the output) and `{ path, … }` clips.
+ * composed it: `{ png }` still layers (base64, all the size of the output) and the clips that play
+ * between them — `{ path, … }` for a file or the YouTube relay, `{ frames, fps, … }` for an
+ * image sequence.
+ *
+ * Clips rarely share a length. The export lasts as long as the longest (`duration` omitted), and
+ * with `seamless` each other clip is nudged to play a whole number of times in it (`loopSpeed`).
  * @param {{ sender?: { send: (channel: string, payload: unknown) => void } } | null} event
- * @param {{ out?: string, format?: string, fps?: number, duration?: number, quality?: number, lossless?: boolean, stack?: any[] }} opts
+ * @param {{ out?: string, format?: string, fps?: number, duration?: number, seamless?: boolean, quality?: number, lossless?: boolean, stack?: any[] }} opts
  */
 async function exportBoardLoop(event, opts) {
   const o = opts || {};
@@ -298,9 +348,8 @@ async function exportBoardLoop(event, opts) {
   if (!o.out || !stack.length || !stack[0].png) return { ok: false, error: t('sourceMissing') };
   if (!FORMATS.has(format)) return { ok: false, error: t('loopFormatUnknown', { format }) };
   if (running) return { ok: false, error: t('loopBusy') };
-  const duration = Number(o.duration) || 0;
-  if (!(duration > 0)) return { ok: false, error: t('noFrames') };
-  if (duration > MAX_LOOP_SEC + 0.05) return { ok: false, error: t('loopTooLong', { max: MAX_LOOP_SEC }) };
+  if (Number(o.duration) > MAX_LOOP_SEC + 0.05) return { ok: false, error: t('loopTooLong', { max: MAX_LOOP_SEC }) };
+  let duration = Number(o.duration) > 0 ? Number(o.duration) : 0;
   const fps = Math.min(MAX_FPS[format], Number(o.fps) > 0 ? Number(o.fps) : 24);
 
   let out = path.resolve(String(o.out));
@@ -322,14 +371,31 @@ async function exportBoardLoop(event, opts) {
         entries.push({ type: 'image', file });
         continue;
       }
-      const file = String(e.path || '');
-      if (!file || /^(https?:|data:|blob:)/i.test(file)) return { ok: false, error: t('localMediaRequired') };
+      const place = { x: e.x, y: e.y, w: e.w, h: e.h, contain: !!e.contain,
+        crop: e.crop, flipH: e.flipH, flipV: e.flipV, rotation: e.rotation, opacity: e.opacity };
+      if (Array.isArray(e.frames) && e.frames.length > 1) {
+        const rate = Number(e.fps) > 0 ? Number(e.fps) : 12;
+        const file = path.join(work, `frames-${i}.txt`);
+        await fsp.writeFile(file, concatList(e.frames, rate));
+        entries.push({ type: 'video', file, concat: true, start: 0, len: e.frames.length / rate, ...place });
+        continue;
+      }
+      const file = clipSource(e.path);
+      if (!file) return { ok: false, error: t('localMediaRequired') };
       const start = Math.max(0, Number(e.in) || 0);
       const end = Number(e.end) > start ? Number(e.end) : (await probeMedia(file)).duration || 0;
-      const len = Math.min(duration, end - start);
-      if (!(len > 0)) continue; // nothing to play: the still layers already show the rest
-      entries.push({ type: 'video', file, start, len, x: e.x, y: e.y, w: e.w, h: e.h,
-        crop: e.crop, flipH: e.flipH, flipV: e.flipV, rotation: e.rotation, opacity: e.opacity });
+      if (!(end > start)) continue; // nothing to play
+      entries.push({ type: 'video', file, start, len: end - start, ...place });
+    }
+
+    // The longest loop sets the length: every clip then shows its whole range at least once.
+    const clips = /** @type {BoardClip[]} */ (entries.filter((entry) => entry.type === 'video'));
+    if (!duration) duration = Math.min(MAX_LOOP_SEC, Math.max(0, ...clips.map((clip) => clip.len)));
+    if (!(duration > 0)) return { ok: false, error: t('noFrames') };
+    for (const clip of clips) {
+      clip.speed = o.seamless ? loopSpeed(clip.len, duration) : 1;
+      // Nothing past the export's own length is ever shown: do not read it.
+      clip.len = Math.min(clip.len, duration * clip.speed);
     }
 
     const args = boardLoopArgs({ stack: entries, fps, duration, format: /** @type {'webp' | 'gif'} */ (format),
@@ -350,7 +416,7 @@ async function exportBoardLoop(event, opts) {
     await fsp.rm(out, { force: true });
     await fsp.rename(tmp, out);
     send(100);
-    return { ok: true, path: out, bytes: (await fsp.stat(out)).size };
+    return { ok: true, path: out, bytes: (await fsp.stat(out)).size, duration };
   } catch (e) {
     running = null;
     await fsp.rm(tmp, { force: true }).catch(() => {});
@@ -396,4 +462,4 @@ async function estimateLoop(opts) {
   }
 }
 
-module.exports = { exportLoop, exportBoardLoop, estimateLoop, cancelLoopExport, loopArgs, boardLoopArgs, loopFilters, MAX_LOOP_SEC };
+module.exports = { exportLoop, exportBoardLoop, estimateLoop, cancelLoopExport, loopArgs, boardLoopArgs, loopFilters, loopSpeed, clipSource, concatList, MAX_LOOP_SEC };

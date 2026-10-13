@@ -22,27 +22,42 @@ describe("board loop export", () => {
   });
 });
 
-import { loopRuns } from "../src/components/reference/boardLoopRender";
+import { loopRuns, loopSourceKind } from "../src/components/reference/boardLoopRender";
 import type { BoardItem } from "../src/components/reference/referenceShared";
 
 describe("whole-board loop export", () => {
-  const item = (id: string, kind: string, z: number, ref = `C:/m/${id}`) =>
-    ({ id, kind, z, ref, x: 0, y: 0, w: 10, h: 10 }) as unknown as BoardItem;
+  const item = (id: string, kind: string, z: number, extra: Record<string, unknown> = {}) =>
+    ({ id, kind, z, ref: `C:/m/${id}`, x: 0, y: 0, w: 10, h: 10, ...extra }) as unknown as BoardItem;
 
-  it("cuts the z order at each video the core can play", () => {
+  it("knows how each moving item reaches the core", () => {
+    expect(loopSourceKind(item("v", "video", 1))).toBe("file");
+    expect(loopSourceKind(item("v", "video", 1, { ref: "https://example.com/a.mp4" }))).toBe("fetch");
+    expect(loopSourceKind(item("g", "image", 1, { ref: "C:/m/anim.GIF" }))).toBe("file");
+    expect(loopSourceKind(item("p", "image", 1, { ref: "C:/m/still.png" }))).toBeNull();
+    expect(loopSourceKind(item("y", "youtube", 1, { ref: "dQw4w9WgXcQ" }))).toBe("stream");
+    expect(loopSourceKind(item("y", "youtube", 1, { localMedia: { kind: "video", ref: "C:/m/y.mp4", src: "" } }))).toBe("file");
+    expect(loopSourceKind(item("s", "sequence", 1, { frames: ["C:/m/1.jpg", "C:/m/2.jpg"] }))).toBe("frames");
+    expect(loopSourceKind(item("s", "sequence", 1, { frames: ["C:/m/1.jpg"] }))).toBeNull();
+    expect(loopSourceKind(item("b", "video", 1, { ref: "blob:abc" }))).toBeNull();
+    expect(loopSourceKind(item("m", "video", 1, { missing: { name: "a.mp4", size: 0, kind: "video" } }))).toBeNull();
+    expect(loopSourceKind(item("t", "text", 1))).toBeNull();
+  });
+
+  it("cuts the z order at each clip", () => {
     const items = [
       item("top", "text", 5), item("v2", "video", 4), item("mid", "image", 3),
       item("v1", "video", 2), item("bg", "image", 1), item("ink", "draw", 9),
     ];
-    const runs = loopRuns(items);
+    const runs = loopRuns(items, undefined, (it) => it.kind === "video");
     expect(runs.map((r) => [r.still, r.clip?.id])).toEqual([
       [["bg"], "v1"], [["mid"], "v2"], [["top"], undefined],
     ]);
   });
 
-  it("paints a video it cannot play as a still, and honours the selection scope", () => {
-    const items = [item("remote", "video", 1, "https://example.com/a.mp4"), item("v", "video", 2), item("img", "image", 3)];
-    expect(loopRuns(items).map((r) => [r.still, r.clip?.id])).toEqual([[["remote"], "v"], [["img"], undefined]]);
-    expect(loopRuns(items, new Set(["img"]))).toEqual([{ still: ["img"] }]);
+  it("paints what could not be made readable as a still, and honours the selection scope", () => {
+    const items = [item("lost", "video", 1), item("v", "video", 2), item("img", "image", 3)];
+    const readable = (it: BoardItem) => it.id === "v";
+    expect(loopRuns(items, undefined, readable).map((r) => [r.still, r.clip?.id])).toEqual([[["lost"], "v"], [["img"], undefined]]);
+    expect(loopRuns(items, new Set(["img"]), readable)).toEqual([{ still: ["img"] }]);
   });
 });

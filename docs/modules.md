@@ -95,10 +95,12 @@ A video item can be written as an **animated image that loops on its own** where
 
 ## Loop export of the whole board (`boardLoopRender.ts` + `ExportImageDialog.tsx`)
 
-"Export board" also writes the board as an animated WebP or GIF: its videos play, everything else is still.
+"Export board" also writes the board as an animated WebP or GIF: whatever moves on it plays, everything else is still.
 
 - **The board is composed again, not captured.** A playing `<video>` cannot be painted into a canvas frame by frame at a useful speed, so the renderer cuts the z order at each video (`loopRuns`): what lies between two videos is painted once as a full-size transparent PNG layer by `renderBoardCanvas` (`paint` restricts what is drawn without changing the framing), and each video travels as a clip with its place, crop, mirror, rotation and opacity. `boardLoopArgs` stacks layers and clips with `overlay` in one ffmpeg pass.
-- **Only a video the core can read from disk plays.** Online players, shared media and image sequences come out still, exactly as in the PNG export.
-- **Each clip loops over its own range for the length of the export**, which defaults to the longest loop on the board and is capped at 60 s. A looped clip is buffered at its placed size, before the RGBA conversion — that is what keeps a board of many clips in memory.
+- **Everything that moves is a clip** (`loopSourceKind`): a video or GIF on disk is read as it is; a YouTube item is read through the core's own relay (`/ytstream`, the only URL `clipSource` accepts), nothing downloaded; an image sequence travels as its frame list (concat demuxer); a remote medium or an embed card is brought to disk when the export starts — the only step that can take long, and the dialog says so. What cannot be made readable (a shared-board medium, an animated WebP, which ffmpeg does not decode) is painted still with the rest, never dropped.
+- **Each clip loops over its own range for the length of the export**, which is the longest loop on the board unless the user types another, capped at 60 s. A looped clip is buffered at its placed size, before the RGBA conversion — that is what keeps a board of many clips in memory.
+- **Loops of different lengths are made to wrap together** (`loopSpeed`, on by default): each clip is bent to play a whole number of times in the export, so the file loops on a loop point of every clip instead of cutting most of them mid-way. The bend is capped at 12 %; past it the clip keeps its speed and takes the cut, since a visibly retimed clip is worse.
+- A clip **fills its item as the board shows it** (cover), except the video of an embed card, which fits inside the card.
 - **The cut is inside the filter graph** (`trim=duration`), never an output `-t`: still layers and looped clips are endless inputs, and `palettegen` reads its whole input before emitting anything.
 - A transparent background survives in WebP; GIF always gets the board colour.

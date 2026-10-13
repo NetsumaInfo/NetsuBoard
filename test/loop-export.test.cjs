@@ -73,10 +73,10 @@ test('a whole board is stacked in z order, clips looping until the export ends',
   const graph = args[args.indexOf('-filter_complex') + 1].split(';');
   assert.equal(graph[0], '[0:v]format=rgba[c0]');
   // Shorter than the export: buffered at its placed size, before the RGBA conversion, and replayed.
-  assert.equal(graph[1], '[1:v]fps=15.000,scale=400:225:flags=lanczos,loop=loop=-1:size=30:start=0,setpts=N/(15.000*TB),format=rgba[v1]');
+  assert.equal(graph[1], '[1:v]fps=15.000,scale=400:225:force_original_aspect_ratio=increase:flags=lanczos,crop=400:225,loop=loop=-1:size=30:start=0,setpts=N/(15.000*TB),format=rgba[v1]');
   assert.equal(graph[2], '[c0][v1]overlay=x=250-w/2:y=270-h/2:format=rgb[c1]');
   // As long as the export: no loop. Mirror, opacity, then rotation around the item's centre.
-  assert.match(graph[3], /^\[2:v\]fps=15\.000,scale=300:300:flags=lanczos,format=rgba,hflip,colorchannelmixer=aa=0\.500,rotate=1\.570796:/);
+  assert.match(graph[3], /^\[2:v\]fps=15\.000,scale=300:300:force_original_aspect_ratio=increase:flags=lanczos,crop=300:300,format=rgba,hflip,colorchannelmixer=aa=0\.500,rotate=1\.570796:/);
   assert.equal(graph[5], '[3:v]format=rgba[l3]');
   // Layers and looped clips never end: the cut is inside the graph, not an output option.
   assert.equal(graph[graph.length - 1], '[c3]trim=duration=4[cut]');
@@ -85,4 +85,38 @@ test('a whole board is stacked in z order, clips looping until the export ends',
 
   const gif = boardLoopArgs({ format: 'gif', out: 'b.gif.part', fps: 15, duration: 4, stack: [{ type: 'image', file: 'l0.png' }] });
   assert.match(gif[gif.indexOf('-filter_complex') + 1], /\[c0\]trim=duration=4\[cut\];\[cut\]split\[a\]\[b\];\[a\]palettegen/);
+});
+
+test('clips of different lengths are bent to wrap together, within a tolerance', () => {
+  const { loopSpeed, boardLoopArgs } = require('../core/loopExport.js');
+  assert.equal(loopSpeed(2, 4), 1);      // already a whole number of loops
+  assert.equal(loopSpeed(4, 4), 1);
+  assert.equal(loopSpeed(3.7, 4), 0.925); // one loop, slowed by 7.5 %
+  assert.ok(Math.abs(loopSpeed(1.9, 10) - 0.95) < 1e-9); // five loops
+  assert.equal(loopSpeed(2.6, 4), 1);    // would need 30 %: left as it is, and cut at the wrap
+  assert.equal(loopSpeed(0, 4), 1);
+
+  // A bent clip is retimed before the cadence is fixed, and its loop holds the retimed frames.
+  const args = boardLoopArgs({ format: 'webp', out: 'b.part', fps: 10, duration: 4,
+    stack: [{ type: 'image', file: 'l0.png' }, { type: 'video', file: 'a.mp4', start: 0, len: 1.9, speed: 0.95, x: 0, y: 0, w: 10, h: 10 }] });
+  const chain = args[args.indexOf('-filter_complex') + 1].split(';')[1];
+  assert.match(chain, /^\[1:v\]setpts=PTS\/0\.950000,fps=10\.000,/);
+  assert.match(chain, /loop=loop=-1:size=20:start=0/); // 1.9 s / 0.95 = 2 s = 20 frames
+});
+
+test('a sequence travels as a frame list, a card keeps its video whole, only the own relay is a URL', () => {
+  const { boardLoopArgs, clipSource, concatList } = require('../core/loopExport.js');
+  const args = boardLoopArgs({ format: 'webp', out: 'b.part', fps: 12, duration: 2,
+    stack: [{ type: 'image', file: 'l0.png' }, { type: 'video', file: 'frames.txt', concat: true, start: 0, len: 2, contain: true, x: 0, y: 0, w: 320, h: 180 }] });
+  const at = args.indexOf('frames.txt');
+  assert.deepEqual(args.slice(at - 7, at), ['-f', 'concat', '-safe', '0', '-t', '2', '-i']);
+  assert.match(args[args.indexOf('-filter_complex') + 1], /scale=320:180:force_original_aspect_ratio=decrease:flags=lanczos,format=rgba/);
+
+  assert.equal(concatList(['C:\\a\\1.jpg', "it's.jpg"], 10),
+    "ffconcat version 1.0\nfile 'C:/a/1.jpg'\nduration 0.100000\nfile 'it'\\''s.jpg'\nduration 0.100000\nfile 'it'\\''s.jpg'\n");
+
+  assert.equal(clipSource('C:/rush/a.mp4'), 'C:/rush/a.mp4');
+  assert.equal(clipSource('http://127.0.0.1:5123/ytstream?id=abc'), 'http://127.0.0.1:5123/ytstream?id=abc');
+  assert.equal(clipSource('https://example.com/a.mp4'), '');
+  assert.equal(clipSource('http://127.0.0.1:5123/media?p=C:/secret'), '');
 });

@@ -750,6 +750,8 @@
     "width": "Largeur",
     "height": "Hauteur",
     "duration": "Durée (s)",
+    "longest": "Boucle la plus longue : {{sec}} s",
+    "seamless": "Boucles sans saut (vitesse ajustée)",
     "selectionOnly": "Sélection seule ({{count}})",
     "transparent": "Fond transparent",
     "export": "Exporter",
@@ -757,8 +759,9 @@
     "doneSize": "Board exporté · {{size}}",
     "failed": "Export impossible : {{error}}",
     "hint": "Le rendu repart du contenu du board : les vidéos sortent sur leur image courante, les lecteurs en ligne en cartouche.",
-    "hintLoop": "Les vidéos jouent en boucle, le reste est fixe. Les lecteurs en ligne sortent en cartouche.",
-    "noVideo": "Aucune vidéo à animer.",
+    "hintLoop": "Vidéos, YouTube, GIF et séquences jouent en boucle. Le reste est fixe.",
+    "noVideo": "Rien à animer ici.",
+    "preparing": "Préparation des médias…",
     "noBridge": "Écriture disque indisponible hors de l'application"
   },
   "exportLoop": {

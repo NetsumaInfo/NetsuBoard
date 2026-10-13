@@ -5,7 +5,8 @@
 // pas un cadrage. Le SVG, lui, sort à sa taille naturelle : c'est du vectoriel, il se redimensionne
 // après coup sans rien perdre.
 //
-// A looping export plays the board's videos and paints everything else once (cf. `boardLoopRender`).
+// A looping export plays whatever moves on the board — videos, YouTube, GIFs, image sequences — and
+// paints everything else once (cf. `boardLoopRender`).
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,8 +26,8 @@ import { fmtBytes } from "@/lib/utils";
 import { MiniSelect } from "./inspectorControls";
 import { useBoard } from "./useReferenceBoard";
 import { defaultExportSize, renderBoardCanvas, renderBoardSvg } from "./boardRender";
-import { animatedItems, buildBoardLoopStack } from "./boardLoopRender";
-import { LOOP_QUALITY_DEFAULT, MAX_LOOP_SEC, loopSpan } from "./boardLoopExport";
+import { animatedItems, buildBoardLoopStack, loopLength } from "./boardLoopRender";
+import { LOOP_QUALITY_DEFAULT, MAX_LOOP_SEC } from "./boardLoopExport";
 import { errorText } from "@/lib/errorText";
 
 type Format = "png" | "jpg" | "svg" | "webp" | "gif";
@@ -56,6 +57,12 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
   const [busy, setBusy] = useState(false);
   const [fps, setFps] = useState(24);
   const [duration, setDuration] = useState(0);
+  // Longest loop found on the board, in seconds; null while unknown. The length follows it until
+  // the user types one of their own.
+  const [longest, setLongest] = useState<number | null>(null);
+  const [ownDuration, setOwnDuration] = useState(false);
+  const [seamless, setSeamless] = useState(true);
+  const [preparing, setPreparing] = useState(false);
   const [quality, setQuality] = useState(LOOP_QUALITY_DEFAULT);
   const [lossless, setLossless] = useState(false);
   const [pct, setPct] = useState(0);
@@ -77,22 +84,21 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
   }, [open, natural.w, animated]);
   useEffect(() => { if (!selectedIds.length) setSelectionOnly(false); }, [selectedIds.length]);
 
-  // Proposed length = the longest loop on the board: every video then plays its range at least
-  // once, the shorter ones replaying theirs. An untrimmed file's length is asked of the core.
+  // Proposed length = the longest loop on the board: every clip then shows its whole range at
+  // least once, the shorter ones replaying theirs. A medium still to be downloaded has no known
+  // length yet: the core measures it at export time, and widens the length if nobody typed one.
   useEffect(() => {
-    if (!open || !videos.length) return;
+    if (!open || !videos.length) return setLongest(null);
     let live = true;
-    void Promise.all(videos.map(async (it) => {
-      const known = loopSpan(it).sec;
-      if (known != null) return known;
-      const info = await nr.reference?.playInfo(it.ref).catch(() => null);
-      return Math.max(0, (info?.duration ?? 0) - (it.trimIn ?? 0));
-    })).then((spans) => {
-      const longest = Math.max(0, ...spans);
-      if (live && longest > 0) setDuration(Math.round(Math.min(MAX_LOOP_SEC, longest) * 10) / 10);
+    void Promise.all(videos.map((it) => loopLength(it).catch(() => null))).then((lengths) => {
+      const max = Math.max(0, ...lengths.map((len) => len ?? 0));
+      if (live) setLongest(max > 0 ? max : null);
     });
     return () => { live = false; };
   }, [open, videos]);
+  const proposed = longest ? Math.round(Math.min(MAX_LOOP_SEC, longest) * 10) / 10 : 0;
+  useEffect(() => { if (!ownDuration) setDuration(proposed); }, [ownDuration, proposed]);
+  useEffect(() => { if (open) setOwnDuration(false); }, [open]);
 
   useEffect(() => {
     if (!busy || !animated) return;
@@ -119,9 +125,13 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
       if (!api) throw new Error(t("exportImage.noBridge"));
 
       if (animated) {
-        const { stack } = await buildBoardLoopStack(items, { width, background: resolved, only });
+        setPreparing(true);
+        const { stack, clips } = await buildBoardLoopStack(items, { width, background: resolved, only })
+          .finally(() => setPreparing(false));
+        if (!clips) throw new Error(t("exportImage.noVideo"));
         const res = await api.exportBoardLoop({
-          out: dest, format, fps, duration, stack,
+          out: dest, format, fps, stack, seamless,
+          duration: ownDuration && duration > 0 ? duration : undefined,
           quality: format === "webp" ? quality : undefined,
           lossless: format === "webp" && lossless,
         });
@@ -211,7 +221,7 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
                   max={MAX_LOOP_SEC}
                   step={0.5}
                   value={duration || ""}
-                  onChange={(e) => setDuration(Math.max(0, Number(e.target.value) || 0))}
+                  onChange={(e) => { setOwnDuration(true); setDuration(Math.max(0, Number(e.target.value) || 0)); }}
                 />
               </div>
               <div className="flex-1">
@@ -224,6 +234,16 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
                 />
               </div>
             </div>
+          )}
+
+          {animated && longest != null && (
+            <button
+              type="button" disabled={busy}
+              className="-mt-2 self-start text-left text-xs text-muted-foreground underline-offset-2 hover:underline"
+              onClick={() => setOwnDuration(false)}
+            >
+              {t("exportImage.longest", { sec: longest.toFixed(1) })}
+            </button>
           )}
 
           {format === "webp" && !lossless && (
@@ -255,6 +275,12 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
                 <Label htmlFor="nr-export-bg" className="text-sm font-normal">{t("exportImage.transparent")}</Label>
               </div>
             )}
+            {animated && (
+              <div className="flex items-center gap-2">
+                <Checkbox id="nr-export-seamless" checked={seamless} onCheckedChange={(v) => setSeamless(!!v)} />
+                <Label htmlFor="nr-export-seamless" className="text-sm font-normal">{t("exportImage.seamless")}</Label>
+              </div>
+            )}
             {format === "webp" && (
               <div className="flex items-center gap-2">
                 <Checkbox id="nr-export-lossless" checked={lossless} onCheckedChange={(v) => setLossless(!!v)} />
@@ -272,12 +298,14 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
               {t(animated ? "exportImage.hintLoop" : "exportImage.hint")}
             </p>
           )}
-          {busy && animated && <Progress value={pct} />}
+          {busy && animated && (preparing
+            ? <p className="flex items-center gap-2 text-xs text-muted-foreground"><Spinner className="size-3" /> {t("exportImage.preparing")}</p>
+            : <Progress value={pct} />)}
         </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={close} disabled={busy && !animated}>{t("common:action.cancel")}</Button>
-          <Button onClick={() => void run()} disabled={busy || (animated && (!videos.length || tooLong || !(duration > 0)))}>
+          <Button onClick={() => void run()} disabled={busy || (animated && (!videos.length || tooLong || (ownDuration && !(duration > 0))))}>
             {busy && <Spinner />}
             {t("exportImage.export")}
           </Button>
