@@ -163,7 +163,7 @@ function createRpc() {
     "ffmpeg:audioTracks": ([p]) => probeAudioTracksTagged(p),
     "ffmpeg:detectScenes": ([p, threshold, model, options]) => sidecars.detectScenes(ev, p, threshold, model, options),
     "ffmpeg:cachedScenes": ([p, model, threshold, options]) => sidecars.getCachedScenes(p, model, threshold, options),
-    "ffmpeg:proxy": ([opts]) => proxy.proxySegment(opts),
+    "ffmpeg:proxy": ([opts]) => (opts?.pingpong ? proxy.pingpongSegment(opts) : proxy.proxySegment(opts)),
     "ffmpeg:proxyCancel": ([token]) => {
       proxy.proxyCancel(token);
       return null;

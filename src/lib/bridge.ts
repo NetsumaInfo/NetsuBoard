@@ -953,7 +953,9 @@ export interface NrApi {
   audioTracks(filePath: string): Promise<{ tracks: AudioTrack[]; error?: string }>;
   detectScenes(filePath: string, threshold?: number, model?: DetectModel, options?: DetectOptions): Promise<SceneResult>;
   cachedScenes(filePath: string, model?: DetectModel, threshold?: number, options?: DetectOptions): Promise<SceneResult>;
-  proxy(opts: { input: string; start: number; end: number; priority?: "high" | "low"; height?: number; token?: number; codec?: "h264" | "hevc"; requireVideo?: boolean; requireAudio?: boolean; settings?: PreviewGenerationSettings["proxy"] }): Promise<{ ok: boolean; path?: string; error?: string; cancelled?: boolean }>;
+  // `pingpong`: the range encoded forwards then backwards in one file, played as a plain loop. Refused
+  // (`ok: false`) when the range is too long to reverse in memory — cf. core/proxy.js.
+  proxy(opts: { input: string; start: number; end: number; priority?: "high" | "low"; height?: number; token?: number; codec?: "h264" | "hevc"; requireVideo?: boolean; requireAudio?: boolean; pingpong?: boolean; settings?: PreviewGenerationSettings["proxy"] }): Promise<{ ok: boolean; path?: string; error?: string; cancelled?: boolean; pingpong?: boolean }>;
   proxyCancel(token: number): void;
   // Renvoie le CHEMIN du jpeg en cache (à passer à mediaUrl() pour l'affichage), pas un data URI.
   // `priority` : "high" (défaut) pour une carte à l'écran, "low" pour une carte encore hors champ —
@@ -1201,9 +1203,9 @@ const mock: NrApi = {
       cancelExportLoop: async () => ({ ok: true, cancelled: false }),
       onLoopProgress: () => () => {},
       estimateLoop: async () => ({ ok: false, stale: true }),
+      exportBoardLoop: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       exportBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       importBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-      exportBoardLoop: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       onShareProgress: () => () => {},
       relocateFrom: async () => ({ ok: false, found: [], scanned: 0, error: i18n.t("common:mock.appUnavailable") }),
       // Forme COMPLÈTE mais vide : le dialogue d'export rend ses quatre niveaux à 0 o au lieu de
