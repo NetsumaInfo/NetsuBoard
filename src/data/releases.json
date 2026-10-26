@@ -1,5 +1,74 @@
 [
   {
+    "id": "netsuboard-0.6.1",
+    "version": "0.6.1",
+    "date": "2026-10-26",
+    "title": {
+      "fr": "Connexion par e-mail et pseudo",
+      "en": "E-mail sign-in and username",
+      "es": "Inicio de sesión por correo y usuario",
+      "de": "Anmeldung per E-Mail und Name",
+      "ja": "メールでのログインとユーザー名",
+      "zh": "邮箱登录与用户名"
+    },
+    "changes": [
+      {
+        "kind": "feature",
+        "fr": "Connexion par e-mail : tape ton adresse, reçois un code à 6 chiffres. Pas de mot de passe.",
+        "en": "E-mail sign-in: type your address, get a 6-digit code. No password.",
+        "es": "Inicio de sesión por correo: escribe tu dirección y recibe un código de 6 cifras. Sin contraseña.",
+        "de": "Anmeldung per E-Mail: Adresse eingeben, 6-stelligen Code erhalten. Kein Passwort.",
+        "ja": "メールでログイン：アドレスを入力し、6 桁のコードを受け取ります。パスワード不要。",
+        "zh": "邮箱登录：输入邮箱，收到 6 位验证码。无需密码。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Même adresse que ton Discord ? Tu retrouves ton compte, tes boards et tes amis.",
+        "en": "Same address as your Discord? You get your account, boards and friends back.",
+        "es": "¿La misma dirección que tu Discord? Recuperas tu cuenta, tus tableros y tus amigos.",
+        "de": "Gleiche Adresse wie bei Discord? Du findest Konto, Boards und Freunde wieder.",
+        "ja": "Discord と同じアドレスなら、アカウント、ボード、友達がそのまま使えます。",
+        "zh": "与 Discord 相同的邮箱？账号、画板和好友都在。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Choisis ton pseudo dans Paramètres → Compte. Les comptes Discord reprennent leur pseudo Discord.",
+        "en": "Choose your username in Settings → Account. Discord accounts start with their Discord username.",
+        "es": "Elige tu usuario en Ajustes → Cuenta. Las cuentas de Discord parten de su usuario de Discord.",
+        "de": "Wähle deinen Namen unter Einstellungen → Konto. Discord-Konten übernehmen ihren Discord-Namen.",
+        "ja": "設定 → アカウントでユーザー名を選べます。Discord アカウントは Discord のユーザー名から始まります。",
+        "zh": "在 设置 → 账号 中选择用户名。Discord 账号默认沿用 Discord 用户名。"
+      },
+      {
+        "kind": "feature",
+        "fr": "On ajoute un ami par son pseudo.",
+        "en": "Add a friend by username.",
+        "es": "Se añade un amigo por su usuario.",
+        "de": "Freunde fügst du per Name hinzu.",
+        "ja": "友達はユーザー名で追加します。",
+        "zh": "通过用户名添加好友。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "La connexion tient 30 jours.",
+        "en": "Sign-in lasts 30 days.",
+        "es": "La sesión dura 30 días.",
+        "de": "Die Anmeldung hält 30 Tage.",
+        "ja": "ログインは 30 日間有効です。",
+        "zh": "登录保持 30 天。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Lecture ping-pong plus fluide, même sur YouTube.",
+        "en": "Smoother ping-pong playback, YouTube included.",
+        "es": "Reproducción ping-pong más fluida, también en YouTube.",
+        "de": "Flüssigere Ping-Pong-Wiedergabe, auch bei YouTube.",
+        "ja": "ピンポン再生がよりなめらかに。YouTube も対応。",
+        "zh": "往返播放更流畅，YouTube 也一样。"
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.6.0",
     "version": "0.6.0",
     "date": "2026-10-13",
