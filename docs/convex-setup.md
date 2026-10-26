@@ -1,4 +1,6 @@
-# Convex, Discord sign-in and the bug relay — provisioning
+# Convex, sign-in (Discord or e-mail code) and the bug relay — provisioning
+
+Two sign-ins, one account: Discord OAuth (no bot, only an OAuth application) or a 6-digit code sent by e-mail through Resend. The first code creates the account; a Discord login with the same verified address lands on the same account. Sessions last 30 days, refreshed each day of online use, and the app stays usable offline for 30 days after the last login.
 
 Everything here is **optional for a solo board and required for collaboration**. With no `.env.local`,
 NetsuBoard boots straight to a local board: no sign-in, invitations, shared recovery, or activity inbox;
@@ -56,6 +58,8 @@ npx convex env set SITE_URL "https://<deployment>.convex.site"
 npx convex env set BETTER_AUTH_SECRET "<32+ random bytes, base64>"
 npx convex env set DISCORD_CLIENT_ID "<client id>"
 npx convex env set DISCORD_CLIENT_SECRET "<client secret>"
+npx convex env set RESEND_API_KEY "<Resend API key>"
+npx convex env set AUTH_EMAIL_FROM "NetsuBoard <login@your-domain>"
 npx convex env set OPEN_BETA "true"
 npx convex env set BUG_WEBHOOK "<Discord webhook URL>"
 ```
@@ -65,6 +69,8 @@ npx convex env set BUG_WEBHOOK "<Discord webhook URL>"
 | `SITE_URL` | Base of the Better Auth routes | Sign-in broken |
 | `BETTER_AUTH_SECRET` | Signs sessions and JWTs | Sign-in broken |
 | `DISCORD_CLIENT_ID` / `_SECRET` | OAuth application | Sign-in broken |
+| `RESEND_API_KEY` | Sends the e-mail sign-in code (Resend HTTP API) | E-mail sign-in refused; Discord still works |
+| `AUTH_EMAIL_FROM` | Sender of that code, on a domain verified at Resend | Same as above |
 | `OPEN_BETA` | `true` = every signed-in account gets in | Allowlist mode (see below) |
 | `BUG_WEBHOOK` | Discord channel the relay forwards to | Relay answers `503`, the app falls back |
 | `BUG_QUOTA_SALT` | Optional; salts the anonymous quota fingerprint | Falls back to `BETTER_AUTH_SECRET` |

@@ -33,7 +33,7 @@ function Checking() {
 
 /**
  * Optional Discord sign-in gate. The "skip" choice is persisted locally; a valid session also keeps
- * a 7-day offline grace. When Convex is not configured (dev, browser, no env) → renders the children
+ * a 30-day offline grace. When Convex is not configured (dev, browser, no env) → renders the children
  * directly, so a board never becomes unopenable because a backend is missing.
  */
 export function LoginGate({ children }: { children: ReactNode }) {
@@ -83,7 +83,7 @@ function LoginGateInner({ children, onSkip }: { children: ReactNode; onSkip: () 
 
   const unreachable = !online || timedOut;
 
-  // 1) Offline + recent login (< 7 days) → app usable (degraded mode).
+  // 1) Offline + recent login (< 30 days) → app usable (degraded mode).
   if (unreachable && !isAuthenticated && offlineGraceValid()) return <>{children}</>;
 
   // 2) Online, resolution in progress → checking.

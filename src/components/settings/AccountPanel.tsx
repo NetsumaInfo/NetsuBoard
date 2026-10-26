@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDiscordLogin } from "@/components/auth/useDiscordLogin";
 import { AvatarDecoration } from "./AvatarDecoration";
 import { CollabSection } from "./CollabSection";
+import { EmailLogin } from "@/components/auth/EmailLogin";
 import { useDiscordProfile } from "./useDiscordProfile";
 
 // Better Auth user document (Discord fields: name = handle, image = avatar, email).
@@ -100,6 +101,7 @@ function AccountInner() {
               </svg>
               {busy ? t("auth:login.waitingDiscord") : t("auth:login.signInDiscord")}
             </Button>
+            {!busy && <EmailLogin size="sm" />}
           </div>
         ) : (
           <div className="flex items-center gap-4">
