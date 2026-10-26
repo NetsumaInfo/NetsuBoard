@@ -70,8 +70,9 @@ test('ingestion poses a YouTube card at the ratio the link announces', () => {
 });
 
 test('the relayed stream reshapes the card to its true ratio, once and without an undo step', () => {
-  // A proxy is a re-encoded excerpt — its dimensions must never be taken for the source's.
-  assert.match(boardItem, /if \(!useProxy && e\.currentTarget\.videoWidth && e\.currentTarget\.videoHeight\)/);
+  // A proxy or a ping-pong file is a re-encoded excerpt — its dimensions must never be taken for the
+  // source's.
+  assert.match(boardItem, /if \(!useProxy && !native && e\.currentTarget\.videoWidth && e\.currentTarget\.videoHeight\)/);
   assert.match(boardItem, /fitNatSize\(item\.id, e\.currentTarget\.videoWidth, e\.currentTarget\.videoHeight\)/);
   // Constant area around the item centre, cropped items left alone, measurement not recorded.
   assert.match(natFit, /Math\.sqrt\(it\.w \* it\.h \* ratio\)/);
