@@ -161,9 +161,12 @@ export function CollabSection() {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.name) return;
-    void upsertProfile({ handle: user.name }).catch(() => undefined);
-  }, [isAuthenticated, user?.name, user?.image, upsertProfile]);
+    // An account made by e-mail code has no name: its handle starts from the address instead, or
+    // nobody could add it.
+    const base = user?.name || user?.email?.split("@")[0];
+    if (!isAuthenticated || !base) return;
+    void upsertProfile({ handle: base }).catch(() => undefined);
+  }, [isAuthenticated, user?.name, user?.email, user?.image, upsertProfile]);
 
   if (!isAuthenticated) return null;
 
