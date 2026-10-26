@@ -88,6 +88,7 @@ async function sendSignInCode(email: string, otp: string) {
       body: JSON.stringify({ sender, to: [{ email }], subject, textContent: text }),
     });
     if (!res.ok) throw new Error(`Brevo refused the e-mail (${res.status}): ${(await res.text()).slice(0, 300)}`);
+    console.log(`sign-in code accepted by Brevo: ${(await res.text()).slice(0, 120)}`);
     return;
   }
 
