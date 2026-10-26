@@ -69,21 +69,34 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     ],
   });
 
-// Resend through its HTTP API: no SDK in the bundle. RESEND_API_KEY and AUTH_EMAIL_FROM (a sender on
-// a domain verified at Resend) live on the deployment.
+// Sent through the provider's HTTP API, no SDK in the bundle. Brevo (BREVO_API_KEY) takes a single
+// verified sender address, so it works without a domain; Resend (RESEND_API_KEY) needs a verified
+// domain. AUTH_EMAIL_FROM is the sender, `Name <address>`. Keys live on the deployment.
 async function sendSignInCode(email: string, otp: string) {
-  const key = process.env.RESEND_API_KEY;
   const from = process.env.AUTH_EMAIL_FROM;
-  if (!key || !from) throw new Error("e-mail sign-in is not configured");
+  if (!from) throw new Error("e-mail sign-in is not configured");
+  const subject = "Your NetsuBoard sign-in code";
+  const text = `Your NetsuBoard sign-in code: ${otp}\n\nIt expires in 10 minutes. If you did not ask for it, ignore this e-mail.`;
+
+  const brevo = process.env.BREVO_API_KEY;
+  if (brevo) {
+    const match = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(from);
+    const sender = match ? { name: match[1] || "NetsuBoard", email: match[2] } : { email: from.trim() };
+    const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: { "api-key": brevo, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ sender, to: [{ email }], subject, textContent: text }),
+    });
+    if (!res.ok) throw new Error(`Brevo refused the e-mail (${res.status})`);
+    return;
+  }
+
+  const resend = process.env.RESEND_API_KEY;
+  if (!resend) throw new Error("e-mail sign-in is not configured");
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from,
-      to: [email],
-      subject: "Your NetsuBoard sign-in code",
-      text: `Your NetsuBoard sign-in code: ${otp}\n\nIt expires in 10 minutes. If you did not ask for it, ignore this e-mail.`,
-    }),
+    headers: { Authorization: `Bearer ${resend}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to: [email], subject, text }),
   });
   if (!res.ok) throw new Error(`Resend refused the e-mail (${res.status})`);
 }
