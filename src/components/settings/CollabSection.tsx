@@ -29,7 +29,7 @@ import { uiLocale } from "@/lib/utils";
 
 const PERFORMANCE_MODES: CollaborationPerformanceMode[] = ["live", "balanced", "economy"];
 
-type AuthUser = { name?: string | null; image?: string | null } | null | undefined;
+type AuthUser = { name?: string | null; email?: string | null; image?: string | null } | null | undefined;
 type Profile = {
   userId: string;
   handle: string;
