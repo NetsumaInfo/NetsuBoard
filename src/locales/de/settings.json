@@ -383,8 +383,8 @@
     },
     "friends": {
       "title": "Freunde",
-      "subtitle": "Per NetsuBoard- oder Discord-Name hinzufügen.",
-      "placeholder": "NetsuBoard- oder Discord-Name",
+      "subtitle": "Freund per Name hinzufügen.",
+      "placeholder": "Name",
       "add": "Hinzufügen",
       "accept": "Annehmen",
       "remove": "Entfernen",
@@ -404,11 +404,10 @@
       "notYetJoined": "Noch nicht registriert"
     },
     "username": {
-      "label": "Dein NetsuBoard-Name",
-      "placeholder": "z. B. haim_f",
+      "label": "Name",
+      "placeholder": "z. B. Netsuma_f",
       "save": "Speichern",
       "hint": "3 bis 20 Zeichen: Kleinbuchstaben, Ziffern, _ und . Einmal im Monat änderbar.",
-      "discord": "Discord: @{{name}}",
       "saved": "Name gespeichert.",
       "format": "Ungültiger Name: 3 bis 20 Zeichen, Kleinbuchstaben, Ziffern, _ und .",
       "reserved": "Dieser Name ist reserviert.",

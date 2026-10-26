@@ -12,10 +12,10 @@ type Result =
   | { status: "format" | "reserved" | "taken" | "noProfile" };
 
 /**
- * The NetsuBoard pseudonym: what friends type to add this account. Kept apart from the Discord
- * username, which is shown next to it and never edited here.
+ * The pseudonym friends type to add this account. A Discord account starts with its Discord
+ * username here; this field replaces it.
  */
-export function UsernameField({ username, discordUsername }: { username: string | null; discordUsername: string | null }) {
+export function UsernameField({ username }: { username: string | null }) {
   const { t } = useTranslation("settings");
   const setUsername = useMutation(api.social.setUsername);
   const [value, setValue] = useState(username ?? "");
@@ -63,9 +63,6 @@ export function UsernameField({ username, discordUsername }: { username: string 
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">{t("collab.username.hint")}</p>
-      {discordUsername && (
-        <p className="text-xs text-muted-foreground">{t("collab.username.discord", { name: discordUsername })}</p>
-      )}
       {message && (
         <p className={message.error ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>{message.text}</p>
       )}

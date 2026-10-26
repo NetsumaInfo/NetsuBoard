@@ -383,8 +383,8 @@
     },
     "friends": {
       "title": "Amis",
-      "subtitle": "Ajoute par pseudo NetsuBoard ou pseudo Discord.",
-      "placeholder": "Pseudo NetsuBoard ou Discord",
+      "subtitle": "Ajoute un ami par son pseudo.",
+      "placeholder": "Pseudo",
       "add": "Ajouter",
       "accept": "Accepter",
       "remove": "Retirer",
@@ -404,11 +404,10 @@
       "notYetJoined": "Pas encore inscrit"
     },
     "username": {
-      "label": "Ton pseudo NetsuBoard",
-      "placeholder": "ex. haim_f",
+      "label": "Pseudo",
+      "placeholder": "ex. Netsuma_f",
       "save": "Enregistrer",
       "hint": "3 à 20 caractères : minuscules, chiffres, _ et . Modifiable une fois par mois.",
-      "discord": "Discord : @{{name}}",
       "saved": "Pseudo enregistré.",
       "format": "Pseudo invalide : 3 à 20 caractères, minuscules, chiffres, _ et .",
       "reserved": "Ce pseudo est réservé.",

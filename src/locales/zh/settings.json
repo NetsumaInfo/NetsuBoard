@@ -383,8 +383,8 @@
     },
     "friends": {
       "title": "好友",
-      "subtitle": "按 NetsuBoard 或 Discord 用户名添加。",
-      "placeholder": "NetsuBoard 或 Discord 用户名",
+      "subtitle": "按用户名添加好友。",
+      "placeholder": "用户名",
       "add": "添加",
       "accept": "接受",
       "remove": "移除",
@@ -404,11 +404,10 @@
       "notYetJoined": "尚未注册"
     },
     "username": {
-      "label": "你的 NetsuBoard 用户名",
-      "placeholder": "例如 haim_f",
+      "label": "用户名",
+      "placeholder": "例如 Netsuma_f",
       "save": "保存",
       "hint": "3 到 20 个字符：小写字母、数字、_ 和 . 。每月可改一次。",
-      "discord": "Discord：@{{name}}",
       "saved": "用户名已保存。",
       "format": "用户名无效：3 到 20 个字符，小写字母、数字、_ 和 . 。",
       "reserved": "该用户名已被保留。",

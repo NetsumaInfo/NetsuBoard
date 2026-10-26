@@ -57,21 +57,15 @@ function Avatar({ url }: { url: string | null }) {
 }
 
 function Row({ profile, children }: { profile: Profile; children?: React.ReactNode }) {
-  const { t } = useTranslation("settings");
-  // The NetsuBoard pseudonym and the Discord username are two different names: each is labelled,
-  // and the internal handle only shows when the account has neither.
-  const pseudo = profile.username ?? (!profile.discordUsername && profile.handle !== profile.name ? profile.handle : null);
+  // One pseudonym per person: the chosen one, else the Discord username it started from, else the
+  // internal handle when it says something the name does not.
+  const pseudo = profile.username ?? profile.discordUsername ?? (profile.handle !== profile.name ? profile.handle : null);
   return (
     <div className="flex items-center gap-3 py-2">
       <Avatar url={profile.image} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{profile.name || profile.username || profile.handle}</p>
-        {pseudo && <p className="truncate text-xs text-muted-foreground">@{pseudo}</p>}
-        {profile.discordUsername && (
-          <p className="truncate text-xs text-muted-foreground">
-            {t("collab.username.discord", { name: profile.discordUsername })}
-          </p>
-        )}
+        <p className="truncate text-sm">{profile.name || pseudo}</p>
+        {pseudo && pseudo !== profile.name && <p className="truncate text-xs text-muted-foreground">@{pseudo}</p>}
       </div>
       {children}
     </div>
@@ -417,7 +411,7 @@ export function CollabSection() {
         <h2 className="text-sm font-medium">{t("collab.friends.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("collab.friends.subtitle")}</p>
         {social?.self && (
-          <UsernameField username={social.self.username ?? null} discordUsername={social.self.discordUsername ?? null} />
+          <UsernameField username={social.self.username ?? social.self.discordUsername ?? null} />
         )}
         <div className="mt-3 flex gap-2">
           <Input

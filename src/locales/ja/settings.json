@@ -383,8 +383,8 @@
     },
     "friends": {
       "title": "フレンド",
-      "subtitle": "NetsuBoard または Discord のユーザー名で追加。",
-      "placeholder": "NetsuBoard または Discord のユーザー名",
+      "subtitle": "ユーザー名で友達を追加。",
+      "placeholder": "ユーザー名",
       "add": "追加",
       "accept": "承認",
       "remove": "削除",
@@ -404,11 +404,10 @@
       "notYetJoined": "未登録"
     },
     "username": {
-      "label": "NetsuBoard のユーザー名",
-      "placeholder": "例: haim_f",
+      "label": "ユーザー名",
+      "placeholder": "例: Netsuma_f",
       "save": "保存",
       "hint": "3〜20 文字：小文字、数字、_ と . 。変更は月 1 回まで。",
-      "discord": "Discord: @{{name}}",
       "saved": "ユーザー名を保存しました。",
       "format": "無効なユーザー名：3〜20 文字、小文字、数字、_ と . のみ。",
       "reserved": "このユーザー名は予約されています。",

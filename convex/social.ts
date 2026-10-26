@@ -164,11 +164,23 @@ export const syncDiscordProfile = internalMutation({
     if (handleOwner && handleOwner.userId !== args.userId)
       throw new Error("this NetsuBoard handle is already in use");
 
+    // An account with no pseudonym yet takes its Discord username as one, when it fits the format and
+    // nobody holds it. Reserved names do not apply: the Discord username already proves who owns it.
+    let username = existing?.username;
+    if (!username && USERNAME.test(discordUsername)) {
+      const owner = await ctx.db
+        .query("profiles")
+        .withIndex("by_username", (q) => q.eq("username", discordUsername))
+        .unique();
+      if (!owner || owner.userId === args.userId) username = discordUsername;
+    }
+
     const row = {
       userId: args.userId,
       handle,
       discordId: args.discordId,
       discordUsername,
+      username,
       name,
       image: args.image,
       updatedAt: now,
@@ -358,10 +370,12 @@ export const setUsername = mutation({
   handler: async (ctx, args) => {
     const user = await requireUser(ctx);
     const username = normalizeUsername(args.username);
-    const problem = usernameProblem(username);
-    if (problem) return { status: problem };
     const profile = await profileOf(ctx, user._id);
     if (!profile) return { status: "noProfile" as const };
+    // One's own Discord username is always allowed, reserved or not: Discord already proves it.
+    const problem = usernameProblem(username);
+    if (problem && !(problem === "reserved" && username === profile.discordUsername))
+      return { status: problem };
     if (profile.username === username) return { status: "ok" as const, username };
     const now = Date.now();
     if (profile.username && profile.usernameChangedAt && now - profile.usernameChangedAt < USERNAME_COOLDOWN_MS)
