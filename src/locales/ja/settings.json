@@ -383,9 +383,8 @@
     },
     "friends": {
       "title": "フレンド",
-      "subtitle": "Discord ユーザー名または NetsuBoard ID で追加できます。",
-      "yourHandle": "自分：@{{handle}}",
-      "placeholder": "Discord ユーザー名 / NetsuBoard ID",
+      "subtitle": "NetsuBoard または Discord のユーザー名で追加。",
+      "placeholder": "NetsuBoard または Discord のユーザー名",
       "add": "追加",
       "accept": "承認",
       "remove": "削除",
@@ -403,6 +402,20 @@
         "invited": "招待を送信しました。"
       },
       "notYetJoined": "未登録"
+    },
+    "username": {
+      "label": "NetsuBoard のユーザー名",
+      "placeholder": "例: haim_f",
+      "save": "保存",
+      "hint": "3〜20 文字：小文字、数字、_ と . 。変更は月 1 回まで。",
+      "discord": "Discord: @{{name}}",
+      "saved": "ユーザー名を保存しました。",
+      "format": "無効なユーザー名：3〜20 文字、小文字、数字、_ と . のみ。",
+      "reserved": "このユーザー名は予約されています。",
+      "taken": "このユーザー名は使用中です。",
+      "cooldown": "次の変更は {{date}} から可能です。",
+      "noProfile": "プロフィールの準備中です。少し後で再試行してください。",
+      "error": "保存できません。再試行してください。"
     },
     "invites": {
       "title": "招待",

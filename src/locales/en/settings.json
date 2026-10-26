@@ -383,9 +383,8 @@
     },
     "friends": {
       "title": "Friends",
-      "subtitle": "Add by Discord username or NetsuBoard handle.",
-      "yourHandle": "You: @{{handle}}",
-      "placeholder": "Discord username or NetsuBoard handle",
+      "subtitle": "Add by NetsuBoard or Discord username.",
+      "placeholder": "NetsuBoard or Discord username",
       "add": "Add",
       "accept": "Accept",
       "remove": "Remove",
@@ -403,6 +402,20 @@
         "invited": "Invitation sent."
       },
       "notYetJoined": "Not signed up yet"
+    },
+    "username": {
+      "label": "Your NetsuBoard username",
+      "placeholder": "e.g. haim_f",
+      "save": "Save",
+      "hint": "3 to 20 characters: lowercase, digits, _ and . Can change once a month.",
+      "discord": "Discord: @{{name}}",
+      "saved": "Username saved.",
+      "format": "Invalid username: 3 to 20 characters, lowercase, digits, _ and .",
+      "reserved": "This username is reserved.",
+      "taken": "Username already taken.",
+      "cooldown": "Next change possible on {{date}}.",
+      "noProfile": "Profile not ready yet. Try again in a moment.",
+      "error": "Could not save. Try again."
     },
     "invites": {
       "title": "Invitations",

@@ -383,9 +383,8 @@
     },
     "friends": {
       "title": "好友",
-      "subtitle": "通过 Discord 用户名或 NetsuBoard 标识添加。",
-      "yourHandle": "你：@{{handle}}",
-      "placeholder": "Discord 用户名或 NetsuBoard 标识",
+      "subtitle": "按 NetsuBoard 或 Discord 用户名添加。",
+      "placeholder": "NetsuBoard 或 Discord 用户名",
       "add": "添加",
       "accept": "接受",
       "remove": "移除",
@@ -403,6 +402,20 @@
         "invited": "邀请已发送。"
       },
       "notYetJoined": "尚未注册"
+    },
+    "username": {
+      "label": "你的 NetsuBoard 用户名",
+      "placeholder": "例如 haim_f",
+      "save": "保存",
+      "hint": "3 到 20 个字符：小写字母、数字、_ 和 . 。每月可改一次。",
+      "discord": "Discord：@{{name}}",
+      "saved": "用户名已保存。",
+      "format": "用户名无效：3 到 20 个字符，小写字母、数字、_ 和 . 。",
+      "reserved": "该用户名已被保留。",
+      "taken": "用户名已被占用。",
+      "cooldown": "下次可修改日期：{{date}}。",
+      "noProfile": "资料尚未就绪，请稍后重试。",
+      "error": "无法保存，请重试。"
     },
     "invites": {
       "title": "邀请",

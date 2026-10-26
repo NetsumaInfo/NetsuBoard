@@ -19,6 +19,7 @@ import { nr } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { UsernameField } from "./UsernameField";
 import {
   getCollaborationPerformanceMode,
   setCollaborationPerformanceMode,
@@ -34,6 +35,7 @@ type Profile = {
   userId: string;
   handle: string;
   discordUsername?: string | null;
+  username?: string | null;
   name: string;
   image: string | null;
 };
@@ -55,20 +57,21 @@ function Avatar({ url }: { url: string | null }) {
 }
 
 function Row({ profile, children }: { profile: Profile; children?: React.ReactNode }) {
-  const secondary =
-    profile.discordUsername && profile.discordUsername !== profile.name
-      ? profile.discordUsername
-      : profile.handle && profile.handle !== profile.name
-        ? profile.handle
-        : null;
+  const { t } = useTranslation("settings");
+  // The NetsuBoard pseudonym and the Discord username are two different names: each is labelled,
+  // and the internal handle only shows when the account has neither.
+  const pseudo = profile.username ?? (!profile.discordUsername && profile.handle !== profile.name ? profile.handle : null);
   return (
     <div className="flex items-center gap-3 py-2">
       <Avatar url={profile.image} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{profile.name || profile.handle}</p>
-        {/* Discord pseudonym and NetsuBoard handle are usually derived from the same name, so
-            printing both showed it twice. Only the second is kept when it says something new. */}
-        {secondary && <p className="truncate text-xs text-muted-foreground">@{secondary}</p>}
+        <p className="truncate text-sm">{profile.name || profile.username || profile.handle}</p>
+        {pseudo && <p className="truncate text-xs text-muted-foreground">@{pseudo}</p>}
+        {profile.discordUsername && (
+          <p className="truncate text-xs text-muted-foreground">
+            {t("collab.username.discord", { name: profile.discordUsername })}
+          </p>
+        )}
       </div>
       {children}
     </div>
@@ -413,16 +416,8 @@ export function CollabSection() {
       <section className="mt-6">
         <h2 className="text-sm font-medium">{t("collab.friends.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("collab.friends.subtitle")}</p>
-        {/* The Discord username, not the internal handle. The stored handle carries a suffix derived
-            from the account id so two people with the same name cannot collide or pre-claim each
-            other's — useful as a key, meaningless to read, and nobody would ever type it: a Discord
-            username is already unique and is what people actually give each other. */}
-        {(social?.self?.discordUsername || social?.self?.handle) && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t("collab.friends.yourHandle", {
-              handle: social.self.discordUsername || social.self.handle,
-            })}
-          </p>
+        {social?.self && (
+          <UsernameField username={social.self.username ?? null} discordUsername={social.self.discordUsername ?? null} />
         )}
         <div className="mt-3 flex gap-2">
           <Input

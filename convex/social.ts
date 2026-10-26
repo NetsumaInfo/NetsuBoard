@@ -22,6 +22,14 @@ const MAX_FRIENDS = 200;
 const MAX_PENDING_REQUESTS = 100;
 const DISCORD_ID = /^\d{17,20}$/;
 const DISCORD_USERNAME = /^[a-z0-9_.]{2,32}$/;
+// NetsuBoard pseudonym: lowercase ASCII only, so no look-alike letter can imitate someone else's,
+// and never digits alone, which would read as a Discord id.
+const USERNAME = /^(?!\d+$)(?!.*\.\.)[a-z0-9_][a-z0-9_.]{1,18}[a-z0-9_]$/;
+const RESERVED_USERNAMES = new Set([
+  "admin", "administrator", "root", "system", "support", "help", "moderator", "staff",
+  "official", "netsuboard", "netsurush", "netsuma", "discord", "everyone", "here",
+]);
+const USERNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
 
 function validText(value: string, maximum: number) {
   return (
@@ -50,9 +58,21 @@ function normalizeDiscordUsername(username: string) {
   return username.trim().replace(/^@/, "").toLowerCase();
 }
 
+export function normalizeUsername(username: string) {
+  return username.trim().replace(/^@/, "").toLowerCase();
+}
+
+/** Why a pseudonym cannot be taken, or null. Format only: uniqueness is checked against the table. */
+export function usernameProblem(username: string) {
+  if (!USERNAME.test(username)) return "format" as const;
+  if (RESERVED_USERNAMES.has(username)) return "reserved" as const;
+  return null;
+}
+
 export function classifySocialIdentifier(identifier: string) {
   const normalized = normalizeDiscordUsername(identifier);
   return {
+    username: USERNAME.test(normalized) ? normalized : null,
     discordId: DISCORD_ID.test(normalized) ? normalized : null,
     discordUsername: DISCORD_USERNAME.test(normalized) ? normalized : null,
     handle: normalizeHandle(identifier),
@@ -85,6 +105,7 @@ async function publicProfile(ctx: QueryCtx, userId: string) {
     userId,
     handle: profile?.handle ?? "",
     discordUsername: profile?.discordUsername ?? null,
+    username: profile?.username ?? null,
     name: profile?.name ?? "",
     image: profile?.image ?? null,
   };
@@ -324,6 +345,44 @@ export const upsertProfile = mutation({
   },
 });
 
+/**
+ * Sets the caller's NetsuBoard pseudonym — the name people type to add them, separate from any
+ * Discord username.
+ *
+ * Unique across accounts, and refused when it is someone else's Discord username: otherwise one
+ * person could take another's Discord name here and receive the requests meant for them. Changed at
+ * most once per 30 days after the first choice, so a name cannot be swapped to mislead.
+ */
+export const setUsername = mutation({
+  args: { username: v.string() },
+  handler: async (ctx, args) => {
+    const user = await requireUser(ctx);
+    const username = normalizeUsername(args.username);
+    const problem = usernameProblem(username);
+    if (problem) return { status: problem };
+    const profile = await profileOf(ctx, user._id);
+    if (!profile) return { status: "noProfile" as const };
+    if (profile.username === username) return { status: "ok" as const, username };
+    const now = Date.now();
+    if (profile.username && profile.usernameChangedAt && now - profile.usernameChangedAt < USERNAME_COOLDOWN_MS)
+      return { status: "cooldown" as const, nextChangeAt: profile.usernameChangedAt + USERNAME_COOLDOWN_MS };
+
+    const owner = await ctx.db
+      .query("profiles")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+    if (owner && owner.userId !== user._id) return { status: "taken" as const };
+    const discordOwners = await ctx.db
+      .query("profiles")
+      .withIndex("by_discord_username", (q) => q.eq("discordUsername", username))
+      .take(2);
+    if (discordOwners.some((row) => row.userId !== user._id)) return { status: "taken" as const };
+
+    await ctx.db.patch(profile._id, { username, usernameChangedAt: now, updatedAt: now });
+    return { status: "ok" as const, username };
+  },
+});
+
 /** Friends, plus requests in both directions. One query feeds the whole settings section. */
 export const listSocial = query({
   args: {},
@@ -372,6 +431,7 @@ export const listSocial = query({
                 userId: "",
                 handle: "",
                 discordUsername: null,
+                username: null,
                 name: row.toLabel ?? row.toHandle ?? "",
                 image: null,
               },
@@ -382,7 +442,7 @@ export const listSocial = query({
 });
 
 /**
- * Sends a friend request by exact Discord id, Discord username, or NetsuBoard handle.
+ * Sends a friend request by NetsuBoard pseudonym, exact Discord id, Discord username, or handle.
  *
  * A request that crosses one already coming the other way is accepted immediately: making two people
  * who each asked first wait for one another would be a dead end with no way out.
@@ -394,6 +454,14 @@ export const sendRequest = mutation({
     if (!validText(identifier.trim(), 128)) throw new Error("invalid identifier");
     const classified = classifySocialIdentifier(identifier);
     const matches = [];
+    if (classified.username) {
+      matches.push(
+        await ctx.db
+          .query("profiles")
+          .withIndex("by_username", (q) => q.eq("username", classified.username!))
+          .unique(),
+      );
+    }
     if (validText(classified.handle, 64)) {
       matches.push(
         await ctx.db

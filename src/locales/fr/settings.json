@@ -383,9 +383,8 @@
     },
     "friends": {
       "title": "Amis",
-      "subtitle": "Ajoute par pseudo Discord ou identifiant NetsuBoard.",
-      "yourHandle": "Toi : @{{handle}}",
-      "placeholder": "Pseudo Discord ou identifiant NetsuBoard",
+      "subtitle": "Ajoute par pseudo NetsuBoard ou pseudo Discord.",
+      "placeholder": "Pseudo NetsuBoard ou Discord",
       "add": "Ajouter",
       "accept": "Accepter",
       "remove": "Retirer",
@@ -403,6 +402,20 @@
         "invited": "Invitation envoyée."
       },
       "notYetJoined": "Pas encore inscrit"
+    },
+    "username": {
+      "label": "Ton pseudo NetsuBoard",
+      "placeholder": "ex. haim_f",
+      "save": "Enregistrer",
+      "hint": "3 à 20 caractères : minuscules, chiffres, _ et . Modifiable une fois par mois.",
+      "discord": "Discord : @{{name}}",
+      "saved": "Pseudo enregistré.",
+      "format": "Pseudo invalide : 3 à 20 caractères, minuscules, chiffres, _ et .",
+      "reserved": "Ce pseudo est réservé.",
+      "taken": "Pseudo déjà pris.",
+      "cooldown": "Prochain changement possible le {{date}}.",
+      "noProfile": "Profil pas encore prêt. Réessaie dans un instant.",
+      "error": "Enregistrement impossible. Réessaie."
     },
     "invites": {
       "title": "Invitations",

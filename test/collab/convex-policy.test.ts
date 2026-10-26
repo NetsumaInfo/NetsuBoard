@@ -22,6 +22,7 @@ import { coalesceMediaHashes } from "../../convex/media";
 import {
   classifySocialIdentifier,
   profileHandle,
+  usernameProblem,
   uniqueProfileIds,
 } from "../../convex/social";
 
@@ -166,20 +167,33 @@ describe("Convex collaboration policy", () => {
 
   it("classifies every supported exact friend identifier", () => {
     expect(classifySocialIdentifier(" 1010539781551292598 ")).toEqual({
+      username: null,
       discordId: "1010539781551292598",
       discordUsername: "1010539781551292598",
       handle: "1010539781551292598",
     });
     expect(classifySocialIdentifier("Netsuma")).toEqual({
+      username: "netsuma",
       discordId: null,
       discordUsername: "netsuma",
       handle: "netsuma",
     });
     expect(classifySocialIdentifier("@netsuma-4jb1phz6tx8cfgcx")).toEqual({
+      username: null,
       discordId: null,
       discordUsername: null,
       handle: "netsuma-4jb1phz6tx8cfgcx",
     });
+  });
+
+  it("accepts a plain pseudonym and refuses look-alikes, digits alone and reserved names", () => {
+    expect(usernameProblem("haim_f.x")).toBeNull();
+    expect(usernameProblem("ha")).toBe("format");
+    expect(usernameProblem("hаim")).toBe("format"); // Cyrillic а
+    expect(usernameProblem("ha..im")).toBe("format");
+    expect(usernameProblem(".haim")).toBe("format");
+    expect(usernameProblem("1010539781551292598")).toBe("format");
+    expect(usernameProblem("netsuboard")).toBe("reserved");
   });
 
   it("deduplicates one profile and fails closed for distinct matches", () => {
