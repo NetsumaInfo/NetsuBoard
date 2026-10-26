@@ -19,7 +19,6 @@ import { nr } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { UsernameField } from "./UsernameField";
 import {
   getCollaborationPerformanceMode,
   setCollaborationPerformanceMode,
@@ -410,9 +409,6 @@ export function CollabSection() {
       <section className="mt-6">
         <h2 className="text-sm font-medium">{t("collab.friends.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("collab.friends.subtitle")}</p>
-        {social?.self && (
-          <UsernameField username={social.self.username ?? social.self.discordUsername ?? null} />
-        )}
         <div className="mt-3 flex gap-2">
           <Input
             value={identifier}

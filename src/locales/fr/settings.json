@@ -414,7 +414,10 @@
       "taken": "Pseudo déjà pris.",
       "cooldown": "Prochain changement possible le {{date}}.",
       "noProfile": "Profil pas encore prêt. Réessaie dans un instant.",
-      "error": "Enregistrement impossible. Réessaie."
+      "error": "Enregistrement impossible. Réessaie.",
+      "edit": "Modifier",
+      "cancel": "Annuler",
+      "none": "Pas encore de pseudo."
     },
     "invites": {
       "title": "Invitations",

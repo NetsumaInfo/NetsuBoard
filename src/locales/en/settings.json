@@ -414,7 +414,10 @@
       "taken": "Username already taken.",
       "cooldown": "Next change possible on {{date}}.",
       "noProfile": "Profile not ready yet. Try again in a moment.",
-      "error": "Could not save. Try again."
+      "error": "Could not save. Try again.",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "none": "No username yet."
     },
     "invites": {
       "title": "Invitations",

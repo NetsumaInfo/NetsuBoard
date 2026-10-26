@@ -414,7 +414,10 @@
       "taken": "Usuario ya en uso.",
       "cooldown": "Próximo cambio posible el {{date}}.",
       "noProfile": "Perfil aún no listo. Reintenta en un momento.",
-      "error": "No se pudo guardar. Reintenta."
+      "error": "No se pudo guardar. Reintenta.",
+      "edit": "Editar",
+      "cancel": "Cancelar",
+      "none": "Aún sin usuario."
     },
     "invites": {
       "title": "Invitaciones",

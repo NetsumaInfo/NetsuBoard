@@ -414,7 +414,10 @@
       "taken": "Name bereits vergeben.",
       "cooldown": "Nächste Änderung möglich am {{date}}.",
       "noProfile": "Profil noch nicht bereit. Gleich erneut versuchen.",
-      "error": "Speichern fehlgeschlagen. Erneut versuchen."
+      "error": "Speichern fehlgeschlagen. Erneut versuchen.",
+      "edit": "Ändern",
+      "cancel": "Abbrechen",
+      "none": "Noch kein Name."
     },
     "invites": {
       "title": "Einladungen",

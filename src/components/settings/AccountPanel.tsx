@@ -20,6 +20,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDiscordLogin } from "@/components/auth/useDiscordLogin";
 import { AvatarDecoration } from "./AvatarDecoration";
 import { CollabSection } from "./CollabSection";
+import { UsernameField } from "./UsernameField";
 import { EmailLogin } from "@/components/auth/EmailLogin";
 import { useDiscordProfile } from "./useDiscordProfile";
 
@@ -27,7 +28,7 @@ import { useDiscordProfile } from "./useDiscordProfile";
 type AuthUser = { name?: string | null; email?: string | null; image?: string | null } | null | undefined;
 
 // The offline grace is dropped with the session: kept, it would let a signed-out install run for
-// another 7 days as if it were signed in.
+// another 30 days as if it were signed in.
 async function signOut() {
   clearAuthStamp();
   try { await authClient.signOut(); } catch { /* best-effort */ }
@@ -104,6 +105,7 @@ function AccountInner() {
             {!busy && <EmailLogin size="sm" />}
           </div>
         ) : (
+          <>
           <div className="flex items-center gap-4">
             <div className="relative size-12 shrink-0">
               {user.image ? (
@@ -133,6 +135,8 @@ function AccountInner() {
               <LogOut className="size-3.5" /> {t("settings:account.signOut")}
             </Button>
           </div>
+          <UsernameField />
+          </>
         )}
       </div>
 
