@@ -30,7 +30,7 @@ function lastAuthAt(): number | null {
   }
 }
 
-// true = a recent login (< 7 days) allows offline use.
+// true = a recent login (< 30 days) allows offline use.
 export function offlineGraceValid(now: number = Date.now()): boolean {
   const t = lastAuthAt();
   return t !== null && now - t >= 0 && now - t < OFFLINE_GRACE_MS;
