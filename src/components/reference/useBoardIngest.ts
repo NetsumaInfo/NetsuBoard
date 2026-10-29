@@ -6,7 +6,7 @@
 import { useCallback } from "react";
 import { nr } from "@/lib/bridge";
 import i18n from "@/i18n";
-import { logError } from "@/lib/appLog";
+import { logAt, logError } from "@/lib/appLog";
 import {
   type ItemKind,
   type BoardItem,
@@ -123,6 +123,8 @@ async function pool<T>(items: T[], limit: number, run: (item: T, index: number) 
 // Au-delà, un média sans chemin disque n'est PAS recopié dans les assets : dupliquer des dizaines de
 // gigaoctets pour un dossier de rushes lâché est pire que la perte de la source au rechargement.
 const ASSET_COPY_MAX = 512 * 1024 * 1024;
+// Animated images keep their source on the board (cf. boardImageLod): no pyramid to start for them.
+const ANIMATED_PATH_RE = /\.(gif|webp|avif|apng)$/i;
 
 // Une entrée de lot : soit un chemin disque (voie normale, zéro copie), soit un objet File quand la
 // coquille n'a pas su rendre le chemin (navigateur, dossier déposé sur un runtime sans le pont).
@@ -532,6 +534,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       opts: { rootName?: string; frames?: boolean; at?: { x: number; y: number }; extra?: Partial<BoardItem> } = {},
     ) => {
       if (!list.length) return;
+      const startedAt = performance.now();
       const store = useBoard.getState();
       const prefs = store.prefs;
       const box = prefs.mediaMaxSize;
@@ -609,6 +612,11 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       }
 
       useBoard.getState().addItems(batch, false);
+      const placedAt = performance.now();
+      // The pyramid of every still image starts NOW, on all the core workers at once: asked item by
+      // item, the levels came four at a time (the renderer caps its requests in flight).
+      const stills = list.filter((f) => f.kind !== "video" && f.path && !ANIMATED_PATH_RE.test(f.path)).map((f) => f.path!);
+      if (stills.length) void Promise.resolve(nr.imageTiersWarm?.(stills)).catch(() => undefined);
 
       // Mesure des ratios (et copie en asset des fichiers sans chemin), file d'attente bornée : un
       // lot de 300 vidéos ne doit pas ouvrir 300 décodeurs d'un coup.
@@ -670,6 +678,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       });
       if (flushTimer) clearTimeout(flushTimer);
       flush();
+      const measuredAt = performance.now();
 
       // Rangement final, en UN seul rendu : chaque groupe est disposé à ses vraies proportions, puis
       // recollé sous le précédent d'après ses limites mesurées, et son cadre ajusté au résultat.
@@ -714,6 +723,8 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         for (const it of all) next.set(it.id, { ...it, x: it.x + dx, y: it.y + dy });
         useBoard.setState({ items: state.items.map((it) => next.get(it.id) ?? it) });
       }
+
+      logAt("log", "board:ingest", `batch of ${total}: placed in ${Math.round(placedAt - startedAt)} ms, measured in ${Math.round(measuredAt - placedAt)} ms, arranged in ${Math.round(performance.now() - measuredAt)} ms`);
 
       // Un lot dont des copies durables ont échoué n'est PAS un import réussi : ces items vivront
       // sur leur objectURL puis rouvriront « manquants ». L'erreur remplace le « terminé ».

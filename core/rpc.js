@@ -180,6 +180,20 @@ function createRpc() {
       const o = request && typeof request === "object" && !Array.isArray(request) ? request : { path: request, items: legacyItems };
       return thumbs.thumbsBatch(o.path, o.items, o.settings).catch((err) => ({ ok: false, error: String(err) }));
     },
+    // Reduced copies of a still board image (cf. thumbs.imageTiers): generated on demand, at the same
+    // two priorities as a thumbnail; the resolve variant only reports what is already on disk.
+    "ffmpeg:imageTiers": ([request]) => {
+      const o = request && typeof request === "object" ? request : { path: request };
+      return thumbs.imageTiers(o.path, o.priority === "low" ? "low" : "high").catch((err) => ({ error: String(err) }));
+    },
+    // A whole import at once: the levels start on every core worker as soon as the batch lands, and
+    // the call returns at once — the items asking one by one then join jobs already running.
+    "ffmpeg:imageTiersWarm": ([paths]) => {
+      const list = Array.isArray(paths) ? paths.filter((p) => typeof p === "string" && p) : [];
+      for (const p of list) void thumbs.imageTiers(p, "high").catch(() => null);
+      return { ok: true, queued: list.length };
+    },
+    "ffmpeg:imageTiersResolve": ([paths]) => thumbs.imageTiersResolve(Array.isArray(paths) ? paths : []).catch(() => []),
     "ffmpeg:thumbsResolve": ([request]) => {
       const o = Array.isArray(request) ? { items: request } : request || { items: [] };
       return thumbs.thumbsResolve(o.items, o.settings).catch(() => []);

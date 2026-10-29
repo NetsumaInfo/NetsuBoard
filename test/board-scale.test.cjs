@@ -79,15 +79,17 @@ test('selection rings switch instantly, no shadow transition on items', () => {
 
 // « Tout figer » doit vraiment tout figer. Un <img> animé (GIF, WebP) ne se met pas en pause : sans
 // bascule vers une frame peinte, le bouton de gel ne change rien pour eux — et l'ingestion Giphy en
-// pose beaucoup.
-test('freezing the board also stops animated images', () => {
+// pose beaucoup. The navigation pause applies too, like for videos: a running animation
+// re-rasterises its area at every frame of the gesture, the swap costs one frame copy at its start.
+test('freezing the board, or navigating it, stops animated images', () => {
   const src = read('src/components/reference/BoardItem.tsx');
   assert.match(src, /const ANIMATED_IMAGE_RE = .*gif/);
   assert.match(src, /drawImage\(img, 0, 0\)/,
     'a frozen animated image must be painted once into a canvas');
   const comp = src.slice(src.indexOf('function ImageContent'));
-  assert.match(comp.slice(0, comp.indexOf('\n}\n')), /useBoard\(\(s\) => s\.frozen\)/,
-    'the swap must follow the explicit freeze, not the transient navigation pause');
+  assert.match(comp.slice(0, comp.indexOf('\n}\n')),
+    /useBoard\(\(s\) => animated && \(s\.frozen \|\| \(s\.navigating && s\.prefs\.pauseMediaWhileNavigating\)\)\)/,
+    'the swap follows the freeze and the navigation pause, and a still image never subscribes to them');
 });
 
 // Les médias LOCAUX du board sortent par le protocole asset. Le serveur HTTP du core partage son
@@ -102,11 +104,11 @@ test('board media are served by the shell, not by the core HTTP server', () => {
 
 // Un <img> qui vient d'être monté ne peint rien tant que son bitmap n'est pas décodé. Le culling
 // remonte les items à chaque dézoom : en asynchrone, toute la planche passe une frame en cases
-// blanches, ce qui se voit comme un clignotement général. Une vignette se décode en une
-// milliseconde, donc en synchrone sans coût perceptible — une source pleine, elle, bloquerait la
-// frame, d'où l'asynchrone conservé pour elle.
-test('a thumbnail decodes synchronously so a remount never paints an empty box', () => {
-  assert.match(read('src/components/reference/BoardItem.tsx'), /decoding=\{lod\.full \? "async" : "sync"\}/);
+// blanches, ce qui se voit comme un clignotement général. A source already decoded once repaints
+// from Chromium's cache, so synchronously at no visible cost; one never decoded would block the
+// frame, hence asynchronous for it.
+test('an already decoded source decodes synchronously so a remount never paints an empty box', () => {
+  assert.match(read('src/components/reference/BoardItem.tsx'), /decoding=\{isDecoded\(lod\.src\) \? "sync" : "async"\}/);
 });
 
 // Le board est une couche DOM transformée, pas un canvas : l'amplitude de zoom est bornée par le

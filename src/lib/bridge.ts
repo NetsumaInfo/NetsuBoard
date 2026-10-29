@@ -984,6 +984,13 @@ export interface NrApi {
   // Résout en UN appel les chemins des vignettes DÉJÀ en cache (sans rien générer) → le renderer
   // amorce son cache d'un coup et n'émet plus 1 RPC par carte (scroll fluide même cache plein).
   thumbsResolve(items: { path: string; time: number }[]): Promise<{ path: string; time: number; file: string | null }[]>;
+  // Reduced copies of a still image, keyed by long side (512, 1024, 2048; only the ones clearly
+  // smaller than the source). An empty map means the source is small enough to show as it is.
+  imageTiers(filePath: string, priority?: "high" | "low"): Promise<{ tiers: Record<number, string> } | { error: string }>;
+  // Levels already on disk, without generating anything: `tiers: null` when they are not all there.
+  imageTiersResolve(paths: string[]): Promise<{ path: string; tiers: Record<number, string> | null }[]>;
+  // Starts the levels of a whole import and returns at once, without waiting for any of them.
+  imageTiersWarm(paths: string[]): Promise<{ ok: boolean; queued: number }>;
   // Codecs réellement encodables sur cette machine (sonde ffmpeg cachée côté core) → l'UI masque le
   // reste. `force` relance la sonde en ignorant le cache.
   exportCapabilities(opts?: { force?: boolean }): Promise<ExportCapabilitiesResult>;
@@ -1176,6 +1183,9 @@ const mock: NrApi = {
   thumbnail: async () => ({ error: "mock" }),
   thumbsBatch: async () => ({ ok: true, made: 0 }),
   thumbsResolve: async (items) => items.map((i) => ({ path: i.path, time: i.time, file: null })),
+  imageTiers: async () => ({ error: "mock" }),
+  imageTiersResolve: async (paths) => paths.map((p) => ({ path: p, tiers: null })),
+  imageTiersWarm: async () => ({ ok: false, queued: 0 }),
   // Hors app : aucune sonde possible → ok:false, donc le renderer ne masque AUCUN codec (l'UI se rend
   // entière dans un navigateur au lieu d'un menu de codecs vide).
   exportCapabilities: async () => ({ ok: false, codecs: [], cpuCodecs: [], hasGpuEncoder: false, hwEncoders: [], codecEncoderOptions: {}, error: "mock" }),

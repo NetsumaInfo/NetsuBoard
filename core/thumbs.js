@@ -77,6 +77,9 @@ function thumbRamForget(files) {
   const gone = new Set(files || []);
   if (!gone.size) return;
   for (const [k, p] of thumbRam) if (gone.has(p)) thumbRam.delete(k);
+  for (const [k, tiers] of tierRam) {
+    if (Object.values(tiers).some((p) => gone.has(p))) tierRam.delete(k);
+  }
 }
 
 // Le réglage utilisateur est un CRAN (léger/équilibré/net) : `thumbPresets` en tire hauteur et
@@ -246,11 +249,133 @@ async function thumbsResolve(items, settings) {
   }));
 }
 
+// Image pyramid of the board. A board image is drawn at whatever size the zoom gives it, and the
+// webview decodes an <img> at the SOURCE resolution: an 8K wallpaper costs 133 MB of decoded bitmap
+// even when it covers a quarter of the screen. A few dozen of them overflow Chromium's decoded-image
+// cache, which evicts, and the board blanks and repaints while navigating. Each still image therefore
+// gets reduced copies on a fixed ladder of long sides; the renderer picks the smallest one that is
+// still sharper than its on-screen size and only falls back to the source when none is.
+//
+// All the levels come out of ONE ffmpeg pass: decoding the source is most of the cost (measured on an
+// 8K JPEG: 490 ms for one level, 530 ms for two), so the levels add almost nothing to each other.
+// WebP keeps the alpha channel of a transparent PNG, which a JPEG level would flatten.
+const TIER_SIDES = [512, 1024, 2048];
+// A level must be clearly smaller than its source to earn its file: below this ratio the source
+// itself is cheap enough to decode and the copy would only blur it.
+const TIER_MIN_RATIO = 1.5;
+const TIER_VERSION = 't1';
+const STILL_MAX_DURATION = 0.1;
+const tierRam = new Map();
+const tierInFlight = new Map();
+
+function tierFile(filePath, side) {
+  const key = crypto.createHash('md5').update(`${filePath}|tier|${side}|${TIER_VERSION}`).digest('hex');
+  return path.join(getThumbDir(), `${key}.webp`);
+}
+
+/** Long sides worth a reduced copy for a source of this size. Pure. */
+function tierSidesFor(width, height) {
+  const long = Math.max(Number(width) || 0, Number(height) || 0);
+  return TIER_SIDES.filter((side) => long >= side * TIER_MIN_RATIO);
+}
+
+function tierArgs(filePath, sides) {
+  const labels = sides.map((_, i) => `[t${i}]`);
+  const scales = sides.map((side, i) =>
+    `${labels[i]}scale=w=${side}:h=${side}:force_original_aspect_ratio=decrease:flags=area[o${i}]`);
+  const graph = sides.length > 1
+    ? `[0:v]split=${sides.length}${labels.join('')};${scales.join(';')}`
+    : scales[0].replace(labels[0], '[0:v]');
+  const outputs = sides.flatMap((side, i) => [
+    '-map', `[o${i}]`, '-frames:v', '1',
+    '-c:v', 'libwebp', '-lossless', '0', '-compression_level', '2', '-quality', '82',
+    tierFile(filePath, side),
+  ]);
+  return ['-v', 'error', '-y', '-i', filePath, '-an', '-filter_complex', graph, ...outputs];
+}
+
+async function readyTiers(filePath, sides) {
+  /** @type {Record<number, string>} */
+  const out = {};
+  for (const side of sides) {
+    const file = tierFile(filePath, side);
+    if (!(await fileReady(file))) return null;
+    out[side] = file;
+  }
+  return out;
+}
+
+// Returns `{ tiers: { [longSide]: file } }`, an empty map when the source is small enough to show as
+// it is, or `{ error }`. Cached in RAM and on disk under the thumbnail directory, so the thumbnail
+// purge and the per-source cache index cover the levels too.
+async function imageTiers(filePath, priority = 'high') {
+  if (!filePath) return { error: 'no path' };
+  const ram = tierRam.get(filePath);
+  if (ram) return { tiers: ram };
+  const running = tierInFlight.get(filePath);
+  if (running) return running;
+  const job = (async () => {
+    const info = await probeMedia(filePath).catch(() => null);
+    if (!info || !info.width || !info.height) return { error: t('thumbnailFailed') };
+    // A file that lasts is a video or an animation: a still level would freeze it. A JPEG reports
+    // the 0.04 s of its single frame, hence the margin.
+    if (info.duration > STILL_MAX_DURATION) return { tiers: {} };
+    const sides = tierSidesFor(info.width, info.height);
+    if (!sides.length) { tierRam.set(filePath, {}); return { tiers: {} }; }
+    const cached = await readyTiers(filePath, sides);
+    if (cached) {
+      tierRam.set(filePath, cached);
+      for (const file of Object.values(cached)) cacheIndex().touch(file);
+      return { tiers: cached };
+    }
+    return thumbGate(async () => {
+      let lastErr = t('thumbnailFailed');
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          await run('ffmpeg', tierArgs(filePath, sides), { timeout: 30000 });
+          const made = await readyTiers(filePath, sides);
+          if (made) {
+            tierRam.set(filePath, made);
+            for (const file of Object.values(made)) {
+              const bytes = (await fsp.stat(file).catch(() => null))?.size || 0;
+              cacheIndex().record({ kind: 'thumb', file, source: filePath, bytes });
+            }
+            return { tiers: made };
+          }
+        } catch (e) { lastErr = String(e.stderr || e); }
+      }
+      return { error: lastErr };
+    }, priority);
+  })();
+  tierInFlight.set(filePath, job);
+  try { return await job; } finally { if (tierInFlight.get(filePath) === job) tierInFlight.delete(filePath); }
+}
+
+// Levels already on disk for a whole board, in one call and without generating anything. A path whose
+// levels are not all there comes back with `tiers: null`.
+async function imageTiersResolve(paths) {
+  return Promise.all((paths || []).map(async (filePath) => {
+    if (!filePath) return { path: filePath, tiers: null };
+    const ram = tierRam.get(filePath);
+    if (ram) return { path: filePath, tiers: ram };
+    try {
+      const info = await probeMedia(filePath);
+      if (!info || !info.width || info.duration > STILL_MAX_DURATION) return { path: filePath, tiers: null };
+      const tiers = await readyTiers(filePath, tierSidesFor(info.width, info.height));
+      if (tiers) tierRam.set(filePath, tiers);
+      return { path: filePath, tiers };
+    } catch (_) {
+      return { path: filePath, tiers: null };
+    }
+  }));
+}
+
 // Vide TOUT le cache de vignettes (RAM + jpeg disque). Purge en bloc, sans distinction de rush :
 // appelée par cacheAdmin quand l'utilisateur demande le type « vignettes » en entier. Une purge
 // ciblée (par rush/projet) passe par l'index latéral, pas par ici. Saute les fichiers verrouillés.
 async function cleanThumbs() {
   thumbRam.clear();
+  tierRam.clear();
   const dir = getThumbDir();
   let files = 0;
   let bytes = 0;
@@ -271,4 +396,4 @@ async function cleanThumbs() {
   return { ok: true, files, bytes, skipped };
 }
 
-module.exports = { thumbnail, thumbsBatch, thumbsResolve, cleanThumbs, thumbRamForget, normalizeThumbSettings, thumbKey, thumbKeyFromSuffix, thumbArgs };
+module.exports = { thumbnail, thumbsBatch, thumbsResolve, imageTiers, imageTiersResolve, tierSidesFor, tierArgs, cleanThumbs, thumbRamForget, normalizeThumbSettings, thumbKey, thumbKeyFromSuffix, thumbArgs };

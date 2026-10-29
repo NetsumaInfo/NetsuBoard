@@ -30,7 +30,7 @@ import { shapeBBox, shifted } from "./drawGeometry";
 import { YoutubeItem } from "./YoutubeItem";
 import { EmbedItem } from "./EmbedItem";
 import { PaletteContent } from "./PaletteItem";
-import { knownThumb, useImageLod, zoomCeil } from "./boardImageLod";
+import { isDecoded, knownThumb, useImageLod, zoomCeil } from "./boardImageLod";
 import { fitNatSize } from "./boardNatFit";
 import { posterTime, stillSized, useVideoStill } from "./boardVideoLod";
 import { useOnScreen } from "./useOnScreen";
@@ -959,13 +959,16 @@ const ANIMATED_IMAGE_RE = /\.(gif|webp|avif|apng)(?:$|[?#])/i;
 const ANIMATED_MIME_RE = /^image\/(gif|webp|avif|apng)$/i;
 
 function ImageContent({ item }: { item: Item }) {
-  const frozen = useBoard((s) => s.frozen);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animated = ANIMATED_IMAGE_RE.test(item.src ?? "") || ANIMATED_MIME_RE.test(item.mime ?? "");
+  // An animation stops like a video does: under the board freeze, and while navigating when media
+  // pause during navigation. A running GIF re-rasterises its area at every frame, gesture included.
+  // A still image never subscribes to the navigation state, so it does not re-render with it.
+  const frozen = useBoard((s) => animated && (s.frozen || (s.navigating && s.prefs.pauseMediaWhileNavigating)));
   const [painted, setPainted] = useState(false);
-  // Affichée petite, une image passe par sa vignette : trente bannières en pleine définition saturent
-  // le cache d'images décodées de Chromium, qui les évince et les laisse blanches jusqu'au repaint.
+  // An image is drawn from the level of its pyramid that its screen size needs: thirty sources in
+  // full definition overflow Chromium's decoded-image cache, which evicts and leaves them blank.
   const lod = useImageLod(item);
   const retry = useLocalMediaRetry(item);
 
@@ -976,10 +979,15 @@ function ImageContent({ item }: { item: Item }) {
     const img = imgRef.current;
     const canvas = canvasRef.current;
     if (!img || !canvas || !img.naturalWidth) { setPainted(false); return; }
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+    // Resizing a canvas reallocates it: only when the source size changed, since the freeze now
+    // follows every navigation gesture. A kept canvas is cleared instead, or a transparent frame
+    // would land over the previous one.
+    if (canvas.width !== img.naturalWidth) canvas.width = img.naturalWidth;
+    if (canvas.height !== img.naturalHeight) canvas.height = img.naturalHeight;
     try {
-      canvas.getContext("2d")?.drawImage(img, 0, 0);
+      const ctx = canvas.getContext("2d");
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      ctx?.drawImage(img, 0, 0);
       setPainted(true);
     } catch { /* peinture refusée : on laisse le <img> animé plutôt qu'un carré vide */ }
   };
@@ -1011,13 +1019,12 @@ function ImageContent({ item }: { item: Item }) {
   if (!lod.src) return <div className="h-full w-full bg-muted/30" />;
   const media = (
     <>
-      {/* `decoding` sur la VIGNETTE seulement : le culling remonte les items à chaque dézoom, et un
-          décodage asynchrone laisse la case blanche une frame — multiplié par la planche, ça
-          clignote. Une vignette se décode en une milliseconde, le coût du décodage synchrone est
-          invisible ; une source pleine, elle, bloquerait la frame, d'où l'asynchrone conservé. */}
+      {/* Synchronous decoding only for a source already decoded once: the culling remounts items at
+          every zoom out, and an asynchronous decode leaves the box blank for a frame — across the
+          board, a flicker. A source never decoded would block the frame, hence asynchronous. */}
       <img
         key={retry.attempt}
-        ref={imgRef} src={lod.src} alt={item.title ?? ""} draggable={false} decoding={lod.full ? "async" : "sync"}
+        ref={imgRef} src={lod.src} alt={item.title ?? ""} draggable={false} decoding={isDecoded(lod.src) ? "sync" : "async"}
         onError={onErr} onLoad={onLd} className={cls} style={{ ...style, ...(painted ? { display: "none" } : null) }}
       />
       {animated && <canvas ref={canvasRef} aria-hidden className={cls} style={{ ...style, ...(painted ? null : { display: "none" }) }} />}

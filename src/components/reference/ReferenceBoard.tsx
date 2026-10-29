@@ -234,7 +234,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     primeBoardThumbs(
       useBoard.getState().items.flatMap((it) => {
         if (it.kind === "image") return [{ ref: it.ref }];
-        if (it.kind === "video") return [{ ref: it.ref, time: posterTime(it) }];
+        if (it.kind === "video") return [{ ref: it.ref, time: posterTime(it), video: true }];
         return [];
       }),
     );
