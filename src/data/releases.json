@@ -1,5 +1,92 @@
 [
   {
+    "id": "netsuboard-0.6.5",
+    "version": "0.6.5",
+    "date": "2026-10-29",
+    "title": {
+      "fr": "Notes, documents, liens et dossiers",
+      "en": "Notes, documents, links and folders",
+      "es": "Notas, documentos, enlaces y carpetas",
+      "de": "Notizen, Dokumente, Verbindungen und Ordner",
+      "ja": "ノート、ドキュメント、リンク、フォルダー",
+      "zh": "笔记、文档、连线与文件夹"
+    },
+    "changes": [
+      {
+        "kind": "feature",
+        "fr": "Notes : trois modes, Texte, Bloc (Markdown) et Feuille. Une feuille s’ouvre en grand avec titres, listes, cases à cocher, encadrés, équations, images, vidéos, YouTube, fichiers et emojis.",
+        "en": "Notes: three modes, Text, Block (Markdown) and Sheet. A sheet opens full size with headings, lists, checkboxes, callouts, equations, images, videos, YouTube, files and emojis.",
+        "es": "Notas: tres modos, Texto, Bloque (Markdown) y Hoja. Una hoja se abre en grande con títulos, listas, casillas, recuadros, ecuaciones, imágenes, vídeos, YouTube, archivos y emojis.",
+        "de": "Notizen: drei Modi, Text, Block (Markdown) und Blatt. Ein Blatt öffnet sich groß mit Überschriften, Listen, Checkboxen, Hinweisboxen, Formeln, Bildern, Videos, YouTube, Dateien und Emojis.",
+        "ja": "ノート：テキスト、ブロック（Markdown）、シートの 3 モード。シートは大きく開き、見出し、リスト、チェックボックス、囲み、数式、画像、動画、YouTube、ファイル、絵文字が使えます。",
+        "zh": "笔记：文本、块（Markdown）、页面三种模式。页面可全屏打开，支持标题、列表、复选框、提示框、公式、图片、视频、YouTube、文件和表情。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Documents sur le board : PDF, Word, texte, Markdown et CSV. Glisse le fichier, lis-le dans la carte, en défilement ou page par page.",
+        "en": "Documents on the board: PDF, Word, text, Markdown and CSV. Drop the file and read it inside the card, scrolling or page by page.",
+        "es": "Documentos en el tablero: PDF, Word, texto, Markdown y CSV. Suelta el archivo y léelo en la tarjeta, con desplazamiento o página a página.",
+        "de": "Dokumente auf dem Board: PDF, Word, Text, Markdown und CSV. Datei ablegen und in der Karte lesen, scrollend oder seitenweise.",
+        "ja": "ボードにドキュメント：PDF、Word、テキスト、Markdown、CSV。ファイルをドロップしてカード内で読めます（スクロールまたはページ送り）。",
+        "zh": "画板上的文档：PDF、Word、文本、Markdown 和 CSV。拖入文件即可在卡片内阅读，可滚动或逐页翻看。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Liens entre les éléments : courbes, droits ou en angle, avec flèches, texte et couleurs. Branches, rangement en arbre ou en carte mentale, raccourcis L, Shift+L et Ctrl+L.",
+        "en": "Links between items: curved, straight or elbow, with arrows, labels and colours. Branches, tree or mind-map layout, shortcuts L, Shift+L and Ctrl+L.",
+        "es": "Enlaces entre elementos: curvos, rectos o en ángulo, con flechas, texto y colores. Ramas, orden en árbol o mapa mental, atajos L, Shift+L y Ctrl+L.",
+        "de": "Verbindungen zwischen Elementen: gebogen, gerade oder gewinkelt, mit Pfeilen, Text und Farben. Abzweigungen, Baum- oder Mindmap-Anordnung, Kürzel L, Shift+L und Ctrl+L.",
+        "ja": "要素間のリンク：曲線・直線・直角、矢印、ラベル、色に対応。分岐、ツリーやマインドマップ配置、ショートカット L、Shift+L、Ctrl+L。",
+        "zh": "元素之间的连线：曲线、直线或折线，可加箭头、文字和颜色。支持分支、树形或思维导图排列，快捷键 L、Shift+L、Ctrl+L。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Dossiers : range un groupe d’éléments dans un dossier, ouvre-le, reviens en arrière avec le fil en haut.",
+        "en": "Folders: put a group of items in a folder, open it, go back with the path at the top.",
+        "es": "Carpetas: guarda un grupo de elementos en una carpeta, ábrela y vuelve atrás con la ruta de arriba.",
+        "de": "Ordner: Elemente in einen Ordner legen, öffnen und über den Pfad oben zurückgehen.",
+        "ja": "フォルダー：要素をまとめてフォルダーに入れ、開いて、上部のパスで戻れます。",
+        "zh": "文件夹：把一组元素放进文件夹，打开它，用顶部路径返回。"
+      },
+      {
+        "kind": "feature",
+        "fr": "Sites en direct : un lien web s’ouvre dans sa carte, tu peux défiler et cliquer. Pubs bloquées. En sortant, la carte garde une capture.",
+        "en": "Live sites: a web link opens inside its card, scroll and click. Ads blocked. When you leave, the card keeps a screenshot.",
+        "es": "Sitios en vivo: un enlace web se abre en su tarjeta, puedes desplazarte y hacer clic. Anuncios bloqueados. Al salir, la tarjeta guarda una captura.",
+        "de": "Live-Seiten: Ein Weblink öffnet sich in seiner Karte, scrollen und klicken möglich. Werbung blockiert. Beim Verlassen behält die Karte einen Screenshot.",
+        "ja": "ライブサイト：Web リンクがカード内で開き、スクロールやクリックができます。広告はブロック。閉じるとカードにスクリーンショットが残ります。",
+        "zh": "实时网页：网页链接在卡片内打开，可滚动和点击。屏蔽广告。离开时卡片保留截图。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Nouvelles icônes partout dans l’app et nouvelle icône d’application. Une icône pas claire ? Dis-le-moi sur Discord ou via Signaler un souci.",
+        "en": "New icons across the app and a new app icon. An icon unclear? Tell me on Discord or through Report a problem.",
+        "es": "Nuevos iconos en toda la app y nuevo icono de aplicación. ¿Un icono poco claro? Dímelo en Discord o con Informar de un problema.",
+        "de": "Neue Icons in der ganzen App und ein neues App-Icon. Ein Icon unklar? Sag es mir auf Discord oder über Problem melden.",
+        "ja": "アプリ全体のアイコンとアプリアイコンを刷新。分かりにくいアイコンがあれば Discord か「問題を知らせる」で教えてください。",
+        "zh": "全新的应用内图标和应用图标。看不懂某个图标？请在 Discord 或通过“反馈问题”告诉我。"
+      },
+      {
+        "kind": "improvement",
+        "fr": "Menu clic droit sur le texte plus complet, avec sous-menus.",
+        "en": "Fuller right-click menu on text, with submenus.",
+        "es": "Menú de clic derecho en el texto más completo, con submenús.",
+        "de": "Vollständigeres Rechtsklickmenü für Text, mit Untermenüs.",
+        "ja": "テキストの右クリックメニューを拡充（サブメニュー付き）。",
+        "zh": "文本右键菜单更完整，带子菜单。"
+      },
+      {
+        "kind": "performance",
+        "fr": "Images affichées à la bonne taille selon le zoom : moins de mémoire, zoom plus fluide sur les gros boards.",
+        "en": "Images drawn at the right size for the zoom: less memory, smoother zoom on big boards.",
+        "es": "Imágenes mostradas al tamaño adecuado según el zoom: menos memoria y zoom más fluido en tableros grandes.",
+        "de": "Bilder in passender Größe je nach Zoom: weniger Speicher, flüssigerer Zoom auf großen Boards.",
+        "ja": "ズームに合わせた解像度で画像を表示：メモリ削減、大きなボードでもズームが滑らか。",
+        "zh": "按缩放级别以合适尺寸显示图片：占用更少内存，大画板缩放更流畅。"
+      }
+    ]
+  },
+  {
     "id": "netsuboard-0.6.1",
     "version": "0.6.1",
     "date": "2026-10-26",
