@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover } from "@base-ui/react/popover";
-import { Check, ChevronDown, Star } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -114,13 +114,14 @@ export function FontPicker({ value, onChange }: { value: string; onChange: (v: s
             className="flex h-7 w-32 items-center justify-between gap-1 rounded-md border border-border bg-transparent px-2 text-xs text-foreground outline-none transition-colors hover:bg-foreground/5 focus-visible:border-primary data-[popup-open]:border-primary"
           >
             <span className="truncate" style={{ fontFamily: value }}>{fontLabel(value, t)}</span>
-            <ChevronDown className="size-3.5 shrink-0 opacity-60" />
+            <NetsuIcon name="chevron-down" className="size-3.5 shrink-0 opacity-60" />
           </Popover.Trigger>
         </TooltipTrigger>
         <Popover.Portal>
           <Popover.Positioner side="top" sideOffset={8} className="z-50 outline-none">
             <Popover.Popup className="w-64 origin-[var(--transform-origin)] rounded-xl border border-border bg-popover p-2 text-popover-foreground shadow-xl outline-none data-[starting-style]:scale-98 data-[starting-style]:opacity-0 transition-[transform,opacity]">
               <input
+                autoComplete="off" spellCheck={false}
                 value={query} placeholder={t("font.search")} aria-label={t("font.search")}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.stopPropagation()}
@@ -152,7 +153,7 @@ export function FontPicker({ value, onChange }: { value: string; onChange: (v: s
                             style={{ fontFamily: v }}
                           >
                             <span className="truncate">{fontLabel(v, t)}</span>
-                            {v === value && <Check className="size-3.5 shrink-0 text-primary" />}
+                            {v === value && <NetsuIcon name="check" className="size-3.5 shrink-0 text-primary" />}
                           </button>
                           <button type="button"
                             aria-label={fav ? t("actions.removeFavorite") : t("actions.addFavorite")}
@@ -162,7 +163,7 @@ export function FontPicker({ value, onChange }: { value: string; onChange: (v: s
                               fav ? "text-primary opacity-100" : "text-muted-foreground opacity-0 group-hover:opacity-100 hoverless:opacity-100",
                             )}
                           >
-                            <Star className={fav ? "fill-current" : ""} />
+                            <NetsuIcon name="card-favorite" on={fav} />
                           </button>
                         </div>
                       );

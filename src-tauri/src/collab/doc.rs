@@ -22,7 +22,7 @@ use super::identity;
 use super::ids::ProjectId;
 pub use super::ops::CollabOp as Op;
 use super::ops::{
-    Appearance, BoardPalette, CollabOp, Crop, EmbedMetadata, FrameStyle, Geometry, ItemKind,
+    Appearance, BoardPalette, CollabOp, Crop, EmbedMetadata, FolderState, FrameStyle, Geometry, ItemKind,
     LinkMetadata, MediaManifest, OperationBatch, Playback, SequenceMetadata, Stroke, TextStyle,
     Trim, VectorShape, OP_PROTOCOL_VERSION,
 };
@@ -102,6 +102,16 @@ pub struct ItemProjection {
     pub text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub frame_style: Option<FrameStyle>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder: Option<FolderState>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub document: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_card: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note_style: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub playback: Option<Playback>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -471,6 +481,11 @@ fn project_projection_from_doc(
             text_style: atomic(&item, "textStyle")?,
             text: text_value(&item),
             frame_style: atomic(&item, "frameStyle")?,
+            folder: atomic(&item, "folder")?,
+            parent: atomic(&item, "parent")?,
+            document: atomic(&item, "document")?,
+            link_card: atomic(&item, "linkCard")?,
+            note_style: atomic(&item, "noteStyle")?,
             playback: atomic(&item, "playback")?,
             media: atomic(&item, "media")?,
             link: atomic(&item, "link")?,
@@ -547,6 +562,21 @@ fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
         }
         CollabOp::SetFrameStyle { item_id, frame } => {
             set_atomic(doc, item_id.as_str(), "frameStyle", frame)?
+        }
+        CollabOp::SetFolder { item_id, folder } => {
+            set_atomic(doc, item_id.as_str(), "folder", folder)?
+        }
+        CollabOp::SetDocument { item_id, document } => {
+            set_atomic(doc, item_id.as_str(), "document", document)?
+        }
+        CollabOp::SetNoteStyle { item_id, style } => {
+            set_atomic(doc, item_id.as_str(), "noteStyle", style)?
+        }
+        CollabOp::SetLinkCard { item_id, card } => {
+            set_atomic(doc, item_id.as_str(), "linkCard", card)?
+        }
+        CollabOp::SetParent { item_id, parent } => {
+            set_atomic(doc, item_id.as_str(), "parent", parent)?
         }
         CollabOp::SetPlayback { item_id, playback } => {
             set_atomic(doc, item_id.as_str(), "playback", playback)?
@@ -1156,6 +1186,43 @@ mod path_tests {
                 .and_then(|value| value.into_value().ok()),
             Some(LoroValue::String(kind)) if kind.as_str() == "text"
         ));
+    }
+
+    #[test]
+    fn folder_state_and_parent_round_trip_through_the_projection() {
+        use serde_json::json;
+
+        let geometry = json!({ "x": 0.0, "y": 0.0, "width": 260.0, "height": 220.0, "rotation": 0.0, "detached": false });
+        let ops: Vec<Op> = serde_json::from_value(json!([
+            { "type": "addItem", "itemId": "folder", "kind": "frame", "geometry": geometry },
+            { "type": "addItem", "itemId": "inside", "kind": "image", "geometry": geometry },
+            { "type": "setFolder", "itemId": "folder", "folder": {
+                "folded": true, "openWidth": 640.0, "openHeight": 420.0, "cover": "inside"
+            }},
+            { "type": "setParent", "itemId": "inside", "parent": "folder" },
+            { "type": "setDocument", "itemId": "inside", "document": "[{\"type\":\"paragraph\"}]" }
+        ]))
+        .expect("folder operations");
+        let doc = LoroDoc::new();
+        apply_batch_to_doc(&doc, &ops).expect("apply");
+        let projection = project_projection_from_doc(&doc, 1).expect("projection");
+        let folder = projection.items.iter().find(|item| item.item_id == "folder").expect("folder");
+        let state = folder.folder.as_ref().expect("folder state");
+        assert!(state.folded);
+        assert_eq!(state.open_width, Some(640.0));
+        assert_eq!(state.cover.as_ref().map(|id| id.as_str()), Some("inside"));
+        let inside = projection.items.iter().find(|item| item.item_id == "inside").expect("inside");
+        assert_eq!(inside.parent.as_deref(), Some("folder"));
+        assert_eq!(inside.document.as_deref(), Some("[{\"type\":\"paragraph\"}]"));
+
+        let up: Vec<Op> = serde_json::from_value(json!([
+            { "type": "setFolder", "itemId": "folder", "folder": null },
+            { "type": "setParent", "itemId": "inside", "parent": null }
+        ]))
+        .expect("unfold operations");
+        apply_batch_to_doc(&doc, &up).expect("apply unfold");
+        let projection = project_projection_from_doc(&doc, 2).expect("projection");
+        assert!(projection.items.iter().all(|item| item.folder.is_none() && item.parent.is_none()));
     }
 
     #[test]

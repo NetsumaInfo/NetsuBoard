@@ -3,10 +3,8 @@
 
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ImageUp, History, Settings2, FilePlus2, FolderOpen, FileCheck2, FileWarning,
-  Star, Trash2, EyeOff, FolderSearch, Users,
-} from "lucide-react";
+import { Star, Users } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { cn, uiLocale } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
 import { logError } from "@/lib/appLog";
@@ -110,7 +108,7 @@ function SceneCard({
                 : "bg-black/50 text-white/70 hover:bg-black/70 hover:text-destructive",
             )}
           >
-            <Star className="size-3.5" fill={isFavorite ? "currentColor" : "none"} />
+            <NetsuIcon name="card-favorite" on={isFavorite} className="size-3.5" />
           </button>
 
           {/* Supprimer — dropdown deux options */}
@@ -123,13 +121,13 @@ function SceneCard({
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex size-6 items-center justify-center rounded-md bg-black/50 text-white/70 hover:bg-black/70 hover:text-destructive backdrop-blur-[2px] transition-colors"
                 >
-                  <Trash2 className="size-3.5" />
+                  <NetsuIcon name="delete" className="size-3.5" />
                 </button>
               }
             />
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onHide(); }}>
-                <EyeOff className="size-4" />
+                <NetsuIcon name="card-hide" />
                 {t("home.hideFromList")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -137,7 +135,7 @@ function SceneCard({
                 variant="destructive"
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
               >
-                <Trash2 className="size-4" />
+                <NetsuIcon name="delete" />
                 {t("home.deleteScene")}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -176,20 +174,20 @@ function SceneCard({
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={onOpen}>
-          <FileCheck2 /> {t("home.openProjectFile")}
+          <NetsuIcon name="open-project-file" /> {t("home.openProjectFile")}
         </ContextMenuItem>
         <ContextMenuItem onClick={() => void revealInternalProject()}>
-          <FolderSearch /> {t("home.openProjectLocation")}
+          <NetsuIcon name="open-location" /> {t("home.openProjectLocation")}
         </ContextMenuItem>
         <ContextMenuItem onClick={onToggleFavorite}>
-          <Star /> {isFavorite ? t("actions.removeFavorite") : t("actions.addFavorite")}
+          <NetsuIcon name="card-favorite" on={isFavorite} /> {isFavorite ? t("actions.removeFavorite") : t("actions.addFavorite")}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onHide}>
-          <EyeOff /> {t("home.hideFromList")}
+          <NetsuIcon name="card-hide" /> {t("home.hideFromList")}
         </ContextMenuItem>
         <ContextMenuItem variant="destructive" onClick={onDelete}>
-          <Trash2 /> {t("home.deleteScene")}
+          <NetsuIcon name="delete" /> {t("home.deleteScene")}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
@@ -238,7 +236,7 @@ function ProjectCard({ entry, isFavorite, onOpen, onToggleFavorite, onForget, on
           )}
         >
           {entry.missing
-            ? <FileWarning className="size-7 opacity-70" strokeWidth={1.5} />
+            ? <NetsuIcon name="file-missing" className="size-7 opacity-70" />
             : <ProjectThumb path={entry.path} />}
         </button>
 
@@ -254,7 +252,7 @@ function ProjectCard({ entry, isFavorite, onOpen, onToggleFavorite, onForget, on
                 : "bg-black/50 text-white/70 hover:bg-black/70 hover:text-destructive",
             )}
           >
-            <Star className="size-3.5" fill={isFavorite ? "currentColor" : "none"} />
+            <NetsuIcon name="card-favorite" on={isFavorite} className="size-3.5" />
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -265,18 +263,18 @@ function ProjectCard({ entry, isFavorite, onOpen, onToggleFavorite, onForget, on
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex size-6 items-center justify-center rounded-md bg-black/50 text-white/70 backdrop-blur-[2px] transition-colors hover:bg-black/70 hover:text-destructive"
                 >
-                  <Trash2 className="size-3.5" />
+                  <NetsuIcon name="delete" className="size-3.5" />
                 </button>
               }
             />
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onForget(); }}>
-                <EyeOff className="size-4" />
+                <NetsuIcon name="card-hide" />
                 {t("home.forgetProject")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
-                <Trash2 className="size-4" />
+                <NetsuIcon name="delete" />
                 {t("home.deleteProject")}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -302,18 +300,18 @@ function ProjectCard({ entry, isFavorite, onOpen, onToggleFavorite, onForget, on
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem disabled={entry.missing} onClick={onOpen}>
-          <FileCheck2 /> {t("home.openProjectFile")}
+          <NetsuIcon name="open-project-file" /> {t("home.openProjectFile")}
         </ContextMenuItem>
         <ContextMenuItem onClick={() => void reveal()}>
-          <FolderSearch /> {t("home.openProjectLocation")}
+          <NetsuIcon name="open-location" /> {t("home.openProjectLocation")}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onForget}>
-          <EyeOff /> {t("home.forgetProject")}
+          <NetsuIcon name="card-hide" /> {t("home.forgetProject")}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
-          <Trash2 /> {t("home.deleteProject")}
+          <NetsuIcon name="delete" /> {t("home.deleteProject")}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
@@ -363,23 +361,38 @@ export function ReferenceHome({
   const [favorites, setFavorites] = useState<Set<string>>(() => loadSet(LS_FAV));
   const [hidden, setHidden] = useState<Set<string>>(() => loadSet(LS_HIDDEN));
 
+  // The lists come from the core, which may be starting, respawning or busy when the home screen
+  // mounts. A failed read is NOT an empty library: the previous lists are kept, the read is retried
+  // with a growing delay, and both lists are read again whenever the window comes back to the front.
   useEffect(() => {
     let alive = true;
-    const initFavs = loadSet(LS_FAV);
-    void (async () => {
-      const list = (await nr.reference?.listScenes()) ?? [];
-      const filtered = list.filter((s) => !s.id.startsWith("__"));
-      if (alive) setRecent(sortScenes(filtered, initFavs));
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!recents) return undefined;
-    let alive = true;
-    const initFavs = loadSet(LS_FAV);
-    void recents().then((list) => { if (alive) setProjects(sortProjects(list, initFavs)); });
-    return () => { alive = false; };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const load = async (attempt: number) => {
+      const favs = loadSet(LS_FAV);
+      let ok = true;
+      try {
+        const list = await nr.reference?.listScenes();
+        if (!list) ok = false;
+        else if (alive) setRecent(sortScenes(list.filter((s) => !s.id.startsWith("__")), favs));
+      } catch { ok = false; }
+      if (recents) {
+        try {
+          const list = await recents();
+          if (alive) setProjects(sortProjects(list, favs));
+        } catch { ok = false; }
+      }
+      if (!ok && alive && attempt < 6) timer = setTimeout(() => void load(attempt + 1), 400 * 2 ** attempt);
+    };
+    void load(0);
+    const refresh = () => { if (document.visibilityState === "visible") void load(5); };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      alive = false;
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [recents]);
 
   const forgetProject = useCallback(async (filePath: string) => {
@@ -495,7 +508,7 @@ export function ReferenceHome({
                 />
               }
             >
-              <FolderOpen className="size-4" /> {t("home.openProject")}
+              <NetsuIcon name="open-scene" /> {t("home.openProject")}
             </TooltipTrigger>
             <TooltipContent>{t("home.openProjectHint")}</TooltipContent>
           </Tooltip>
@@ -514,7 +527,7 @@ export function ReferenceHome({
             />
           }
         >
-          <Settings2 className="size-4" />
+          <NetsuIcon name="settings" />
         </TooltipTrigger>
         <TooltipContent>{t("actions.settings")}</TooltipContent>
       </Tooltip>
@@ -533,7 +546,7 @@ export function ReferenceHome({
               over && "scale-110",
             )}
           >
-            <ImageUp className="size-10" strokeWidth={1.5} />
+            <NetsuIcon name="drop-media" className="size-10" />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -552,7 +565,7 @@ export function ReferenceHome({
             onClick={onNew}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted"
           >
-            <FilePlus2 className="size-4" />
+            <NetsuIcon name="new-scene" />
             {t("home.createEmpty")}
           </button>
 
@@ -590,7 +603,7 @@ export function ReferenceHome({
                   onClick={onResume}
                   className="flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors group-hover:border-primary/50"
                 >
-                  <History className="size-7 opacity-70" strokeWidth={1.5} />
+                  <NetsuIcon name="home-resume" className="size-7 opacity-70" />
                 </button>
                 <button type="button" onClick={onResume} className="min-w-0 text-left">
                   <p className="truncate text-sm font-medium text-foreground">{t("home.resume")}</p>
@@ -633,19 +646,19 @@ export function ReferenceHome({
           controls, plus the storage folder — the cards keep their own menu. */}
       <ContextMenuContent>
         <ContextMenuItem onClick={onNew}>
-          <FilePlus2 /> {t("home.createEmpty")}
+          <NetsuIcon name="new-scene" /> {t("home.createEmpty")}
         </ContextMenuItem>
         {onOpenProject && (
           <ContextMenuItem onClick={onOpenProject}>
-            <FolderOpen /> {t("home.openProject")}
+            <NetsuIcon name="open-scene" /> {t("home.openProject")}
           </ContextMenuItem>
         )}
         <ContextMenuItem onClick={() => void revealInternalProject()}>
-          <FolderSearch /> {t("home.openProjectLocation")}
+          <NetsuIcon name="open-location" /> {t("home.openProjectLocation")}
         </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem onClick={onSettings}>
-          <Settings2 /> {t("actions.settings")}
+          <NetsuIcon name="settings" /> {t("actions.settings")}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

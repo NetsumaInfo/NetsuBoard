@@ -14,10 +14,13 @@ export function AddLinkDialog({
   board,
   open,
   onOpenChange,
+  asCard = false,
 }: {
   board: RefObject<BoardHandle | null>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Site card: the link is put as a card (preview of the page), nothing is downloaded.
+  asCard?: boolean;
 }) {
   const { t } = useTranslation("reference");
   const [url, setUrl] = useState("");
@@ -29,7 +32,8 @@ export function AddLinkDialog({
     setBusy(true);
     setErr(null);
     try {
-      if (await board.current?.addUrl(url, { allowGenericEmbed: true })) {
+      const ok = asCard ? board.current?.addLinkCard(url) : await board.current?.addUrl(url, { allowGenericEmbed: true });
+      if (ok) {
         setUrl("");
         onOpenChange(false);
       } else {
@@ -54,7 +58,7 @@ export function AddLinkDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{t("linkDialog.title")}</DialogTitle>
+          <DialogTitle>{t(asCard ? "linkDialog.cardTitle" : "linkDialog.title")}</DialogTitle>
         </DialogHeader>
         <Input
           autoFocus
@@ -62,7 +66,7 @@ export function AddLinkDialog({
           disabled={busy}
           onChange={(e) => { setUrl(e.target.value); setErr(null); }}
           onKeyDown={(e) => { if (e.key === "Enter") void submit(); }}
-          placeholder={t("linkDialog.placeholder")}
+          placeholder={t(asCard ? "linkDialog.cardPlaceholder" : "linkDialog.placeholder")}
         />
         {err && <p className="text-xs text-destructive">{err}</p>}
         <DialogFooter>

@@ -6,12 +6,19 @@
 //     contenu, pile. Les autres providers : ratio libre côté redimensionnement + scrolling caché.
 //  2. Drag du board volé par l'iframe : wrapper en pointer-events:none.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Snowflake } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { cn } from "@/lib/utils";
 import { type BoardItem, parseVideoEmbed } from "./referenceShared";
 import { useBoard } from "./useReferenceBoard";
+import { useOnScreen } from "./useOnScreen";
+import { zoomCeil } from "./boardImageLod";
+import { stillSized } from "./boardVideoLod";
+
+// Pre-mount margin (screen px): the iframe is up before its card slides into view, and a small pan
+// back and forth does not reload it.
+const EMBED_MARGIN = 320;
 
 // Lit une hauteur de contenu depuis un message d'iframe (formats Twitter et Instagram).
 function readEmbedHeight(data: unknown): number {
@@ -39,6 +46,17 @@ export function EmbedItem({ item, interactive }: { item: BoardItem; interactive?
   const provider = parseVideoEmbed(item.ref, true)?.provider ?? "generic";
   const autoHeight = provider === "twitter" || provider === "instagram";
   // hauteur courante lue par le handler sans réabonner à chaque changement.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  // An iframe is a whole page: network, script, compositor layer. The cull zone mounts ~6x the
+  // viewport, and a card seen from far away is a few pixels — neither deserves one. Off screen or
+  // tiny (same dead band as videos), the card is a light placeholder and the iframe is unmounted;
+  // it reloads on return. An interactive card (double-clicked) is never put to sleep under the hand.
+  const onScreen = useOnScreen(wrapRef, { margin: EMBED_MARGIN, initial: false });
+  const zoom = useBoard((s) => zoomCeil(s.view.scale));
+  const [tiny, setTiny] = useState(false);
+  const wantsTiny = stillSized(item, zoom, tiny);
+  if (wantsTiny !== tiny) setTiny(wantsTiny);
+  const asleep = !interactive && (!onScreen || tiny);
   const hRef = useRef(item.h);
   useEffect(() => { hRef.current = item.h; }, [item.h]);
 
@@ -59,15 +77,23 @@ export function EmbedItem({ item, interactive }: { item: BoardItem; interactive?
   // gel explicite.
   if (frozen) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl bg-[var(--color-surface)] text-muted-foreground">
-        <Snowflake className="size-6" strokeWidth={1.5} />
+      <div ref={wrapRef} className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-xl bg-[var(--color-surface)] text-muted-foreground">
+        <NetsuIcon name="freeze" className="size-6" />
         <span className="max-w-[85%] truncate text-xs font-medium">{item.title ?? t("embed.frozen")}</span>
         <span className="text-[10px]">{t("embed.frozen")}</span>
       </div>
     );
   }
+  if (asleep) {
+    return (
+      <div ref={wrapRef} className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-xl bg-[var(--color-surface)] text-muted-foreground">
+        <NetsuIcon name="web" className="size-6" />
+        {item.title && <span className="max-w-[85%] truncate text-xs font-medium">{item.title}</span>}
+      </div>
+    );
+  }
   return (
-    <div className={cn("block h-full w-full overflow-hidden rounded-xl bg-[var(--color-surface)]", interactive ? "pointer-events-auto" : "pointer-events-none")}>
+    <div ref={wrapRef} className={cn("block h-full w-full overflow-hidden rounded-xl bg-[var(--color-surface)]", interactive ? "pointer-events-auto" : "pointer-events-none")}>
       <iframe
         ref={frameRef}
         src={item.src}

@@ -14,13 +14,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import {
-  Lock, LockOpen, Plus, X, Pipette, Images, LayoutGrid, ChevronLeft, ChevronRight,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Spinner } from "@/components/ui/spinner";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useBoard } from "./useReferenceBoard";
 import { extractPalette, PALETTE_MAX } from "./palette";
@@ -504,7 +501,7 @@ export function PaletteStudio() {
       >
         <h2 className="min-w-0 truncate font-heading text-sm font-medium">{t("palette.studio.title")}</h2>
         <Button variant="ghost" size="icon-sm" aria-label={t("palette.studio.close")} onClick={close}>
-          <X />
+          <NetsuIcon name="close" />
         </Button>
       </div>
 
@@ -606,7 +603,7 @@ export function PaletteStudio() {
                           />
                         }
                       >
-                        {slot.locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
+                        <NetsuIcon name="studio-lock" on={!!slot.locked} className="size-3.5" />
                       </TooltipTrigger>
                       <TooltipContent>{t(slot.locked ? "palette.studio.unlock" : "palette.studio.lock")}</TooltipContent>
                     </Tooltip>
@@ -618,16 +615,18 @@ export function PaletteStudio() {
                       disabled={slots.length <= MIN_SLOTS}
                       onClick={(e) => { e.stopPropagation(); remove(i); }}
                     >
-                      <X className="size-3.5" />
+                      <NetsuIcon name="remove" className="size-3.5" />
                     </button>
                   </div>
                   {/* The padlock stays visible when engaged, even without hover — except where the
                       row above is permanently out, which would show the same padlock twice. */}
                   {slot.locked && (
-                    <Lock
-                      className={cn("absolute left-1 top-1 size-3.5 group-hover:opacity-0", i === active && "hoverless:opacity-0")}
+                    <span
+                      className={cn("absolute left-1 top-1 group-hover:opacity-0", i === active && "hoverless:opacity-0")}
                       style={{ color: ink }}
-                    />
+                    >
+                      <NetsuIcon name="lock" className="size-3.5" />
+                    </span>
                   )}
                   {i === active && (
                     <div className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 flex-col items-center gap-0.5 @min-[48px]:flex-row @min-[48px]:justify-between @min-[48px]:gap-0 @min-[48px]:px-0.5">
@@ -639,7 +638,7 @@ export function PaletteStudio() {
                         disabled={i === 0}
                         onClick={(e) => { e.stopPropagation(); move(i, -1); }}
                       >
-                        <ChevronLeft className="size-3.5" />
+                        <NetsuIcon name="prev" className="size-3.5" />
                       </button>
                       <button
                         type="button"
@@ -649,7 +648,7 @@ export function PaletteStudio() {
                         disabled={i === slots.length - 1}
                         onClick={(e) => { e.stopPropagation(); move(i, 1); }}
                       >
-                        <ChevronRight className="size-3.5" />
+                        <NetsuIcon name="next" className="size-3.5" />
                       </button>
                     </div>
                   )}
@@ -677,7 +676,7 @@ export function PaletteStudio() {
                     />
                   }
                 >
-                  <Plus className="size-4" />
+                  <NetsuIcon name="add" className="size-4" />
                 </TooltipTrigger>
                 <TooltipContent>{t("palette.studio.addSwatch")}</TooltipContent>
               </Tooltip>
@@ -742,6 +741,7 @@ export function PaletteStudio() {
                 <input
                   aria-label={t("palette.studio.value")}
                   value={shown}
+                  autoComplete="off"
                   spellCheck={false}
                   disabled={activeSlot.locked}
                   onChange={(e) => {
@@ -781,7 +781,7 @@ export function PaletteStudio() {
                   />
                 }
               >
-                <Pipette />
+                <NetsuIcon name="studio-eyedropper" />
               </TooltipTrigger>
               <TooltipContent>{t("palette.studio.pickScreen")}</TooltipContent>
             </Tooltip>
@@ -798,7 +798,7 @@ export function PaletteStudio() {
                 />
               }
             >
-              {seeding ? <Spinner /> : <Images />}
+              <NetsuIcon name="studio-from-selection" busy={seeding} />
             </TooltipTrigger>
             <TooltipContent>{t("palette.studio.fromSelection")}</TooltipContent>
           </Tooltip>
@@ -814,7 +814,7 @@ export function PaletteStudio() {
                 />
               }
             >
-              <LayoutGrid />
+              <NetsuIcon name="layout-grid" />
             </TooltipTrigger>
             <TooltipContent>{t("palette.studio.fromBoard")}</TooltipContent>
           </Tooltip>

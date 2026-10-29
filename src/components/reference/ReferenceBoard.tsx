@@ -14,7 +14,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/i18n";
-import { ImageOff } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
 import { useBoard } from "./useReferenceBoard";
@@ -23,6 +23,9 @@ import { useBoardCulling } from "./useBoardCulling";
 import { BoardItem } from "./BoardItem";
 import { DrawLayer } from "./DrawLayer";
 import { DrawToolbar } from "./DrawToolbar";
+import { FolderBreadcrumb } from "./FolderBreadcrumb";
+import { LiveSiteLayer } from "./LiveSiteLayer";
+import { LinkLayer } from "./links/LinkLayer";
 import {
   type BoardItem as Item,
   type BoardView,
@@ -30,13 +33,16 @@ import {
   ZOOM_MAX,
   screenToBoard,
   makeTextItem,
+  makeNoteItem,
+  makeBlockItem,
+  youtubeId,
   makeFrameItem,
 } from "./referenceShared";
 import { shapeBBox } from "./drawGeometry";
 import { resolveShapes } from "./drawAnchor";
 import { isPalm, isTouchFirst, kindOf, usesBarrel, watchPen, type PointerKind } from "./tabletInput";
 import { boundsOf, rotatedBBox } from "./boardArrange";
-import { useLive } from "./boardLive";
+import { useLiveGuides } from "./boardLive";
 import { watchMouseThroughExit } from "./boardMouseThrough";
 import { clampMediaOpacity } from "./boardPrefs";
 import { itemToPngBlob } from "./boardRender";
@@ -49,7 +55,7 @@ const clampScale = (s: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, s));
 // lequel l'item vient de s'accrocher. Abonné au canal vivant : hors geste, ce composant ne rend rien
 // et ne re-rend jamais — un board qui n'aimante pas ne paie rien.
 function SnapGuides({ view }: { view: BoardView }) {
-  const { guides } = useLive();
+  const guides = useLiveGuides();
   if (!guides.length) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-30">
@@ -80,6 +86,7 @@ export interface BoardHandle {
   addVideoUrl: (url: string, opts?: { allowGenericEmbed?: boolean }) => boolean;
   addUrl: (url: string, opts?: { allowGenericEmbed?: boolean }) => Promise<boolean>;
   addPath: (path: string, title?: string) => void;
+  addPaths: (paths: string[]) => void;
   addCut: (path: string, inSec: number, outSec: number, title?: string) => void;
   addCuts: (path: string, cuts: { in: number; out: number; title?: string }[]) => void;
   addSequence: (paths: string[]) => void;
@@ -90,6 +97,10 @@ export interface BoardHandle {
   // Colle le presse-papiers INTERNE (items copiés dans le board) au centre du viewport.
   pasteItems: () => number;
   addText: () => void;
+  addNote: () => void;
+  addBlock: () => void;
+  // A web page as a link card (preview); false when the text is not a web address.
+  addLinkCard: (url: string) => boolean;
   addFrame: () => void;
   fit: () => void;
   fitSelection: () => void;
@@ -178,7 +189,14 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     const v = liveView.current;
     if (v) {
       const tf = `translate(${v.tx}px, ${v.ty}px) scale(${v.scale})`;
-      c.querySelectorAll<HTMLElement>("[data-board-pan]").forEach((el) => { el.style.transform = tf; });
+      // The pan layers sit at most two levels under the container (board layer, link layer, drawing
+      // layer). A descendant query would walk every node of every mounted item, once per frame.
+      for (const child of Array.from(c.children)) {
+        if (child.hasAttribute("data-board-pan")) { (child as HTMLElement).style.transform = tf; continue; }
+        for (const inner of Array.from(child.children)) {
+          if (inner.hasAttribute("data-board-pan")) (inner as HTMLElement).style.transform = tf;
+        }
+      }
       const dots = dotsRef.current;
       if (dots) {
         const g = useBoard.getState().prefs.dotGap || 24;
@@ -602,6 +620,17 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     fitItems(sel.length ? sel : undefined);
   }, [fitItems]);
 
+  // Opening a folder frames its content; going back up restores the saved camera (store).
+  const depth = useBoard((s) => s.folderPath.length);
+  const lastDepth = useRef(depth);
+  useEffect(() => {
+    const entered = depth > lastDepth.current;
+    lastDepth.current = depth;
+    if (!entered) return;
+    const t = setTimeout(fit, 0);
+    return () => clearTimeout(t);
+  }, [depth, fit]);
+
   // Recadrer tous les items à l'ouverture d'une scène (Paramètres). Un tick après le montage des items.
   useEffect(() => {
     if (!fitOnOpen || !sceneId) return;
@@ -643,6 +672,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       addVideoUrl: ingest.addVideoUrl,
       addUrl: ingest.addUrl,
       addPath: ingest.addPath,
+      addPaths: (paths: string[]) => ingest.addPaths(paths),
       addCut: ingest.addCut,
       addCuts: ingest.addCuts,
       addSequence: (paths: string[]) => void ingest.addSequence(paths),
@@ -670,6 +700,31 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       pasteItems: () => {
         const c = centerPoint();
         return useBoard.getState().pasteClipboard(c.x, c.y);
+      },
+      addLinkCard: (raw: string) => {
+        const url = raw.trim();
+        if (!/^https?:\/\/\S+$/i.test(url)) return false;
+        const c = centerPoint();
+        const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
+        const yt = youtubeId(url);
+        const base = { ref: yt ?? url, x: 0, y: 0, rotation: 0, z };
+        if (yt) addItem({ ...base, kind: "youtube", src: yt, w: 480, h: 270, x: c.x - 240, y: c.y - 135 });
+        else addItem({ ...base, kind: "embed", src: url, w: 360, h: 300, x: c.x - 180, y: c.y - 150, linkCard: { mode: "preview" } });
+        return true;
+      },
+      addBlock: () => {
+        const c = centerPoint();
+        const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
+        const note = makeBlockItem(c.x - 150, c.y - 100, z);
+        addItem(note);
+        useBoard.getState().setEditing(note.id);
+      },
+      addNote: () => {
+        const c = centerPoint();
+        const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
+        const note = makeNoteItem(c.x - 150, c.y - 120, z);
+        addItem(note);
+        useBoard.getState().openNote(note.id);
       },
       addText: () => {
         const c = centerPoint();
@@ -736,7 +791,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         if (r) zoomAt(r.width / 2, r.height / 2, factor);
       },
     }),
-    [ingest.addFiles, ingest.addVideoUrl, ingest.addUrl, ingest.addPath, ingest.addCut, ingest.addCuts, ingest.addSequence, ingest.addPaste, addItem, centerPoint, fit, fitSelection, commitView, zoomAt, t],
+    [ingest.addFiles, ingest.addVideoUrl, ingest.addUrl, ingest.addPath, ingest.addPaths, ingest.addCut, ingest.addCuts, ingest.addSequence, ingest.addPaste, addItem, centerPoint, fit, fitSelection, commitView, zoomAt, t],
   );
 
 
@@ -860,8 +915,13 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       {/* Guides de l'aimant : lignes fines tracées pendant un geste, dans le repère board. */}
       <SnapGuides view={view} />
 
+      <LiveSiteLayer containerRef={containerRef} />
+
+      <FolderBreadcrumb />
+
       {/* calque de dessin maison (SVG plein board, suit le pan/zoom) + barre du mode dessin */}
       <DrawLayer />
+      <LinkLayer containerRef={containerRef} />
       {drawMode && <DrawToolbar />}
 
       {/* Marquee : montée/démontée par état, mais DÉPLACÉE en impératif (applyGesture) pendant le
@@ -881,7 +941,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
 
       {!items.some((it) => it.kind !== "draw") && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-          <ImageOff className="size-8" />
+          <NetsuIcon name="media-missing" className="size-8" />
           <p className="text-sm">{t("board.emptyTitle")}</p>
           <p className="text-xs">{t("board.emptyHint")}</p>
         </div>

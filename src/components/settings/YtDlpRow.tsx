@@ -6,7 +6,7 @@
 // It is a ROW, not a card: one line of state and one button, like the two toggles above it.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Info, RefreshCw } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { useTranslation } from "react-i18next";
 import { nr, type YtDlpStatus } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,7 @@ export function YtDlpRow() {
             <TooltipTrigger
               render={<button type="button" className="text-muted-foreground transition-colors hover:text-foreground" aria-label={t("updates.ytdlp.hint")} />}
             >
-              <Info className="size-3.5" />
+              <NetsuIcon name="info" className="size-3.5" />
             </TooltipTrigger>
             <TooltipContent>{t("updates.ytdlp.hint")}</TooltipContent>
           </Tooltip>
@@ -92,7 +92,7 @@ export function YtDlpRow() {
       </div>
       {(actionable || busy) && (
         <Button variant="outline" size="sm" disabled={busy} onClick={() => void update()}>
-          <RefreshCw className={busy ? "size-3.5 animate-spin" : "size-3.5"} /> {busy ? t("updates.ytdlp.updating") : t("updates.ytdlp.update")}
+          <NetsuIcon name="refresh" busy={busy} className="size-3.5" /> {busy ? t("updates.ytdlp.updating") : t("updates.ytdlp.update")}
         </Button>
       )}
     </div>

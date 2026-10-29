@@ -97,6 +97,10 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
   const resolutionCache = useRef(new Map<string, Resolution>());
   const importFailures = useRef(new Map<string, string>());
   const refreshGeneration = useRef(0);
+  // The native service rejects every command on a project it has not opened ("project is not
+  // open"): `openedId` is the project it holds right now, `opening` settles once that is known.
+  const openedId = useRef<string | null>(null);
+  const opening = useRef<Promise<boolean>>(Promise.resolve(false));
   const nativeProjectionRef = useRef<NativeProject | null>(null);
   const mediaRequests = useRef(new Map<string, Promise<void>>());
   // Rust announces EVERY apply, including the ones this window just made. Reloading the projection
@@ -186,7 +190,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
   }, [projectId, renderProjection]);
 
   const refresh = useCallback(async () => {
-    if (!projectId) return;
+    if (!projectId || openedId.current !== projectId) return;
     const generation = ++refreshGeneration.current;
     try {
       const native = await nativeProjection(projectId);
@@ -295,6 +299,8 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
     let cancelled = false;
     let stop: (() => void) | null = null;
     let lease: string | null = null;
+    let settle: (open: boolean) => void = () => {};
+    opening.current = new Promise((resolve) => { settle = resolve; });
     void (async () => {
       try {
         if (!(await refreshNativeCollaborationAuth())) {
@@ -306,6 +312,8 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
           await closeProject(projectId, lease);
           return;
         }
+        openedId.current = projectId;
+        settle(true);
         setSession(opened);
         await refresh();
         const unlisten = await onChanged((event) => {
@@ -320,10 +328,14 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
         else stop = unlisten;
       } catch (cause) {
         if (!cancelled) setError(collabErrorText(cause));
+      } finally {
+        settle(false);
       }
     })();
     return () => {
       cancelled = true;
+      openedId.current = null;
+      settle(false);
       refreshGeneration.current += 1;
       stop?.();
       if (lease) void closeProject(projectId, lease);
@@ -393,6 +405,8 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
       await refresh();
       return;
     }
+    // An edit made while the project is still opening waits for it; one after it closed is dropped.
+    if (!(await opening.current) || openedId.current !== projectId) return;
     try {
       const assets = await resolverFor(next);
       const operations = diffBoard(previous, next, assets.resolve);
@@ -411,6 +425,7 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
       if (result.revision) selfRevisions.current.add(result.revision);
       setRevision(result.revision);
     } catch (cause) {
+      if (openedId.current !== projectId) return;
       setError(collabErrorText(cause));
       await refresh();
     }
@@ -421,12 +436,13 @@ export function useCollabProject(projectId: string | null, sceneId: string | nul
   }, [sendBoard]);
 
   const runHistory = useCallback(async (redoing: boolean) => {
-    if (!projectId || session?.role === "viewer") return;
+    if (!projectId || session?.role === "viewer" || openedId.current !== projectId) return;
     try {
       const result = await (redoing ? redo(projectId) : undo(projectId));
       if (result.revision) selfRevisions.current.add(result.revision);
       await refresh();
     } catch (cause) {
+      if (openedId.current !== projectId) return;
       setError(collabErrorText(cause));
     }
   }, [projectId, refresh, session?.role]);

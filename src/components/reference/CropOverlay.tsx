@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, X, Maximize } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { useBoard } from "./useReferenceBoard";
 import type { BoardItem } from "./referenceShared";
@@ -120,13 +120,13 @@ function Editor({ item }: { item: BoardItem }) {
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={() => setRect({ x: 0, y: 0, w: 1, h: 1 })}>
-          <Maximize className="size-4" /> {t("common:action.reset")}
+          <NetsuIcon name="reset" /> {t("common:action.reset")}
         </Button>
         <Button variant="outline" size="sm" onClick={() => setCropping(null)}>
-          <X className="size-4" /> {t("common:action.cancel")}
+          <NetsuIcon name="close" className="size-4" /> {t("common:action.cancel")}
         </Button>
         <Button size="sm" onClick={confirm}>
-          <Check className="size-4" /> {t("actions.crop")}
+          <NetsuIcon name="check" className="size-4" /> {t("actions.crop")}
         </Button>
       </div>
     </div>

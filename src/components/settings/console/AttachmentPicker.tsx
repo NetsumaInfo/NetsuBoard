@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FileText, FileVideo, Film, Paperclip, X } from "lucide-react";
+import { FileKindAudioGlyph, FileTextGlyph, VideoGlyph } from "@/components/reference/netsuIcons";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -30,9 +31,9 @@ function sizeLabel(bytes: number, locale: string): string {
 }
 
 function iconFor(file: File) {
-  if (file.type.startsWith("video/")) return FileVideo;
-  if (file.type.startsWith("audio/")) return Film;
-  return FileText;
+  if (file.type.startsWith("video/")) return VideoGlyph;
+  if (file.type.startsWith("audio/")) return FileKindAudioGlyph;
+  return FileTextGlyph;
 }
 
 /** Même nom, même taille, même date : c'est un double ajout, pas un second fichier. */
@@ -139,7 +140,7 @@ export function AttachmentPicker({ files, onChange, maxFiles = DEFAULT_MAX_FILES
                         />
                       }
                     >
-                      <X className="size-3" />
+                      <NetsuIcon name="close" className="size-3" />
                     </TooltipTrigger>
                     <TooltipContent>{t("bugReport.files.remove")}</TooltipContent>
                   </Tooltip>
@@ -151,7 +152,7 @@ export function AttachmentPicker({ files, onChange, maxFiles = DEFAULT_MAX_FILES
 
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" size="sm" disabled={full} onClick={() => inputRef.current?.click()}>
-            <Paperclip className="size-3.5" /> {files.length ? t("bugReport.files.add") : t("bugReport.files.choose")}
+            <NetsuIcon name="attach-file" className="size-3.5" /> {files.length ? t("bugReport.files.add") : t("bugReport.files.choose")}
           </Button>
           {/* Compteur seul : la bordure en pointillés porte déjà l'affordance de dépôt. */}
           {files.length > 0 && <span className="text-xs text-muted-foreground">{files.length}/{maxFiles}</span>}

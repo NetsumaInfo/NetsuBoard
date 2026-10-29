@@ -1,5 +1,6 @@
 // Géométrie pure du calque de dessin (coords MONDE) : distances, bbox, hit-test, poignées, édition.
 import type { DashStyle, DrawShape, RouteStyle } from "./referenceShared";
+import { freeEnd, isLink, routePath } from "./links/model";
 
 // Type de tracé effectif d'une ligne/flèche (compat : un `cp` manuel sans `route` = courbe).
 export function routeOf(s: DrawShape): RouteStyle {
@@ -30,6 +31,14 @@ export function connectorPath(s: DrawShape): { d: string; startAng: number; endA
     return { d: `M ${x0} ${y0} L ${x0} ${my} L ${x1} ${my} L ${x1} ${y1}`, endAng: dy >= 0 ? Math.PI / 2 : -Math.PI / 2, startAng: dy >= 0 ? -Math.PI / 2 : Math.PI / 2 };
   }
   if (route === "curved") {
+    // A link without a manual bend: the smooth S of the links layer. The side normals are not known
+    // here (no items), so each end leaves along the dominant axis towards the other one — what the
+    // links layer computes exactly for a link drawn on screen.
+    if (!s.cp && isLink(s)) {
+      const a = { x: x0, y: y0 }, b = { x: x1, y: y1 };
+      const path = routePath("curved", freeEnd(a, b), freeEnd(b, a));
+      return { d: path.d, startAng: path.startAng, endAng: path.endAng };
+    }
     const cp = s.cp ?? autoBow(x0, y0, x1, y1);
     return {
       d: `M ${x0} ${y0} Q ${cp[0]} ${cp[1]} ${x1} ${y1}`,

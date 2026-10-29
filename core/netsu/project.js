@@ -189,10 +189,26 @@ async function tokenizeProjectPrev(ctx, item) {
   else delete item.prevMedia;
 }
 
+/**
+ * The document of a PDF card is a project media like the thumbnail: stored or referenced the same
+ * way. Not storable at all: the field is dropped, the item stays its thumbnail image.
+ * @param {any} ctx @param {any} item
+ */
+async function tokenizeProjectDoc(ctx, item) {
+  const doc = item.docFile;
+  if (!doc || typeof doc !== 'object') return;
+  const ref = String(doc.ref || '');
+  if (!ref) { delete item.docFile; return; }
+  const out = await tokenizeProjectRef(ctx, ref, 'pdf', { title: item.title });
+  if (out.token) item.docFile = { ...doc, ref: out.token };
+  else delete item.docFile;
+}
+
 /** Un item de la scène, prêt à être écrit : tokens posés, champs transitoires retirés. */
 async function tokenizeProjectItem(ctx, raw) {
   const item = stripTransient(raw);
   await tokenizeProjectPrev(ctx, item);
+  await tokenizeProjectDoc(ctx, item);
   const kind = String(item.kind || '');
   if (!MEDIA_KINDS.has(kind)) return { item, unresolved: false };
 
@@ -398,6 +414,7 @@ async function saveBoardProject({ session, refStore, scene }) {
     if (item.missing) missing += 1;
     const refs = item.kind === 'sequence' ? item.frames || [] : [item.ref];
     if (item.prevMedia && item.prevMedia.ref) refs.push(item.prevMedia.ref);
+    if (item.docFile && item.docFile.ref) refs.push(item.docFile.ref);
     for (const token of refs) {
       const value = String(token || '');
       if (value.startsWith('ref:')) keepMediaIds.add(value.slice(4));

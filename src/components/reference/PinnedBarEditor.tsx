@@ -5,8 +5,8 @@
 // un réglage inatteignable au clavier ou au stylet est un réglage perdu.
 
 import { useState } from "react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { PINNED_BUTTONS, isVerticalSide, type PinnedButtonId, type PinnedSide } from "./toolbarButtons";
@@ -152,7 +152,7 @@ export function PinnedBarEditor({
         ))}
       </div>
       <p className="text-[11px] text-muted-foreground">
-        <X className="mr-1 inline size-3" />
+        <NetsuIcon name="close" className="mr-1 inline size-3" />
         {t("settings.pinnedBarHint")}
       </p>
     </div>

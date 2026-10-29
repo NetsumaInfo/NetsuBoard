@@ -2,7 +2,7 @@
 // opacité, pointes (flèche/ligne), remplissage + coins arrondis (formes fermées), duplication,
 // suppression.
 import { useTranslation } from "react-i18next";
-import { Copy, Link2, Link2Off, PaintBucket, Radius, Trash2 } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -74,7 +74,7 @@ export function ShapeInspector({ shape, scale, onPatch, onDuplicate, onDelete, o
                   onClick={() => onPatch({ fill: filled ? "none" : `color-mix(in srgb, ${shape.c} 22%, transparent)` })}
                 />
               }>
-                <PaintBucket />
+                <NetsuIcon name="fill" on={filled} />
               </TooltipTrigger>
               <TooltipContent>{t("shape.fillLabel")}</TooltipContent>
             </Tooltip>
@@ -86,7 +86,7 @@ export function ShapeInspector({ shape, scale, onPatch, onDuplicate, onDelete, o
                     onClick={() => onPatch({ r: shape.r ? undefined : true })}
                   />
                 }>
-                  <Radius />
+                  <NetsuIcon name="corner-radius" on={!!shape.r} />
                 </TooltipTrigger>
                 <TooltipContent>{t("shape.rounded")}</TooltipContent>
               </Tooltip>
@@ -104,16 +104,16 @@ export function ShapeInspector({ shape, scale, onPatch, onDuplicate, onDelete, o
               onClick={links ? onUnlink : onRelink}
             />
           }>
-            {links ? <Link2 /> : <Link2Off />}
+            <NetsuIcon name="link-frame" on={links > 0} />
           </TooltipTrigger>
           <TooltipContent>{links ? t("shape.linkedTo", { count: links }) : t("shape.relink")}</TooltipContent>
         </Tooltip>
 
         <Button variant="ghost" size="icon-sm" aria-label={t("shape.duplicate")} onClick={onDuplicate}>
-          <Copy />
+          <NetsuIcon name="duplicate" />
         </Button>
         <Button variant="ghost" size="icon-sm" aria-label={t("common:action.delete")} onClick={onDelete}>
-          <Trash2 className="text-destructive" />
+          <NetsuIcon name="delete" className="text-destructive" />
         </Button>
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
   getCollaborationPerformanceSettings,
   subscribeCollaborationPerformance,
 } from "@/lib/collab/performance";
+import { sceneItems, splitLevel } from "./boardFolders";
 import { useBoard } from "./useReferenceBoard";
 import { syncCollabMedia } from "./useScenePersistence";
 import { useCollabProject } from "./useCollabProject";
@@ -19,6 +20,11 @@ import { useCollabProject } from "./useCollabProject";
 // toolbar reported as "sync pending". Local edits are coalesced over this window and leave as one
 // batch once the gesture rests; the document is never more than this far behind the screen.
 /** Bidirectional adapter. Rust/Loro is always authoritative; the Zustand board is a render cache. */
+// Every folder level of the board, the one on screen included: the document holds them all.
+function wholeScene(st: { items: BoardItem[]; stash: BoardItem[]; folderPath: { id: string }[] }): BoardItem[] {
+  return sceneItems(st.items, st.stash, st.folderPath.length ? st.folderPath[st.folderPath.length - 1].id : null);
+}
+
 export function useCollabBridge() {
   const projectId = useBoard((state) => state.collabProjectId);
   const sceneId = useBoard((state) => state.sceneId);
@@ -31,6 +37,8 @@ export function useCollabBridge() {
   const performance = getCollaborationPerformanceSettings(performanceMode);
   const applyingProjection = useRef(false);
   const lastSent = useRef<BoardItem[]>([]);
+  // Level arrays last diffed or applied: the scene is rebuilt from them, so identity is checked here.
+  const seen = useRef<{ items: BoardItem[]; stash: BoardItem[] }>({ items: [], stash: [] });
   const sendQueue = useRef(Promise.resolve());
   // Non-zero while a local edit is either waiting for the coalescing window or in flight. An
   // authoritative projection that lands in that interval describes a board older than the one under
@@ -80,12 +88,21 @@ export function useCollabBridge() {
     // The projection rebuilds every item object on every remote change. Reusing the existing object
     // for items the change did not touch keeps their identity stable, so memoized item components
     // skip their render and the outgoing diff's `old === item` fast path holds.
-    const currentById = new Map(useBoard.getState().items.map((item) => [item.id, item]));
-    const items = collab.items.map((item) => {
+    const currentById = new Map(wholeScene(useBoard.getState()).map((item) => [item.id, item]));
+    const scene = collab.items.map((item) => {
       const current = currentById.get(item.id);
       return current && same(current, item) ? current : item;
     });
-    lastSent.current = items;
+    lastSent.current = scene;
+    // The document holds every folder level; the board shows one. A folder deleted by someone else
+    // while it is open sends this member back to the top level.
+    const path = useBoard.getState().folderPath;
+    const alive = new Set(scene.filter((item) => item.folder).map((item) => item.id));
+    const keep = path.findIndex((entry) => !alive.has(entry.id));
+    const folderPath = keep < 0 ? path : path.slice(0, keep);
+    const level = splitLevel(scene, folderPath.length ? folderPath[folderPath.length - 1].id : null);
+    const items = level.items;
+    seen.current = { items, stash: level.stash };
     // Selection is the user's, not the document's: a remote edit elsewhere on the board must not
     // deselect what is being worked on. Only references to items that no longer exist are dropped.
     useBoard.setState((state) => {
@@ -96,6 +113,9 @@ export function useCollabBridge() {
       const keptShapes = state.drawSel.filter((id) => shapeIds.has(id));
       return {
         items,
+        stash: level.stash,
+        folderPath,
+        ...(folderPath !== state.folderPath && keep >= 0 ? { view: path[keep].view } : null),
         dirty: false,
         selectedIds,
         selectedId: state.selectedId && ids.has(state.selectedId)
@@ -115,7 +135,8 @@ export function useCollabBridge() {
 
   useEffect(() => {
     if (!projectId || !ready) return;
-    lastSent.current = useBoard.getState().items;
+    lastSent.current = wholeScene(useBoard.getState());
+    seen.current = { items: useBoard.getState().items, stash: useBoard.getState().stash };
     let timer: number | null = null;
 
     // The projection held back during a gesture is re-read once the board is quiet, so a concurrent
@@ -139,12 +160,13 @@ export function useCollabBridge() {
         settle();
         return;
       }
-      const next = state.items;
-      const previous = lastSent.current;
-      if (next === previous) {
+      if (state.items === seen.current.items && state.stash === seen.current.stash) {
         settle();
         return;
       }
+      seen.current = { items: state.items, stash: state.stash };
+      const next = wholeScene(state);
+      const previous = lastSent.current;
       lastSent.current = next;
       sendQueue.current = sendQueue.current
         .catch(() => undefined)
@@ -161,7 +183,7 @@ export function useCollabBridge() {
     const stop = useBoard.subscribe((state) => {
       if (applyingProjection.current) return;
       if (state.collabProjectId !== projectId) return;
-      if (state.items === lastSent.current) return;
+      if (state.items === seen.current.items && state.stash === seen.current.stash) return;
       if (timer !== null) return;
       localPending.current += 1;
       timer = window.setTimeout(flush, performance.coalesceMs);

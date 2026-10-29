@@ -10,6 +10,7 @@ import { comboFromEvent, isCompleteCombo, type ShortcutMap } from "@/lib/shortcu
 import { collabMediaSrc } from "@/lib/collab/currentProject";
 import { embedSrc } from "./embeds";
 import type { ColorFormat } from "./colorFormat";
+import type { DocType } from "./boardDocs";
 
 export type ItemKind = "image" | "video" | "youtube" | "embed" | "text" | "frame" | "draw" | "sequence" | "palette";
 
@@ -59,7 +60,9 @@ export type ShortcutAction =
   | "normalizeHeight" | "normalizeWidth" | "normalizeArea" | "arrangeDefault"
   | "addText" | "addFrame" | "toggleDraw" | "toggleFreeze" | "prevFrame" | "nextFrame"
   | "toggleMouseThrough" | "newScene" | "openSettings" | "togglePin" | "paletteStudio"
-  | "crop" | "groupSequence";
+  | "crop" | "groupSequence"
+  | "linkChain" | "linkStar" | "linkTo" | "selectLinked" | "selectLinkGroup" | "unlinkItem"
+  | "organiseLinks" | "cycleLinks" | "selectDownstream" | "selectUpstream" | "toggleCollapse";
 export const SHORTCUT_DEFS: { action: ShortcutAction; labelKey: string; combo: string }[] = [
   { action: "delete", labelKey: "shortcut.delete", combo: "Delete" },
   { action: "deselect", labelKey: "shortcut.deselect", combo: "Escape" },
@@ -99,6 +102,19 @@ export const SHORTCUT_DEFS: { action: ShortcutAction; labelKey: string; combo: s
   { action: "paletteStudio", labelKey: "shortcut.paletteStudio", combo: "Shift+G" },
   { action: "crop", labelKey: "shortcut.crop", combo: "C" },
   { action: "groupSequence", labelKey: "shortcut.groupSequence", combo: "Ctrl+G" },
+  // Links between items (links/linkActions).
+  { action: "linkChain", labelKey: "shortcut.linkChain", combo: "L" },
+  { action: "linkStar", labelKey: "shortcut.linkStar", combo: "Shift+L" },
+  { action: "linkTo", labelKey: "shortcut.linkTo", combo: "Ctrl+L" },
+  { action: "selectLinked", labelKey: "shortcut.selectLinked", combo: "Alt+L" },
+  { action: "selectLinkGroup", labelKey: "shortcut.selectLinkGroup", combo: "Ctrl+Shift+L" },
+  // Alt + a letter follows the links: L around, D downstream, U upstream; C folds the subtree.
+  { action: "selectDownstream", labelKey: "shortcut.selectDownstream", combo: "Alt+D" },
+  { action: "selectUpstream", labelKey: "shortcut.selectUpstream", combo: "Alt+U" },
+  { action: "toggleCollapse", labelKey: "shortcut.toggleCollapse", combo: "Alt+C" },
+  { action: "unlinkItem", labelKey: "shortcut.unlinkItem", combo: "" },
+  { action: "organiseLinks", labelKey: "shortcut.organiseLinks", combo: "Alt+O" },
+  { action: "cycleLinks", labelKey: "shortcut.cycleLinks", combo: "Tab" },
 ];
 export type ShortcutKeys = ShortcutMap;
 export const DEFAULT_SHORTCUT_KEYS: ShortcutKeys = Object.fromEntries(SHORTCUT_DEFS.map((d) => [d.action, d.combo]));
@@ -163,6 +179,24 @@ export interface DrawShape {
   detached?: boolean;
 }
 
+// How a web link (kind "embed") is shown, plus the page details fetched for it (see LinkCard).
+export interface LinkCard {
+  mode?: "link" | "preview" | "embed" | "live";
+  fetched?: boolean;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+  favicon?: string;
+  embedSize?: { w: number; h: number }; // size the live embed had, given back when it returns to it
+  // Last screenshot of the live site: durable asset path on THIS machine (collaborators fall back
+  // to the preview card until they take their own).
+  shot?: string;
+  // A background picture was tried and failed (blocked, timeout): not retried on its own, only when
+  // the user asks for "Refresh picture".
+  shotFailed?: boolean;
+}
+
 // Item du board. `ref` = localisateur DURABLE (persisté) : chemin disque, URL distante, ou
 // id YouTube. `src` = URL d'AFFICHAGE dérivée (nrmedia://, objectURL, URL distante) — transitoire,
 // recalculée au chargement d'une scène (un objectURL ne survit pas à un reload).
@@ -194,6 +228,10 @@ export interface BoardItem {
   // Non renseigné = réglage du board. Sémantique : core/netsu/levels.js.
   embed?: NetsuEmbed;
   title?: string;
+  // Document behind an image item (kind "image"): the image is its first screen, the file is read
+  // only when the card is opened live. `ref` of the document is a durable path like an image ref.
+  // `view` (PDF) remembers the live reader mode: pages stacked, or one page at a time.
+  docFile?: { ref: string; name: string; type: DocType; pages?: number; view?: "scroll" | "pages" };
   opacity?: number;
   // Miroir horizontal / vertical.
   flipH?: boolean;
@@ -205,6 +243,18 @@ export interface BoardItem {
   // Effacé dès que l'item ne se trouve plus dans aucun cadre — sinon il resterait secrètement délié
   // en arrivant dans un autre cadre.
   detached?: boolean;
+  // Web link (kind === "embed"): display mode and page details (see LinkCard).
+  linkCard?: LinkCard;
+  // Note sheet (kind === "text"): BlockNote document. Present = the note is a sheet opened full
+  // size for writing (NoteOverlay); `text` then mirrors its plain text (search, older builds).
+  doc?: unknown[];
+  // Display mode of a text element, with `doc` (see blockModel.noteMode): "postit" is the synced
+  // value of a Markdown text block (its source is `text`; the product never says post-it), unset or
+  // "card" is a sheet when `doc` exists and a plain note otherwise. A block accent is `bg`.
+  noteStyle?: "card" | "postit";
+  // Look of a Markdown block that the shared document has no field for (see blockModel.BlockLook):
+  // kept on this device only.
+  blockLook?: { border?: boolean; radius?: "s" | "m" | "l"; pad?: "s" | "m" | "l" };
   // Note texte (kind === "text") / titre de cadre (kind === "frame").
   text?: string;
   fontSize?: number;
@@ -226,6 +276,17 @@ export interface BoardItem {
   filled?: boolean;
   fillColor?: string;
   titleBg?: string;   // fond de l'étiquette de titre du cadre ("transparent" possible ; défaut surface)
+  // Folder mode of a frame (see boardFolders): the frame is folded into a card and its content
+  // lives one level down. `openW`/`openH` = frame size to restore on unfold; `cover` = id of the
+  // child shown on the card (first image when unset or gone).
+  folder?: boolean;
+  openW?: number;
+  openH?: number;
+  cover?: string;
+  coverStyle?: "image" | "mosaic"; // unset = the board setting (Paramètres › Dossiers)
+  // Folder holding this item. Unset = top level of the board. Only written when the item leaves
+  // the level on screen: items on the current level never rely on it (see boardFolders).
+  parent?: string;
   align?: "left" | "center" | "right" | "justify";
   bold?: boolean;
   italic?: boolean;
@@ -324,6 +385,17 @@ export async function loadSystemFonts(): Promise<string[]> {
     }
   } catch { /* API absente ou permission refusée → repli */ }
   return (_systemFonts = FONT_FAMILIES.map((f) => f.value));
+}
+
+// Text block: a small Markdown block written in place (see blockModel). `noteStyle: "postit"`
+// is only the value the shared document accepts for it.
+export function makeBlockItem(x: number, y: number, z: number): BoardItem {
+  return { id: uid(), kind: "text", ref: "", src: "", x, y, w: 300, h: 200, rotation: 0, z, text: "", noteStyle: "postit", fontSize: 15 };
+}
+
+// Note sheet: a card on the board, written in the full-size editor.
+export function makeNoteItem(x: number, y: number, z: number): BoardItem {
+  return { id: uid(), kind: "text", ref: "", src: "", x, y, w: 300, h: 240, rotation: 0, z, text: "", doc: [] };
 }
 
 // Item texte par défaut (note adhésive).

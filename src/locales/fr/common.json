@@ -13,7 +13,8 @@
     "selectAll": "Tout sélectionner",
     "reset": "Réinitialiser",
     "open": "Ouvrir",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "pastePlain": "Coller sans mise en forme"
   },
   "status": {
     "loading": "Chargement"

@@ -12,6 +12,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter as _, Manager, RunEvent};
 
 mod collab;
+mod livesite;
 mod player;
 mod state;
 
@@ -393,6 +394,27 @@ fn disable_tracking_prevention(window: &tauri::WebviewWindow) {
     });
 }
 
+// WebView2's own autofill pops a native dropdown of previously typed values under every text field
+// (account, search, URLs). It does not match the app's UI and `autocomplete="off"` is not always
+// honoured, so general autofill and password saving are turned off for the whole window.
+#[cfg(target_os = "windows")]
+fn disable_autofill(window: &tauri::WebviewWindow) {
+    use webview2_com::Microsoft::Web::WebView2::Win32::ICoreWebView2Settings4;
+    use windows_core::Interface;
+
+    let _ = window.with_webview(|webview| unsafe {
+        let Ok(core) = webview.controller().CoreWebView2() else {
+            return;
+        };
+        let Ok(settings) = core.Settings() else { return };
+        let Ok(s4) = settings.cast::<ICoreWebView2Settings4>() else {
+            return;
+        };
+        let _ = s4.SetIsGeneralAutofillEnabled(false);
+        let _ = s4.SetIsPasswordAutosaveEnabled(false);
+    });
+}
+
 // ── Chemin disque des fichiers déposés depuis l'Explorateur ─────────────────────────────────────
 // `dragDropEnabled` (tauri.conf.json) est EXCLUSIF : l'activer fait révoquer par wry les cibles OLE
 // de WebView2 (SetAllowExternalDrop(false) + EnumChildWindows/RevokeDragDrop sur chaque enfant) →
@@ -642,6 +664,20 @@ pub fn run() {
         .manage(collab::service::CollabService::spawn())
         .invoke_handler(tauri::generate_handler![
             nr_attach_file_paths,
+            livesite::livesite_open,
+            livesite::livesite_bounds,
+            livesite::livesite_visible,
+            livesite::livesite_nav,
+            livesite::livesite_url,
+            livesite::livesite_capture,
+            livesite::livesite_close,
+            livesite::livesite_goto,
+            livesite::livesite_info,
+            livesite::livesite_allow,
+            livesite::livesite_snapshot,
+            livesite::adblock_status,
+            livesite::adblock_set_enabled,
+            livesite::adblock_refresh_lists,
             nr_pick_trusted_files,
             nr_core_port,
             collab_configure_auth,
@@ -735,6 +771,7 @@ pub fn run() {
                     w.open_devtools();
                 }
             }
+            livesite::init_main_blocking(app.handle());
             // Lance le service Node "core" (médias + RPC + sidecars + pont Resolve). Tué à la fermeture.
             CORE_SHUTDOWN.store(false, Ordering::Release);
             let child = spawn_core(app.handle());
@@ -755,6 +792,7 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             if let Some(w) = app.get_webview_window("main") {
                 disable_tracking_prevention(&w);
+                disable_autofill(&w);
             }
 
             Ok(())

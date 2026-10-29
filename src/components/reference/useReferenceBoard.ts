@@ -2,6 +2,8 @@
 // la fenêtre détachée est un AUTRE renderer (autre instance de store) — la source de vérité
 // partagée entre fenêtres, c'est la persistance disque + la sync IPC, pas ce store.
 
+import { pruneLinks } from "./links/model";
+import { linksWithin, remapLinks } from "./links/graph";
 import { create } from "zustand";
 import i18n from "@/i18n";
 import type { MemberPresence } from "@/lib/collab/client";
@@ -24,6 +26,9 @@ import {
   topZ,
   bottomZ,
 } from "./referenceShared";
+import { foldFrame, parkInto, sceneItems, splitLevel, switchLevel, unfoldFrame } from "./boardFolders";
+import { noteMode } from "./blockModel";
+import { frameContentIds } from "./boardFrames";
 import {
   type BoardBg,
   type SaveOpts,
@@ -81,6 +86,13 @@ export interface BoardState {
   // Présence OBSERVÉE des autres membres (cf. service.rs#member_presence). Vide hors board partagé.
   collabMembers: MemberPresence[];
   items: BoardItem[];
+  // Items of every OTHER folder level (see boardFolders). `items` is only the level on screen.
+  stash: BoardItem[];
+  // Folders opened from the top level, innermost last. `view` = camera of the level it was opened
+  // from, given back on the way out.
+  folderPath: { id: string; view: BoardView }[];
+  // Note sheet open full size over the board (NoteOverlay). Never persisted.
+  noteOpenId: string | null;
   // Frame VIVANTE des séquences en lecture, hors du document. Elle vivait dans `items`, donc chaque
   // frame de chaque séquence recréait le tableau ENTIER : sur un board de plusieurs centaines de
   // médias, dix séquences à 12 images/s suffisaient à re-rendre tout le board 120 fois par seconde
@@ -135,6 +147,8 @@ export interface BoardState {
   removeItem: (id: string) => void;
   removeSelected: () => void;
   duplicateItem: (id: string) => void;
+  // Duplicates several items at once; the links between them are duplicated with them.
+  duplicateItems: (ids: string[]) => void;
   setSeqFrame: (id: string, frame: number) => void;
   commitSeqFrame: (id: string, frame: number) => void;
   groupSequence: (ids: string[]) => void;
@@ -193,6 +207,17 @@ export interface BoardState {
   setView: (view: BoardView) => void;
   setNotice: (n: BoardState["notice"]) => void;
   loadScene: (scene: BoardScene) => void;
+  // Folders: fold/unfold a frame, open one, go back up to `depth` (0 = top level), park items in
+  // a folder card, pick the card's cover, and fold everything back flat (before sharing).
+  openNote: (id: string | null) => void;
+  // Shows an item wherever it lives: opens the folders that hold it, then frames and selects it.
+  revealItem: (id: string) => void;
+  toggleFolder: (id: string) => void;
+  enterFolder: (id: string) => void;
+  leaveFolder: (depth: number) => void;
+  moveIntoFolder: (folderId: string, ids: string[]) => boolean;
+  setFolderCover: (itemId: string) => void;
+  flattenFolders: () => void;
   newScene: (name?: string) => void;
   clearDirty: () => void;
 }
@@ -208,6 +233,9 @@ let pendingPast: BoardItem[] | null = null; // snapshot d'`items` capturé au D�
 let burstTag: string | null = null;         // tag de la rafale en cours (coalescing)
 let flushQueued = false;                    // un flush micro-tâche est-il programmé
 let lastTag: string | null = null;          // tag de la dernière entrée empilée (coalescing cross-tick)
+// Folder levels parked when each snapshot was taken: folding moves items between `items` and
+// `stash` in one step, so undoing it must give both back together.
+const stashAt = new WeakMap<BoardItem[], BoardItem[]>();
 
 // Empile l'instantané en attente dans la pile d'annulation (à la fin du tick courant). Deux mutations
 // du MÊME tick (ex. déplacement de groupe : updateItem + moveBy) partagent un seul `pendingPast` → 1 entrée.
@@ -228,7 +256,10 @@ function flushHistory() {
 
 // Marque une mutation de contenu : capture l'état AVANT (une fois par rafale) et programme le flush.
 function recordHistory(items: BoardItem[], tag: string | null) {
-  if (pendingPast == null) pendingPast = items;
+  if (pendingPast == null) {
+    pendingPast = items;
+    stashAt.set(items, useBoard.getState().stash);
+  }
   burstTag = tag;
   if (!flushQueued) {
     flushQueued = true;
@@ -257,9 +288,28 @@ let noticeTimer: ReturnType<typeof setTimeout> | null = null;
 // sinon chaque clic sur le fond rerend tous les abonnés pour un « rien » différent du précédent.
 const EMPTY_DRAW_SEL: string[] = [];
 
+// Deleting an item takes the links anchored to it along (one undo entry restores both).
+function dropLinksOf(items: BoardItem[], removed: ReadonlySet<string>): BoardItem[] {
+  const draw = items.find((it) => it.kind === "draw");
+  if (!draw?.shapes?.length) return items;
+  const shapes = pruneLinks(draw.shapes, removed);
+  return shapes === draw.shapes ? items : items.map((it) => (it === draw ? { ...it, shapes } : it));
+}
+
 // Presse-papiers INTERNE : vit hors du store pour survivre au chargement d'une autre scène — on
 // copie dans un board, on colle dans un autre. `clipCount` en reflète la taille pour l'UI.
 let internalClipboard: BoardItem[] = [];
+// Links between the copied items, pasted back between their copies.
+let internalClipLinks: DrawShape[] = [];
+
+// Copies of the links between remapped items, appended to the drawing layer (created if needed).
+function withLinkCopies(items: BoardItem[], links: DrawShape[], idMap: Map<string, string>): BoardItem[] {
+  const copies = remapLinks(links, idMap, uid);
+  if (!copies.length) return items;
+  const draw = items.find((it) => it.kind === "draw");
+  if (!draw) return [...items, { ...makeDrawItem(), shapes: copies }];
+  return items.map((it) => (it === draw ? { ...it, shapes: [...(it.shapes ?? []), ...copies] } : it));
+}
 
 // Recale la sélection/édition sur un jeu d'items restauré (undo/redo) : retire les références mortes.
 function reconcile(items: BoardItem[], s: BoardState) {
@@ -294,6 +344,9 @@ export const useBoard = create<BoardState>((set, get) => ({
   collabOfflineQueued: false,
   collabMembers: [],
   items: [],
+  stash: [],
+  folderPath: [],
+  noteOpenId: null,
   view: INITIAL_VIEW,
   background: readBg(),
   selectedId: null,
@@ -366,7 +419,7 @@ export const useBoard = create<BoardState>((set, get) => ({
       if (isReadOnlyCollaborator(s)) return {};
       recordHistory(s.items, null);
       return {
-        items: s.items.filter((it) => it.id !== id),
+        items: dropLinksOf(s.items.filter((it) => it.id !== id), new Set([id])),
         selectedId: s.selectedId === id ? null : s.selectedId,
         selectedIds: s.selectedIds.filter((x) => x !== id),
         dirty: true,
@@ -379,7 +432,7 @@ export const useBoard = create<BoardState>((set, get) => ({
       const kill = new Set(s.selectedIds);
       recordHistory(s.items, null);
       return {
-        items: s.items.filter((it) => !kill.has(it.id)),
+        items: dropLinksOf(s.items.filter((it) => !kill.has(it.id)), kill),
         selectedId: null,
         selectedIds: [],
         dirty: true,
@@ -396,6 +449,26 @@ export const useBoard = create<BoardState>((set, get) => ({
       const top = topZ(s.items) + 1;
       const copy: BoardItem = { ...src, id: uid(), x: src.x + 24, y: src.y + 24, z: top };
       return { items: [...s.items, copy], selectedId: copy.id, selectedIds: [copy.id], dirty: true };
+    }),
+
+  duplicateItems: (ids) =>
+    set((s) => {
+      if (isReadOnlyCollaborator(s)) return {};
+      const wanted = new Set(ids);
+      const picked = s.items.filter((it) => wanted.has(it.id) && it.kind !== "draw");
+      if (!picked.length) return {};
+      recordHistory(s.items, null);
+      let z = topZ(s.items);
+      const idMap = new Map<string, string>();
+      const copies = picked.map((src) => {
+        const id = uid();
+        idMap.set(src.id, id);
+        return { ...src, id, x: src.x + 24, y: src.y + 24, z: ++z };
+      });
+      const shapes = s.items.find((it) => it.kind === "draw")?.shapes ?? [];
+      const items = withLinkCopies([...s.items, ...copies], linksWithin(shapes, wanted), idMap);
+      const sel = copies.map((c) => c.id);
+      return { items, selectedIds: sel, selectedId: sel[sel.length - 1] ?? null, drawSel: EMPTY_DRAW_SEL, dirty: true };
     }),
 
   // Frame courante d'une séquence (lecteur). NE marque PAS `dirty` : l'avance auto à 12 fps
@@ -535,7 +608,7 @@ export const useBoard = create<BoardState>((set, get) => ({
   tidy: ({ layout, uniform, gap, sort, base, tag }) =>
     set((s) => {
       if (isReadOnlyCollaborator(s)) return {};
-      if (s.items.filter((it) => s.selectedIds.includes(it.id) && it.kind !== "draw").length < 2) return {};
+      if (tidyUnits(s.items, s.selectedIds).length < 2) return {};
       recordHistory(s.items, tag ?? null);
 
       // Retour au point de départ avant de ranger : le sélecteur rejoue depuis la même planche à
@@ -543,12 +616,12 @@ export const useBoard = create<BoardState>((set, get) => ({
       const from = base
         ? s.items.map((it) => (base.has(it.id) ? { ...it, ...base.get(it.id)! } : it))
         : s.items;
-      const picked = from.filter((it) => s.selectedIds.includes(it.id) && it.kind !== "draw");
+      const picked = tidyUnits(from, s.selectedIds);
 
       let sel = picked;
       let items = from;
       if (uniform && uniform !== "none") {
-        const size = computeNormalize(sel, uniform);
+        const size = computeNormalize(sel.filter((it) => it.kind !== "frame" || it.folder), uniform);
         if (size.size) {
           items = items.map((it) => (size.has(it.id) ? { ...it, ...size.get(it.id)! } : it));
           sel = items.filter((it) => size.has(it.id) || sel.some((p) => p.id === it.id));
@@ -556,18 +629,19 @@ export const useBoard = create<BoardState>((set, get) => ({
       }
 
       // `keepSize` : une taille commune vient d'être imposée, le rangement ne doit pas la défaire.
-      const pos = computeArrange(sel, layout, { gap, sort, keepSize: !!uniform && uniform !== "none", locale: uiLocale() });
+      // A frame cannot be scaled like a picture: with one in the lot, blocks are placed, not resized.
+      const hasFrame = sel.some((it) => it.kind === "frame" && !it.folder);
+      const keepSize = hasFrame || (!!uniform && uniform !== "none");
+      const pos = computeArrange(sel, layout, { gap, sort, keepSize, locale: uiLocale() });
       if (!pos.size && items === s.items) return {};
-      return {
-        items: items.map((it) => (pos.has(it.id) ? { ...it, ...pos.get(it.id) } : it)),
-        dirty: true,
-      };
+      return { items: placeUnits(items, pos), dirty: true };
     }),
 
   normalize: (mode) =>
     set((s) => {
       if (isReadOnlyCollaborator(s)) return {};
-      const sel = s.items.filter((it) => s.selectedIds.includes(it.id) && it.kind !== "draw");
+      // A frame is a container, not a picture: it keeps its size.
+      const sel = tidyUnits(s.items, s.selectedIds).filter((it) => it.kind !== "frame" || it.folder);
       const size = computeNormalize(sel, mode);
       if (!size.size) return {};
       recordHistory(s.items, null);
@@ -648,6 +722,8 @@ export const useBoard = create<BoardState>((set, get) => ({
     const s = get();
     const picked = s.items.filter((it) => s.selectedIds.includes(it.id) && it.kind !== "draw");
     internalClipboard = picked.map((it) => ({ ...it }));
+    const shapes = s.items.find((it) => it.kind === "draw")?.shapes ?? [];
+    internalClipLinks = linksWithin(shapes, new Set(picked.map((it) => it.id))).map((l) => ({ ...l }));
     set({ clipCount: internalClipboard.length });
     return internalClipboard.length;
   },
@@ -671,7 +747,10 @@ export const useBoard = create<BoardState>((set, get) => ({
     const maxY = Math.max(...src.map((it) => it.y + it.h));
     const dx = x - (minX + maxX) / 2;
     const dy = y - (minY + maxY) / 2;
-    get().addItems(src.map((it) => ({ ...it, id: uid(), x: it.x + dx, y: it.y + dy })));
+    const idMap = new Map(src.map((it) => [it.id, uid()]));
+    get().addItems(src.map((it) => ({ ...it, id: idMap.get(it.id)!, x: it.x + dx, y: it.y + dy })));
+    // Same tick as addItems: the links join its history entry.
+    if (internalClipLinks.length) set((s) => ({ items: withLinkCopies(s.items, internalClipLinks, idMap) }));
     return src.length;
   },
 
@@ -696,6 +775,12 @@ export const useBoard = create<BoardState>((set, get) => ({
     }),
 
   setEditing: (id) => {
+    // A note sheet is written in its full-size editor; a text note or block is written in place.
+    const target = id ? get().items.find((it) => it.id === id) : undefined;
+    if (id && target && noteMode(target) === "sheet") {
+      get().openNote(id);
+      return;
+    }
     if (id && isReadOnlyCollaborator(get())) return;
     resetCoalesce();
     set({ editingId: id });
@@ -721,6 +806,11 @@ export const useBoard = create<BoardState>((set, get) => ({
   }),
   setDrawMode: (on) => {
     if (on && isReadOnlyCollaborator(get())) return;
+    // The shared document has one drawing layer, the board's top level one.
+    if (on && get().collabProjectId && get().folderPath.length) {
+      get().setNotice({ kind: "error", text: i18n.t("reference:folder.drawTopLevel") });
+      return;
+    }
     resetCoalesce();
     set((s) => ({
       drawMode: on, selectedId: null, selectedIds: [], editingId: null, drawSel: EMPTY_DRAW_SEL,
@@ -775,8 +865,10 @@ export const useBoard = create<BoardState>((set, get) => ({
       if (!s.past.length) return {};
       resetHistoryCtl();
       const prev = s.past[s.past.length - 1];
+      stashAt.set(s.items, s.stash);
       return {
         items: prev,
+        stash: stashAt.get(prev) ?? s.stash,
         past: s.past.slice(0, -1),
         future: [...s.future, s.items],
         dirty: true,
@@ -790,8 +882,10 @@ export const useBoard = create<BoardState>((set, get) => ({
       if (!s.future.length) return {};
       resetHistoryCtl();
       const next = s.future[s.future.length - 1];
+      stashAt.set(s.items, s.stash);
       return {
         items: next,
+        stash: stashAt.get(next) ?? s.stash,
         past: [...s.past, s.items],
         future: s.future.slice(0, -1),
         dirty: true,
@@ -881,7 +975,9 @@ export const useBoard = create<BoardState>((set, get) => ({
       collabPeerCandidates: 0,
       collabMembers: [],
       collabOfflineQueued: false,
-      items: scene.items,
+      ...splitLevel(scene.items, null),
+      folderPath: [],
+      noteOpenId: null,
       seqFrames: {},   // positions vivantes de la scène précédente : jamais reportées sur la nouvelle
       view: scene.view ?? INITIAL_VIEW,
       selectedId: null,
@@ -900,8 +996,157 @@ export const useBoard = create<BoardState>((set, get) => ({
 
   newScene: (name = i18n.t("reference:scene.untitled")) => {
     resetHistoryCtl();
-    set({ sceneId: null, sceneName: name, filePath: null, fileReadonly: false, collabProjectId: null, collabRole: null, collabKeyEpoch: 0, collabRotationRequired: false, collabPeerCandidates: 0, collabOfflineQueued: false, items: [], view: INITIAL_VIEW, selectedId: null, selectedIds: [], editingId: null, croppingId: null, studio: null, drawMode: false, drawBack: false, drawSel: EMPTY_DRAW_SEL, past: [], future: [], dirty: false });
+    set({ sceneId: null, sceneName: name, filePath: null, fileReadonly: false, collabProjectId: null, collabRole: null, collabKeyEpoch: 0, collabRotationRequired: false, collabPeerCandidates: 0, collabOfflineQueued: false, items: [], stash: [], folderPath: [], noteOpenId: null, view: INITIAL_VIEW, selectedId: null, selectedIds: [], editingId: null, croppingId: null, studio: null, drawMode: false, drawBack: false, drawSel: EMPTY_DRAW_SEL, past: [], future: [], dirty: false });
   },
+
+  openNote: (id) => set({ noteOpenId: id, editingId: null }),
+
+  revealItem: (id) => {
+    const s = get();
+    const all = sceneItems(s.items, s.stash, currentFolder(s));
+    const byId = new Map(all.map((it) => [it.id, it]));
+    const target = byId.get(id);
+    if (!target) return;
+    const chain: string[] = [];
+    for (let p = target.parent, guard = 0; p && guard < 64; guard++) {
+      chain.unshift(p);
+      p = byId.get(p)?.parent;
+    }
+    const path = s.folderPath.map((f) => f.id);
+    const same = path.length === chain.length && path.every((f, i) => f === chain[i]);
+    if (!same) {
+      if (path.length) get().leaveFolder(0);
+      for (const f of chain) get().enterFolder(f);
+    }
+    get().select(id);
+    get().requestFocus(id);
+  },
+
+  toggleFolder: (id) =>
+    set((s) => {
+      if (isReadOnlyCollaborator(s)) return {};
+      const frame = s.items.find((it) => it.id === id && it.kind === "frame");
+      if (!frame) return {};
+      recordHistory(s.items, null);
+      const next = frame.folder ? unfoldFrame(frame, s.items, s.stash) : foldFrame(frame, s.items, s.stash);
+      return { ...next, ...reconcile(next.items, s), dirty: true };
+    }),
+
+  enterFolder: (id) =>
+    set((s) => {
+      const folder = s.items.find((it) => it.id === id && it.folder);
+      if (!folder) return {};
+      const from = currentFolder(s) ?? null;
+      return {
+        ...switchLevel(s.items, s.stash, from, id),
+        ...levelReset(),
+        folderPath: [...s.folderPath, { id, view: s.view }],
+      };
+    }),
+
+  leaveFolder: (depth) =>
+    set((s) => {
+      if (depth < 0 || depth >= s.folderPath.length) return {};
+      const from = s.folderPath[s.folderPath.length - 1].id;
+      const to = depth ? s.folderPath[depth - 1].id : null;
+      return {
+        ...switchLevel(s.items, s.stash, from, to),
+        ...levelReset(),
+        folderPath: s.folderPath.slice(0, depth),
+        view: s.folderPath[depth].view,
+      };
+    }),
+
+  moveIntoFolder: (folderId, ids) => {
+    const s = get();
+    if (isReadOnlyCollaborator(s)) return false;
+    const next = parkInto(folderId, ids, s.items, s.stash);
+    if (!next) return false;
+    set((st) => {
+      recordHistory(st.items, null);
+      return { ...next, ...reconcile(next.items, st), dirty: true };
+    });
+    return true;
+  },
+
+  setFolderCover: (itemId) =>
+    set((s) => {
+      const folderId = currentFolder(s);
+      if (!folderId || isReadOnlyCollaborator(s)) return {};
+      return {
+        stash: s.stash.map((it) => (it.id === folderId ? { ...it, cover: itemId } : it)),
+        dirty: true,
+      };
+    }),
+
+  // Back to the top level with every folder unfolded, innermost first.
+  flattenFolders: () =>
+    set((s) => {
+      if (!s.stash.length && !s.items.some((it) => it.folder)) return {};
+      const from = currentFolder(s) ?? null;
+      let level = switchLevel(s.items, s.stash, from, null);
+      for (let guard = 0; guard < 10_000; guard++) {
+        const folder = level.items.find((it) => it.folder);
+        if (!folder) break;
+        level = unfoldFrame(folder, level.items, level.stash);
+      }
+      return {
+        items: sceneItems(level.items, level.stash, null),
+        stash: [],
+        folderPath: [],
+        view: s.folderPath[0]?.view ?? s.view,
+        ...levelReset(),
+      };
+    }),
 
   clearDirty: () => set({ dirty: false }),
 }));
+
+// Blocks moved by « Ranger »: a selected frame moves as one block with its content, so the items it
+// holds are not arranged on their own.
+function tidyUnits(items: BoardItem[], selectedIds: string[]): BoardItem[] {
+  const ids = new Set(selectedIds);
+  const carried = new Set<string>();
+  for (const it of items) {
+    if (it.kind === "frame" && !it.folder && ids.has(it.id)) for (const id of frameContentIds(it, items)) carried.add(id);
+  }
+  return items.filter((it) => ids.has(it.id) && it.kind !== "draw" && !carried.has(it.id));
+}
+
+// Applies arranged positions. A frame only moves (size kept) and takes its content along.
+function placeUnits(items: BoardItem[], pos: Map<string, Partial<BoardItem>>): BoardItem[] {
+  const shift = new Map<string, { dx: number; dy: number }>();
+  for (const it of items) {
+    const p = pos.get(it.id);
+    if (!p || it.kind !== "frame" || it.folder) continue;
+    const dx = (p.x ?? it.x) - it.x, dy = (p.y ?? it.y) - it.y;
+    for (const id of frameContentIds(it, items)) shift.set(id, { dx, dy });
+    shift.set(it.id, { dx, dy });
+  }
+  return items.map((it) => {
+    const d = shift.get(it.id);
+    if (d) return d.dx || d.dy ? { ...it, x: it.x + d.dx, y: it.y + d.dy } : it;
+    const p = pos.get(it.id);
+    return p ? { ...it, ...p } : it;
+  });
+}
+
+const currentFolder = (s: Pick<BoardState, "folderPath">): string | null =>
+  s.folderPath.length ? s.folderPath[s.folderPath.length - 1].id : null;
+
+// State dropped when the level on screen changes: selections and edits point at items that are
+// no longer shown, and the undo history holds snapshots of the level that was left.
+function levelReset() {
+  resetHistoryCtl();
+  return {
+    selectedId: null,
+    selectedIds: [],
+    editingId: null,
+    croppingId: null,
+    noteOpenId: null,
+    drawSel: EMPTY_DRAW_SEL,
+    drawMode: false,
+    past: [],
+    future: [],
+  };
+}

@@ -1,0 +1,281 @@
+{
+  "audioLabel": "Audio",
+  "player": {
+    "pause": "Pause",
+    "play": "Wiedergabe",
+    "seek": "Im Video navigieren",
+    "soundOn": "Ton einschalten",
+    "soundOff": "Stummschalten"
+  },
+  "blocksUi": {
+    "playbackSpeed": "Wiedergabegeschwindigkeit",
+    "chooseAudio": "Audio auswählen…",
+    "audioDrop": "MP3, WAV, FLAC… oder hierher ziehen",
+    "audioUrl": "…oder Audio-URL einfügen und Eingabe drücken",
+    "changeDivider": "Stil der Trennlinie ändern",
+    "chooseFile": "Datei auswählen…",
+    "fileDrop": "PDF, Word, Excel, ZIP… oder hierher ziehen",
+    "fileUrl": "…oder Datei-URL einfügen und Eingabe drücken",
+    "open": "Öffnen",
+    "download": "Herunterladen",
+    "today": "Heute",
+    "clear": "Löschen",
+    "play": "Wiedergeben",
+    "fullscreen": "Vollbild",
+    "chooseVideo": "Video auswählen…",
+    "dropFile": "oder Datei hierher ziehen",
+    "videoUrl": "…oder Video-URL einfügen und Eingabe drücken"
+  },
+  "finalPass": {
+    "volume": "Lautstärke",
+    "convertOptions": "Konvertieren / Optionen",
+    "convertTo": "Konvertieren in",
+    "copyLink": "Link kopieren",
+    "pasteAs": "Einfügen als"
+  },
+  "delete": "Löschen",
+  "boardMention": {
+    "untitled": "Element"
+  },
+  "blocks": {
+    "bookmark": {
+      "pastePlaceholder": "Website-Link einfügen…"
+    },
+    "embed": {
+      "pastePlaceholder": "Link zum Einbetten einfügen (Vimeo, X, TikTok…)",
+      "iframeTitle": "Einbettung"
+    },
+    "toggle": {
+      "collapse": "Einklappen",
+      "expand": "Ausklappen"
+    },
+    "youtube": {
+      "pastePlaceholder": "YouTube-Link einfügen…"
+    }
+  },
+  "callout": {
+    "basic": "Standard",
+    "info": "Info",
+    "tip": "Tipp",
+    "warning": "Achtung",
+    "alert": "Warnung",
+    "changeEmoji": "Emoji ändern",
+    "presets": "Voreinstellungen",
+    "background": "Hintergrundfarbe",
+    "style": "Hinweisstil"
+  },
+  "equation": {
+    "group": {
+      "structures": "Strukturen",
+      "calculus": "Analysis",
+      "matrices": "Matrizen und Systeme",
+      "chemistry": "Chemie (mhchem)"
+    },
+    "template": {
+      "fraction": "Bruch",
+      "squareRoot": "Quadratwurzel",
+      "nthRoot": "N-te Wurzel",
+      "exponent": "Exponent",
+      "subscript": "Index",
+      "binomial": "Binomialkoeffizient",
+      "sum": "Summe",
+      "product": "Produkt",
+      "integral": "Integral",
+      "limit": "Grenzwert",
+      "derivative": "Ableitung",
+      "partialDerivative": "Partielle Ableitung",
+      "matrix": "2×2-Matrix",
+      "determinant": "Determinante",
+      "system": "Gleichungssystem",
+      "vector": "Vektor",
+      "molecule": "Molekül",
+      "reaction": "Reaktion",
+      "equilibrium": "Gleichgewicht",
+      "ion": "Ion"
+    },
+    "empty": "Leere Gleichung – klicken, um LaTeX einzugeben",
+    "edit": "Gleichung bearbeiten",
+    "templates": "Vorlagen",
+    "input": "LaTeX-Code der Gleichung",
+    "error": "LaTeX-Fehler: {{error}}",
+    "hint": "Vollständiges LaTeX (KaTeX + Chemie \\ce) · Strg+Eingabe zum Anwenden · Esc zum Abbrechen"
+  },
+  "fileKind": {
+    "other": "Datei",
+    "doc": "Dokument",
+    "sheet": "Tabelle",
+    "slide": "Präsentation",
+    "archive": "Archiv",
+    "video": "Video",
+    "image": "Bild",
+    "text": "Text"
+  },
+  "gallery": {
+    "chooseImages": "Bilder auswählen…",
+    "dropFiles": "oder Dateien hierher ziehen",
+    "imageUrl": "…oder Bild-URL einfügen und Eingabe drücken",
+    "row": "Streifen (horizontal scrollbar)",
+    "carousel": "Karussell",
+    "grid": "Raster",
+    "height": "Höhe {{size}}",
+    "imageCount_one": "{{count}} Bild",
+    "imageCount_other": "{{count}} Bilder",
+    "add": "Hinzufügen",
+    "remove": "Entfernen",
+    "removeImage": "Dieses Bild entfernen",
+    "caption": "Bildunterschrift…",
+    "openImage": "Bild öffnen"
+  },
+  "a11y": {
+    "addImage": "Bild hinzufügen",
+    "previousImage": "Vorheriges Bild",
+    "nextImage": "Nächstes Bild",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "resizeMedia": "Größe des Mediums ändern",
+    "inPoint": "In-Punkt",
+    "outPoint": "Out-Punkt"
+  },
+  "lightbox": {
+    "zoomOut": "Verkleinern",
+    "zoomIn": "Vergrößern",
+    "pause": "Pause (Leertaste)",
+    "slideshow": "Diashow (Leertaste)",
+    "previous": "Zurück",
+    "next": "Weiter"
+  },
+  "close": "Schließen",
+  "color": {
+    "gray": "Grau",
+    "blue": "Blau",
+    "green": "Grün",
+    "yellow": "Gelb",
+    "orange": "Orange",
+    "red": "Rot",
+    "purple": "Violett",
+    "pink": "Rosa"
+  },
+  "emoji": {
+    "custom": "Emoji einfügen + Eingabe"
+  },
+  "editor": {
+    "uploadFailed": "Upload fehlgeschlagen",
+    "dateToday": "Heutiges Datum"
+  },
+  "untitled": "Ohne Titel",
+  "paste": {
+    "mention": {
+      "label": "Erwähnung",
+      "desc": "Kompakter Verweis im Text"
+    },
+    "url": {
+      "label": "Link",
+      "desc": "Anklickbarer Inline-Link"
+    },
+    "bookmark": {
+      "label": "Lesezeichen",
+      "desc": "Kartenvorschau"
+    },
+    "embed": {
+      "label": "Einbettung",
+      "desc": "Eingebetteter Player (iframe / YouTube)"
+    }
+  },
+  "sideMenu": {
+    "changeType": "Umwandeln in",
+    "colors": "Farben",
+    "rowHeader": "Kopfzeile",
+    "columnHeader": "Kopfspalte"
+  },
+  "slash": {
+    "groups": {
+      "blocks": "Blöcke",
+      "media": "Medien",
+      "insert": "Einfügen"
+    },
+    "callout": {
+      "title": "Hinweis",
+      "desc": "Farbiger Bereich mit Emoji",
+      "aliases": "callout|hinweis|notiz|note|info"
+    },
+    "toggle": {
+      "title": "Aufklappbereich",
+      "desc": "Ein- und ausklappbarer Abschnitt",
+      "aliases": "toggle|aufklappen|einklappen|akkordeon"
+    },
+    "equation": {
+      "title": "Gleichung",
+      "desc": "LaTeX-Formel (KaTeX)",
+      "aliases": "equation|gleichung|math|mathe|latex|formel|katex"
+    },
+    "divider": {
+      "title": "Trennlinie",
+      "desc": "Linie, Striche, Punkte oder Sterne",
+      "aliases": "divider|trennlinie|trenner|linie|hr|---"
+    },
+    "youtube": {
+      "desc": "YouTube-Video einbetten",
+      "aliases": "youtube|video|yt"
+    },
+    "embed": {
+      "title": "Einbettung",
+      "aliases": "embed|einbetten|einbettung|iframe|vimeo|twitter|tiktok"
+    },
+    "bookmark": {
+      "title": "Lesezeichen",
+      "desc": "Vorschau eines Weblinks",
+      "aliases": "bookmark|lesezeichen|link|web"
+    },
+    "video": {
+      "title": "Video",
+      "desc": "Lokale Datei oder URL mit integriertem Player",
+      "aliases": "video|mp4|film|clip"
+    },
+    "audio": {
+      "desc": "Integrierter Player mit Wellenform",
+      "aliases": "audio|ton|mp3|musik|wav|podcast"
+    },
+    "file": {
+      "title": "Datei",
+      "desc": "PDF, Word, Excel, ZIP… (PDF-Vorschau)",
+      "aliases": "file|datei|pdf|doc|dokument|zip|excel|word"
+    },
+    "gallery": {
+      "title": "Bildergalerie",
+      "desc": "Mehrere Bilder in einer scrollbaren Reihe",
+      "aliases": "gallery|galerie|bilder|karussell|carousel|album"
+    },
+    "date": {
+      "title": "Datum",
+      "desc": "Datum in den Text einfügen",
+      "aliases": "date|datum|tag|kalender|heute"
+    }
+  },
+  "blockTypes": {
+    "paragraph": "Text",
+    "heading1": "Titel",
+    "heading2": "Untertitel",
+    "heading3": "Kleine Überschrift",
+    "bulletList": "Aufzählung",
+    "numberedList": "Nummerierte Liste",
+    "checkList": "Aufgabenliste",
+    "quote": "Zitat",
+    "callout": "Hinweis",
+    "codeBlock": "Codeblock"
+  },
+  "placeOnBoard": "Aufs Board legen",
+  "menu": {
+    "format": "Format",
+    "bold": "Fett",
+    "italic": "Kursiv",
+    "underline": "Unterstrichen",
+    "strike": "Durchgestrichen",
+    "code": "Code",
+    "link": "Link",
+    "linkNeedsUrl": "Kopiere zuerst eine Adresse",
+    "block": "Block",
+    "duplicate": "Duplizieren",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten"
+  }
+}

@@ -1,0 +1,281 @@
+{
+  "audioLabel": "音频",
+  "player": {
+    "pause": "暂停",
+    "play": "播放",
+    "seek": "在视频中定位",
+    "soundOn": "开启声音",
+    "soundOff": "静音"
+  },
+  "blocksUi": {
+    "playbackSpeed": "播放速度",
+    "chooseAudio": "选择音频…",
+    "audioDrop": "MP3、WAV、FLAC… 或拖放到此处",
+    "audioUrl": "…或粘贴音频 URL 后按 Enter",
+    "changeDivider": "更改分隔线样式",
+    "chooseFile": "选择文件…",
+    "fileDrop": "PDF、Word、Excel、ZIP… 或拖放到此处",
+    "fileUrl": "…或粘贴文件 URL 后按 Enter",
+    "open": "打开",
+    "download": "下载",
+    "today": "今天",
+    "clear": "清除",
+    "play": "播放",
+    "fullscreen": "全屏",
+    "chooseVideo": "选择视频…",
+    "dropFile": "或拖放文件",
+    "videoUrl": "…或粘贴视频 URL 后按 Enter"
+  },
+  "finalPass": {
+    "volume": "音量",
+    "convertOptions": "转换 / 选项",
+    "convertTo": "转换为",
+    "copyLink": "复制链接",
+    "pasteAs": "粘贴为"
+  },
+  "delete": "删除",
+  "boardMention": {
+    "untitled": "项目"
+  },
+  "blocks": {
+    "bookmark": {
+      "pastePlaceholder": "粘贴网站链接…"
+    },
+    "embed": {
+      "pastePlaceholder": "粘贴要嵌入的链接（Vimeo、X、TikTok…）",
+      "iframeTitle": "嵌入内容"
+    },
+    "toggle": {
+      "collapse": "收起",
+      "expand": "展开"
+    },
+    "youtube": {
+      "pastePlaceholder": "粘贴 YouTube 链接…"
+    }
+  },
+  "callout": {
+    "basic": "基础",
+    "info": "信息",
+    "tip": "提示",
+    "warning": "注意",
+    "alert": "警告",
+    "changeEmoji": "更改表情符号",
+    "presets": "预设",
+    "background": "背景颜色",
+    "style": "提示框样式"
+  },
+  "equation": {
+    "group": {
+      "structures": "结构",
+      "calculus": "微积分",
+      "matrices": "矩阵与方程组",
+      "chemistry": "化学（mhchem）"
+    },
+    "template": {
+      "fraction": "分数",
+      "squareRoot": "平方根",
+      "nthRoot": "n 次方根",
+      "exponent": "指数",
+      "subscript": "下标",
+      "binomial": "二项式",
+      "sum": "求和",
+      "product": "连乘",
+      "integral": "积分",
+      "limit": "极限",
+      "derivative": "导数",
+      "partialDerivative": "偏导数",
+      "matrix": "2×2 矩阵",
+      "determinant": "行列式",
+      "system": "方程组",
+      "vector": "向量",
+      "molecule": "分子",
+      "reaction": "反应",
+      "equilibrium": "平衡",
+      "ion": "离子"
+    },
+    "empty": "空公式，点击输入 LaTeX",
+    "edit": "编辑公式",
+    "templates": "模板",
+    "input": "公式的 LaTeX 代码",
+    "error": "LaTeX 错误：{{error}}",
+    "hint": "完整 LaTeX（KaTeX + 化学 \\ce）· Ctrl+Enter 应用 · Esc 取消"
+  },
+  "fileKind": {
+    "other": "文件",
+    "doc": "文档",
+    "sheet": "电子表格",
+    "slide": "演示文稿",
+    "archive": "压缩包",
+    "video": "视频",
+    "image": "图片",
+    "text": "文本"
+  },
+  "gallery": {
+    "chooseImages": "选择图片…",
+    "dropFiles": "或拖放文件",
+    "imageUrl": "…或粘贴图片 URL 后按 Enter",
+    "row": "横排（横向滚动）",
+    "carousel": "轮播",
+    "grid": "网格",
+    "height": "高度 {{size}}",
+    "imageCount_one": "{{count}} 张图片",
+    "imageCount_other": "{{count}} 张图片",
+    "add": "添加",
+    "remove": "移除",
+    "removeImage": "移除此图片",
+    "caption": "说明…",
+    "openImage": "打开图片"
+  },
+  "a11y": {
+    "addImage": "添加图片",
+    "previousImage": "上一张图片",
+    "nextImage": "下一张图片",
+    "previousMonth": "上个月",
+    "nextMonth": "下个月",
+    "resizeMedia": "调整大小",
+    "inPoint": "入点",
+    "outPoint": "出点"
+  },
+  "lightbox": {
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "pause": "暂停（空格）",
+    "slideshow": "幻灯片（空格）",
+    "previous": "上一张",
+    "next": "下一张"
+  },
+  "close": "关闭",
+  "color": {
+    "gray": "灰色",
+    "blue": "蓝色",
+    "green": "绿色",
+    "yellow": "黄色",
+    "orange": "橙色",
+    "red": "红色",
+    "purple": "紫色",
+    "pink": "粉色"
+  },
+  "emoji": {
+    "custom": "粘贴表情符号后按 Enter"
+  },
+  "editor": {
+    "uploadFailed": "文件上传失败",
+    "dateToday": "今天日期"
+  },
+  "untitled": "无标题",
+  "paste": {
+    "mention": {
+      "label": "提及",
+      "desc": "文本中的紧凑标签"
+    },
+    "url": {
+      "label": "链接",
+      "desc": "可点击的行内链接"
+    },
+    "bookmark": {
+      "label": "书签",
+      "desc": "卡片预览"
+    },
+    "embed": {
+      "label": "嵌入内容",
+      "desc": "嵌入式播放器（iframe / YouTube）"
+    }
+  },
+  "sideMenu": {
+    "changeType": "转换为",
+    "colors": "颜色",
+    "rowHeader": "标题行",
+    "columnHeader": "标题列"
+  },
+  "slash": {
+    "groups": {
+      "blocks": "区块",
+      "media": "媒体",
+      "insert": "插入"
+    },
+    "callout": {
+      "title": "提示框",
+      "desc": "带表情符号的彩色条幅",
+      "aliases": "提示框|便签|信息"
+    },
+    "toggle": {
+      "title": "折叠",
+      "desc": "可折叠区域",
+      "aliases": "折叠|展开"
+    },
+    "equation": {
+      "title": "公式",
+      "desc": "LaTeX 公式（KaTeX）",
+      "aliases": "公式|数学|latex|katex"
+    },
+    "divider": {
+      "title": "分隔线",
+      "desc": "直线、虚线、点线或星号",
+      "aliases": "分隔线|线|hr|---"
+    },
+    "youtube": {
+      "desc": "嵌入 YouTube 视频",
+      "aliases": "youtube|视频|yt"
+    },
+    "embed": {
+      "title": "嵌入内容",
+      "aliases": "嵌入|iframe|vimeo|twitter|tiktok"
+    },
+    "bookmark": {
+      "title": "书签",
+      "desc": "预览网页链接",
+      "aliases": "书签|链接|网页"
+    },
+    "video": {
+      "title": "视频",
+      "desc": "使用内置播放器播放本地文件或 URL",
+      "aliases": "视频|mp4|影片|素材"
+    },
+    "audio": {
+      "desc": "带波形的内置播放器",
+      "aliases": "音频|声音|mp3|音乐|wav|播客"
+    },
+    "file": {
+      "title": "文件",
+      "desc": "PDF、Word、Excel、ZIP…（PDF 预览）",
+      "aliases": "文件|pdf|doc|文档|zip|excel|word"
+    },
+    "gallery": {
+      "title": "图片画廊",
+      "desc": "在一行中滚动浏览多张图片",
+      "aliases": "画廊|图片|轮播|相册"
+    },
+    "date": {
+      "title": "日期",
+      "desc": "在文本中插入日期",
+      "aliases": "日期|日|日历|今天"
+    }
+  },
+  "blockTypes": {
+    "paragraph": "文本",
+    "heading1": "标题",
+    "heading2": "副标题",
+    "heading3": "小标题",
+    "bulletList": "项目符号列表",
+    "numberedList": "编号列表",
+    "checkList": "任务列表",
+    "quote": "引用",
+    "callout": "提示框",
+    "codeBlock": "代码块"
+  },
+  "placeOnBoard": "放到画板上",
+  "menu": {
+    "format": "格式",
+    "bold": "粗体",
+    "italic": "斜体",
+    "underline": "下划线",
+    "strike": "删除线",
+    "code": "代码",
+    "link": "链接",
+    "linkNeedsUrl": "请先复制网址",
+    "block": "块",
+    "duplicate": "创建副本",
+    "moveUp": "上移",
+    "moveDown": "下移"
+  }
+}

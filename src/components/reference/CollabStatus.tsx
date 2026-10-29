@@ -11,12 +11,12 @@
 
 import { useTranslation } from "react-i18next";
 import { useQuery } from "convex/react";
-import { AlertTriangle, Check, RefreshCw, UserRound, Users } from "lucide-react";
 import { api } from "@/lib/convexApi";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBoard } from "./useReferenceBoard";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 
 type Profile = { userId: string; handle: string; name: string; image: string | null };
 type Details = {
@@ -34,7 +34,7 @@ function Avatar({ url, online }: { url: string | null; online: boolean }) {
         <img src={url} alt="" className="size-6 rounded-full object-cover" referrerPolicy="no-referrer" />
       ) : (
         <span className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <UserRound className="size-3.5" />
+          <NetsuIcon name="account" className="size-3.5" />
         </span>
       )}
       <span
@@ -100,7 +100,7 @@ export function CollabStatus() {
             />
           }
         >
-          <Users className="size-3.5" />
+          <NetsuIcon name="collab" className="size-3.5" />
           <span className={onlineCount ? "text-[var(--color-ok)]" : undefined}>{onlineCount}</span>
           {(queued || rotationRequired) && (
             <span className="size-1.5 rounded-full bg-amber-500" />
@@ -158,29 +158,29 @@ export function CollabStatus() {
               autrement laissait croire que les autres avaient déjà les modifications. */}
           {queued ? (
             <p className="flex items-start gap-1.5 text-muted-foreground">
-              <RefreshCw className="mt-0.5 size-3.5 shrink-0" />
+              <NetsuIcon name="refresh" className="mt-0.5 size-3.5 shrink-0" />
               {t("collab.panel.queued")}
             </p>
           ) : seen.length > 0 && onlineCount === 0 ? (
             <p className="flex items-start gap-1.5 text-muted-foreground">
-              <RefreshCw className="mt-0.5 size-3.5 shrink-0" />
+              <NetsuIcon name="refresh" className="mt-0.5 size-3.5 shrink-0" />
               {t("collab.panel.nobodyReachable")}
             </p>
           ) : (
             <p className="flex items-start gap-1.5 text-muted-foreground">
-              <Check className="mt-0.5 size-3.5 shrink-0 text-[var(--color-ok)]" />
+              <NetsuIcon name="status-ok" className="mt-0.5 size-3.5 shrink-0 text-[var(--color-ok)]" />
               {t("collab.panel.upToDate")}
             </p>
           )}
           {rotationRequired && (
             <p className="flex items-start gap-1.5 text-amber-500">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <NetsuIcon name="warning" className="mt-0.5 size-3.5 shrink-0" />
               {t("collab.panel.rotation")}
             </p>
           )}
           {waitingForKey.length > 0 && (
             <p className="flex items-start gap-1.5 text-amber-500">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <NetsuIcon name="warning" className="mt-0.5 size-3.5 shrink-0" />
               {t("collab.panel.waitingKey", { count: waitingForKey.length })}
             </p>
           )}

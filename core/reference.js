@@ -84,6 +84,20 @@ function parseMetaTags(html) {
   return map;
 }
 
+// Image canonique et icône d'une page quand og:image manque : <link rel="image_src|icon|apple-touch-icon">.
+function parseLinkHints(html) {
+  const out = {};
+  for (const tag of html.match(/<link\b[^>]*>/gi) || []) {
+    const rel = (tag.match(/rel\s*=\s*["']([^"']+)["']/i) || [])[1] || '';
+    const href = (tag.match(/href\s*=\s*["']([^"']+)["']/i) || [])[1];
+    if (!href) continue;
+    const rels = rel.toLowerCase().split(/\s+/);
+    if (rels.includes('image_src')) out.image = decodeEntities(href);
+    if (rels.some((x) => x === 'icon' || x === 'shortcut' || x === 'apple-touch-icon')) out.icon = decodeEntities(href);
+  }
+  return out;
+}
+
 function absoluteHttpUrl(value, baseUrl) {
   try {
     const url = new URL(decodeEntities(value), baseUrl);
@@ -129,6 +143,11 @@ const EXT_OK = new Set([
   'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'avif', 'svg', 'tif', 'tiff',
   // vidéos (blobs collés/déposés sans chemin disque → persistés comme les images)
   'mp4', 'webm', 'mov', 'mkv', 'm4v', 'avi', 'ogv',
+  // documents behind a document card (PDF, Word, text, Markdown, CSV, any other file); `bin` keeps
+  // the bytes of a file whose extension is not listed. Mirrors DOC_SAVE_EXTS in boardDocs.ts.
+  'pdf', 'docx', 'doc', 'odt', 'rtf', 'xlsx', 'xls', 'ods', 'pptx', 'ppt', 'odp', 'zip', 'rar', '7z',
+  'txt', 'log', 'json', 'srt', 'ass', 'ssa', 'vtt', 'xml', 'yaml', 'yml', 'ini', 'cfg', 'conf', 'toml',
+  'nfo', 'lrc', 'tex', 'md', 'markdown', 'csv', 'tsv', 'bin',
 ]);
 
 function uid() {
@@ -396,6 +415,38 @@ function createReferenceStore(dataDir) {
     }
   }
 
+  // Aperçu de lien (signet, mention, carte d'intégration) : OpenGraph / Twitter Card → carte
+  // { url, title, description, image, siteName, favicon }. Un site illisible rend quand même le
+  // domaine : le renderer affiche une carte nue plutôt qu'un échec.
+  async function linkMeta(url) {
+    if (!/^https?:\/\//i.test(String(url || ''))) return { ok: false, error: t('invalidUrl') };
+    let u;
+    try { u = new URL(url); } catch (e) { return { ok: false, error: String(e) }; }
+    const favicon = `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
+    try {
+      const page = await download(url);
+      const html = page.buf.subarray(0, 256 * 1024).toString('utf8');
+      const base = page.finalUrl || url;
+      const m = parseMetaTags(html);
+      const hints = parseLinkHints(html);
+      const titleTag = (html.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1];
+      const abs = (v) => (v ? absoluteHttpUrl(v, base) : null);
+      return {
+        ok: true,
+        meta: {
+          url,
+          title: m['og:title'] || m['twitter:title'] || decodeEntities(titleTag).trim() || u.hostname,
+          description: m['og:description'] || m['twitter:description'] || m.description || '',
+          image: abs(m['og:image:secure_url'] || m['og:image:url'] || m['og:image'] || m['twitter:image'] || m['twitter:image:src'] || hints.image) || '',
+          siteName: m['og:site_name'] || u.hostname,
+          favicon: abs(hints.icon) || favicon,
+        },
+      };
+    } catch (_) {
+      return { ok: true, meta: { url, title: u.hostname, description: '', image: '', siteName: u.hostname, favicon } };
+    }
+  }
+
   // Chemin d'un nouvel asset (ex. média upscalé) dans le dossier possédé par l'app.
   function assetPath(name) {
     return path.join(assetsDir, sanitizeFile(name));
@@ -431,7 +482,7 @@ function createReferenceStore(dataDir) {
       for (const value of [item.ref, ...(Array.isArray(item.frames) ? item.frames : [])]) {
         if (value) into.add(path.resolve(String(value)).toLowerCase());
       }
-      for (const nested of [item.prevMedia, item.localMedia]) {
+      for (const nested of [item.prevMedia, item.localMedia, item.docFile]) {
         if (nested && nested.ref) into.add(path.resolve(String(nested.ref)).toLowerCase());
       }
     }
@@ -482,7 +533,7 @@ function createReferenceStore(dataDir) {
   }
 
   return {
-    kind, listScenes, loadScene, saveScene, deleteScene, saveAsset, collabPreview, fetchAsset, resolveMedia,
+    kind, listScenes, loadScene, saveScene, deleteScene, saveAsset, collabPreview, fetchAsset, resolveMedia, linkMeta,
     storagePath: () => dir, close: () => backend.close(),
     assetsDir, assetPath, isAppAsset, removeAsset, sweepAssets, sceneRefs,
   };

@@ -2,7 +2,7 @@
 // texte — un panneau qu'on ouvre pour une version, un serveur ou une licence, jamais pour lire.
 // Décalque de l'écran de NetsuRush : les deux applications se ressemblent, et le Discord est le même.
 import type { MouseEvent } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { useTranslation } from "react-i18next";
 import { BetaBadge } from "@/components/BetaBadge";
 import { BrandIcon } from "@/components/BrandIcon";
@@ -51,7 +51,7 @@ function LinkRow({ link, group }: { link: ExternalLink; group: string }) {
       <Icon className={cn("size-5", link.tint)} />
       <span className="text-sm font-medium">{link.label}</span>
       <span className="ml-auto truncate text-xs text-muted-foreground">{t(`about.${group}.${link.id}`)}</span>
-      <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0" />
+      <NetsuIcon name="open-external" className="size-4 shrink-0 text-muted-foreground transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0 motion-reduce:group-hover:translate-y-0" />
     </a>
   );
 }

@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Grid2x2, Square, X, Star, Trash2 } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { cn, fmtNumber, fmtPercent } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
 import { Separator } from "@/components/ui/separator";
@@ -34,6 +34,7 @@ import {
 import { FontPicker, NumberSpin, MiniSelect, fontLabel } from "./inspectorControls";
 import { PINNED_SIDES } from "./toolbarButtons";
 import { PinnedBarEditor } from "./PinnedBarEditor";
+import { LinkSettings } from "./links/LinkSettings";
 import { errorText } from "@/lib/errorText";
 
 const INTERVALS: { label: string; ms: number }[] = [
@@ -317,10 +318,10 @@ export function BoardSettings({ tab, onCapturingChange }: {
           <h3 className="text-xs font-semibold text-foreground">{t("settings.background")}</h3>
           <div className="flex items-center gap-2">
             <Seg active={background.mode === "dots"} onClick={() => setBackground({ mode: "dots" })}>
-              <Grid2x2 className="size-3.5" /> {t("settings.dots")}
+              <NetsuIcon name="dot-bg" className="size-3.5" /> {t("settings.dots")}
             </Seg>
             <Seg active={background.mode === "solid"} onClick={() => setBackground({ mode: "solid" })}>
-              <Square className="size-3.5" /> {t("settings.solid")}
+              <NetsuIcon name="solid" className="size-3.5" /> {t("settings.solid")}
             </Seg>
             <div className="ml-auto flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{t("settings.color")}</span>
@@ -405,6 +406,20 @@ export function BoardSettings({ tab, onCapturingChange }: {
 
         <Separator />
 
+        {/* Folders: what a folder card shows when the folder sets no cover style of its own. */}
+        <section className="flex flex-col gap-2.5">
+          <h3 className="text-xs font-semibold text-foreground">{t("settings.folders")}</h3>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">{t("settings.folderCover")}</span>
+            <div className="flex items-center gap-1.5">
+              <Seg active={prefs.folderCover === "image"} onClick={() => setPrefs({ folderCover: "image" })}>{t("folder.coverImage")}</Seg>
+              <Seg active={prefs.folderCover === "mosaic"} onClick={() => setPrefs({ folderCover: "mosaic" })}>{t("folder.coverMosaic")}</Seg>
+            </div>
+          </div>
+        </section>
+
+        <Separator />
+
         {/* Nouveaux cadres : défauts appliqués à chaque cadre ajouté (cohérent avec les notes) */}
         <section className="flex flex-col gap-2.5">
           <h3 className="text-xs font-semibold text-foreground">{t("settings.newFrames")}</h3>
@@ -428,7 +443,7 @@ export function BoardSettings({ tab, onCapturingChange }: {
         <section className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold text-foreground">{t("settings.favFonts")}</h3>
           {prefs.favFonts.length === 0 ? (
-            <p className="text-[11px] text-muted-foreground"><Trans t={t} i18nKey="settings.favHint" components={[<Star key="star" className="inline size-3 -mt-0.5" />]} /></p>
+            <p className="text-[11px] text-muted-foreground"><Trans t={t} i18nKey="settings.favHint" components={[<NetsuIcon key="star" name="card-favorite" className="inline-flex size-3 -mt-0.5" />]} /></p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {prefs.favFonts.map((f) => (
@@ -443,9 +458,9 @@ export function BoardSettings({ tab, onCapturingChange }: {
                       />
                     }
                   >
-                    <Star className="size-3 shrink-0 fill-current text-primary" />
+                    <NetsuIcon name="card-favorite" on className="size-3 shrink-0 text-primary" />
                     <span className="truncate">{fontLabel(f, t)}</span>
-                    <X className="size-3 shrink-0 text-muted-foreground group-hover:text-destructive" />
+                    <NetsuIcon name="close" className="size-3 shrink-0 text-muted-foreground group-hover:text-destructive" />
                   </TooltipTrigger>
                   <TooltipContent>{t("actions.removeFavorite")}</TooltipContent>
                 </Tooltip>
@@ -531,6 +546,10 @@ export function BoardSettings({ tab, onCapturingChange }: {
             ))}
           </div>
         </section>
+
+        <Separator />
+
+        <LinkSettings Seg={Seg} />
 
         <Separator />
 
@@ -749,7 +768,7 @@ export function BoardSettings({ tab, onCapturingChange }: {
           <p className="-mt-1.5 text-[11px] leading-snug text-muted-foreground">{t("settings.assetSweepHint")}</p>
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" disabled={sweeping} onClick={() => void sweep()}>
-              <Trash2 className="size-3.5" /> {t("settings.assetSweepAction")}
+              <NetsuIcon name="delete" className="size-3.5" /> {t("settings.assetSweepAction")}
             </Button>
             {sweepResult && <span className="text-[11px] text-muted-foreground">{sweepResult}</span>}
           </div>

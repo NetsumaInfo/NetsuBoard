@@ -47,6 +47,43 @@ Infinite canvas (pan/zoom) where images, local videos and YouTube videos are lai
 - **An import that is still loading follows its placeholder**: the arriving media lands where the loading square *is*, not where the link was pasted. A dropped file re-centres on its live position; everything a link added is shifted by the placeholder's travel, so a carousel keeps its row.
 - Media elements are `display:block` (`<video>`, `<img>`, YouTube iframe) to avoid the thin horizontal line from inline baseline gaps during playback.
 
+## Folders (`boardFolders.ts` + `FolderBreadcrumb.tsx`)
+
+- A frame with `folder: true` is folded into a card; its content lives one level down. The store keeps only the level on screen in `items` and parks every other level in `stash`; an item's `parent` names its folder and is written when the item is parked.
+- Everything that saves, shares or diffs reads the **whole scene** (`sceneItems(items, stash, currentFolder)`), never `items` alone, or the other levels would be lost.
+- Changing level clears the selection and the undo history; folding, unfolding and dropping an item on a card are one undo entry each (`stash` is restored with the snapshot).
+- Collaboration: `setFolder` and `setParent` ops, each under its own key, so an older build shows the board flat. A shared board has one drawing layer, at the top level.
+
+## PDF cards (`boardPdf.ts` + `PdfViewer.tsx`)
+
+A PDF is an `image` item showing page 1 (other document types: see Documents below) (rendered once with pdf.js at ~1024 px, saved as a PNG asset), plus `docFile: { ref, name, type: "pdf", pages }` pointing at the document. The collaboration kind enum stays closed: peers see the thumbnail, never the file. Double-click (or the context menu entry) makes the card live: `PdfViewer` (lazy) opens the document, stacks every page and renders only those near the scroller's visible area; leaving live mode unmounts it and destroys the pdf.js document. `docFile.ref` is a media ref like any other: kept by `refsOf`, adopted into the project folder on save, bundled as a blob in a shared `.netsu`.
+
+## Documents (`boardDocs.ts` + `boardDocRender.ts` + `DocViewer.tsx`)
+
+Same model as a PDF card for every document type: an `image` item (the thumbnail) plus `docFile: { ref, name, type, pages?, view? }`, `type` being `"pdf" | "docx" | "text" | "markdown" | "csv" | "file"`. `docTypeOf` maps the extension (images and videos always win and import as media): `.docx` through mammoth, `.txt .log .json .srt .ass …` as preformatted text, `.md` through our small Markdown renderer (HTML escaped first; links only http, https, mailto; images never load), `.csv .tsv` through our RFC 4180 parser into a table, everything else (`.xlsx .pptx .doc .odt .zip .rtf …`) a `"file"` card (extension badge, name, size). Thumbnails are 800x1000 on white paper (html-to-image, canvas text as a fallback) or 800x600 for a `"file"`; a new card has a long side of `max(mediaMaxSize, 560)` (a `"file"` card keeps `mediaMaxSize`). A file without disk path is first saved as an asset under its own extension (`DOC_SAVE_EXTS`, mirrored by `EXT_OK` in `core/reference.js`; unknown extensions are kept as `.bin`). Every converted HTML goes through `sanitizeHtml` (allowlist, no script, handler, style, external load). `docFile.ref` is type-agnostic in `refsOf`, `sceneRefs`, the project adoption and the `.netsu` blob (its extension comes from the file). Double-click: `DocViewer` (scrollable paper, zoom, "open in system app"); a `"file"` card opens in the system app. The Add menu entry "Document" accepts all of these.
+
+PDF extras: the live viewer fits the page width to the card and renders at screen density x board zoom (capped, 4096 px per canvas side). `docFile.view` (`"scroll"` or `"pages"`) is the reading mode of the card: `"pages"` is a carousel (one page, prev/next, Left/Right keys captured while live). "Extract pages" (context menu and live toolbar) renders up to 100 pages at 2048 px to PNG assets, then adds one `sequence` item or a grid of images to the right of the card, in a single undo step (`boardDocExtract.ts`).
+
+## Text modes (`blockModel.ts` + `TextBlock.tsx` + `blockActions.ts`)
+
+One `text` item, three modes, switched in place from the inspector (Text | Block | Sheet) or the right-click menu ("Display as…"). `noteMode(item)` is the single decision:
+
+- **Text**: no `doc`, no `noteStyle`. Plain note edited in place (`TextNote`), fonts, colours, background.
+- **Block**: `noteStyle: "postit"` and Markdown source in `text`. `"postit"` is only the on-wire value the Rust document already validates (`setNoteStyle` accepts `card` and `postit`); the product never says post-it. `text` syncs through the text CRDT, so a build without blocks still shows readable text. `TextBlock` renders it with `renderMarkdown(src, { tasks: "interactive" })` (nested lists by indentation, tasks, pipe tables, code, quotes; HTML escaped first, links only http, https, mailto and opened with `nr.openExternal`). Task checkboxes tick in view mode (`toggleTaskLine` rewrites the source line). Double-click edits the raw Markdown in the same box (Escape, Ctrl+Enter or a click outside leaves). A box too small for its content scrolls inside, and the wheel is the block's only while it can scroll.
+
+  - **Entering the editor** does not rely on the browser's `dblclick` (retargeted by the pointer capture of the move gesture). `BoardItem` reads two taps from the pointer itself (`blockGesture.ts`: `isTap` + `registerTap`); the native `dblclick` stays as a second path. `usePointerTransform` keeps `dragging` as real state (a ref read at render left the grab cursor stuck after a click that never re-rendered), starts a move only after 3 screen px (a click or double-click jitter never commits or costs an undo step), ends on pointerup, pointercancel, `lostpointercapture`, window blur (commit) and Escape (cancel), closes a gesture still open before starting another, and is aborted when the item enters edit mode. A press on a link or a checkbox inside a block does not start a move (it would capture the pointer and swallow the click).
+  - **Writing** (`blockEditing.ts`, pure and tested; `blockEditorDom.ts` applies it to the textarea): Enter continues `-`, `*`, `1.` and `- [ ]` lists (empty item ends the list, or goes one level out) and numbered lists are renumbered after every edit; Tab / Shift+Tab indent lines (selection too); Ctrl+B bold, Ctrl+I italic, Ctrl+Shift+X strike, Ctrl+E code, Ctrl+K link (selects `url`), Ctrl+1/2/3 headings, Ctrl+0 paragraph, Ctrl+Shift+7/8/9 numbered/bullet/task list, Alt+Up/Down move lines; typing `[] ` at line start gives `- [ ] `, `1) ` gives `1. `. `BlockEditBar` shows a slim formatting bar above the block while editing (constant screen size via `chromePx`, same transforms, tooltips with the shortcut) and a `/` menu at line start (headings, lists, task, quote, code block, divider, table; filtered as you type).
+  - **Look** (`BlockControls`): font = `fontFamily`, size = `fontSize` (S/M/L presets 13/15/18 or any value), text colour = `color`, surface = `highlight` (a block has no text highlight, so the synced field is reused; unset = theme surface), accent bar = `bg` (palette or custom). Border on/off, corner radius S/M/L and padding S/M/L have no field in the shared document: they live in the local `blockLook` (not synced, lost when a collaborator's projection rebuilds the item, until a Rust field exists).
+- **Sheet**: `doc` present, see below.
+
+Switching (`switchNoteMode`, lazy BlockNote serialisers): Text and Block keep `text`; to Sheet, Markdown becomes blocks (`markdownToBlocks`); from Sheet, blocks become Markdown (Block) or plain text (Text). A sheet with content Markdown cannot hold (images, embeds, callouts…; `sheetIsRich`) refuses the switch with a notice and stays a sheet: nothing is dropped. Legacy post-its (`noteStyle: "postit"` + a `doc` of plain lines) display as blocks from `legacyMarkdown(doc)` and migrate on first edit or first tick (`text` written, `doc` dropped); a legacy post-it whose `doc` holds more than plain lines stays a sheet.
+
+## Note sheets (`NoteCard.tsx` + `NoteOverlay.tsx` + `note/`)
+
+- A sheet is a `text` item carrying `doc` (BlockNote JSON); `text` mirrors its plain text. The card renders a preview from the JSON; the editor (`note/NoteEditor.tsx`, BlockNote + Mantine, MPL-2.0) is lazy-loaded when a sheet opens and keeps its CSS in its own chunk.
+- Edits reach the board debounced; one opening is one undo entry.
+- Collaboration: `setDocument` writes the whole JSON (last writer wins per sheet, no character merge yet).
+
 ## `.netsu` container
 
 `core/netsu/`, façade `core/netsu.js`. The share and project format is a **SQLite container**, no longer a ZIP.
@@ -106,3 +143,148 @@ A video item can be written as an **animated image that loops on its own** where
 - A clip **fills its item as the board shows it** (cover), except the video of an embed card, which fits inside the card.
 - **The cut is inside the filter graph** (`trim=duration`), never an output `-t`: still layers and looped clips are endless inputs, and `palettegen` reads its whole input before emitting anything.
 - A transparent background survives in WebP; GIF always gets the board colour.
+
+## Links
+
+Obsidian-Canvas-style links between board items. A link is **not** a separate model: it is an
+anchored `arrow`/`line` `DrawShape` with both `a1` and `a2` set, so persistence, undo and
+collaboration already handle it. Everything lives in `src/components/reference/links/`:
+
+| File | Role |
+|---|---|
+| `model.ts` | Pure: anchors, side choice, routing, heads, hit-testing, label layout and label style encoding, palette, width, identity helpers. |
+| `junction.ts` | Pure: junction encoding and checks (cycles, depth), root items of a flow, item edges through junctions, downstream/upstream, collapse, cascade delete and re-root, detach, path sampling. |
+| `resolve.ts` | Pure: geometry of every link, junctions included, parents first, cached by a key that includes the parent's. Shared by the layer and the export. |
+| `graph.ts` | Pure: neighbours and connected groups, chain/star pairs, insert into a link, link copies for duplicated items, the Organise layouts. |
+| `gestureModel.ts` | Pure: gesture kinds, link targets of a dragged end, what a released gesture writes. |
+| `useLinkScene.ts` | The one geometry selector: store items merged with live gesture geometry, resolved through `resolve.ts`. |
+| `LinkLayer.tsx` | Single owner of link rendering, hit areas, junction dots, collapsed subtrees, focus, hover highlight, selection UI, insert hint, pick mode hint. |
+| `LinkHandles.tsx` | Connect handles of one item, end handles of the selected link, branch dot, collapse badge, target hint. |
+| `LinkLabel.tsx` | Label pill (styled) and inline editor. |
+| `LinkEditorMenu.tsx`, `LinkStyleControls.tsx`, `linkToolbarParts.tsx` | Floating toolbar of the selected link(s) and its style panels. |
+| `LinkDropMenu.tsx` | Popover after a drop on empty space: note sheet, text, block. |
+| `LinkMenuItems.tsx` | Link entries of the right-click menu (item, link, multi-selection). |
+| `LinkSettings.tsx` | Settings > Links: defaults of new links, focus toggle. |
+| `linkActions.ts` | Store-level commands (link selection, select linked / downstream / upstream, unlink, delete with re-root, detach a branch, reverse, collapse, organise, insert, Tab cycle, multi-edit). |
+| `useLinkGesture.ts` | Drag of a link end (new link, re-attach, fork, branch, merge, junction slide), Escape cancels. |
+| `useLinkShortcutsOnBoard.ts` | Ctrl/Cmd-drag an item to link it; "Link to..." pick mode. |
+| `useInsertOnDrop.ts` | Drop of a moved item onto a link. |
+| `usePointerNear.ts` | Item under / near the pointer (handles, hover highlight). |
+| `linkUi.ts` | Transient UI state (label being edited, hovered link, pick mode, Tab pivot, collapsed subtrees). |
+
+`DrawLayer` skips links entirely (no drawing, no hit target, no handles, no inspector).
+
+- **Anchors**: an end is AUTO when its fraction is exactly the item centre (`fx = fy = 0.5`): it
+  re-picks the side facing the other end every time either item moves (`sideToward`, split along
+  the box diagonals). The sentinel stays inside the 0..1 range the collaboration document
+  validates. Any other fraction is FIXED: a side midpoint pins that side; older links and
+  hand-drawn arrows keep their exact point and leave along their closest side. A link is never
+  re-anchored from its points (`reanchorShape` returns it unchanged).
+- **Create**: handles (four tiny low-contrast dots, outside each side) appear only for one item —
+  the one whose edge the pointer is near, else the single selected item — and never while
+  navigating, during a gesture, in draw mode, for a viewer, or below `chromeVisible`. Dragging one
+  previews the link; over an item it targets that item (auto) or, near a side, pins that side.
+  Release on an item writes one history entry; on empty space a popover creates a note sheet or a
+  text block there and links it (one undo entry).
+  The popover offers a note sheet, a text note (Settings text defaults) or a Markdown block. Links
+  drawn from scratch take the Settings > Links defaults (route, heads, line, colour, width, label
+  font and size).
+- **Re-attach / fork**: the selected link shows its two end handles; drag one to another item or
+  side, onto another link (it becomes a junction there), or to empty space to create an item there.
+  **Alt**-drag an end keeps the link and draws a copy of it (same style) with that end moved.
+- **Junctions** (node-editor style): a link END can sit on ANOTHER LINK. Encoded with the existing
+  anchor, no new field: `{ id: <parent link id>, fx: t, fy: 0.5 }`, `t` = arc-length fraction along
+  the parent's path, clamped 0.05..0.95. Item ids and shape ids never collide, so the lookup tells an
+  item end from a junction. Junctions nest (a branch of a branch) up to `JUNCTION_MAX_DEPTH`; a link
+  never hangs from itself or its descendants (`canAttach`), and a cycle or a missing parent is
+  simply not drawn (a branch that arrives before its parent through collaboration shows up when the
+  parent does). The junction point is recomputed from the parent's LIVE path, so it follows items in
+  real time. A branch leaves its parent along the parent's tangent, oriented toward its other end:
+  one wire splitting in two (fork) or two joining (merge). A small dot marks the junction (link
+  colour, low contrast, clearer on hover/selection); a junction end never carries an arrowhead.
+- **Branch** (fork): a hovered or selected link shows a grab dot that follows the pointer along it
+  (at the midpoint, beside the label, before the pointer moves on it); **Alt**-drag anywhere on a
+  link does the same. Dragging out previews the branch leaving tangentially; release on an item
+  creates the branch link (same style as the parent, no label), on empty space opens the drop
+  popover. One undo entry.
+- **Merge** (fan-in): any dragged end (a new link from a handle, a re-attached or forked end) that is
+  away from every item but within reach of a link attaches to it at the pointer's `t`; the target
+  link lights up during the drag.
+- **Editing junctions**: drag a junction dot along its parent to slide it (clamped), off it onto an
+  item to make it a normal end, or onto another link. A press without a drag selects the branch.
+  Right-click a junction (or a branch): "Detach branch" moves the end to the parent's nearer item
+  (source before the middle, target after; the branch goes if neither is possible), "Delete
+  branch". Deleting a link re-roots its branches (a fork on the parent's source item, a merge on its
+  target item, keeping their style; removed when impossible, and so on down) in the same undo entry
+  (`removeShapes`); deleting an item does the same for its links (`pruneLinks`). Reversing a link
+  mirrors its branches' `t`; inserting an item into a link moves the branches of the second half
+  onto the new second link.
+- **Node logic**: a link has a source and a target. A branch counts as an edge from the flow's
+  source item to its target item (`itemEdges`: a fork from the parent's source, a merge into the
+  parent's target), which is what focus, hover highlight, Tab cycling, select linked / group,
+  Organise and the directed commands read. "Select downstream" (`Alt+D`) and "Select upstream"
+  (`Alt+U`) follow the direction through junctions. "Move with downstream items" (item menu or
+  Settings > Links, `linkMoveSubtree`) makes a moved item carry its whole subtree, live and in the
+  same undo entry. Collapse / expand (`Alt+C`, item menu, or the small badge at the bottom-right of
+  the item under the pointer, always shown on a collapsed item with the hidden count) hides the
+  downstream items (CSS `visibility`) and their links; view only, local to the window, never saved
+  or shared, ignored by the export.
+- **Reroute points**: not implemented. The manual control point `cp` is stored in world
+  coordinates, so a bend would not follow the items, and double-click already edits the label.
+- **Fast linking**: `L` links the selected items in selection order as a chain, `Shift+L` from the
+  first selected item to every other one (star); existing links (either direction) are never
+  duplicated. `Ctrl+L` / "Link to..." enters a pick mode: the next item clicked is linked from the
+  selection, a click elsewhere or Escape cancels. Ctrl/Cmd-drag an item draws a link from it instead
+  of moving it (a Ctrl/Cmd-click without moving toggles it in the selection). `Alt+L` selects the
+  linked items, `Ctrl+Shift+L` the whole connected group; "Remove links" is unbound by default.
+  Every shortcut is in the rebindable table (`SHORTCUT_DEFS`), so it shows in Settings.
+- **Insert into a link**: a lone item dragged with its centre over a link lights that link; released
+  there, A>B becomes A>X>B (the first half keeps id, style and label; one undo with the move). To
+  see the item move, `usePointerTransform` publishes live geometry for a lone item on any board that
+  has links.
+- **Organise** (item menu, link menu, `Alt+O` replaying the last mode): tree left to right, tree
+  top to bottom, or mind map (rings around the root, wedges in proportion to leaves), computed by
+  `organiseLayout` over the undirected item edges (junctions included) from the root (the item, or a
+  link's source). The root
+  stays put, sizes are kept, siblings keep their current order, one undo entry. The board has no
+  lock/pin concept on items, so every item of the group moves.
+- **Copies keep links**: Ctrl+D on several items and the internal copy/paste carry the links whose
+  two ends are in the copied set, re-anchored onto the copies, and the branches between them,
+  hanging from the copied parents (`remapLinks`).
+- **Routes**: `curved` (cubic leaving each side along its normal, default), `straight`, `elbow`
+  (orthogonal, rounded corners). Heads none/end/both (filled arrowhead, path trimmed under it),
+  solid/dashed. Colour: a palette of mid-tone colours readable on both themes, the last eight custom
+  colours (kept in prefs, added when the colour panel closes), a full colour picker, and an opacity
+  (`op`). Width: thin/normal/bold presets or any value from 0.5 to 12. The stored `w` is a width in
+  screen pixels (clamped); the drawn width is that times `chromePx(scale)`, like every piece of link
+  chrome.
+- **Label**: stored in `text`, a horizontal pill at the arc-length midpoint, two lines then an
+  ellipsis (`labelLayout`); the path is masked under it. Hidden below `chromeVisible`. Double-click
+  the link or the label to edit; an empty label removes it. Its style (font, size S/M/L or custom,
+  text colour, pill background, transparent allowed, bold, italic) is stored in the link's `fill`
+  as `nbl1|bg|color|size|flags|font` (`formatLabelStyle` / `parseLabelStyle`), kept within the
+  document's 128 characters by cutting the font name. `fill` is a field every vector shape already
+  syncs and links did not use, so the label style syncs with no new collaboration field; the export
+  strips it so it never paints the path.
+- **Selection**: click the link (wide transparent hit path; hover lights a halo in CSS),
+  Shift+click to add links. The selection gets a compact toolbar under the last link's midpoint:
+  route, heads, line, width, colour, label style, label (one link only), reverse, delete; with
+  several links every change applies to all of them. Delete/Backspace and the right-click menu
+  (`BoardMenu.tsx`) work as for strokes. `Tab` / `Shift+Tab` steps through the links of the
+  selected item (then keeps that item as the pivot). Hovering an item lights its links faintly.
+- **Real time**: geometry is read through `useLinkScene`, which merges `boardLive` geometry
+  (published by `usePointerTransform` for the moving item, the rest of a multi-selection, the
+  content a frame carries — culled items included — and a frame hugging its content), coalesced to
+  one update per frame. Undo/redo and collaborator edits arrive through the store.
+- **Focus**: with one item selected (setting "Highlight links of the selected item"), its links stay
+  lit, the others dim, and the reached items are outlined.
+- **Levels**: a link is drawn only when both ends resolve on the level on screen (an item there, or a
+  parent link drawn there); links into a folded folder or towards a deleted item are skipped.
+  Deleting an item removes its links in the same history entry and repairs their branches
+  (`pruneLinks`).
+- **Export** (`boardRender.ts`) draws links with the same resolver (junctions included), at a chrome
+  factor of 1.
+- **Performance**: one SVG for every link inside a `data-board-pan` layer (pan never re-renders
+  it), links resolved in topological order (parents first) and memoised per link by a key of its
+  own geometry and its parent's key, viewport culling with one viewport of margin. The branch dot
+  follows the pointer imperatively (no React render per move).

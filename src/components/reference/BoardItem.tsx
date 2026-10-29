@@ -3,9 +3,9 @@
 // Gestes via usePointerTransform (capture sur le wrapper). Multi-sélection (Shift) → déplacement de
 // groupe au relâchement. Notes texte éditables (double-clic). Miroir (flipH/flipV) sur le contenu.
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2, FileQuestion, FolderSearch, Loader2, ImageOff, Link2, Unlink2, RefreshCw } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn, fmtBytes } from "@/lib/utils";
 import { nr, nextProxyToken } from "@/lib/bridge";
@@ -13,7 +13,16 @@ import i18n from "@/i18n";
 import { type BoardItem as Item, type BoardLink, parseVideoEmbed, EMBED_PLAYER_PROVIDERS, displaySrc, isCollabRef, isCoreFileRef } from "./referenceShared";
 import { recoverMediaOnce, reloadMedia, reloadableMedia, relocateMissingMedia } from "./boardMediaActions";
 import { usePointerTransform, type ResizeHandle } from "./usePointerTransform";
+import { isTap, registerTap, type Tap } from "./blockGesture";
 import { enclosingFrame, frameContentIds, framable } from "./boardFrames";
+import { folderChildren, folderCover, folderMosaic, openFolderCoverId } from "./boardFolders";
+import { useShallow } from "zustand/react/shallow";
+import { NoteCardContent } from "./NoteCard";
+import { TextBlock } from "./TextBlock";
+import { BlockEditBar } from "./BlockEditBar";
+import { blockRadius, noteMode } from "./blockModel";
+import { LinkCardContent, linkMode } from "./LinkCard";
+import { startLive } from "./liveSite";
 import { frameTitleFactor, noteTextFactor } from "./boardTextZoom";
 import { useBoard } from "./useReferenceBoard";
 import { registerPlayer } from "./playhead";
@@ -26,6 +35,12 @@ import { fitNatSize } from "./boardNatFit";
 import { posterTime, stillSized, useVideoStill } from "./boardVideoLod";
 import { useOnScreen } from "./useOnScreen";
 import { requestCurrentCollabMedia } from "@/lib/collab/currentProject";
+import { onOpenDoc } from "./boardPdf";
+import { subtreeCarry } from "./links/linkActions";
+
+// pdf.js, mammoth and the viewers only load when a document card is opened.
+const PdfViewer = lazy(() => import("./PdfViewer"));
+const DocViewer = lazy(() => import("./DocViewer"));
 
 // Récupération auto d'un média cassé/noir (lien distant mort ou média extrait d'un post), seulement
 // si un lien d'origine existe (sourceUrl ou ref http). Le compte des tentatives vit avec la
@@ -538,7 +553,7 @@ function SequenceContent({ item }: { item: Item }) {
   if (!count || !frames[cur]) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-muted/40 text-muted-foreground">
-        <ImageOff className="size-8" strokeWidth={1.5} />
+        <NetsuIcon name="media-missing" className="size-8" />
       </div>
     );
   }
@@ -548,7 +563,7 @@ function SequenceContent({ item }: { item: Item }) {
   if (!frameSrc) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-muted/40 text-muted-foreground">
-        <ImageOff className="size-8" strokeWidth={1.5} />
+        <NetsuIcon name="media-missing" className="size-8" />
       </div>
     );
   }
@@ -635,6 +650,7 @@ function TextNote({ item, editing }: { item: Item; editing: boolean }) {
     // (blur, clic ailleurs, Échap) — pas de perte si le blur ne se déclenche pas.
     return (
       <textarea
+        autoComplete="off"
         aria-label={item.title || item.text || t("boardMenu.text")}
         ref={taRef}
         value={item.text ?? ""}
@@ -705,7 +721,7 @@ function TextNote({ item, editing }: { item: Item; editing: boolean }) {
           onClick={(e) => { e.stopPropagation(); openNoteLink(item.link!); }}
           className="absolute right-1 top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow ring-1 ring-black/10 transition-colors hover:bg-primary [&_svg]:size-3"
         >
-          <Link2 />
+          <NetsuIcon name="link" />
         </button>
       )}
     </div>
@@ -728,6 +744,63 @@ function cropStyle(c: NonNullable<Item["crop"]>): React.CSSProperties {
 // Cadre (conteneur titré) : rectangle dont le CONTOUR prend la couleur choisie + titre en haut-gauche.
 // Déplacer le cadre déplace les items qu'il contient (cf. commit de déplacement plus bas) ; le test
 // d'appartenance vit dans boardFrames, partagé par le geste et la croissance automatique.
+// Moves the dragged item (and the rest of its selection) into the folder card under its centre.
+function dropIntoFolder(id: string, g: { x: number; y: number; w: number; h: number }): boolean {
+  const st = useBoard.getState();
+  const cx = g.x + g.w / 2, cy = g.y + g.h / 2;
+  // A plain frame would leave its content behind: only items and folder cards can go in.
+  const ids = (st.selectedIds.includes(id) ? st.selectedIds : [id])
+    .filter((x) => { const it = st.items.find((i) => i.id === x); return it && framable(it); });
+  if (!ids.length) return false;
+  const target = st.items
+    .filter((it) => it.folder && !ids.includes(it.id) && cx >= it.x && cx <= it.x + it.w && cy >= it.y && cy <= it.y + it.h)
+    .sort((a, b) => b.z - a.z)[0];
+  return target ? st.moveIntoFolder(target.id, ids) : false;
+}
+
+// Folded folder: a card with its cover, title and item count. Selectors return a string and a
+// number, so the card only re-renders when what it shows changes.
+function FolderContent({ item }: { item: Item }) {
+  const { t } = useTranslation("reference");
+  const color = item.color ?? "#8b8b94";
+  const count = useBoard((s) => folderChildren(item.id, s.stash).length);
+  const mosaic = useBoard((s) => (item.coverStyle ?? s.prefs.folderCover) === "mosaic");
+  const cover = useBoard((s) => (mosaic ? "" : folderCover(item, folderChildren(item.id, s.stash))?.src ?? ""));
+  const tiles = useBoard(useShallow((s) => (mosaic ? folderMosaic(folderChildren(item.id, s.stash)) : [])));
+  const label = item.text || t("item.frameDefault");
+  return (
+    <div
+      className="relative h-full w-full overflow-hidden rounded-xl shadow-lg"
+      style={{
+        border: `2px solid color-mix(in srgb, ${color} 80%, transparent)`,
+        background: `color-mix(in srgb, ${color} 14%, var(--color-surface))`,
+      }}
+    >
+      {tiles.length ? (
+        <div className="pointer-events-none absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5">
+          {tiles.map((src, i) => (
+            <img
+              key={i}
+              src={src}
+              alt=""
+              draggable={false}
+              className={cn("h-full w-full object-cover", tiles.length === 1 && "col-span-2 row-span-2", tiles.length === 3 && i === 0 && "row-span-2", tiles.length === 2 && "row-span-2")}
+            />
+          ))}
+        </div>
+      ) : cover ? (
+        <img src={cover} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <span className="pointer-events-none absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 opacity-40" style={{ color }}><NetsuIcon name="folder" className="size-16" /></span>
+      )}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 to-transparent px-3 pb-2 pt-8 text-white">
+        <span className="truncate font-medium" style={{ fontSize: item.fontSize ?? 14, fontFamily: item.fontFamily }}>{label}</span>
+        <span className="shrink-0 text-xs opacity-80">{t("folder.count", { count })}</span>
+      </div>
+    </div>
+  );
+}
+
 function FrameContent({ item }: { item: Item }) {
   const { t } = useTranslation("reference");
   const color = item.color ?? "#8b8b94";
@@ -808,7 +881,7 @@ function MissingContent({ item }: { item: Item }) {
   };
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted/30 p-3 text-center">
-      <FileQuestion className="size-7 shrink-0 text-muted-foreground" strokeWidth={1.5} />
+      <NetsuIcon name="file-missing" className="size-7 shrink-0 text-muted-foreground" />
       <p className="line-clamp-2 text-xs font-medium text-foreground break-all">
         {collaborativeReason === "waiting"
           ? t("item.mediaWaiting")
@@ -827,7 +900,7 @@ function MissingContent({ item }: { item: Item }) {
           onClick={() => void reload()}
           className="mt-1 inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
         >
-          {reloading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
+          <NetsuIcon name="reload-media" busy={reloading} className="size-3.5" />
           {t("item.reloadMedia")}
         </button>
       )}
@@ -842,7 +915,7 @@ function MissingContent({ item }: { item: Item }) {
             : "mt-1 bg-primary text-primary-foreground hover:bg-primary/90",
         )}
       >
-        <FolderSearch className="size-3.5" /> {t(collaborativeReason === "waiting" ? "item.retryMedia" : "item.relocate")}
+        <NetsuIcon name="relocate-missing" className="size-3.5" /> {t(collaborativeReason === "waiting" ? "item.retryMedia" : "item.relocate")}
       </button>
       {/* Un board reçu arrive rarement avec UN seul trou : proposer le dossier entier depuis la
           première tuile évite de répéter le même geste autant de fois qu'il y a de rushs. */}
@@ -865,7 +938,7 @@ function LoadingContent({ item }: { item: Item }) {
   const { t } = useTranslation("reference");
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2.5 bg-muted/40 text-muted-foreground">
-      <Loader2 className="size-8 animate-spin" strokeWidth={1.5} />
+      <NetsuIcon name="loading" busy className="size-8" />
       <span className="max-w-[85%] truncate text-xs font-medium">{item.title ?? t("item.downloading")}</span>
     </div>
   );
@@ -959,7 +1032,7 @@ function YoutubeLoading() {
   const { t } = useTranslation("reference");
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-muted/40 text-muted-foreground">
-      <Loader2 className="size-8 animate-spin" strokeWidth={1.5} />
+      <NetsuIcon name="loading" busy className="size-8" />
       <span className="text-xs font-medium">{t("youtube.preparing")}</span>
     </div>
   );
@@ -1024,15 +1097,28 @@ function YoutubeContent({ item, live, onFallback }: { item: Item; live: boolean;
 function ItemContent({ item, editing, live, onYtFallback }: { item: Item; editing: boolean; live: boolean; onYtFallback: (on: boolean) => void }) {
   if (item.loading) return <LoadingContent item={item} />;
   if (item.missing) return <MissingContent item={item} />;
-  if (item.kind === "text") return <TextNote item={item} editing={editing} />;
-  if (item.kind === "frame") return <FrameContent item={item} />;
+  if (item.kind === "text") {
+    const mode = noteMode(item);
+    if (mode === "sheet") return <NoteCardContent item={item} editing={editing} />;
+    return mode === "block" ? <TextBlock item={item} editing={editing} /> : <TextNote item={item} editing={editing} />;
+  }
+  if (item.kind === "frame") return item.folder ? <FolderContent item={item} /> : <FrameContent item={item} />;
   if (item.kind === "palette") return <PaletteContent item={item} />;
-  if (item.kind === "image") return <ImageContent item={item} />;
+  if (item.kind === "image") {
+    if (item.docFile && live && item.docFile.type !== "file") {
+      const Viewer = item.docFile.type === "pdf" ? PdfViewer : DocViewer;
+      return <Suspense fallback={<ImageContent item={item} />}><Viewer item={item} /></Suspense>;
+    }
+    return <ImageContent item={item} />;
+  }
   if (item.kind === "video") return <VideoWithStill item={item} />;
   if (item.kind === "sequence") return <SequenceContent item={item} />;
   // Embed / YouTube : `live` (double-clic) rend l'iframe cliquable (play, scroll, liens). Sinon
   // pointer-events:none → le clic sélectionne / déplace l'item (le drag du board n'est pas volé).
-  if (item.kind === "embed") return <EmbedItem item={item} interactive={live} />;
+  if (item.kind === "embed") {
+    const mode = linkMode(item);
+    return mode === "embed" ? <EmbedItem item={item} interactive={live} /> : <LinkCardContent item={item} mode={mode} />;
+  }
   return <YoutubeContent item={item} live={live} onFallback={onYtFallback} />;
 }
 
@@ -1049,14 +1135,9 @@ export const BoardItem = memo(function BoardItem({
 }) {
   const { t: tr } = useTranslation("reference");
   const wrapRef = useRef<HTMLDivElement>(null);
-  const select = useBoard((s) => s.select);
-  const patchItem = useBoard((s) => s.patchItem);
-  const toggleSelect = useBoard((s) => s.toggleSelect);
-  const bringToFront = useBoard((s) => s.bringToFront);
-  const updateItem = useBoard((s) => s.updateItem);
-  const removeItem = useBoard((s) => s.removeItem);
-  const moveBy = useBoard((s) => s.moveBy);
-  const setEditing = useBoard((s) => s.setEditing);
+  // Store actions are stable references: read once, never subscribed. Eight selectors per item meant
+  // eight subscriptions to re-run on every store change, times every mounted item.
+  const { select, patchItem, toggleSelect, bringToFront, updateItem, removeItem, moveBy, setEditing } = useBoard.getState();
 
   // Mode interactif des embeds/YouTube : double-clic → l'iframe devient cliquable (play/scroll/liens).
   // On en sort dès que l'item n'est plus seul sélectionné (clic ailleurs / Échap) → on peut le déplacer.
@@ -1064,8 +1145,23 @@ export const BoardItem = memo(function BoardItem({
   // Un YouTube joué en flux direct est une vidéo comme une autre : rien à « activer » au double-clic.
   // Seul le repli iframe redevient interactif.
   const [ytFallback, setYtFallback] = useState(false);
-  const liveable = item.kind === "embed" || (item.kind === "youtube" && ytFallback);
+  const liveable = (item.kind === "embed" && linkMode(item) === "embed") || (item.kind === "youtube" && ytFallback);
   useEffect(() => { if (!primary) setLive(false); }, [primary]);
+  // A document card (image item with a document behind it) goes live on double-click: the reader
+  // runs inside the card until the item is deselected. A plain "file" card has no reader: it opens
+  // in the system app instead.
+  const docItem = item.kind === "image" && !!item.docFile && !item.loading && !item.missing;
+  const docLive = docItem && item.docFile!.type !== "file";
+  const docRef = item.docFile?.ref;
+  useEffect(() => {
+    if (!docItem) return;
+    return onOpenDoc((id) => {
+      if (id !== item.id) return;
+      if (!docLive) { if (docRef) void nr.openPath(docRef); return; }
+      useBoard.getState().select(item.id);
+      setLive(true);
+    });
+  }, [docItem, docLive, docRef, item.id]);
   // Economy mode leaves originals parked until a cull-visible card asks for its bytes. The item
   // stays in the Zustand board, so collaboration diffs still see the complete authoritative list.
   useEffect(() => {
@@ -1078,6 +1174,7 @@ export const BoardItem = memo(function BoardItem({
   // commit du store, soit un coût quadratique sur une planche chargée. Lecture hors abonnement,
   // relue à chaque rendu de l'item — ce qui inclut le survol et tout déplacement.
   const [hover, setHover] = useState(false);
+  const isCover = useBoard((s) => item.kind === "image" && s.folderPath.length > 0 && openFolderCoverId(s) === item.id);
   const showChrome = (hover || selected) && !editing;
   const framedBy = showChrome && framable(item) ? enclosingFrame(item, useBoard.getState().items) : null;
 
@@ -1097,13 +1194,20 @@ export const BoardItem = memo(function BoardItem({
         const now = st.items.find((i) => i.id === item.id);
         if (now && !enclosingFrame(now, st.items)) patchItem(item.id, { detached: undefined }, false);
       }
+      // Dropped on a folder card: the moved items go into the folder.
+      if (pureMove && (dx !== 0 || dy !== 0) && dropIntoFolder(item.id, g)) return;
       if (pureMove && (dx !== 0 || dy !== 0)) {
         const st = useBoard.getState();
         const sel = st.selectedIds;
-        if (sel.length > 1 && sel.includes(item.id)) {
+        // "Move downstream items" (Settings > Links): the item's subtree comes along, same tick.
+        const multi = sel.length > 1 && sel.includes(item.id);
+        const carried = new Set(multi ? sel : item.kind === "frame" && !item.folder ? frameContentIds(item, st.items) : []);
+        const subtree = subtreeCarry(item.id).filter((id) => !carried.has(id));
+        if (subtree.length) moveBy(subtree, dx, dy);
+        if (multi) {
           // multi-sélection → bouge tout le groupe.
           moveBy(sel.filter((id) => id !== item.id), dx, dy);
-        } else if (item.kind === "frame") {
+        } else if (item.kind === "frame" && !item.folder) {
           // cadre = conteneur : déplace les items dont le centre est dans le cadre (position d'origine).
           const inFrame = (cx: number, cy: number) =>
             cx >= item.x && cx <= item.x + item.w && cy >= item.y && cy <= item.y + item.h;
@@ -1130,17 +1234,30 @@ export const BoardItem = memo(function BoardItem({
     {
       keepAspect:
         item.kind === "image" || item.kind === "video" || item.kind === "youtube" || item.kind === "sequence"
-        || (item.kind === "embed"
+        || (item.kind === "embed" && linkMode(item) === "embed"
             && EMBED_PLAYER_PROVIDERS.has(parseVideoEmbed(item.ref, true)?.provider ?? "generic")),
       captureRef: wrapRef,
       // Aimant + géométrie vivante (tracés liés) : le moteur de gestes a besoin de savoir QUI il
       // manipule. Un cadre emmène son contenu, qui ne peut donc pas lui servir de cible d'accrochage.
       id: item.id,
-      groupIds: item.kind === "frame" ? () => frameContentIds(item, useBoard.getState().items) : undefined,
+      // A frame carries its content; any item carries its downstream subtree when "Move downstream
+      // items" is on (links/linkActions subtreeCarry).
+      groupIds: () => [
+        ...(item.kind === "frame" ? frameContentIds(item, useBoard.getState().items) : []),
+        ...subtreeCarry(item.id),
+      ],
       // Déplacé ou redimensionné, l'item entraîne le cadre qui le tient (cf. boardFrames).
       hugFrame: framable(item) && !item.detached,
     },
   );
+  // A text element enters its editor from two taps on it, read off the pointer itself (blockGesture):
+  // `dblclick` alone is retargeted by the pointer capture and lost to the jitter of the two presses.
+  const downAt = useRef<{ x: number; y: number } | null>(null);
+  const lastTap = useRef<Tap | null>(null);
+  const writable = item.kind === "text" && noteMode(item) !== "sheet";
+  // Entering the editor closes any gesture still open (a move that never saw its pointerup).
+  const abortGesture = t.abort;
+  useEffect(() => { if (editing) abortGesture(); }, [editing, abortGesture]);
   const g = t.geom;
   const flip = `scale(${item.flipH ? -1 : 1}, ${item.flipV ? -1 : 1})`;
   // Médias animés → couche composite dédiée (cf. wrapper du contenu plus bas) pour ne pas figer au pan.
@@ -1157,16 +1274,33 @@ export const BoardItem = memo(function BoardItem({
         if (e.shiftKey) { toggleSelect(item.id); return; }
         if (!selected) select(item.id);
         if (item.kind !== "frame") bringToFront(item.id); // le cadre reste en fond
+        downAt.current = { x: e.clientX, y: e.clientY };
         t.startMove(e);
       }}
       onDoubleClick={() => {
-        if (item.kind === "text") setEditing(item.id);
-        else if (liveable) setLive(true);
+        if (item.kind === "text") { if (useBoard.getState().editingId !== item.id) setEditing(item.id); }
+        else if (liveable || docLive) setLive(true);
+        else if (item.kind === "embed" && linkMode(item) === "live") startLive(item.id);
+        else if (docItem && docRef) void nr.openPath(docRef);
+        else if (item.kind === "embed") void nr.openExternal(item.ref);
+        else if (item.folder) useBoard.getState().enterFolder(item.id);
         else useBoard.getState().requestFocus(item.id); // image/vidéo/séquence/cadre → centre + zoome
       }}
       onPointerMove={t.onPointerMove}
-      onPointerUp={t.onPointerUp}
-      onPointerCancel={t.onPointerCancel}
+      onPointerUp={(e) => {
+        const down = downAt.current;
+        downAt.current = null;
+        t.onPointerUp();
+        if (!writable || editing || e.button !== 0 || !down || !isTap(down, { x: e.clientX, y: e.clientY })) {
+          lastTap.current = null;
+          return;
+        }
+        const r = registerTap(lastTap.current, { id: item.id, x: e.clientX, y: e.clientY, t: e.timeStamp });
+        lastTap.current = r.next;
+        if (r.double) setEditing(item.id);
+      }}
+      onPointerCancel={() => { downAt.current = null; lastTap.current = null; t.onPointerCancel(); }}
+      onLostPointerCapture={t.onLostPointerCapture}
       onPointerEnter={() => setHover(true)}
       onPointerLeave={() => setHover(false)}
       className={cn(
@@ -1191,8 +1325,14 @@ export const BoardItem = memo(function BoardItem({
           item.kind === "frame" ? "" : "shadow-lg ring-1",
           item.kind === "text" || item.kind === "frame" ? "" : "bg-black/40",
           selected ? "ring-2 ring-primary" : item.kind === "frame" ? "" : "ring-black/30",
+          // Markdown block: its own hairline border and soft shadow, matching radius (see TextBlock).
+          item.kind === "text" && noteMode(item) === "block" && "shadow-[0_1px_2px_rgba(0,0,0,0.08),0_8px_18px_-8px_rgba(0,0,0,0.25)]",
+          item.kind === "text" && noteMode(item) === "block" && !selected && "ring-0",
         )}
-        style={{ background: item.kind === "text" ? item.bg : undefined }}
+        style={{
+          background: item.kind === "text" && noteMode(item) === "text" ? item.bg : undefined,
+          borderRadius: item.kind === "text" && noteMode(item) === "block" ? blockRadius(item) : undefined,
+        }}
       >
         {/* Vidéo/séquence = couche composite PROPRE (translateZ + will-change) : au pan, le wrapper
             d'items s'anime ; sans couche dédiée, Chromium re-rasterise le média avec le parent et la
@@ -1208,6 +1348,8 @@ export const BoardItem = memo(function BoardItem({
           <ItemContent item={item} editing={editing} live={live} onYtFallback={setYtFallback} />
         </div>
       </div>
+
+      {editing && item.kind === "text" && noteMode(item) === "block" && <BlockEditBar item={item} />}
 
       {/* Lien au cadre : bleu = le cadre emmène cet item et s'ajuste sur lui, gris = lien coupé,
           l'item reste posé là mais le cadre l'ignore. Le clic bascule les deux états. */}
@@ -1233,19 +1375,32 @@ export const BoardItem = memo(function BoardItem({
               />
             }
           >
-            {item.detached ? <Unlink2 /> : <Link2 />}
+            <NetsuIcon name="link-frame" on={!item.detached} className="size-3.5" />
           </TooltipTrigger>
           <TooltipContent>{tr(item.detached ? "actions.linkFrame" : "actions.unlinkFrame")}</TooltipContent>
         </Tooltip>
       )}
 
       {/* Indice d'interaction (embed/YouTube) : double-clic pour activer, clic ailleurs pour déplacer */}
-      {liveable && primary && !editing && (
+      {(liveable || docLive) && primary && !editing && (
         <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover/90 px-2 py-0.5 text-[10px] font-medium text-popover-foreground shadow ring-1 ring-foreground/10">
           {live ? tr("item.interactiveActive") : tr("item.interactiveHint")}
         </span>
       )}
 
+      {item.kind === "embed" && linkMode(item) === "live" && primary && !editing && (
+        <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover/90 px-2 py-0.5 text-[10px] font-medium text-popover-foreground shadow ring-1 ring-foreground/10">
+          {tr("linkCard.liveHint")}
+        </span>
+      )}
+
+      {/* Inside a folder, the image shown on the folder's card is marked: one quiet chip, so
+          nobody has to guess which picture is the cover. */}
+      {isCover && (
+        <span className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white shadow">
+          <NetsuIcon name="set-cover" className="size-3" /> {tr("folder.cover")}
+        </span>
+      )}
       {primary && !editing && (
         <>
           {HANDLES.map((h) => (
@@ -1255,12 +1410,14 @@ export const BoardItem = memo(function BoardItem({
               className={cn("absolute z-10 size-2.5 rounded-full border border-background bg-primary shadow transition-transform hover:scale-125", HANDLE_POS[h])}
             />
           ))}
+          {/* Rotation sits off the top-left corner, away from the side midpoints where link
+              handles live: the two used to overlap at the top centre. */}
           <span
             onPointerDown={(e) => { if (e.button === 0) t.startRotate(e); }}
-            className="absolute left-1/2 z-10 size-3 -translate-x-1/2 cursor-grab rounded-full border border-background bg-foreground shadow transition-shadow hover:ring-2 hover:ring-primary/60"
-            style={{ top: -28 }}
-          />
-          <span className="absolute left-1/2 top-0 -z-0 h-5 w-px -translate-x-1/2 -translate-y-full bg-primary/60" />
+            className="absolute -left-6 -top-6 z-10 flex size-[18px] cursor-grab items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:border-primary hover:text-primary"
+          >
+            <NetsuIcon name="rotate" className="size-3" />
+          </span>
           <button
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
@@ -1268,7 +1425,7 @@ export const BoardItem = memo(function BoardItem({
             aria-label={tr("common:action.delete")}
             className="absolute -right-2 -top-9 z-10 flex size-6 items-center justify-center rounded-full bg-destructive/90 text-white shadow hover:bg-destructive"
           >
-            <Trash2 className="size-3.5" />
+            <NetsuIcon name="delete" className="size-3.5" />
           </button>
         </>
       )}

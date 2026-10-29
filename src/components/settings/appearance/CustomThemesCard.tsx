@@ -9,7 +9,7 @@
 // l'aperçu est une vignette de palette, sans affiche à charger.
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Pencil, Plus, Save, Trash2 } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -89,11 +89,11 @@ export function CustomThemesCard() {
               n'apprend rien sur l'état du thème. */}
           {dirty ? (
             <Button size="sm" onClick={() => active && updateCustomTheme(active.id)}>
-              <Save className="size-3.5" /> {t("settings:appearance.custom.save")}
+              <NetsuIcon name="save" className="size-3.5" /> {t("settings:appearance.custom.save")}
             </Button>
           ) : null}
           <Button size="sm" variant="outline" onClick={() => setNaming({ id: null, name: "" })}>
-            <Plus className="size-3.5" /> {t("settings:appearance.custom.create")}
+            <NetsuIcon name="add" className="size-3.5" /> {t("settings:appearance.custom.create")}
           </Button>
         </div>
       </div>
@@ -117,7 +117,7 @@ export function CustomThemesCard() {
                 >
                   <div className="flex w-full items-center justify-between gap-2">
                     <span className="truncate text-sm font-medium">{entry.name}</span>
-                    {selected && <Check className="size-4 shrink-0 text-primary" />}
+                    {selected && <NetsuIcon name="check" className="size-4 shrink-0 text-primary" />}
                   </div>
                   <ThemePreview theme={entry} />
                 </button>
@@ -128,10 +128,10 @@ export function CustomThemesCard() {
                     label={t("settings:appearance.custom.rename")}
                     onClick={() => setNaming({ id: entry.id, name: entry.name })}
                   >
-                    <Pencil className="size-3" />
+                    <NetsuIcon name="edit" className="size-3" />
                   </CardAction>
                   <CardAction label={t("settings:appearance.custom.delete")} onClick={() => deleteCustomTheme(entry.id)}>
-                    <Trash2 className="size-3" />
+                    <NetsuIcon name="delete" className="size-3" />
                   </CardAction>
                 </div>
               </div>

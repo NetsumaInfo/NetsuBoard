@@ -1065,3 +1065,19 @@ button:not(:disabled):active,
   }
   @keyframes gate-in { to { opacity: 1; transform: none; } }
 }
+
+/* Brand logos stay as their owners draw them; they only answer the control that holds them, with one small move. */
+.brand-motion {
+  transition: transform 200ms ease-out;
+}
+:is(button, a, [role="button"], [role="menuitem"], [role="tab"]):hover .brand-motion {
+  transform: translateY(-1px) rotate(-6deg) scale(1.06);
+}
+:is(button, a, [role="button"], [role="menuitem"], [role="tab"]):active .brand-motion {
+  transform: scale(0.92);
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-motion {
+    transition: none;
+  }
+}

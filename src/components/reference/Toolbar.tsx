@@ -9,12 +9,6 @@
 
 import { lazy, Suspense, useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ImagePlus, Type, Frame, Pencil, ZoomIn, ZoomOut, Maximize, FilePlus2,
-  Save, SaveAll, FileCheck2, FolderOpen, Share2, PictureInPicture2, Minimize2, Pin, PinOff, Play, Pause,
-  Settings2, Home, Undo2, Redo2, RotateCw, Magnet, Package, ImageDown, SwatchBook,
-  MousePointer2, MousePointerBan, Pipette, LayoutGrid, Users,
-} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -28,6 +22,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { convexConfigured } from "@/lib/convexEnv";
 import { useBoard } from "./useReferenceBoard";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
+import {
+  AddTextGlyph, AddBlockGlyph, AddFrameGlyph, DrawToggleGlyph, PaletteStudioGlyph, ExtractPaletteGlyph,
+  TidyGlyph, SnapGlyph, ZoomOutGlyph, ZoomInGlyph, FitAllGlyph, FreezeGlyph, UndoGlyph, RedoGlyph,
+  MouseThroughGlyph, SettingsGlyph, SaveGlyph, SaveAsGlyph, OpenSceneGlyph, NewSceneGlyph,
+  HomeGlyph, PinWindowGlyph, DetachGlyph, AttachGlyph, type Glyph, type GlyphProps,
+} from "./netsuIcons";
 
 // LAZY, and mounted only while open: this dialog pulls `convex/react`, which must stay out of the
 // entry chunk of an app that opens without a backend — and its hooks would throw outside the Convex
@@ -41,7 +42,8 @@ const CollaborationDialog = lazy(() =>
   import("./CollaborationDialog").then((module) => ({ default: module.CollaborationDialog })),
 );
 import { fileLabel } from "./useScenePersistence";
-import { recoverAllOnlineMedia, recoverableOnlineItems } from "./boardMediaActions";
+import { recoverAllOnlineMedia } from "./boardMediaActions";
+import { countRecoverableOnlineItems } from "./boardMediaRecovery";
 import { ExportImageDialog } from "./ExportImageDialog";
 import { askMouseThrough, setMouseThrough } from "./boardMouseThrough";
 import { extractPaletteToBoard } from "./boardPaletteActions";
@@ -51,8 +53,8 @@ import type { ShortcutAction } from "./referenceShared";
 
 // `action` = raccourci-commande qui fait la MÊME chose : sa touche paraît dans l'infobulle, lue dans
 // les préférences (un rebind se voit tout de suite).
-function IconBtn({ icon: Icon, label, onClick, disabled, active, action }: {
-  icon: typeof ImagePlus; label: string; onClick: () => void;
+function IconBtn({ icon: Icon, iconProps, label, onClick, disabled, active, action }: {
+  icon: Glyph; iconProps?: Omit<GlyphProps, "className">; label: string; onClick: () => void;
   disabled?: boolean; active?: boolean; action?: ShortcutAction;
 }) {
   const combo = useBoard((s) => (action ? s.prefs.shortcutKeys[action] : ""));
@@ -63,7 +65,7 @@ function IconBtn({ icon: Icon, label, onClick, disabled, active, action }: {
           <Button variant={active ? "default" : "ghost"} size="icon-sm" onClick={onClick} disabled={disabled} aria-label={label} aria-pressed={active} />
         }
       >
-        <Icon />
+        <Icon {...iconProps} />
       </TooltipTrigger>
       <TooltipContent>
         <ShortcutTip label={label} combo={combo} />
@@ -108,7 +110,6 @@ export function Toolbar({
   const filePath = useBoard((s) => s.filePath);
   const dirty = useBoard((s) => s.dirty);
   const notice = useBoard((s) => s.notice);
-  const items = useBoard((s) => s.items);
   const frozen = useBoard((s) => s.frozen);
   const toggleFrozen = useBoard((s) => s.toggleFrozen);
   const drawMode = useBoard((s) => s.drawMode);
@@ -126,8 +127,10 @@ export function Toolbar({
   const askOpen = useBoard((s) => s.mouseThroughAsk);
   const setAskOpen = useBoard((s) => s.setMouseThroughAsk);
   const setStudio = useBoard((s) => s.setStudio);
-  const recoverableCount = recoverableOnlineItems(items).length;
-  const hasItems = items.some((i) => i.kind !== "draw");
+  // Scalars, not the item list: the toolbar must not re-render (and re-scan the board) on every item
+  // commit, note keystroke or sequence step. `some` stops at the first match.
+  const recoverableCount = useBoard((s) => countRecoverableOnlineItems(s.items));
+  const hasItems = useBoard((s) => s.items.some((i) => i.kind !== "draw"));
   const snap = useBoard((s) => s.prefs.snap);
   const setPrefs = useBoard((s) => s.setPrefs);
   const readOnly = useBoard((s) => s.collabProjectId !== null && s.collabRole === "viewer");
@@ -159,11 +162,14 @@ export function Toolbar({
 
   // Boutons adressables par les deux barres : une seule définition, jamais deux à garder d'accord.
   const B: Record<PinnedButtonId, React.ReactNode> = {
-    text: <IconBtn icon={Type} label={t("toolbar.addText")} action="addText" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addText(); }} />,
-    frame: <IconBtn icon={Frame} label={t("toolbar.addFrame")} action="addFrame" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addFrame(); }} />,
+    text: <IconBtn icon={AddTextGlyph} label={t("toolbar.addText")} action="addText" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addText(); }} />,
+    // The "note" id is persisted in user prefs: it now adds a text block (a sheet is in the Add menu).
+    note: <IconBtn icon={AddBlockGlyph} label={t("toolbar.addBlock")} disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addBlock(); }} />,
+    frame: <IconBtn icon={AddFrameGlyph} label={t("toolbar.addFrame")} action="addFrame" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addFrame(); }} />,
     draw: (
       <IconBtn
-        icon={Pencil}
+        icon={DrawToggleGlyph}
+        iconProps={{ on: drawMode }}
         label={drawMode ? t("toolbar.exitDraw") : t("toolbar.draw")}
         action="toggleDraw"
         active={drawMode}
@@ -172,38 +178,40 @@ export function Toolbar({
       />
     ),
     // Générateur de palettes : son état vit dans le store, le panneau survit aux rendus de la barre.
-    palette: <IconBtn icon={SwatchBook} label={t("palette.studio.open")} disabled={readOnly} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />,
-    extractPalette: <IconBtn icon={Pipette} label={t("shortcut.extractPalette")} action="extractPalette" disabled={readOnly} onClick={() => void extractPaletteToBoard()} />,
-    tidy: <IconBtn icon={LayoutGrid} label={t("shortcut.arrangeDefault")} action="arrangeDefault" disabled={readOnly} onClick={tidySelection} />,
+    palette: <IconBtn icon={PaletteStudioGlyph} label={t("palette.studio.open")} disabled={readOnly} onClick={() => { leaveDraw(); setStudio({ targetId: null }); }} />,
+    extractPalette: <IconBtn icon={ExtractPaletteGlyph} label={t("shortcut.extractPalette")} action="extractPalette" disabled={readOnly} onClick={() => void extractPaletteToBoard()} />,
+    tidy: <IconBtn icon={TidyGlyph} iconProps={{ mode: prefs.arrangeLayout }} label={t("shortcut.arrangeDefault")} action="arrangeDefault" disabled={readOnly} onClick={tidySelection} />,
     // Aimant : accrochage bords/centres/coins. Alt le suspend le temps d'un geste, ce bouton l'éteint.
-    snap: <IconBtn icon={Magnet} label={snap ? t("toolbar.snapOff") : t("toolbar.snapOn")} active={snap} onClick={() => setPrefs({ snap: !snap })} />,
-    zoomOut: <IconBtn icon={ZoomOut} label={t("actions.zoomOut")} action="zoomOut" onClick={() => board.current?.zoomBy(0.8)} />,
-    zoomIn: <IconBtn icon={ZoomIn} label={t("actions.zoomIn")} action="zoomIn" onClick={() => board.current?.zoomBy(1.25)} />,
-    fit: <IconBtn icon={Maximize} label={t("actions.fitAll")} action="fit" onClick={() => board.current?.fit()} />,
+    snap: <IconBtn icon={SnapGlyph} iconProps={{ on: snap }} label={snap ? t("toolbar.snapOff") : t("toolbar.snapOn")} active={snap} onClick={() => setPrefs({ snap: !snap })} />,
+    zoomOut: <IconBtn icon={ZoomOutGlyph} label={t("actions.zoomOut")} action="zoomOut" onClick={() => board.current?.zoomBy(0.8)} />,
+    zoomIn: <IconBtn icon={ZoomInGlyph} label={t("actions.zoomIn")} action="zoomIn" onClick={() => board.current?.zoomBy(1.25)} />,
+    fit: <IconBtn icon={FitAllGlyph} label={t("actions.fitAll")} action="fit" onClick={() => board.current?.fit()} />,
     freeze: (
       <IconBtn
-        icon={frozen ? Play : Pause}
+        icon={FreezeGlyph}
+        iconProps={{ on: frozen }}
         label={frozen ? t("toolbar.playAll") : t("toolbar.freezeAll")}
         action="toggleFreeze"
         onClick={toggleFrozen}
       />
     ),
-    undo: <IconBtn icon={Undo2} label={t("actions.undo")} action="undo" onClick={undo} disabled={readOnly || !canUndo} />,
-    redo: <IconBtn icon={Redo2} label={t("actions.redo")} action="redo" onClick={redo} disabled={readOnly || !canRedo} />,
+    undo: <IconBtn icon={UndoGlyph} label={t("actions.undo")} action="undo" onClick={undo} disabled={readOnly || !canUndo} />,
+    redo: <IconBtn icon={RedoGlyph} label={t("actions.redo")} action="redo" onClick={redo} disabled={readOnly || !canRedo} />,
     mouseThrough: (
       <IconBtn
-        icon={mouseThrough ? MousePointer2 : MousePointerBan}
+        icon={MouseThroughGlyph}
+        iconProps={{ on: mouseThrough }}
         label={mouseThrough ? t("mouseThrough.off") : t("mouseThrough.on")}
         action="toggleMouseThrough"
         active={mouseThrough}
         onClick={askMouseThrough}
       />
     ),
-    settings: onSettings ? <IconBtn icon={Settings2} label={t("actions.settings")} onClick={onSettings} /> : null,
-    save: onSave ? <IconBtn icon={Save} label={t("toolbar.saveScene")} action="save" onClick={onSave} /> : null,
-    saveAs: onSaveAs ? <IconBtn icon={SaveAll} label={t("toolbar.saveAs")} action="saveAs" onClick={onSaveAs} /> : null,
-    openProject: onOpen ? <IconBtn icon={FolderOpen} label={t("toolbar.openScene")} action="openProject" onClick={onOpen} /> : null,
-    newScene: <IconBtn icon={FilePlus2} label={t("actions.newScene")} action="newScene" onClick={() => newScene()} />,
+    settings: onSettings ? <IconBtn icon={SettingsGlyph} label={t("actions.settings")} onClick={onSettings} /> : null,
+    save: onSave ? <IconBtn icon={SaveGlyph} label={t("toolbar.saveScene")} action="save" onClick={onSave} /> : null,
+    saveAs: onSaveAs ? <IconBtn icon={SaveAsGlyph} label={t("toolbar.saveAs")} action="saveAs" onClick={onSaveAs} /> : null,
+    openProject: onOpen ? <IconBtn icon={OpenSceneGlyph} label={t("toolbar.openScene")} action="openProject" onClick={onOpen} /> : null,
+    newScene: <IconBtn icon={NewSceneGlyph} label={t("actions.newScene")} action="newScene" onClick={() => newScene()} />,
     // Partager : le PROJET (.netsu) ou une IMAGE de la scène — deux sorties, d'où le menu.
     share: (
       <DropdownMenu>
@@ -211,31 +219,31 @@ export function Toolbar({
           <TooltipTrigger
             render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={t("toolbar.share")} />} />}
           >
-            <Share2 />
+            <NetsuIcon name="share" />
           </TooltipTrigger>
           <TooltipContent>{t("toolbar.share")}</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end">
           {onExport && (
             <DropdownMenuItem onClick={onExport}>
-              <Package /> {t("toolbar.shareProject")}
+              <NetsuIcon name="share-project" /> {t("toolbar.shareProject")}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem disabled={!hasItems} onClick={() => setImgExport(true)}>
-            <ImageDown /> {t("exportImage.menu")}
+            <NetsuIcon name="export-image" /> {t("exportImage.menu")}
           </DropdownMenuItem>
           {/* Partager À QUELQU'UN, et non un fichier : le projet devient collaboratif et les amis
               choisis reçoivent une invitation dans leur application. Sans déploiement Convex il n'y
               a ni compte ni amis : l'entrée disparaît plutôt que de mener à une impasse. */}
           {convexConfigured && (
             <DropdownMenuItem onClick={() => setCollab(true)}>
-              <Users /> {t("collab.menu")}
+              <NetsuIcon name="collab" /> {t("collab.menu")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
     ),
-    home: onHome ? <IconBtn icon={Home} label={t("toolbar.home")} onClick={onHome} /> : null,
+    home: onHome ? <IconBtn icon={HomeGlyph} label={t("toolbar.home")} onClick={onHome} /> : null,
   };
 
   // Sorties du format épinglé : jamais masquables.
@@ -243,13 +251,14 @@ export function Toolbar({
     <>
       {onTogglePin && (
         <IconBtn
-          icon={pinned ? Pin : PinOff}
+          icon={PinWindowGlyph}
+          iconProps={{ on: pinned }}
           label={pinned ? t("actions.unpin") : t("actions.pin")}
           onClick={onTogglePin}
         />
       )}
-      {onDetach && <IconBtn icon={PictureInPicture2} label={t("actions.detach")} onClick={onDetach} />}
-      {onAttach && <IconBtn icon={Minimize2} label={t("actions.attach")} onClick={onAttach} />}
+      {onDetach && <IconBtn icon={DetachGlyph} label={t("actions.detach")} onClick={onDetach} />}
+      {onAttach && <IconBtn icon={AttachGlyph} label={t("actions.attach")} onClick={onAttach} />}
     </>
   );
   const dialogs = (
@@ -331,7 +340,7 @@ export function Toolbar({
         {filePath ? (
           <Tooltip>
             <TooltipTrigger render={<span className="flex min-w-0 items-center gap-1 truncate" />}>
-              <FileCheck2 className="size-3.5 shrink-0" />
+              <NetsuIcon name="open-project-file" className="size-3.5" />
               <span className="truncate">{fileLabel(filePath)}</span>
             </TooltipTrigger>
             <TooltipContent>{filePath}</TooltipContent>
@@ -368,7 +377,7 @@ export function Toolbar({
             aria-label={t("notice.redownloadAll", { count: recoverableCount })}
             style={draggable ? ({ WebkitAppRegion: "no-drag" } as React.CSSProperties) : undefined}
           >
-            <RotateCw className={cn(recovering && "animate-spin")} />
+            <NetsuIcon name="redownload-all" busy={recovering} />
             {t("notice.redownloadAll", { count: recoverableCount })}
           </Button>
         )}

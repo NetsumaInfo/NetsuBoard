@@ -9,7 +9,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, FolderInput, HardDrive, Loader2, Save, Sparkles, Users } from "lucide-react";
+import type { ComponentType } from "react";
+import { SettingsStorageGlyph, SparklesGlyph } from "@/components/reference/netsuIcons";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr, type StorageAudit } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -29,7 +31,7 @@ function Row({ label, hint, size, icon: Icon }: {
   label: string;
   hint: string;
   size: number;
-  icon: typeof HardDrive;
+  icon: ComponentType<{ className?: string }>;
 }) {
   return (
     <div className="flex items-start gap-2.5 py-2">
@@ -132,7 +134,7 @@ export function StoragePanel() {
   if (busy === "scan" && !audit) {
     return (
       <div className="grid flex-1 place-items-center gap-2 text-muted-foreground">
-        <Loader2 className="size-5 animate-spin" />
+        <NetsuIcon name="loading" busy className="size-5" />
         <p className="text-xs">{t("settings:storage.scanning")}</p>
       </div>
     );
@@ -166,13 +168,13 @@ export function StoragePanel() {
 
         <div className="divide-y divide-border">
           <Row
-            icon={Sparkles}
+            icon={SparklesGlyph}
             label={t("settings:storage.safe.caches")}
             hint={t("settings:storage.safe.cachesHint")}
             size={cacheBytes}
           />
           <Row
-            icon={HardDrive}
+            icon={SettingsStorageGlyph}
             label={t("settings:storage.safe.duplicated", { count: assets?.freeable.files ?? 0 })}
             hint={assets?.freeable.entries.length
               ? t("settings:storage.safe.duplicatedHint", {
@@ -185,7 +187,7 @@ export function StoragePanel() {
 
         <div className="mt-2 flex items-center gap-2">
           <Button size="sm" onClick={() => void free()} disabled={!!busy || freeableBytes === 0}>
-            {busy === "free" ? <Loader2 className="animate-spin" /> : null}
+            {busy === "free" ? <NetsuIcon name="loading" busy /> : null}
             {t("settings:storage.safe.action")}
           </Button>
           {!!assets?.settling && (
@@ -203,7 +205,7 @@ export function StoragePanel() {
       <section className="flex flex-col gap-2 rounded-lg border border-border p-3.5">
         <div className="flex items-baseline justify-between gap-3">
           <h4 className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-            <AlertTriangle className="size-3.5 text-[var(--color-warn,#d97706)]" />
+            <NetsuIcon name="warning" className="size-3.5 text-[var(--color-warn,#d97706)]" />
             {t("settings:storage.sole.title")}
           </h4>
           <span className="text-sm font-medium tabular-nums text-foreground">
@@ -231,7 +233,7 @@ export function StoragePanel() {
                 <TooltipTrigger
                   render={<span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground" />}
                 >
-                  <Users className="size-3.5" /> {t("settings:storage.sole.shared")}
+                  <NetsuIcon name="collab" className="size-3.5" /> {t("settings:storage.sole.shared")}
                 </TooltipTrigger>
                 <TooltipContent>{t("settings:storage.sole.sharedHint")}</TooltipContent>
               </Tooltip>
@@ -249,7 +251,7 @@ export function StoragePanel() {
                 disabled={!!busy}
                 onClick={() => void archive(scene)}
               >
-                <Save /> {t("settings:storage.sole.archive")}
+                <NetsuIcon name="save" /> {t("settings:storage.sole.archive")}
               </Button>
             )}
           </div>
@@ -264,7 +266,7 @@ export function StoragePanel() {
               </p>
             </div>
             <Button size="sm" variant="outline" disabled={!!busy} onClick={() => void moveOrphans()}>
-              {busy === "move" ? <Loader2 className="animate-spin" /> : <FolderInput />}
+              <NetsuIcon name="storage-move" busy={busy === "move"} />
               {t("settings:storage.sole.move")}
             </Button>
           </div>

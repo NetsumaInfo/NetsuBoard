@@ -1,0 +1,36 @@
+/* Paper look shared by the live document reader and the card thumbnail (rasterised by
+   html-to-image, which reads these computed styles). Everything is in `em` so the reader's zoom is
+   a font-size change. Plain CSS, no animation. */
+.doc-paper {
+  box-sizing: border-box;
+  background: #fff;
+  color: #1b1b1f;
+  font: 1em/1.55 system-ui, "Segoe UI", sans-serif;
+  padding: 2.2em 2.4em;
+  overflow-wrap: anywhere;
+}
+.doc-paper h1, .doc-paper h2, .doc-paper h3, .doc-paper h4, .doc-paper h5, .doc-paper h6 {
+  margin: 1.1em 0 0.4em;
+  line-height: 1.25;
+  font-weight: 650;
+}
+.doc-paper h1 { font-size: 1.7em; }
+.doc-paper h2 { font-size: 1.4em; }
+.doc-paper h3 { font-size: 1.2em; }
+.doc-paper h4, .doc-paper h5, .doc-paper h6 { font-size: 1.05em; }
+.doc-paper > :first-child { margin-top: 0; }
+.doc-paper p { margin: 0 0 0.8em; }
+.doc-paper ul, .doc-paper ol { margin: 0 0 0.8em; padding-left: 1.6em; }
+.doc-paper li { margin: 0.15em 0; }
+.doc-paper a { color: #1d63d8; text-decoration: underline; }
+.doc-paper blockquote { margin: 0 0 0.8em; padding: 0.1em 0 0.1em 0.9em; border-left: 0.2em solid #c9ccd4; color: #4a4d57; }
+.doc-paper hr { border: 0; border-top: 1px solid #d7d9df; margin: 1.2em 0; }
+.doc-paper code { font: 0.9em ui-monospace, "Cascadia Mono", Consolas, monospace; background: #f1f2f5; padding: 0.1em 0.3em; border-radius: 0.25em; }
+.doc-paper pre { margin: 0 0 0.8em; padding: 0.8em 1em; background: #f1f2f5; border-radius: 0.4em; overflow: auto; }
+.doc-paper pre code { background: none; padding: 0; }
+.doc-paper img { max-width: 100%; height: auto; }
+.doc-paper table { border-collapse: collapse; margin: 0 0 0.8em; font-size: 0.92em; }
+.doc-paper th, .doc-paper td { border: 1px solid #d0d3da; padding: 0.3em 0.6em; text-align: left; vertical-align: top; }
+.doc-paper th { background: #eef0f4; font-weight: 600; }
+.doc-paper.doc-plain { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.85em; }
+.doc-paper.doc-plain pre { margin: 0; padding: 0; background: none; white-space: pre-wrap; overflow: visible; }

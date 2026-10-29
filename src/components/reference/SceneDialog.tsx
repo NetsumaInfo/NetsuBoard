@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Trash2, FolderOpen } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -97,7 +97,7 @@ export function SceneDialog({
                   onClick={() => doOpen(s.id)}
                   className="flex min-w-0 flex-1 items-center gap-2 text-left justify-start rounded hover:bg-muted/50 transition-colors text-foreground text-sm"
                 >
-                  <FolderOpen className="size-4 shrink-0 text-muted-foreground" />
+                  <NetsuIcon name="folder-open" className="size-4 shrink-0 text-muted-foreground" />
                   <span className="truncate text-sm">{s.name}</span>
                   <span className="ml-auto shrink-0 text-xs text-muted-foreground">{fmtDate(s.updatedAt)}</span>
                 </button>
@@ -107,7 +107,7 @@ export function SceneDialog({
                   className="opacity-0 group-hover:opacity-100 hoverless:opacity-100 inline-flex items-center justify-center size-6 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                   onClick={() => doDelete(s.id)}
                 >
-                  <Trash2 className="text-destructive size-4" />
+                  <NetsuIcon name="delete" className="text-destructive" />
                 </button>
               </li>
             ))}

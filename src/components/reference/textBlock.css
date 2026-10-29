@@ -1,0 +1,130 @@
+/* Markdown text block on the board. Sober: theme surface, hairline border, small radius, soft shadow
+   (on the item wrapper, which clips its children), a clear type scale in `em` so the block's font
+   size drives everything. Plain CSS, no animation. */
+.nr-block {
+  --nr-accent: transparent;
+  --nr-pad: 1;
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-family: "Inter Variable", Inter, system-ui, sans-serif;
+  line-height: 1.5;
+  text-align: left;
+}
+.nr-block::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--nr-accent);
+}
+.nr-block-body {
+  box-sizing: border-box;
+  height: 100%;
+  padding: calc(0.85em * var(--nr-pad)) calc(1.1em * var(--nr-pad)) calc(0.9em * var(--nr-pad)) calc(1.25em * var(--nr-pad));
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+}
+.nr-block-body > :first-child { margin-top: 0; }
+.nr-block-body > :last-child { margin-bottom: 0; }
+.nr-block h1, .nr-block h2, .nr-block h3, .nr-block h4, .nr-block h5, .nr-block h6 {
+  margin: 0.9em 0 0.35em;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.nr-block h1 { font-size: 1.5em; font-weight: 700; letter-spacing: -0.02em; }
+.nr-block h2 { font-size: 1.25em; }
+.nr-block h3 { font-size: 1.08em; }
+.nr-block h4, .nr-block h5, .nr-block h6 { font-size: 1em; color: var(--color-muted-foreground); }
+.nr-block p { margin: 0 0 0.6em; }
+.nr-block ul, .nr-block ol { margin: 0 0 0.6em; padding-left: 1.3em; }
+.nr-block ul ul, .nr-block ul ol, .nr-block ol ul, .nr-block ol ol { margin: 0.1em 0; }
+.nr-block li { margin: 0.12em 0; }
+.nr-block li::marker { color: var(--color-muted-foreground); }
+.nr-block a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+.nr-block strong { font-weight: 650; }
+.nr-block del { color: var(--color-muted-foreground); }
+.nr-block blockquote {
+  margin: 0 0 0.6em;
+  padding: 0.05em 0 0.05em 0.8em;
+  border-left: 2px solid var(--color-border);
+  color: var(--color-muted-foreground);
+}
+.nr-block hr { border: 0; border-top: 1px solid var(--color-border); margin: 0.9em 0; }
+.nr-block code {
+  font: 0.88em ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background: color-mix(in srgb, var(--color-muted-foreground) 14%, transparent);
+  padding: 0.1em 0.35em;
+  border-radius: 0.3em;
+}
+.nr-block pre {
+  margin: 0 0 0.6em;
+  padding: 0.6em 0.8em;
+  border-radius: 0.5em;
+  background: color-mix(in srgb, var(--color-muted-foreground) 12%, transparent);
+  overflow-x: auto;
+}
+.nr-block pre code { background: none; padding: 0; font-size: 0.85em; }
+.nr-block table { border-collapse: collapse; margin: 0 0 0.6em; font-size: 0.95em; }
+.nr-block th, .nr-block td { border: 1px solid var(--color-border); padding: 0.25em 0.6em; text-align: left; }
+.nr-block th { font-weight: 600; background: color-mix(in srgb, var(--color-muted-foreground) 10%, transparent); }
+
+/* Task items: the checkbox is a span carrying its source line; the block reads the click. */
+.nr-block li.md-task { list-style: none; position: relative; margin-left: -1.3em; padding-left: 1.55em; }
+.nr-block li.md-task ul, .nr-block li.md-task ol { margin-left: -0.25em; }
+.nr-block .md-box {
+  position: absolute;
+  left: 0;
+  top: 0.28em;
+  box-sizing: border-box;
+  width: 1.05em;
+  height: 1.05em;
+  border: 1.5px solid var(--color-muted-foreground);
+  border-radius: 0.28em;
+  cursor: pointer;
+}
+.nr-block .md-box:hover { border-color: var(--color-primary); }
+.nr-block li[data-done] > .md-box { background: var(--color-primary); border-color: var(--color-primary); }
+.nr-block li[data-done] > .md-box::after {
+  content: "";
+  position: absolute;
+  left: 0.3em;
+  top: 0.08em;
+  width: 0.28em;
+  height: 0.55em;
+  border: solid var(--color-primary-foreground);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.nr-block li[data-done] > span:last-child { color: var(--color-muted-foreground); text-decoration: line-through; }
+.nr-block-empty { color: var(--color-muted-foreground); }
+
+.nr-block-edit {
+  display: block;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  resize: none;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: inherit;
+  padding: calc(0.85em * var(--nr-pad)) calc(1.1em * var(--nr-pad)) calc(0.9em * var(--nr-pad)) calc(1.25em * var(--nr-pad));
+  font: 0.93em/1.55 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  tab-size: 2;
+  scrollbar-width: thin;
+}

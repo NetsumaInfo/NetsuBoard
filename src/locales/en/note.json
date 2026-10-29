@@ -1,0 +1,281 @@
+{
+  "audioLabel": "Audio",
+  "player": {
+    "pause": "Pause",
+    "play": "Play",
+    "seek": "Seek in the video",
+    "soundOn": "Turn sound on",
+    "soundOff": "Mute sound"
+  },
+  "blocksUi": {
+    "playbackSpeed": "Playback speed",
+    "chooseAudio": "Choose audio…",
+    "audioDrop": "MP3, WAV, FLAC… or drag and drop",
+    "audioUrl": "…or paste an audio URL and press Enter",
+    "changeDivider": "Change divider style",
+    "chooseFile": "Choose a file…",
+    "fileDrop": "PDF, Word, Excel, ZIP… or drag and drop",
+    "fileUrl": "…or paste a file URL and press Enter",
+    "open": "Open",
+    "download": "Download",
+    "today": "Today",
+    "clear": "Clear",
+    "play": "Play",
+    "fullscreen": "Full screen",
+    "chooseVideo": "Choose a video…",
+    "dropFile": "or drag and drop a file",
+    "videoUrl": "…or paste a video URL and press Enter"
+  },
+  "finalPass": {
+    "volume": "Volume",
+    "convertOptions": "Convert / options",
+    "convertTo": "Convert to",
+    "copyLink": "Copy link",
+    "pasteAs": "Paste as"
+  },
+  "delete": "Delete",
+  "boardMention": {
+    "untitled": "Item"
+  },
+  "blocks": {
+    "bookmark": {
+      "pastePlaceholder": "Paste a website link…"
+    },
+    "embed": {
+      "pastePlaceholder": "Paste a link to embed (Vimeo, X, TikTok…)",
+      "iframeTitle": "Embed"
+    },
+    "toggle": {
+      "collapse": "Collapse",
+      "expand": "Expand"
+    },
+    "youtube": {
+      "pastePlaceholder": "Paste a YouTube link…"
+    }
+  },
+  "callout": {
+    "basic": "Basic",
+    "info": "Info",
+    "tip": "Tip",
+    "warning": "Warning",
+    "alert": "Alert",
+    "changeEmoji": "Change emoji",
+    "presets": "Presets",
+    "background": "Background color",
+    "style": "Callout style"
+  },
+  "equation": {
+    "group": {
+      "structures": "Structures",
+      "calculus": "Calculus",
+      "matrices": "Matrices and systems",
+      "chemistry": "Chemistry (mhchem)"
+    },
+    "template": {
+      "fraction": "Fraction",
+      "squareRoot": "Square root",
+      "nthRoot": "Nth root",
+      "exponent": "Exponent",
+      "subscript": "Subscript",
+      "binomial": "Binomial",
+      "sum": "Sum",
+      "product": "Product",
+      "integral": "Integral",
+      "limit": "Limit",
+      "derivative": "Derivative",
+      "partialDerivative": "Partial derivative",
+      "matrix": "2×2 matrix",
+      "determinant": "Determinant",
+      "system": "System (cases)",
+      "vector": "Vector",
+      "molecule": "Molecule",
+      "reaction": "Reaction",
+      "equilibrium": "Equilibrium",
+      "ion": "Ion"
+    },
+    "empty": "Empty equation — click to enter LaTeX",
+    "edit": "Edit the equation",
+    "templates": "Templates",
+    "input": "LaTeX code of the equation",
+    "error": "LaTeX error: {{error}}",
+    "hint": "Full LaTeX (KaTeX + chemistry \\ce) · Ctrl+Enter to apply · Escape to cancel"
+  },
+  "fileKind": {
+    "other": "File",
+    "doc": "Document",
+    "sheet": "Spreadsheet",
+    "slide": "Presentation",
+    "archive": "Archive",
+    "video": "Video",
+    "image": "Image",
+    "text": "Text"
+  },
+  "gallery": {
+    "chooseImages": "Choose images…",
+    "dropFiles": "or drag and drop files",
+    "imageUrl": "…or paste an image URL and press Enter",
+    "row": "Strip (horizontal scroll)",
+    "carousel": "Carousel",
+    "grid": "Grid",
+    "height": "Height {{size}}",
+    "imageCount_one": "{{count}} image",
+    "imageCount_other": "{{count}} images",
+    "add": "Add",
+    "remove": "Remove",
+    "removeImage": "Remove this image",
+    "caption": "Caption…",
+    "openImage": "Open the image"
+  },
+  "a11y": {
+    "addImage": "Add image",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "resizeMedia": "Resize media",
+    "inPoint": "In point",
+    "outPoint": "Out point"
+  },
+  "lightbox": {
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "pause": "Pause (Space)",
+    "slideshow": "Slideshow (Space)",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "close": "Close",
+  "color": {
+    "gray": "Gray",
+    "blue": "Blue",
+    "green": "Green",
+    "yellow": "Yellow",
+    "orange": "Orange",
+    "red": "Red",
+    "purple": "Purple",
+    "pink": "Pink"
+  },
+  "emoji": {
+    "custom": "Paste an emoji + Enter"
+  },
+  "editor": {
+    "uploadFailed": "Upload failed",
+    "dateToday": "Today's date"
+  },
+  "untitled": "Untitled",
+  "paste": {
+    "mention": {
+      "label": "Mention",
+      "desc": "Compact inline chip"
+    },
+    "url": {
+      "label": "Link",
+      "desc": "Clickable inline link"
+    },
+    "bookmark": {
+      "label": "Bookmark",
+      "desc": "Card preview"
+    },
+    "embed": {
+      "label": "Embed",
+      "desc": "Embedded player (iframe / YouTube)"
+    }
+  },
+  "sideMenu": {
+    "changeType": "Turn into",
+    "colors": "Colors",
+    "rowHeader": "Header row",
+    "columnHeader": "Header column"
+  },
+  "slash": {
+    "groups": {
+      "blocks": "Blocks",
+      "media": "Media",
+      "insert": "Insert"
+    },
+    "callout": {
+      "title": "Callout",
+      "desc": "Colored banner with an emoji",
+      "aliases": "callout|note|info"
+    },
+    "toggle": {
+      "title": "Toggle",
+      "desc": "Collapsible section",
+      "aliases": "toggle|collapsible|accordion"
+    },
+    "equation": {
+      "title": "Equation",
+      "desc": "LaTeX formula (KaTeX)",
+      "aliases": "equation|math|latex|formula|katex"
+    },
+    "divider": {
+      "title": "Divider",
+      "desc": "Line, dashes, dots, or stars",
+      "aliases": "divider|line|separator|hr|---"
+    },
+    "youtube": {
+      "desc": "Embed a YouTube video",
+      "aliases": "youtube|video|yt"
+    },
+    "embed": {
+      "title": "Embed",
+      "aliases": "embed|iframe|vimeo|twitter|tiktok"
+    },
+    "bookmark": {
+      "title": "Bookmark",
+      "desc": "Preview a web link",
+      "aliases": "bookmark|link|web"
+    },
+    "video": {
+      "title": "Video",
+      "desc": "Local file or URL with a built-in player",
+      "aliases": "video|mp4|movie|clip"
+    },
+    "audio": {
+      "desc": "Integrated waveform player",
+      "aliases": "audio|sound|mp3|music|wav|podcast"
+    },
+    "file": {
+      "title": "File",
+      "desc": "PDF, Word, Excel, ZIP… (PDF preview)",
+      "aliases": "file|pdf|doc|document|zip|excel|word"
+    },
+    "gallery": {
+      "title": "Image gallery",
+      "desc": "Multiple scrollable images in one row",
+      "aliases": "gallery|images|carousel|album"
+    },
+    "date": {
+      "title": "Date",
+      "desc": "Insert a date inline",
+      "aliases": "date|day|calendar|today"
+    }
+  },
+  "blockTypes": {
+    "paragraph": "Text",
+    "heading1": "Heading",
+    "heading2": "Subheading",
+    "heading3": "Small heading",
+    "bulletList": "Bulleted list",
+    "numberedList": "Numbered list",
+    "checkList": "Task list",
+    "quote": "Quote",
+    "callout": "Callout",
+    "codeBlock": "Code block"
+  },
+  "placeOnBoard": "Put on the board",
+  "menu": {
+    "format": "Format",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "strike": "Strikethrough",
+    "code": "Code",
+    "link": "Link",
+    "linkNeedsUrl": "Copy an address first",
+    "block": "Block",
+    "duplicate": "Duplicate",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
+  }
+}

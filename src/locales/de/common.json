@@ -13,7 +13,8 @@
     "selectAll": "Alles auswählen",
     "reset": "Zurücksetzen",
     "open": "Öffnen",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "pastePlain": "Als reinen Text einfügen"
   },
   "status": {
     "loading": "Wird geladen"

@@ -4,7 +4,7 @@
 
 import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { Pin, PinOff, Minimize2 } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr } from "@/lib/bridge";
 import { convexConfigured } from "@/lib/convexEnv";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -89,7 +89,7 @@ export function ReferenceWindow() {
               <TooltipTrigger
                 render={<Button variant="ghost" size="icon-sm" aria-label={pinned ? t("actions.unpin") : t("actions.pin")} aria-pressed={pinned} onClick={togglePin} />}
               >
-                {pinned ? <Pin /> : <PinOff />}
+                <NetsuIcon name="pin-window" on={pinned} />
               </TooltipTrigger>
               <TooltipContent>{pinned ? t("actions.unpin") : t("actions.pin")}</TooltipContent>
             </Tooltip>
@@ -98,7 +98,7 @@ export function ReferenceWindow() {
                 <TooltipTrigger
                   render={<Button variant="ghost" size="icon-sm" aria-label={t("actions.attach")} onClick={() => nr.reference!.attach()} />}
                 >
-                  <Minimize2 />
+                  <NetsuIcon name="attach" />
                 </TooltipTrigger>
                 <TooltipContent>{t("actions.attach")}</TooltipContent>
               </Tooltip>

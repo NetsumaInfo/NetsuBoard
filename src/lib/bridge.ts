@@ -609,6 +609,9 @@ export interface NetsuRecent {
   sourceSceneId?: string;
 }
 
+// Link preview card returned by `reference.linkMeta`.
+export interface LinkMeta { url: string; title: string; description: string; image: string; siteName: string; favicon: string }
+
 export interface ResolvedOnlineMedia {
   ok: boolean;
   path?: string;
@@ -671,6 +674,9 @@ export interface RefApi {
   // Résout le vrai média de N'IMPORTE quel lien (fichier direct, ou page web via OpenGraph) → asset
   // disque. Catch-all générique : GIF (giphy/tenor), imgur, articles, CDN sans extension propre.
   resolveMedia(url: string, options?: { download?: boolean; projectPath?: string; title?: string }): Promise<ResolvedOnlineMedia>;
+  // Aperçu OpenGraph d'un lien (carte signet / mention / intégration d'une note). Un site illisible
+  // rend quand même le domaine.
+  linkMeta(url: string): Promise<{ ok: boolean; meta?: LinkMeta; error?: string }>;
   // Upscale un item média (image/vidéo locale) → nouveau fichier asset. NON destructif : ne supprime
   // jamais l'ancien fichier (le board garde de quoi revenir en arrière).
   upscaleItem(opts: { path: string; kind: "image" | "video"; in?: number; out?: number; engine?: "ia" | "turbo"; model: UpscaleModel; shader?: ShaderModel; scale: 1 | 2 | 4; denoise?: number }): Promise<{ ok: boolean; path?: string; width?: number; height?: number; error?: string }>;
@@ -919,6 +925,18 @@ export interface BugReportRequest {
 }
 export interface BugReportResponse { ok: boolean; message: string; reportId?: string }
 
+export interface LiveSiteRect { x: number; y: number; w: number; h: number }
+export interface LiveSiteInfo {
+  url: string | null; title: string; loading: boolean;
+  blocked: number; // requests refused on the current live page
+  enabled: boolean; ready: boolean;
+}
+export interface AdblockStatus {
+  enabled: boolean; ready: boolean;
+  blockedMain: number; // requests refused in the board's own embedded frames since launch
+  listsAgeSecs: number | null;
+}
+
 export interface NrApi {
   // Langue de l'UI : lecture/écriture durable dans nr.config.json (le renderer applique via localStorage).
   configGet(): Promise<{ lang: string | null }>;
@@ -985,6 +1003,9 @@ export interface NrApi {
   chooseDir(): Promise<string | null>;
   chooseFiles(): Promise<string[] | null>;
   chooseImages(): Promise<string[] | null>;
+  // Documents (PDF, Word, text, Markdown, CSV, any other file). The
+  // native dialog has no document filter, so the picked list is filtered here.
+  chooseDocuments(): Promise<string[] | null>;
   chooseAnyFile(): Promise<string | null>;
   // Chemins disque d'objets File lâchés depuis l'Explorateur (Chromium masque `File.path`). Index
   // aligné sur `files` ; chaîne vide quand le chemin est irrésoluble (navigateur, WebView2 ancien).
@@ -1010,6 +1031,34 @@ export interface NrApi {
   // Flux d'une vidéo YouTube relayé par le core (yt-dlp résout, le core relaie) : source d'un
   // `<video>` ordinaire, donc AUCUN habillage YouTube — cf. core/ytstream.js.
   ytStreamUrl(videoId: string): string;
+  // Live site: one native WebView2 child webview laid over a board card (src-tauri/src/livesite.rs).
+  // Rects are LOGICAL pixels relative to the main window client area (= viewport coordinates).
+  // `capture` resolves with the PNG bytes, or null when there is nothing to capture.
+  liveSite: {
+    available: boolean;
+    open(url: string, rect: LiveSiteRect): Promise<boolean>;
+    bounds(rect: LiveSiteRect): Promise<void>;
+    visible(on: boolean): Promise<void>;
+    nav(action: "back" | "forward" | "reload"): Promise<void>;
+    url(): Promise<string | null>;
+    capture(): Promise<ArrayBuffer | null>;
+    close(): Promise<void>;
+    // Navigates the live card to an address (http/https only).
+    goto(url: string): Promise<void>;
+    // Address, title, loading flag and ad-block counter of the live page (polled by the toolbar).
+    info(): Promise<LiveSiteInfo | null>;
+    // Hosts (and subdomains) the live card and the snapshots do not filter.
+    allow(hosts: string[]): Promise<void>;
+    // Background picture of a page, taken in a hidden webview; null when it cannot be taken
+    // (live site active, busy, load timeout, no desktop shell).
+    snapshot(url: string, w: number, h: number): Promise<ArrayBuffer | null>;
+  };
+  // Ad blocker shared by the live card, the snapshots and the board's embedded frames.
+  adblock: {
+    status(): Promise<AdblockStatus | null>;
+    setEnabled(on: boolean): Promise<AdblockStatus | null>;
+    refreshLists(): Promise<AdblockStatus | null>;
+  };
   openExternal(url: string): Promise<boolean>;
   openPath(path: string): Promise<boolean>;
   revealPath(path: string): Promise<boolean>;
@@ -1149,6 +1198,7 @@ const mock: NrApi = {
   chooseDir: async () => null,
   chooseFiles: async () => null,
   chooseImages: async () => null,
+  chooseDocuments: async () => null,
   chooseAnyFile: async () => null,
   pathsForFiles: async (files) => files.map(() => ""),
   warmFilePaths: () => {},
@@ -1156,6 +1206,25 @@ const mock: NrApi = {
   mediaUrl: (p) => "nrmedia://media?p=" + encodeURIComponent(p),
   assetUrl: (p) => "nrmedia://media?p=" + encodeURIComponent(p),
   ytStreamUrl: (id) => "nrmedia://ytstream?id=" + encodeURIComponent(id),
+  liveSite: {
+    available: false,
+    open: async () => false,
+    bounds: async () => {},
+    visible: async () => {},
+    nav: async () => {},
+    url: async () => null,
+    capture: async () => null,
+    close: async () => {},
+    goto: async () => {},
+    info: async () => null,
+    allow: async () => {},
+    snapshot: async () => null,
+  },
+  adblock: {
+    status: async () => null,
+    setEnabled: async () => null,
+    refreshLists: async () => null,
+  },
   openExternal: async (url) => { try { window.open(url, "_blank", "noopener"); } catch { /* noop */ } return true; },
   openPath: async () => false,
   revealPath: async () => false,
@@ -1190,6 +1259,7 @@ const mock: NrApi = {
       ytDuration: async () => null,
       fetchAsset: async () => ({ ok: false, error: "mock" }),
       resolveMedia: async (_url, _options) => ({ ok: false, error: "mock" }),
+      linkMeta: async () => ({ ok: false, error: "mock" }),
       upscaleItem: async () => ({ ok: false, error: "mock" }),
       dropAsset: async () => ({ ok: true, removed: false }),
       sweepAssets: async () => ({ ok: true, removed: 0, bytes: 0, kept: 0 }),

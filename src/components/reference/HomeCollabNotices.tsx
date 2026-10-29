@@ -9,7 +9,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useConvexAuth, useQuery } from "convex/react";
-import { Check, Clock, UserRound, X } from "lucide-react";
 import { api } from "@/lib/convexApi";
 import { nr } from "@/lib/bridge";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
@@ -17,6 +16,7 @@ import { respondInvite } from "@/lib/collab/client";
 import { collabErrorText } from "@/lib/collab/errors";
 import { useBoard } from "./useReferenceBoard";
 import { Button } from "@/components/ui/button";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 
 type Profile = { userId: string; handle: string; name: string; image: string | null };
 type Invite = { inviteId: string; projectId: string; role: string; from: Profile };
@@ -167,7 +167,7 @@ export function HomeCollabNotices({ onOpenScene, onCardStatus }: {
               />
             ) : (
               <div className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <UserRound className="size-4" />
+                <NetsuIcon name="account" className="size-4" />
               </div>
             )}
             <div className="min-w-0 flex-1">
@@ -184,7 +184,7 @@ export function HomeCollabNotices({ onOpenScene, onCardStatus }: {
               disabled={busy === invite.inviteId}
               onClick={() => later(invite.inviteId)}
             >
-              <Clock className="size-3.5" /> {t("home.invites.later")}
+              <NetsuIcon name="calendar" className="size-3.5" /> {t("home.invites.later")}
             </Button>
             <Button
               size="sm"
@@ -192,10 +192,10 @@ export function HomeCollabNotices({ onOpenScene, onCardStatus }: {
               disabled={busy === invite.inviteId}
               onClick={() => void decline(invite)}
             >
-              <X className="size-3.5" /> {t("home.invites.decline")}
+              <NetsuIcon name="close" className="size-3.5" /> {t("home.invites.decline")}
             </Button>
             <Button size="sm" disabled={busy === invite.inviteId} onClick={() => void join(invite)}>
-              <Check className="size-3.5" /> {t("home.invites.join")}
+              <NetsuIcon name="check" className="size-3.5" /> {t("home.invites.join")}
             </Button>
           </div>
         </div>

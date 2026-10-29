@@ -64,7 +64,7 @@ export function EmailLogin({ size }: { size?: "sm" }) {
       {!sent ? (
         <Input
           type="email"
-          autoComplete="email"
+          autoComplete="off"
           placeholder={t("email.address")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}

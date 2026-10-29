@@ -54,3 +54,13 @@ export function clearLive(): void {
 export function useLive(): LiveState {
   return useSyncExternalStore(subscribeLive, getLive, getLive);
 }
+
+// Slice subscriptions: a consumer that only needs one half must not wake for the other. The guides
+// change on every pointer frame of a snapping drag; the geometry only moves when a link is attached.
+export function useLiveGeom(): Record<string, Geom> {
+  return useSyncExternalStore(subscribeLive, () => state.geom, () => state.geom);
+}
+
+export function useLiveGuides(): SnapGuide[] {
+  return useSyncExternalStore(subscribeLive, () => state.guides, () => state.guides);
+}

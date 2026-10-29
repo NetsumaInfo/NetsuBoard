@@ -4,6 +4,7 @@ import type {
   BoardPalette,
   CollabOp,
   EmbedMetadata,
+  FolderState,
   FrameStyle,
   Geometry,
   LinkMetadata,
@@ -108,6 +109,11 @@ function frameStyle(item: BoardItem): FrameStyle {
     fillColor: item.fillColor,
     titleBackground: item.titleBg,
   };
+}
+
+function folder(item: BoardItem): FolderState | null {
+  if (!item.folder) return null;
+  return { folded: true, openWidth: item.openW, openHeight: item.openH, cover: item.cover, coverStyle: item.coverStyle };
 }
 
 function playback(item: BoardItem): Playback {
@@ -336,6 +342,11 @@ function addItemOps(item: BoardItem, resolveAsset: AssetResolver): CollabOp[] {
     { type: "setFrameStyle", itemId: item.id, frame: frameStyle(item) },
     { type: "setPlayback", itemId: item.id, playback: playback(item) },
   ];
+  if (item.folder) ops.push({ type: "setFolder", itemId: item.id, folder: folder(item) });
+  if (item.parent) ops.push({ type: "setParent", itemId: item.id, parent: item.parent });
+  if (item.doc) ops.push({ type: "setDocument", itemId: item.id, document: JSON.stringify(item.doc) });
+  if (item.linkCard) ops.push({ type: "setLinkCard", itemId: item.id, card: JSON.stringify(item.linkCard) });
+  if (item.noteStyle) ops.push({ type: "setNoteStyle", itemId: item.id, style: item.noteStyle });
   if (item.crop) ops.push({ type: "setCrop", itemId: item.id, crop: crop(item) });
   if (trim(item)) ops.push({ type: "setTrim", itemId: item.id, trim: trim(item) });
   const manifest = mediaManifest(item, resolveAsset);
@@ -461,6 +472,19 @@ export function diffBoard(
     if (!same(appearance(old), appearance(item))) ops.push({ type: "setAppearance", itemId: item.id, appearance: appearance(item) });
     if (!same(textStyle(old), textStyle(item))) ops.push({ type: "setTextStyle", itemId: item.id, style: textStyle(item) });
     if (!same(frameStyle(old), frameStyle(item))) ops.push({ type: "setFrameStyle", itemId: item.id, frame: frameStyle(item) });
+    if (!same(folder(old), folder(item))) ops.push({ type: "setFolder", itemId: item.id, folder: folder(item) });
+    if (old.doc !== item.doc && !same(old.doc ?? null, item.doc ?? null)) {
+      ops.push({ type: "setDocument", itemId: item.id, document: item.doc ? JSON.stringify(item.doc) : null });
+    }
+    if ((old.noteStyle ?? null) !== (item.noteStyle ?? null)) {
+      ops.push({ type: "setNoteStyle", itemId: item.id, style: item.noteStyle ?? null });
+    }
+    if (!same(old.linkCard ?? null, item.linkCard ?? null)) {
+      ops.push({ type: "setLinkCard", itemId: item.id, card: item.linkCard ? JSON.stringify(item.linkCard) : null });
+    }
+    if ((old.parent ?? null) !== (item.parent ?? null)) {
+      ops.push({ type: "setParent", itemId: item.id, parent: item.parent ?? null });
+    }
     if (!same(playbackSettings(old), playbackSettings(item))) {
       ops.push({ type: "setPlayback", itemId: item.id, playback: playback(item) });
     }

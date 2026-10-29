@@ -1,0 +1,281 @@
+{
+  "audioLabel": "Audio",
+  "player": {
+    "pause": "Pausa",
+    "play": "Reproducir",
+    "seek": "Desplazarse por el vídeo",
+    "soundOn": "Activar el sonido",
+    "soundOff": "Silenciar"
+  },
+  "blocksUi": {
+    "playbackSpeed": "Velocidad de reproducción",
+    "chooseAudio": "Elegir audio…",
+    "audioDrop": "MP3, WAV, FLAC… o arrastra y suelta",
+    "audioUrl": "…o pega una URL de audio y pulsa Entrar",
+    "changeDivider": "Cambiar el estilo del separador",
+    "chooseFile": "Elegir un archivo…",
+    "fileDrop": "PDF, Word, Excel, ZIP… o arrastra y suelta",
+    "fileUrl": "…o pega una URL de archivo y pulsa Entrar",
+    "open": "Abrir",
+    "download": "Descargar",
+    "today": "Hoy",
+    "clear": "Borrar",
+    "play": "Reproducir",
+    "fullscreen": "Pantalla completa",
+    "chooseVideo": "Elegir un vídeo…",
+    "dropFile": "o arrastra y suelta un archivo",
+    "videoUrl": "…o pega una URL de vídeo y pulsa Entrar"
+  },
+  "finalPass": {
+    "volume": "Volumen",
+    "convertOptions": "Convertir / opciones",
+    "convertTo": "Convertir en",
+    "copyLink": "Copiar enlace",
+    "pasteAs": "Pegar como"
+  },
+  "delete": "Eliminar",
+  "boardMention": {
+    "untitled": "Elemento"
+  },
+  "blocks": {
+    "bookmark": {
+      "pastePlaceholder": "Pegar un enlace de sitio web…"
+    },
+    "embed": {
+      "pastePlaceholder": "Pegar un enlace para incrustar (Vimeo, X, TikTok…)",
+      "iframeTitle": "Contenido incrustado"
+    },
+    "toggle": {
+      "collapse": "Contraer",
+      "expand": "Expandir"
+    },
+    "youtube": {
+      "pastePlaceholder": "Pegar un enlace de YouTube…"
+    }
+  },
+  "callout": {
+    "basic": "Básico",
+    "info": "Información",
+    "tip": "Consejo",
+    "warning": "Atención",
+    "alert": "Alerta",
+    "changeEmoji": "Cambiar emoji",
+    "presets": "Preajustes",
+    "background": "Color de fondo",
+    "style": "Estilo del recuadro"
+  },
+  "equation": {
+    "group": {
+      "structures": "Estructuras",
+      "calculus": "Cálculo",
+      "matrices": "Matrices y sistemas",
+      "chemistry": "Química (mhchem)"
+    },
+    "template": {
+      "fraction": "Fracción",
+      "squareRoot": "Raíz cuadrada",
+      "nthRoot": "Raíz n-ésima",
+      "exponent": "Exponente",
+      "subscript": "Subíndice",
+      "binomial": "Binomio",
+      "sum": "Suma",
+      "product": "Producto",
+      "integral": "Integral",
+      "limit": "Límite",
+      "derivative": "Derivada",
+      "partialDerivative": "Derivada parcial",
+      "matrix": "Matriz 2×2",
+      "determinant": "Determinante",
+      "system": "Sistema (casos)",
+      "vector": "Vector",
+      "molecule": "Molécula",
+      "reaction": "Reacción",
+      "equilibrium": "Equilibrio",
+      "ion": "Ion"
+    },
+    "empty": "Ecuación vacía — haz clic para escribir LaTeX",
+    "edit": "Editar la ecuación",
+    "templates": "Plantillas",
+    "input": "Código LaTeX de la ecuación",
+    "error": "Error de LaTeX: {{error}}",
+    "hint": "LaTeX completo (KaTeX + química \\ce) · Ctrl+Entrar para aplicar · Esc para cancelar"
+  },
+  "fileKind": {
+    "other": "Archivo",
+    "doc": "Documento",
+    "sheet": "Hoja de cálculo",
+    "slide": "Presentación",
+    "archive": "Archivo comprimido",
+    "video": "Vídeo",
+    "image": "Imagen",
+    "text": "Texto"
+  },
+  "gallery": {
+    "chooseImages": "Elegir imágenes…",
+    "dropFiles": "o arrastra y suelta archivos",
+    "imageUrl": "…o pega una URL de imagen y pulsa Entrar",
+    "row": "Tira (desplazamiento horizontal)",
+    "carousel": "Carrusel",
+    "grid": "Cuadrícula",
+    "height": "Altura {{size}}",
+    "imageCount_one": "{{count}} imagen",
+    "imageCount_other": "{{count}} imágenes",
+    "add": "Añadir",
+    "remove": "Quitar",
+    "removeImage": "Quitar esta imagen",
+    "caption": "Leyenda…",
+    "openImage": "Abrir la imagen"
+  },
+  "a11y": {
+    "addImage": "Añadir imagen",
+    "previousImage": "Imagen anterior",
+    "nextImage": "Imagen siguiente",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "resizeMedia": "Cambiar el tamaño del medio",
+    "inPoint": "Punto de entrada",
+    "outPoint": "Punto de salida"
+  },
+  "lightbox": {
+    "zoomOut": "Alejar",
+    "zoomIn": "Acercar",
+    "pause": "Pausa (Espacio)",
+    "slideshow": "Presentación (Espacio)",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  },
+  "close": "Cerrar",
+  "color": {
+    "gray": "Gris",
+    "blue": "Azul",
+    "green": "Verde",
+    "yellow": "Amarillo",
+    "orange": "Naranja",
+    "red": "Rojo",
+    "purple": "Morado",
+    "pink": "Rosa"
+  },
+  "emoji": {
+    "custom": "Pega un emoji + Intro"
+  },
+  "editor": {
+    "uploadFailed": "Error al subir el archivo",
+    "dateToday": "Fecha de hoy"
+  },
+  "untitled": "Sin título",
+  "paste": {
+    "mention": {
+      "label": "Mención",
+      "desc": "Etiqueta compacta en el texto"
+    },
+    "url": {
+      "label": "Enlace",
+      "desc": "Enlace clicable en el texto"
+    },
+    "bookmark": {
+      "label": "Marcador",
+      "desc": "Vista previa en tarjeta"
+    },
+    "embed": {
+      "label": "Contenido incrustado",
+      "desc": "Reproductor integrado (iframe / YouTube)"
+    }
+  },
+  "sideMenu": {
+    "changeType": "Convertir en",
+    "colors": "Colores",
+    "rowHeader": "Fila de encabezado",
+    "columnHeader": "Columna de encabezado"
+  },
+  "slash": {
+    "groups": {
+      "blocks": "Bloques",
+      "media": "Medios",
+      "insert": "Insertar"
+    },
+    "callout": {
+      "title": "Recuadro",
+      "desc": "Banda de color con emoji",
+      "aliases": "recuadro|nota|info"
+    },
+    "toggle": {
+      "title": "Desplegable",
+      "desc": "Sección plegable",
+      "aliases": "desplegable|plegable|acordeon"
+    },
+    "equation": {
+      "title": "Ecuación",
+      "desc": "Fórmula LaTeX (KaTeX)",
+      "aliases": "ecuacion|matematicas|latex|formula|katex"
+    },
+    "divider": {
+      "title": "Separador",
+      "desc": "Línea, guiones, puntos o estrellas",
+      "aliases": "separador|linea|hr|---"
+    },
+    "youtube": {
+      "desc": "Insertar un vídeo de YouTube",
+      "aliases": "youtube|video|yt"
+    },
+    "embed": {
+      "title": "Contenido incrustado",
+      "aliases": "insertar|iframe|vimeo|twitter|tiktok"
+    },
+    "bookmark": {
+      "title": "Marcador",
+      "desc": "Vista previa de un enlace web",
+      "aliases": "marcador|enlace|web"
+    },
+    "video": {
+      "title": "Vídeo",
+      "desc": "Archivo local o URL con reproductor integrado",
+      "aliases": "video|mp4|pelicula|clip"
+    },
+    "audio": {
+      "desc": "Reproductor integrado con forma de onda",
+      "aliases": "audio|sonido|mp3|musica|wav|podcast"
+    },
+    "file": {
+      "title": "Archivo",
+      "desc": "PDF, Word, Excel, ZIP… (vista previa PDF)",
+      "aliases": "archivo|pdf|doc|documento|zip|excel|word"
+    },
+    "gallery": {
+      "title": "Galería de imágenes",
+      "desc": "Varias imágenes desplazables en una fila",
+      "aliases": "galeria|imagenes|carrusel|album"
+    },
+    "date": {
+      "title": "Fecha",
+      "desc": "Insertar una fecha en el texto",
+      "aliases": "fecha|dia|calendario|hoy"
+    }
+  },
+  "blockTypes": {
+    "paragraph": "Texto",
+    "heading1": "Título",
+    "heading2": "Subtítulo",
+    "heading3": "Título pequeño",
+    "bulletList": "Lista con viñetas",
+    "numberedList": "Lista numerada",
+    "checkList": "Lista de tareas",
+    "quote": "Cita",
+    "callout": "Destacado",
+    "codeBlock": "Bloque de código"
+  },
+  "placeOnBoard": "Poner en el tablero",
+  "menu": {
+    "format": "Formato",
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "underline": "Subrayado",
+    "strike": "Tachado",
+    "code": "Código",
+    "link": "Enlace",
+    "linkNeedsUrl": "Copia antes una dirección",
+    "block": "Bloque",
+    "duplicate": "Duplicar",
+    "moveUp": "Subir",
+    "moveDown": "Bajar"
+  }
+}

@@ -11,9 +11,10 @@
 import type { BoardItem, DrawShape, ShapeAnchor } from "./referenceShared";
 import { fromItemSpace, toItemSpace, type AnchorBox } from "./boardArrange";
 import { shapeBBox } from "./drawGeometry";
+import { isLink, linkEndpoints } from "./links/model";
 
 // Kinds qui peuvent porter un tracé : tout ce qui est un média ou un conteneur visible.
-const ANCHORABLE = new Set(["image", "video", "youtube", "embed", "sequence", "frame", "palette", "text"]);
+export const ANCHORABLE = new Set(["image", "video", "youtube", "embed", "sequence", "frame", "palette", "text"]);
 
 // Part des points d'une forme qui doit tomber dans un item pour qu'elle lui appartienne.
 const OWN_COVERAGE = 0.8;
@@ -143,9 +144,12 @@ export function resolveShape(shape: DrawShape, byId: Map<string, AnchorItem>): D
     return { ...shape, p: worldPts(shape.ownPts, owner) };
   }
   if (!shape.a1 && !shape.a2) return shape;
-  const p = [...shape.p];
   const a = shape.a1 ? byId.get(shape.a1.id) : null;
   const b = shape.a2 ? byId.get(shape.a2.id) : null;
+  // A link resolves both ends together: an AUTO end picks its side from where the other end is. A
+  // link with an end on another link (a junction) is placed by links/resolve.ts only.
+  if (isLink(shape)) return a && b ? { ...shape, p: linkEndpoints(shape, a, b) } : shape;
+  const p = [...shape.p];
   if (a && shape.a1) {
     const pt = fromItemSpace(box(a), shape.a1.fx, shape.a1.fy);
     p[0] = pt.x;
@@ -181,6 +185,10 @@ export function reanchorShape(shape: DrawShape, byId: Map<string, AnchorItem>): 
     return { ...shape, ownPts: normalizePts(shape.p, owner) };
   }
   if (!shape.a1 && !shape.a2) return shape;
+  // A link is never re-anchored from its points: its anchors (auto or pinned side) are edited by
+  // the links layer only, and an end whose item is gone is pruned or hidden, never frozen into a
+  // stray arrow.
+  if (isLink(shape)) return shape;
   const next = { ...shape };
   if (shape.a1) {
     const a = byId.get(shape.a1.id);

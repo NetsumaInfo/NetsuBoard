@@ -28,6 +28,10 @@ import { extractPaletteToBoard } from "./boardPaletteActions";
 import { askMouseThrough } from "./boardMouseThrough";
 import { stepFrame } from "./boardFrameStep";
 import type { BoardHandle } from "./ReferenceBoard";
+import {
+  cycleLinks, deleteShapes, linkSelection, organiseSelection, selectDownstream, selectLinkGroup, selectLinked,
+  selectUpstream, startLinkPick, toggleCollapse, unlinkItems,
+} from "./links/linkActions";
 
 const ARROWS: Record<string, [number, number]> = {
   ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
@@ -113,15 +117,17 @@ export function useBoardShortcuts(
       // Alias fixe : F cadre tout (convention des outils de référence et de la 3D). Pas en mode
       // dessin, où F est l'outil flèche.
       if (!action && !st.drawMode && combo === "F") action = "fit";
+      // Shift reverses the link cycle, whatever key it is bound to.
+      let back = false;
+      if (!action && keys.cycleLinks && combo === `Shift+${keys.cycleLinks}`) { action = "cycleLinks"; back = true; }
       if (!action) return;
 
       switch (action) {
         case "delete":
           if (st.drawSel.length) {
             e.preventDefault();
-            const gone = new Set(st.drawSel);
-            st.drawSetShapes((st.items.find((i) => i.kind === "draw")?.shapes ?? []).filter((s) => !gone.has(s.id)));
-            st.selectDrawShape(null);
+            // Branches hanging from a deleted link are re-rooted on its items, or go with it.
+            deleteShapes(st.drawSel);
             // Un lasso peut avoir pris les deux : supprimer ne doit pas laisser la moitié derrière.
             if (st.selectedIds.length) st.removeSelected();
           } else if (st.selectedIds.length) {
@@ -130,7 +136,9 @@ export function useBoardShortcuts(
           }
           break;
         case "deselect":
-          st.select(null); // pas de preventDefault (Échap sert aussi ailleurs)
+          // Nothing selected inside a folder: Escape goes back up one level.
+          if (!st.selectedIds.length && !st.drawSel.length && st.folderPath.length) st.leaveFolder(st.folderPath.length - 1);
+          else st.select(null); // pas de preventDefault (Échap sert aussi ailleurs)
           break;
         case "selectAll":
           e.preventDefault();
@@ -151,8 +159,8 @@ export function useBoardShortcuts(
               st.selectDrawShapes(copies.map((copy) => copy.id));
             }
           } else {
-            // Duplication multi : les appels du même tick partagent un snapshot → 1 entrée d'undo.
-            st.selectedIds.forEach((id) => st.duplicateItem(id));
+            // Links between the duplicated items come along.
+            st.duplicateItems(st.selectedIds);
           }
           break;
         case "undo":
@@ -313,6 +321,46 @@ export function useBoardShortcuts(
           if (st.selectedIds.length < 2) break;
           e.preventDefault();
           st.groupSequence(st.selectedIds);
+          break;
+        case "linkChain":
+        case "linkStar":
+          if (st.selectedIds.length < 2) break;
+          e.preventDefault();
+          linkSelection(action === "linkChain" ? "chain" : "star");
+          break;
+        case "linkTo":
+          if (startLinkPick()) e.preventDefault();
+          break;
+        case "selectLinked":
+        case "selectLinkGroup":
+          if (!st.selectedIds.length) break;
+          e.preventDefault();
+          if (action === "selectLinked") selectLinked(st.selectedIds);
+          else selectLinkGroup(st.selectedIds);
+          break;
+        case "selectDownstream":
+        case "selectUpstream":
+          if (!st.selectedIds.length) break;
+          e.preventDefault();
+          if (action === "selectDownstream") selectDownstream(st.selectedIds);
+          else selectUpstream(st.selectedIds);
+          break;
+        case "toggleCollapse":
+          if (st.selectedIds.length && toggleCollapse(st.selectedIds)) e.preventDefault();
+          break;
+        case "unlinkItem":
+          if (!st.selectedIds.length) break;
+          e.preventDefault();
+          unlinkItems(st.selectedIds);
+          break;
+        case "organiseLinks":
+          if (!st.selectedIds.length) break;
+          e.preventDefault();
+          organiseSelection();
+          break;
+        case "cycleLinks":
+          // Only taken from the page when there is a link to step to.
+          if (cycleLinks(back ? -1 : 1)) e.preventDefault();
           break;
       }
     };

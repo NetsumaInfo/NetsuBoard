@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, RefreshCw } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { TFunction } from "i18next";
@@ -111,11 +111,11 @@ export function MachineCard() {
         <h3 className="text-sm font-medium">{t("bugReport.specs.title")}</h3>
         <div className="flex shrink-0 items-center gap-1.5">
           <Button variant="outline" size="sm" onClick={() => void copy()} disabled={!specs}>
-            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} {t("bugReport.specs.copy")}
+            {copied ? <NetsuIcon name="check" className="size-3.5" /> : <NetsuIcon name="copy-clipboard" className="size-3.5" />} {t("bugReport.specs.copy")}
           </Button>
           <Tooltip>
             <TooltipTrigger render={<Button variant="ghost" size="icon-sm" onClick={() => void read()} aria-label={t("bugReport.specs.refresh")} />}>
-              <RefreshCw className={loading ? "size-3.5 animate-spin" : "size-3.5"} />
+              <NetsuIcon name="refresh" busy={loading} className="size-3.5" />
             </TooltipTrigger>
             <TooltipContent>{t("bugReport.specs.refresh")}</TooltipContent>
           </Tooltip>

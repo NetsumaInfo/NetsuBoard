@@ -4,9 +4,10 @@
 //  - cadre : titre + couleurs + mode de remplissage, plan, supprimer.
 // Masqué pendant l'édition inline d'une note (libère l'espace). Multi-sélection (≥2) → arrangement.
 
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import { FlipHorizontal, FlipVertical, Trash2, BringToFront, SendToBack, Crop, Download, AppWindow, Wand2, Undo2, Film, Palette, Hash, RefreshCw, Columns3, Rows3, Grid2x2, Link2, Unlink2, SwatchBook, Repeat } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
+import { Layout2x2Glyph, LayoutColumnsGlyph, LayoutRowsGlyph } from "./netsuIcons";
 import { nr } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -14,8 +15,10 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useBoard } from "./useReferenceBoard";
 import { useHideOnBlur } from "./useAppFocus";
 import { IconToggle, IconAction } from "./inspectorControls";
-import { TrimControls, TextControls, FrameControls, ArrangeBar, PlayModeControls, EmbedControls } from "./inspectorPanels";
+import { TrimControls, TextControls, FrameControls, ArrangeBar, PlayModeControls, EmbedControls, LinkModeControls } from "./inspectorPanels";
 import { displaySrc, probeImage, youtubeId, isCollabRef, isCoreFileRef, paletteSize, type PaletteLayout } from "./referenceShared";
+import { noteMode } from "./blockModel";
+import { NoteModeSwitch, BlockControls } from "./TextModeControls";
 import { convertToEmbed, downloadMediaFromEmbed, downloadYoutube } from "./boardMediaActions";
 import { quickUpscale } from "./boardUpscale";
 import { extractPaletteToBoard, regeneratePalette } from "./boardPaletteActions";
@@ -25,6 +28,7 @@ import { ExportLoopDialog } from "./ExportLoopDialog";
 import { loopExportable } from "./boardLoopExport";
 import { iconForLink } from "./brandIcons";
 import { enclosingFrame } from "./boardFrames";
+import { openFolderCoverId } from "./boardFolders";
 
 // Cadence supposée d'une source en mode « même que la vidéo » (la vraie vient du core, après coup) :
 // haute exprès, l'avertissement « vidéo longue » doit se déclencher plutôt trop tôt que trop tard.
@@ -32,10 +36,10 @@ const ASSUMED_SOURCE_FPS = 30;
 
 // Dispositions d'un bloc palette. Les icônes disent la FORME obtenue : une bande de pastilles côte à
 // côte, une pile, ou un carré.
-const PALETTE_LAYOUTS: { value: PaletteLayout; labelKey: string; icon: typeof Columns3 }[] = [
-  { value: "row", labelKey: "palette.layoutRow", icon: Columns3 },
-  { value: "col", labelKey: "palette.layoutCol", icon: Rows3 },
-  { value: "grid", labelKey: "palette.layoutGrid", icon: Grid2x2 },
+const PALETTE_LAYOUTS: { value: PaletteLayout; labelKey: string; icon: ComponentType<{ className?: string }> }[] = [
+  { value: "row", labelKey: "palette.layoutRow", icon: LayoutColumnsGlyph },
+  { value: "col", labelKey: "palette.layoutCol", icon: LayoutRowsGlyph },
+  { value: "grid", labelKey: "palette.layoutGrid", icon: Layout2x2Glyph },
 ];
 
 export function Inspector() {
@@ -57,6 +61,9 @@ export function Inspector() {
   const setStudio = useBoard((s) => s.setStudio);
   // Réglage « barre quand l'app perd le focus » : la sélection reste, seule la barre s'efface.
   const hidden = useHideOnBlur();
+  const inFolder = useBoard((s) => s.folderPath.length > 0);
+  const isCover = useBoard((s) => selectedId !== null && openFolderCoverId(s) === selectedId);
+  const setFolderCover = useBoard((s) => s.setFolderCover);
 
   if (hidden) return null;
 
@@ -78,6 +85,7 @@ export function Inspector() {
   // Séquence : barre dédiée (SequencePlayer) + actions génériques au clic droit → pas d'inspecteur ici.
   if (item.kind === "sequence") return null;
   const isText = item.kind === "text";
+  const mode = noteMode(item);
   const isFrame = item.kind === "frame";
   const isMedia = item.kind === "image" || item.kind === "video" || item.kind === "youtube" || item.kind === "embed";
   const trimmable = item.kind === "video" || item.kind === "youtube";
@@ -142,14 +150,21 @@ export function Inspector() {
         {isMedia && (
           <>
             <IconToggle on={item.flipH} label={t("actions.flipH")} onClick={() => patchItem(item.id, { flipH: !item.flipH })}>
-              <FlipHorizontal />
+              <NetsuIcon name="flip-h" on={!!item.flipH} />
             </IconToggle>
             <IconToggle on={item.flipV} label={t("actions.flipV")} onClick={() => patchItem(item.id, { flipV: !item.flipV })}>
-              <FlipVertical />
+              <NetsuIcon name="flip-v" on={!!item.flipV} />
             </IconToggle>
           </>
         )}
-        {isText && <TextControls item={item} />}
+        {isText && <NoteModeSwitch item={item} />}
+        {isText && mode === "text" && <TextControls item={item} />}
+        {isText && mode === "block" && <BlockControls item={item} />}
+        {isText && mode === "sheet" && (
+          <Button size="sm" variant="secondary" onClick={() => useBoard.getState().openNote(item.id)}>
+            <NetsuIcon name="note" /> {t("noteCard.open")}
+          </Button>
+        )}
         {isFrame && <FrameControls item={item} />}
         {/* Palette : afficher/masquer les valeurs, choisir leur NOTATION (c'est elle qui part dans le
             presse-papiers — chaque outil de destination attend la sienne), et recalculer depuis les
@@ -161,7 +176,7 @@ export function Inspector() {
               label={t("palette.showHex")}
               onClick={() => patchItem(item.id, { showHex: item.showHex === false })}
             >
-              <Hash />
+              <NetsuIcon name="hash" />
             </IconToggle>
             {/* Disposition des pastilles : bande, colonne ou carré. Le bloc est REDIMENSIONNÉ au
                 passage — une colonne de six pastilles dans une boîte large les écraserait. */}
@@ -202,11 +217,11 @@ export function Inspector() {
               ))}
             </div>
             <IconAction label={t("palette.regenerate")} onClick={() => void regeneratePalette(item.id)}>
-              <RefreshCw />
+              <NetsuIcon name="refresh" />
             </IconAction>
             {/* Rework THIS block in the generator (wheel, harmonies, locks) and write back into it. */}
             <IconAction label={t("palette.studio.edit")} onClick={() => setStudio({ targetId: item.id })}>
-              <SwatchBook />
+              <NetsuIcon name="palette-studio" />
             </IconAction>
           </>
         )}
@@ -214,7 +229,7 @@ export function Inspector() {
             ont leur propre barre et ne passent pas par cet inspecteur.) */}
         {(item.kind === "image" || item.kind === "video") && (
           <IconAction label={t("palette.extract")} onClick={() => void extractPaletteToBoard()}>
-            <Palette />
+            <NetsuIcon name="extract-palette" />
           </IconAction>
         )}
         {trimmable && (
@@ -233,6 +248,12 @@ export function Inspector() {
           </>
         )}
 
+        {item.kind === "embed" && (
+          <>
+            <Separator orientation="vertical" className="h-6" />
+            <LinkModeControls item={item} />
+          </>
+        )}
         {/* Lien d'origine : ouvrir dans le navigateur + bascule média ↔ carte embed */}
         {(linkUrl || item.kind === "embed" || extracted) && <Separator orientation="vertical" className="h-6" />}
         {linkUrl && (() => {
@@ -250,7 +271,7 @@ export function Inspector() {
             label={item.localMedia ? t("actions.restoreDownload") : t("actions.download")}
             onClick={() => void downloadMediaFromEmbed(item.id)}
           >
-            <Download />
+            <NetsuIcon name="download-media" />
           </IconAction>
         )}
         {item.kind === "youtube" && (
@@ -258,7 +279,7 @@ export function Inspector() {
             label={item.localMedia ? t("actions.restoreDownload") : t("actions.download")}
             onClick={() => void downloadYoutube(item.id)}
           >
-            <Download />
+            <NetsuIcon name="download-media" />
           </IconAction>
         )}
         {extracted && (
@@ -266,7 +287,7 @@ export function Inspector() {
             label={item.sourceUrl && youtubeId(item.sourceUrl) ? t("inspector.ytPlayer") : t("inspector.anchoredCard")}
             onClick={() => convertToEmbed(item.id)}
           >
-            <AppWindow />
+            <NetsuIcon name="as-embed" />
           </IconAction>
         )}
 
@@ -274,7 +295,7 @@ export function Inspector() {
         <Separator orientation="vertical" className="h-6" />
         {croppable && (
           <IconAction label={t("actions.crop")} active={!!item.crop} onClick={() => setCropping(item.id)}>
-            <Crop />
+            <NetsuIcon name="crop" />
           </IconAction>
         )}
         {/* Upscale : « rapide » lance directement avec les préréglages des Paramètres du board,
@@ -284,17 +305,17 @@ export function Inspector() {
             label={prefs.upQuick ? t("inspector.upscaleQuick") : t("inspector.upscale")}
             onClick={() => (prefs.upQuick ? void quickUpscale(item.id) : setUpOpen(true))}
           >
-            <Wand2 />
+            <NetsuIcon name="upscale" />
           </IconAction>
         )}
         {framesExtractable && (
           <IconAction label={t("inspector.extractFrames")} onClick={() => void extractFrames()}>
-            <Film />
+            <NetsuIcon name="extract-frames" />
           </IconAction>
         )}
         {loopExportable(item) && (
           <IconAction label={t("exportLoop.menu")} onClick={() => setLoopOpen(true)}>
-            <Repeat />
+            <NetsuIcon name="export-loop" />
           </IconAction>
         )}
         {item.prevMedia && (
@@ -310,7 +331,13 @@ export function Inspector() {
               void nr.reference?.dropAsset(upscaled);
             }}
           >
-            <Undo2 />
+            <NetsuIcon name="undo-upscale" />
+          </IconAction>
+        )}
+        {/* Inside a folder: make this image the picture shown on the folder's card. */}
+        {inFolder && item.kind === "image" && (
+          <IconAction label={t(isCover ? "folder.isCover" : "folder.setCover")} active={isCover} onClick={() => setFolderCover(item.id)}>
+            <NetsuIcon name="set-cover" />
           </IconAction>
         )}
         {/* Lien au cadre : même bascule que la pastille posée sur l'élément (bleu = le cadre l'emmène
@@ -321,13 +348,13 @@ export function Inspector() {
             active={!item.detached}
             onClick={() => patchItem(item.id, { detached: item.detached ? undefined : true })}
           >
-            {item.detached ? <Unlink2 /> : <Link2 />}
+            <NetsuIcon name="link-frame" on={!item.detached} />
           </IconAction>
         )}
-        <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><BringToFront /></IconAction>
-        <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><SendToBack /></IconAction>
+        <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><NetsuIcon name="z-front" /></IconAction>
+        <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><NetsuIcon name="z-back" /></IconAction>
         <IconAction label={t("common:action.delete")} onClick={() => removeItem(item.id)}>
-          <Trash2 className="text-destructive" />
+          <NetsuIcon name="delete" className="text-destructive" />
         </IconAction>
       </div>
       {upscalable && <UpscaleItemDialog item={item} open={upOpen} onOpenChange={setUpOpen} />}

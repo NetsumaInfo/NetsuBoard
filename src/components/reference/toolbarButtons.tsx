@@ -10,44 +10,47 @@
 // pour en sortir.
 
 import {
-  Type, Frame, Pencil, SwatchBook, Pipette, LayoutGrid, Magnet, ZoomIn, ZoomOut, Maximize,
-  Pause, Undo2, Redo2, MousePointerBan, Settings2, Save, SaveAll, FolderOpen, Share2, FilePlus2, Home,
-} from "lucide-react";
+  AddTextGlyph, AddBlockGlyph, AddFrameGlyph, DrawToggleGlyph, PaletteStudioGlyph, ExtractPaletteGlyph,
+  TidyGlyph, SnapGlyph, ZoomOutGlyph, ZoomInGlyph, FitAllGlyph, FreezeGlyph, UndoGlyph, RedoGlyph,
+  MouseThroughGlyph, SettingsGlyph, SaveGlyph, SaveAsGlyph, OpenSceneGlyph, ShareGlyph, NewSceneGlyph,
+  HomeGlyph, type Glyph,
+} from "./netsuIcons";
 
 export type PinnedButtonId =
-  | "text" | "frame" | "draw" | "palette" | "extractPalette" | "tidy"
+  | "text" | "note" | "frame" | "draw" | "palette" | "extractPalette" | "tidy"
   | "snap" | "zoomOut" | "zoomIn" | "fit" | "freeze"
   | "undo" | "redo" | "mouseThrough" | "settings" | "save" | "saveAs" | "openProject"
   | "share" | "newScene" | "home";
 
-export const PINNED_BUTTONS: { id: PinnedButtonId; labelKey: string; icon: typeof Type }[] = [
-  { id: "text", labelKey: "toolbar.addText", icon: Type },
-  { id: "frame", labelKey: "toolbar.addFrame", icon: Frame },
-  { id: "draw", labelKey: "toolbar.draw", icon: Pencil },
-  { id: "palette", labelKey: "palette.studio.open", icon: SwatchBook },
-  { id: "extractPalette", labelKey: "shortcut.extractPalette", icon: Pipette },
-  { id: "tidy", labelKey: "shortcut.arrangeDefault", icon: LayoutGrid },
-  { id: "snap", labelKey: "toolbar.snap", icon: Magnet },
-  { id: "zoomOut", labelKey: "actions.zoomOut", icon: ZoomOut },
-  { id: "zoomIn", labelKey: "actions.zoomIn", icon: ZoomIn },
-  { id: "fit", labelKey: "actions.fitAll", icon: Maximize },
-  { id: "freeze", labelKey: "toolbar.freeze", icon: Pause },
-  { id: "undo", labelKey: "actions.undo", icon: Undo2 },
-  { id: "redo", labelKey: "actions.redo", icon: Redo2 },
-  { id: "mouseThrough", labelKey: "mouseThrough.on", icon: MousePointerBan },
-  { id: "settings", labelKey: "actions.settings", icon: Settings2 },
-  { id: "save", labelKey: "toolbar.saveScene", icon: Save },
-  { id: "saveAs", labelKey: "toolbar.saveAs", icon: SaveAll },
-  { id: "openProject", labelKey: "toolbar.openScene", icon: FolderOpen },
-  { id: "share", labelKey: "toolbar.share", icon: Share2 },
-  { id: "newScene", labelKey: "actions.newScene", icon: FilePlus2 },
-  { id: "home", labelKey: "toolbar.home", icon: Home },
+export const PINNED_BUTTONS: { id: PinnedButtonId; labelKey: string; icon: Glyph }[] = [
+  { id: "text", labelKey: "toolbar.addText", icon: AddTextGlyph },
+  { id: "note", labelKey: "toolbar.addBlock", icon: AddBlockGlyph },
+  { id: "frame", labelKey: "toolbar.addFrame", icon: AddFrameGlyph },
+  { id: "draw", labelKey: "toolbar.draw", icon: DrawToggleGlyph },
+  { id: "palette", labelKey: "palette.studio.open", icon: PaletteStudioGlyph },
+  { id: "extractPalette", labelKey: "shortcut.extractPalette", icon: ExtractPaletteGlyph },
+  { id: "tidy", labelKey: "shortcut.arrangeDefault", icon: TidyGlyph },
+  { id: "snap", labelKey: "toolbar.snap", icon: SnapGlyph },
+  { id: "zoomOut", labelKey: "actions.zoomOut", icon: ZoomOutGlyph },
+  { id: "zoomIn", labelKey: "actions.zoomIn", icon: ZoomInGlyph },
+  { id: "fit", labelKey: "actions.fitAll", icon: FitAllGlyph },
+  { id: "freeze", labelKey: "toolbar.freeze", icon: FreezeGlyph },
+  { id: "undo", labelKey: "actions.undo", icon: UndoGlyph },
+  { id: "redo", labelKey: "actions.redo", icon: RedoGlyph },
+  { id: "mouseThrough", labelKey: "mouseThrough.on", icon: MouseThroughGlyph },
+  { id: "settings", labelKey: "actions.settings", icon: SettingsGlyph },
+  { id: "save", labelKey: "toolbar.saveScene", icon: SaveGlyph },
+  { id: "saveAs", labelKey: "toolbar.saveAs", icon: SaveAsGlyph },
+  { id: "openProject", labelKey: "toolbar.openScene", icon: OpenSceneGlyph },
+  { id: "share", labelKey: "toolbar.share", icon: ShareGlyph },
+  { id: "newScene", labelKey: "actions.newScene", icon: NewSceneGlyph },
+  { id: "home", labelKey: "toolbar.home", icon: HomeGlyph },
 ];
 
 // Barre épinglée par défaut : de quoi poser, regarder et annuler. Le document (enregistrer, ouvrir,
 // accueil) reste au clic droit, qui le porte déjà.
 export const DEFAULT_PINNED_BUTTONS: PinnedButtonId[] = [
-  "text", "frame", "draw", "palette", "snap", "zoomOut", "zoomIn", "fit", "freeze",
+  "text", "note", "frame", "draw", "palette", "snap", "zoomOut", "zoomIn", "fit", "freeze",
 ];
 
 // Ancrés à l'AUTRE bout par défaut : ce qui répare et ce qui touche à la fenêtre, loin des outils
@@ -56,7 +59,7 @@ export const DEFAULT_PINNED_BUTTONS_END: PinnedButtonId[] = ["undo", "redo", "mo
 
 // Barre PLEINE (fenêtre normale) : mêmes boutons, mêmes deux extrémités, autour du nom du projet.
 export const DEFAULT_BAR_BUTTONS: PinnedButtonId[] = [
-  "home", "text", "frame", "draw", "palette", "extractPalette", "tidy",
+  "home", "text", "note", "frame", "draw", "palette", "extractPalette", "tidy",
   "snap", "zoomOut", "zoomIn", "fit", "freeze",
 ];
 export const DEFAULT_BAR_BUTTONS_END: PinnedButtonId[] = [

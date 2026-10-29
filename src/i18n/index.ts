@@ -53,6 +53,7 @@ export const NAMESPACES = [
   "export",
   "settings",
   "models",
+  "note",
 ] as const;
 
 // --- Chargement des ressources -------------------------------------------------------------------

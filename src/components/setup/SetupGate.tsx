@@ -11,14 +11,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowLeft,
-  Check,
-  CheckCircle2,
-  RotateCw,
-  Terminal,
-  TriangleAlert,
-} from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr } from "@/lib/bridge";
 import type { SetupDownload, SetupProgress } from "@/lib/bridge";
 import { hasChosenLang, LANGUAGES, type LangCode } from "@/i18n";
@@ -225,7 +218,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
   const errorBlock = install === "error" && (
     <div className="flex flex-col gap-2 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
       <div className="flex items-start gap-2">
-        <TriangleAlert className="size-4 shrink-0" /><span className="break-words">{error}</span>
+        <NetsuIcon name="warning" className="size-4 shrink-0" /><span className="break-words">{error}</span>
       </div>
       {/* Une installation qui échoue laisse l'app inutilisable : le rapport doit partir d'ICI,
           les Paramètres étant derrière l'écran bloqué. */}
@@ -270,7 +263,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
                 >
                   <FlagIcon code={entry.code} className="h-4 w-[1.35rem] shrink-0" />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{entry.label}</span>
-                  {entry.code === lang && <Check className="size-4 shrink-0 text-primary" />}
+                  {entry.code === lang && <NetsuIcon name="check" className="size-4 shrink-0 text-primary" />}
                 </button>
               ))}
             </div>
@@ -278,7 +271,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
             {install !== "error" && (
               <div className="flex items-center gap-3 rounded-md bg-muted/40 px-3 py-2">
                 {install === "ok"
-                  ? <CheckCircle2 className="size-4 shrink-0 text-[var(--color-ok)]" />
+                  ? <NetsuIcon name="status-ok" className="size-4 shrink-0 text-[var(--color-ok)]" />
                   : <Spinner className="size-4 shrink-0 text-muted-foreground" />}
                 <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
                   {install === "ok" ? t("setup:auto.ready") : prog.label || t("setup:auto.running")}
@@ -294,7 +287,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
           <section className="flex flex-col gap-4">
             {install === "ok" ? (
               <div className="flex flex-col items-center gap-3 py-5 text-center">
-                <span className="grid size-12 place-items-center rounded-full bg-[var(--color-ok)]/15 text-[var(--color-ok)]"><CheckCircle2 className="size-6" /></span>
+                <span className="grid size-12 place-items-center rounded-full bg-[var(--color-ok)]/15 text-[var(--color-ok)]"><NetsuIcon name="status-ok" className="size-6" /></span>
                 <div><h2 className="text-base font-medium">{t("setup:done")}</h2><p className="mt-1 text-sm text-muted-foreground">{t("setup:restartHint")}</p></div>
               </div>
             ) : (
@@ -324,7 +317,7 @@ export function SetupGate({ children }: { children: ReactNode }) {
             {(log.length > 0 || downloads.length > 0) && install !== "ok" && (
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Terminal className="size-3.5" /> {t("setup:log")}</span>
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><NetsuIcon name="console" className="size-3.5" /> {t("setup:log")}</span>
                   <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => void navigator.clipboard?.writeText(logText(log))}>{t("common:action.copy")}</Button>
                 </div>
                 <div ref={logRef} className="h-44 overflow-auto rounded-md border border-border bg-black/40 p-2 font-mono text-[11px] leading-relaxed text-muted-foreground">
@@ -341,14 +334,14 @@ export function SetupGate({ children }: { children: ReactNode }) {
         <footer className="flex items-center justify-between gap-3 border-t border-border pt-4">
           <div>
             {phase === "install" && needLang && install === "error" && (
-              <Button variant="ghost" onClick={() => setPhase("language")}><ArrowLeft className="size-4" /> {t("common:action.back")}</Button>
+              <Button variant="ghost" onClick={() => setPhase("language")}><NetsuIcon name="back" className="size-4" /> {t("common:action.back")}</Button>
             )}
           </div>
           <div className="flex gap-2">
             {phase === "language" && <Button onClick={() => setPhase("install")}>{t("common:action.continue")}</Button>}
-            {phase === "install" && install === "running" && <Button disabled><RotateCw className="size-4 animate-spin" /> {t("setup:installing")}</Button>}
-            {phase === "install" && install === "error" && <Button onClick={() => void runInstall()}><RotateCw className="size-4" /> {t("common:action.retry")}</Button>}
-            {phase === "install" && install === "ok" && <Button onClick={() => void relaunchApp()}><RotateCw className="size-4" /> {t("setup:restartApp")}</Button>}
+            {phase === "install" && install === "running" && <Button disabled><NetsuIcon name="setup-install" busy /> {t("setup:installing")}</Button>}
+            {phase === "install" && install === "error" && <Button onClick={() => void runInstall()}><NetsuIcon name="setup-install" /> {t("common:action.retry")}</Button>}
+            {phase === "install" && install === "ok" && <Button onClick={() => void relaunchApp()}><NetsuIcon name="restart" className="size-4" /> {t("setup:restartApp")}</Button>}
           </div>
         </footer>
       </Card>

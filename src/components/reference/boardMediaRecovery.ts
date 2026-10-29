@@ -14,13 +14,22 @@ export function originalOnlineSource(item: Pick<RecoverableOnlineItem, "sourceUr
   return item.sourceUrl || item.prevMedia?.sourceUrl || "";
 }
 
+function isRecoverableOnline(item: RecoverableOnlineItem): boolean {
+  const source = originalOnlineSource(item);
+  if (!/^https?:/i.test(source)) return false;
+  if (item.kind === "sequence") return !!item.missing || !(item.frames || []).some(Boolean);
+  return (item.kind === "image" || item.kind === "video") && (!!item.missing || !item.ref);
+}
+
 export function recoverableOnlineItems<T extends RecoverableOnlineItem>(items: T[]): T[] {
-  return items.filter((item) => {
-    const source = originalOnlineSource(item);
-    if (!/^https?:/i.test(source)) return false;
-    if (item.kind === "sequence") return !!item.missing || !(item.frames || []).some(Boolean);
-    return (item.kind === "image" || item.kind === "video") && (!!item.missing || !item.ref);
-  });
+  return items.filter(isRecoverableOnline);
+}
+
+/** Same rule as `recoverableOnlineItems`, counted without allocating (a store selector runs per commit). */
+export function countRecoverableOnlineItems(items: RecoverableOnlineItem[]): number {
+  let n = 0;
+  for (const item of items) if (isRecoverableOnline(item)) n++;
+  return n;
 }
 
 export async function runSequentialRecovery<T>(

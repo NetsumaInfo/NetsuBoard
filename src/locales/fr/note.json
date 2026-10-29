@@ -1,0 +1,281 @@
+{
+  "audioLabel": "Audio",
+  "player": {
+    "pause": "Pause",
+    "play": "Lecture",
+    "seek": "Se déplacer dans la vidéo",
+    "soundOn": "Activer le son",
+    "soundOff": "Couper le son"
+  },
+  "blocksUi": {
+    "playbackSpeed": "Vitesse de lecture",
+    "chooseAudio": "Choisir un audio…",
+    "audioDrop": "MP3, WAV, FLAC… ou glisse-dépose",
+    "audioUrl": "…ou coller une URL audio + Entrée",
+    "changeDivider": "Changer le style du séparateur",
+    "chooseFile": "Choisir un fichier…",
+    "fileDrop": "PDF, Word, Excel, ZIP… ou glisse-dépose",
+    "fileUrl": "…ou coller une URL de fichier + Entrée",
+    "open": "Ouvrir",
+    "download": "Télécharger",
+    "today": "Aujourd'hui",
+    "clear": "Effacer",
+    "play": "Lire",
+    "fullscreen": "Plein écran",
+    "chooseVideo": "Choisir une vidéo…",
+    "dropFile": "ou glisse-dépose un fichier",
+    "videoUrl": "…ou coller une URL de vidéo + Entrée"
+  },
+  "finalPass": {
+    "volume": "Volume",
+    "convertOptions": "Convertir / options",
+    "convertTo": "Convertir en",
+    "copyLink": "Copier le lien",
+    "pasteAs": "Coller comme"
+  },
+  "delete": "Supprimer",
+  "boardMention": {
+    "untitled": "Élément"
+  },
+  "blocks": {
+    "bookmark": {
+      "pastePlaceholder": "Coller un lien de site web…"
+    },
+    "embed": {
+      "pastePlaceholder": "Coller un lien à intégrer (Vimeo, X, TikTok…)",
+      "iframeTitle": "Intégration"
+    },
+    "toggle": {
+      "collapse": "Replier",
+      "expand": "Déplier"
+    },
+    "youtube": {
+      "pastePlaceholder": "Coller un lien YouTube…"
+    }
+  },
+  "callout": {
+    "basic": "Basique",
+    "info": "Info",
+    "tip": "Astuce",
+    "warning": "Attention",
+    "alert": "Alerte",
+    "changeEmoji": "Changer l'emoji",
+    "presets": "Préréglages",
+    "background": "Couleur de fond",
+    "style": "Style de l'encadré"
+  },
+  "equation": {
+    "group": {
+      "structures": "Structures",
+      "calculus": "Calcul",
+      "matrices": "Matrices et systèmes",
+      "chemistry": "Chimie (mhchem)"
+    },
+    "template": {
+      "fraction": "Fraction",
+      "squareRoot": "Racine carrée",
+      "nthRoot": "Racine n-ième",
+      "exponent": "Exposant",
+      "subscript": "Indice",
+      "binomial": "Binôme",
+      "sum": "Somme",
+      "product": "Produit",
+      "integral": "Intégrale",
+      "limit": "Limite",
+      "derivative": "Dérivée",
+      "partialDerivative": "Dérivée partielle",
+      "matrix": "Matrice 2×2",
+      "determinant": "Déterminant",
+      "system": "Système (cas)",
+      "vector": "Vecteur",
+      "molecule": "Molécule",
+      "reaction": "Réaction",
+      "equilibrium": "Équilibre",
+      "ion": "Ion"
+    },
+    "empty": "Équation vide — cliquer pour écrire du LaTeX",
+    "edit": "Modifier l'équation",
+    "templates": "Modèles",
+    "input": "Code LaTeX de l'équation",
+    "error": "Erreur LaTeX : {{error}}",
+    "hint": "LaTeX complet (KaTeX + chimie \\ce) · Ctrl+Entrée pour valider · Échap pour annuler"
+  },
+  "fileKind": {
+    "other": "Fichier",
+    "doc": "Document",
+    "sheet": "Tableur",
+    "slide": "Présentation",
+    "archive": "Archive",
+    "video": "Vidéo",
+    "image": "Image",
+    "text": "Texte"
+  },
+  "gallery": {
+    "chooseImages": "Choisir des images…",
+    "dropFiles": "ou glisse-dépose des fichiers",
+    "imageUrl": "…ou coller une URL d'image + Entrée",
+    "row": "Bande (défilement horizontal)",
+    "carousel": "Carrousel",
+    "grid": "Grille",
+    "height": "Hauteur {{size}}",
+    "imageCount_one": "{{count}} image",
+    "imageCount_other": "{{count}} images",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "removeImage": "Retirer cette image",
+    "caption": "Légende…",
+    "openImage": "Ouvrir l'image"
+  },
+  "a11y": {
+    "addImage": "Ajouter une image",
+    "previousImage": "Image précédente",
+    "nextImage": "Image suivante",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "resizeMedia": "Redimensionner le média",
+    "inPoint": "Point d'entrée",
+    "outPoint": "Point de sortie"
+  },
+  "lightbox": {
+    "zoomOut": "Zoom arrière",
+    "zoomIn": "Zoom avant",
+    "pause": "Pause (Espace)",
+    "slideshow": "Diaporama (Espace)",
+    "previous": "Précédente",
+    "next": "Suivante"
+  },
+  "close": "Fermer",
+  "color": {
+    "gray": "Gris",
+    "blue": "Bleu",
+    "green": "Vert",
+    "yellow": "Jaune",
+    "orange": "Orange",
+    "red": "Rouge",
+    "purple": "Violet",
+    "pink": "Rose"
+  },
+  "emoji": {
+    "custom": "Coller un emoji + Entrée"
+  },
+  "editor": {
+    "uploadFailed": "Échec de l'envoi du fichier",
+    "dateToday": "Date du jour"
+  },
+  "untitled": "Sans titre",
+  "paste": {
+    "mention": {
+      "label": "Mention",
+      "desc": "Puce compacte au fil du texte"
+    },
+    "url": {
+      "label": "Lien",
+      "desc": "Lien cliquable en ligne"
+    },
+    "bookmark": {
+      "label": "Signet",
+      "desc": "Aperçu en carte"
+    },
+    "embed": {
+      "label": "Intégration",
+      "desc": "Lecteur intégré (iframe / YouTube)"
+    }
+  },
+  "sideMenu": {
+    "changeType": "Transformer en",
+    "colors": "Couleurs",
+    "rowHeader": "Ligne d'en-tête",
+    "columnHeader": "Colonne d'en-tête"
+  },
+  "slash": {
+    "groups": {
+      "blocks": "Blocs",
+      "media": "Médias",
+      "insert": "Insertion"
+    },
+    "callout": {
+      "title": "Encadré",
+      "desc": "Bandeau coloré avec emoji",
+      "aliases": "callout|encadre|note|info"
+    },
+    "toggle": {
+      "title": "Bascule",
+      "desc": "Section repliable",
+      "aliases": "toggle|bascule|repliable|accordeon"
+    },
+    "equation": {
+      "title": "Équation",
+      "desc": "Formule LaTeX (KaTeX)",
+      "aliases": "equation|math|latex|formule|katex"
+    },
+    "divider": {
+      "title": "Séparateur",
+      "desc": "Ligne, tirets, points ou étoiles",
+      "aliases": "divider|separateur|séparateur|ligne|hr|---"
+    },
+    "youtube": {
+      "desc": "Intégrer une vidéo YouTube",
+      "aliases": "youtube|video|yt"
+    },
+    "embed": {
+      "title": "Intégration",
+      "aliases": "embed|integration|iframe|vimeo|twitter|tiktok"
+    },
+    "bookmark": {
+      "title": "Signet",
+      "desc": "Aperçu d'un lien web",
+      "aliases": "bookmark|signet|lien|web|link"
+    },
+    "video": {
+      "title": "Vidéo",
+      "desc": "Fichier local ou URL, lecteur intégré",
+      "aliases": "video|vidéo|mp4|film|clip"
+    },
+    "audio": {
+      "desc": "Lecteur harmonisé (forme d'onde)",
+      "aliases": "audio|son|mp3|musique|wav|podcast"
+    },
+    "file": {
+      "title": "Fichier",
+      "desc": "PDF, Word, Excel, ZIP… (aperçu PDF)",
+      "aliases": "file|fichier|pdf|doc|document|zip|excel|word"
+    },
+    "gallery": {
+      "title": "Galerie d'images",
+      "desc": "Plusieurs images défilables sur une ligne",
+      "aliases": "gallery|galerie|images|carrousel|carousel|album"
+    },
+    "date": {
+      "title": "Date",
+      "desc": "Insérer une date au fil du texte",
+      "aliases": "date|jour|calendrier|aujourd'hui"
+    }
+  },
+  "blockTypes": {
+    "paragraph": "Texte",
+    "heading1": "Titre",
+    "heading2": "Sous-titre",
+    "heading3": "Petit titre",
+    "bulletList": "Liste à puces",
+    "numberedList": "Liste numérotée",
+    "checkList": "Liste de tâches",
+    "quote": "Citation",
+    "callout": "Encadré",
+    "codeBlock": "Bloc de code"
+  },
+  "placeOnBoard": "Poser sur le board",
+  "menu": {
+    "format": "Format",
+    "bold": "Gras",
+    "italic": "Italique",
+    "underline": "Souligné",
+    "strike": "Barré",
+    "code": "Code",
+    "link": "Lien",
+    "linkNeedsUrl": "Copie d'abord une adresse",
+    "block": "Bloc",
+    "duplicate": "Dupliquer",
+    "moveUp": "Monter",
+    "moveDown": "Descendre"
+  }
+}

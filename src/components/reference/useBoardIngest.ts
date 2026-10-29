@@ -30,6 +30,9 @@ import {
   makeFrameItem,
   topZ,
 } from "./referenceShared";
+import { probeImageFast } from "./boardProbe";
+import { loadPdf, renderPdfThumb } from "./boardPdf";
+import { type DocType, docCardSize, docLongSide, docSaveExt, docTypeOf } from "./boardDocs";
 import { useBoard } from "./useReferenceBoard";
 import { boundsOf, computeArrange } from "./boardArrange";
 import { errorText } from "@/lib/errorText";
@@ -133,6 +136,23 @@ function entryKind(nameOrPath: string, mime = ""): "image" | "video" | null {
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("video/")) return "video";
   return null;
+}
+
+// A document (PDF, Word, text, Markdown, CSV or any other file) is not an image/video batch entry:
+// it needs its own pass (first screen rendered to a PNG). Images and videos win over this.
+const docKindOf = (nameOrPath: string, mime = ""): DocType | null =>
+  entryKind(nameOrPath, mime) ? null : docTypeOf(nameOrPath, mime);
+
+type DocEntry = { path?: string; file?: File; name: string; type: DocType };
+
+// Size of a local file through the core's media server (HEAD); 0 when it does not say.
+async function remoteSize(url: string): Promise<number> {
+  try {
+    const res = await fetch(url, { method: "HEAD" });
+    return Number(res.headers.get("content-length")) || 0;
+  } catch {
+    return 0;
+  }
 }
 
 // Entités HTML d'un attribut `src` de presse-papier. Les URL de CDN sont pleines de `&` : sans ce
@@ -304,6 +324,94 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     [place, addPath],
   );
 
+  // Documents: each becomes an IMAGE item showing the first screen of the document (a PNG asset,
+  // so the board treats it like any picture: LOD, culling, upscale), with `docFile` pointing at the
+  // document itself. PDF: page 1 by pdf.js. Word, text, Markdown, CSV: the document on paper by
+  // html-to-image. Anything else: an extension / name / size card. The document is read again only
+  // when the card is opened live. At most 2 documents are decoded at a time; the cards land
+  // together, in one undo step.
+  const addDocs = useCallback(
+    async (entries: DocEntry[], at?: { x: number; y: number }) => {
+      if (!entries.length) return;
+      const store = useBoard.getState();
+      const box = store.prefs.mediaMaxSize;
+      const origin = at ?? centerPoint();
+      const side = Math.max(...entries.map((e) => docLongSide(e.type, box)));
+      const cells = gridLayout(entries.length, side, side, origin, store.prefs.arrangeGap);
+      const made: (BoardItem | null)[] = entries.map(() => null);
+      const failed: string[] = [];
+      let done = 0;
+      const report = () => useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.progress", { done, total: entries.length }) });
+      report();
+      await pool(entries, 2, async (entry, i) => {
+        try {
+          const stem = entry.name.replace(/\.[^.]*$/, "") || entry.name;
+          let bytes: ArrayBuffer | null = null;
+          let docPath = entry.path;
+          if (!docPath) {
+            // A browser File has no durable locator: the document itself is saved as an asset first.
+            if (!entry.file || !nr.reference?.saveAsset) throw new Error("no durable source");
+            if (entry.file.size > ASSET_COPY_MAX) throw new Error("file too large to copy");
+            bytes = await entry.file.arrayBuffer();
+            const saved = await nr.reference.saveAsset(bytes, docSaveExt(entry.name), assetOptions(entry.name));
+            if (!saved.ok || !saved.path) throw new Error(saved.error || "asset copy failed");
+            docPath = saved.path;
+          }
+          const url = displaySrc("image", docPath);
+          let thumb: { blob: Blob; w: number; h: number };
+          let pages: number | undefined;
+          if (entry.type === "pdf") {
+            const doc = await loadPdf(bytes ? { data: bytes.slice(0) } : { url });
+            try {
+              const t = await renderPdfThumb(doc);
+              thumb = t;
+              pages = t.pages;
+            } finally {
+              void doc.destroy();
+            }
+          } else {
+            const render = await import("./boardDocRender");
+            if (entry.type === "file") {
+              thumb = await render.renderFileThumb(entry.name, entry.file?.size ?? await remoteSize(url));
+            } else {
+              thumb = await render.renderDocThumb(entry.type, bytes ?? await render.fetchDocBytes(url), entry.name);
+            }
+          }
+          const png = await nr.reference?.saveAsset?.(await thumb.blob.arrayBuffer(), "png", assetOptions(`${stem}-${entry.type === "pdf" ? "p1" : "thumb"}`));
+          if (!png?.ok || !png.path) throw new Error(png?.error || "thumbnail copy failed");
+          const { w, h } = docCardSize(thumb.w, thumb.h, docLongSide(entry.type, box));
+          made[i] = {
+            id: `doc-${Date.now().toString(36)}-${i}`,
+            kind: "image",
+            ref: png.path,
+            src: displaySrc("image", png.path),
+            x: cells[i].x + (side - w) / 2,
+            y: cells[i].y + (side - h) / 2,
+            w, h,
+            rotation: 0,
+            z: 0,
+            natW: thumb.w,
+            natH: thumb.h,
+            title: entry.name,
+            docFile: { ref: docPath, name: entry.name, type: entry.type, ...(pages ? { pages } : null) },
+          };
+        } catch (e) {
+          logError("board:ingest", `document import failed: ${entry.name}: ${errorText(e)}`);
+          failed.push(entry.name);
+        }
+        done++;
+        report();
+      });
+      let z = topZ(useBoard.getState().items);
+      const batch = made.filter((it): it is BoardItem => !!it).map((it) => ({ ...it, z: ++z }));
+      if (batch.length) useBoard.getState().addItems(batch, false);
+      useBoard.getState().setNotice(failed.length
+        ? { kind: "error", text: i18n.t("reference:ingest.pdfFailed", { name: failed[0] }) }
+        : { kind: "ok", text: i18n.t("reference:ingest.done", { count: batch.length }) });
+    },
+    [centerPoint],
+  );
+
   // UN fichier déposé, collé ou choisi. Posé AVANT la moindre attente : le placeholder paraît sous le
   // curseur dans la frame du dépôt et la barre d'outils annonce l'import, puis ratio natif et source
   // durable arrivent par patch. L'ancienne voie attendait la résolution du chemin disque PUIS le
@@ -316,6 +424,12 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   // qui rend l'item réparable si ses octets viennent à manquer.
   const addFile = useCallback(
     async (file: File, at?: { x: number; y: number }, extra?: Partial<BoardItem>) => {
+      const docType = docKindOf(file.name, file.type);
+      if (docType) {
+        const [p] = await nr.pathsForFiles([file]).catch(() => [""]);
+        await addDocs([{ path: p || undefined, file, name: file.name, type: docType }], at);
+        return;
+      }
       const kind = entryKind(file.name, file.type);
       if (!kind) return;
       const box = useBoard.getState().prefs.mediaMaxSize;
@@ -400,7 +514,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       }
       useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: 1 }) });
     },
-    [addItem, centerPoint],
+    [addItem, centerPoint, addDocs],
   );
 
   // Un LOT posé en BLOC : jamais une pile au même point. Les médias sont rangés (et regroupés dans
@@ -501,13 +615,32 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       let done = 0;
       const total = created.length;
       const copyFailures: string[] = [];
-      const tick = () => useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.progress", { done, total }) });
-      tick();
+      // Measures and the counter land together, a few times a second: one store write per media
+      // re-rendered the whole board forty times in a row and froze the interface while importing.
+      const patches = new Map<string, Partial<BoardItem>>();
+      let flushTimer: ReturnType<typeof setTimeout> | null = null;
+      const flush = () => {
+        flushTimer = null;
+        if (patches.size) {
+          const batchPatch = new Map(patches);
+          patches.clear();
+          useBoard.setState((st) => ({
+            items: st.items.map((it) => (batchPatch.has(it.id) ? { ...it, ...batchPatch.get(it.id)! } : it)),
+            dirty: true,
+          }));
+        }
+        useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.progress", { done, total }) });
+      };
+      const queue = (id: string, patch: Partial<BoardItem>) => {
+        patches.set(id, { ...patches.get(id), ...patch });
+      };
+      const tick = () => { if (!flushTimer) flushTimer = setTimeout(flush, 150); };
+      flush();
       await pool(created, 8, async (c) => {
-        const nat = await probeNat(c.kind, c.src);
+        const nat = c.kind === "image" ? await probeImageFast(c.src) : await probeNat(c.kind, c.src);
         if (nat.w && nat.h) {
           const size = fitSize(nat.w, nat.h, box);
-          useBoard.getState().patchItem(c.id, { natW: nat.w, natH: nat.h, w: size.w, h: size.h }, false);
+          queue(c.id, { natW: nat.w, natH: nat.h, w: size.w, h: size.h });
         }
         if (c.file && nr.reference?.saveAsset && c.file.size <= ASSET_COPY_MAX) {
           const name = c.file.name;
@@ -519,8 +652,10 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
             );
             if (res.ok && res.path) {
               const durable = displaySrc(c.kind, res.path);
-              useBoard.getState().patchItem(c.id, { ref: res.path, src: durable }, false);
-              URL.revokeObjectURL(c.src);
+              queue(c.id, { ref: res.path, src: durable });
+              // The objectURL stays alive until the item has switched to the durable source.
+              const stale = c.src;
+              setTimeout(() => URL.revokeObjectURL(stale), 2000);
             } else {
               logError("board:ingest", `asset copy failed: ${name}: ${res.error || "?"}`);
               copyFailures.push(name);
@@ -533,6 +668,8 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         done++;
         tick();
       });
+      if (flushTimer) clearTimeout(flushTimer);
+      flush();
 
       // Rangement final, en UN seul rendu : chaque groupe est disposé à ses vraies proportions, puis
       // recollé sous le précédent d'après ses limites mesurées, et son cadre ajusté au résultat.
@@ -599,9 +736,18 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   // viewport : import interminable et planche illisible.
   const addFiles = useCallback(
     (files: FileList | File[], at?: { x: number; y: number }, extra?: Partial<BoardItem>) => {
-      const all = Array.from(files);
-      if (!all.length) return;
-      if (all.length === 1) { void addFile(all[0], at, extra); return; }
+      const everything = Array.from(files);
+      if (!everything.length) return;
+      // Documents get their own pass, after the rest of the drop has landed.
+      const docs = everything.filter((f) => docKindOf(f.name, f.type));
+      const all = everything.filter((f) => !docKindOf(f.name, f.type));
+      const runPdfs = async () => {
+        if (!docs.length) return;
+        const paths = await nr.pathsForFiles(docs).catch(() => [] as string[]);
+        await addDocs(docs.map((file, i) => ({ path: paths[i] || undefined, file, name: file.name, type: docKindOf(file.name, file.type)! })), at);
+      };
+      if (!all.length) { void runPdfs(); return; }
+      if (all.length === 1) { void addFile(all[0], at, extra).then(runPdfs); return; }
       void (async () => {
         useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.reading", { count: all.length }) });
         const paths = await nr.pathsForFiles(all);
@@ -616,9 +762,39 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         if (list.length) await addBatch(list, { at, extra });
         else useBoard.getState().setNotice(null);
         for (const f of others) await addFile(f, at, extra);
+        await runPdfs();
       })();
     },
-    [addFile, addBatch],
+    [addFile, addBatch, addDocs],
+  );
+
+  // Paths picked in a file dialog: several at once go through the same batch as a drop (laid out
+  // in one pass, measured in parallel, « Import x/y » shown). One by one, each waited for its own
+  // probe and landed on the viewport centre.
+  const addPaths = useCallback(
+    (all: string[], at?: { x: number; y: number }) => {
+      const docs = all.filter((p) => docKindOf(p));
+      const paths = all.filter((p) => !docKindOf(p));
+      const runPdfs = async () => {
+        if (docs.length) await addDocs(docs.map((p) => ({ path: p, name: p.split(/[\\/]/).pop() || p, type: docKindOf(p)! })), at);
+      };
+      if (!paths.length) { void runPdfs(); return; }
+      if (paths.length === 1) { void addPath(paths[0], undefined, at).then(runPdfs); return; }
+      const list: BatchEntry[] = [];
+      const others: string[] = [];
+      for (const p of paths) {
+        const kind = entryKind(p);
+        const name = p.split(/[\\/]/).pop() || p;
+        if (kind) list.push({ path: p, rel: "", name, kind });
+        else others.push(p);
+      }
+      void (async () => {
+        if (list.length) await addBatch(list, { at });
+        for (const p of others) await addPath(p, undefined, at);
+        await runPdfs();
+      })();
+    },
+    [addPath, addBatch, addDocs],
   );
 
   // Dossier CHOISI (menu) : le core parcourt l'arborescence, puis le lot est posé en cadres.
@@ -925,12 +1101,18 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
 
           // 4. Réseau social reconnu → extraction (post entier ou slide visée), repli OpenGraph sauf
           //    pour les providers dont l'OpenGraph n'est qu'un poster. Générique : OpenGraph d'abord.
-          const found = e
-            ? (await extractAndPlace(text, at))
-              || (!OG_POSTER_ONLY_PROVIDERS.has(e.provider) && await resolvePageAndPlace(text, at))
-            : prefs.autoDownloadOnline
-              ? (await resolvePageAndPlace(text, at)) || (await extractAndPlace(text, at))
-              : await resolvePageAndPlace(text, at);
+          // A page that is not a known media host (an article, a portfolio, a shop…) becomes a site
+          // card: its preview, not a picture lifted from it. Social posts keep their extraction.
+          if (!e) {
+            const c = at ?? centerPoint();
+            addItem({
+              kind: "embed", ref: text, src: text, x: c.x - 180, y: c.y - 150, w: 360, h: 300, rotation: 0,
+              linkCard: { mode: "preview" },
+            });
+            return true;
+          }
+          const found = (await extractAndPlace(text, at))
+            || (!OG_POSTER_ONLY_PROVIDERS.has(e.provider) && await resolvePageAndPlace(text, at));
           if (found) return true;
 
           // 5. Échec → repli carte embed ancrée (social, ou générique si autorisé).
@@ -988,5 +1170,5 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     [addFile, addUrl],
   );
 
-  return { addPath, addCut, addCuts, addSequence, addFiles, addFolder, addDroppedEntry, addVideoUrl, addUrl, addImageUrl, addPaste };
+  return { addPath, addPaths, addCut, addCuts, addSequence, addFiles, addFolder, addDroppedEntry, addVideoUrl, addUrl, addImageUrl, addPaste };
 }

@@ -13,7 +13,6 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Link2, Film, Maximize2, HardDrive, TriangleAlert } from "lucide-react";
 import { nr, type NetsuLevel, type NetsuQuality, type NetsuExportOpts, type NetsuWeight } from "@/lib/bridge";
 import { fmtBytes } from "@/lib/utils";
 import {
@@ -31,12 +30,13 @@ import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { useBoard } from "./useReferenceBoard";
 import { EMBED_LEVELS, EMBED_QUALITIES, EMBED_MARGINS } from "./referenceShared";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 
-const LEVEL_ICONS: Record<NetsuLevel, typeof Link2> = {
-  link: Link2,
-  preview: Film,
-  margin: Maximize2,
-  full: HardDrive,
+const LEVEL_ICONS: Record<NetsuLevel, string> = {
+  link: "level-link",
+  preview: "level-preview",
+  margin: "level-margin",
+  full: "level-full",
 };
 // Au-delà, on prévient : un fichier de cette taille ne se partage pas comme une pièce jointe.
 const HEAVY_BYTES = 200 * 1024 * 1024;
@@ -144,7 +144,6 @@ export function ExportDialog({
             className="grid w-full grid-cols-1"
           >
             {EMBED_LEVELS.map((id) => {
-              const Icon = LEVEL_ICONS[id];
               const active = id === level;
               return (
                 <ToggleGroupItem
@@ -152,7 +151,7 @@ export function ExportDialog({
                   value={id}
                   className="h-auto items-start justify-start gap-3 px-3 py-2.5 text-left aria-pressed:bg-primary/10 aria-pressed:text-foreground aria-pressed:ring-1 aria-pressed:ring-inset aria-pressed:ring-primary/60"
                 >
-                  <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <NetsuIcon name={LEVEL_ICONS[id]} className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium leading-tight">{t(`embed.level.${id}`)}</span>
                     <span className="mt-1 block text-xs leading-snug text-muted-foreground">{t(`embed.hint.${id}`)}</span>
@@ -224,7 +223,7 @@ export function ExportDialog({
 
           {(heavy || hasLong) && (
             <p className="flex items-start gap-2 text-xs leading-snug text-muted-foreground">
-              <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-destructive" aria-hidden />
+              <NetsuIcon name="warning" className="mt-0.5 size-3.5 shrink-0 text-destructive" />
               <span>{heavy ? t("embed.warn.heavy", { size: fmtBytes(perLevel![level]) }) : t("embed.warn.long")}</span>
             </p>
           )}

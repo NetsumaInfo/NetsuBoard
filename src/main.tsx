@@ -10,6 +10,12 @@ import "./index.css";
 // Capte les logs (renderer + core) au plus tôt pour le panneau Console (debug / bêta-test).
 initConsoleCapture();
 
+// The middle button pans the board. Its browser default must never run: autoscroll, or a
+// middle-click on a link or a card opening a new window that reloads the app view.
+const blockMiddle = (e: MouseEvent) => { if (e.button === 1) e.preventDefault(); };
+window.addEventListener("mousedown", blockMiddle, true);
+window.addEventListener("auxclick", blockMiddle, true);
+
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 // La fenêtre Tauri est frameless : on monte immédiatement le cadre avec ses contrôles, avant tout

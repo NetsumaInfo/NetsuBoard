@@ -9,7 +9,11 @@
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, HardDrive, Info, LayoutDashboard, LifeBuoy, MessageCircle, Palette, Terminal, UserRound, X } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
+import {
+  SettingsAboutGlyph, SettingsAccountGlyph, SettingsBoardGlyph, SettingsConsoleGlyph, SettingsDiscordGlyph,
+  SettingsInterfaceGlyph, SettingsReportGlyph, SettingsStorageGlyph, SettingsUpdatesGlyph, type Glyph,
+} from "@/components/reference/netsuIcons";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { markConsoleSeen, subscribeErrorCount } from "@/lib/appConsole";
@@ -27,24 +31,21 @@ import { useSettingsUi, type SettingsSection } from "./useSettingsUi";
 // statique, ils entreraient dans le chunk d'entrée d'une app qui doit s'ouvrir sans backend.
 const AccountPanel = lazy(() => import("./AccountPanel").then((m) => ({ default: m.AccountPanel })));
 
-// Board = LayoutDashboard (la surface qu'on règle), Interface = Palette (thème et langue, comme dans
-// NetsuRush). La palette sur « Board » disait « couleurs » alors que la page couvre aussi les médias,
-// la navigation et les raccourcis — et laissait l'apparence de l'app sans icône propre.
-const SECTIONS: { id: SettingsSection; icon: typeof Palette; labelKey: string }[] = [
+const SECTIONS: { id: SettingsSection; icon: Glyph; labelKey: string }[] = [
   // « Compte » en tête, comme dans NetsuRush : c'est la seule porte vers la connexion Discord une
   // fois le gate passé, et l'écran de connexion promet précisément de la trouver ici.
-  { id: "account", icon: UserRound, labelKey: "settings:nav.account" },
-  { id: "discord", icon: MessageCircle, labelKey: "settings:nav.discord" },
-  { id: "board", icon: LayoutDashboard, labelKey: "reference:settings.navBoard" },
-  { id: "interface", icon: Palette, labelKey: "settings:nav.interface" },
+  { id: "account", icon: SettingsAccountGlyph, labelKey: "settings:nav.account" },
+  { id: "discord", icon: SettingsDiscordGlyph, labelKey: "settings:nav.discord" },
+  { id: "board", icon: SettingsBoardGlyph, labelKey: "reference:settings.navBoard" },
+  { id: "interface", icon: SettingsInterfaceGlyph, labelKey: "settings:nav.interface" },
   // « Stockage » avant la console : c'est un réglage du produit, pas un outil de diagnostic.
-  { id: "storage", icon: HardDrive, labelKey: "settings:nav.storage" },
-  { id: "console", icon: Terminal, labelKey: "settings:tab.system.console" },
+  { id: "storage", icon: SettingsStorageGlyph, labelKey: "settings:nav.storage" },
+  { id: "console", icon: SettingsConsoleGlyph, labelKey: "settings:tab.system.console" },
   // « Signaler » vit juste après la Console : c'est là qu'on arrive après avoir lu ce qui a cassé,
   // et le formulaire joint précisément ce journal.
-  { id: "report", icon: LifeBuoy, labelKey: "settings:nav.report" },
-  { id: "updates", icon: Download, labelKey: "settings:nav.updates" },
-  { id: "about", icon: Info, labelKey: "settings:nav.about" },
+  { id: "report", icon: SettingsReportGlyph, labelKey: "settings:nav.report" },
+  { id: "updates", icon: SettingsUpdatesGlyph, labelKey: "settings:nav.updates" },
+  { id: "about", icon: SettingsAboutGlyph, labelKey: "settings:nav.about" },
 ];
 
 export function AppSettings() {
@@ -102,7 +103,7 @@ export function AppSettings() {
             onClick={closeSettings}
             className="inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            <X className="size-4" />
+            <NetsuIcon name="close" className="size-4" />
           </button>
         </div>
 

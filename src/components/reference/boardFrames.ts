@@ -16,9 +16,9 @@ export const FRAME_TOP = 52; // place de l'étiquette de titre, posée au-dessus
 export interface Rect { x: number; y: number; w: number; h: number }
 
 // Un item peut-il vivre dans un cadre ? (un cadre n'entre pas dans un cadre, le calque de dessin
-// n'a pas de géométrie propre).
+// n'a pas de géométrie propre). A folded folder is a card, not a container: it can sit in a frame.
 export function framable(it: BoardItem): boolean {
-  return it.kind !== "frame" && it.kind !== "draw";
+  return it.kind === "frame" ? !!it.folder : it.kind !== "draw";
 }
 
 function centerInside(f: Rect, cx: number, cy: number): boolean {
@@ -46,6 +46,7 @@ export function geomBox(g: Geom): Rect {
 // Items LIÉS au cadre : centre dedans, lien intact. Ce sont eux que le cadre emmène et sur lesquels
 // il s'ajuste.
 export function frameContentIds(frame: BoardItem, items: BoardItem[]): string[] {
+  if (frame.folder) return [];
   return items
     .filter((it) => framable(it) && !it.detached && it.id !== frame.id && centerInside(frame, it.x + it.w / 2, it.y + it.h / 2))
     .map((it) => it.id);
@@ -57,7 +58,7 @@ export function frameContentIds(frame: BoardItem, items: BoardItem[]): string[] 
 export function frameAtPoint(cx: number, cy: number, items: BoardItem[], skipId?: string): BoardItem | null {
   let best: BoardItem | null = null;
   for (const f of items) {
-    if (f.kind !== "frame" || f.id === skipId) continue;
+    if (f.kind !== "frame" || f.folder || f.id === skipId) continue;
     if (!centerInside(f, cx, cy)) continue;
     if (!best || f.w * f.h < best.w * best.h) best = f;
   }

@@ -4,27 +4,28 @@
 
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Pen, Highlighter, Slash, MoveUpRight, Square, Circle, Diamond, Eraser, Undo2, Redo2, Check,
-  BringToFront, SendToBack,
-} from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { ShortcutTip } from "@/components/ui/kbd";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { useBoard } from "./useReferenceBoard";
+import {
+  DrawPenGlyph, DrawMarkerGlyph, DrawLineGlyph, DrawArrowGlyph, DrawRectGlyph, DrawEllipseGlyph,
+  DrawDiamondGlyph, DrawEraserGlyph, type Glyph,
+} from "./netsuIcons";
 import { DrawHeadPicker } from "./DrawHeadPicker";
 import { DrawStyleControls } from "./DrawStyleControls";
 import { DRAW_TOOL_DEFS, type DrawTool } from "./referenceShared";
 
 const PEN_COLORS = ["#f43f5e", "#f59e0b", "#10b981", "#3b82f6", "#a855f7", "#ffffff", "#111827"];
 // Icônes par outil ; libellé + raccourci (personnalisable) viennent de DRAW_TOOL_DEFS / prefs.drawKeys.
-const TOOL_ICON: Record<string, typeof Pen> = {
-  pen: Pen, marker: Highlighter, line: Slash, arrow: MoveUpRight,
-  rect: Square, ellipse: Circle, diamond: Diamond, eraser: Eraser,
+const TOOL_ICON: Record<string, Glyph> = {
+  pen: DrawPenGlyph, marker: DrawMarkerGlyph, line: DrawLineGlyph, arrow: DrawArrowGlyph,
+  rect: DrawRectGlyph, ellipse: DrawEllipseGlyph, diamond: DrawDiamondGlyph, eraser: DrawEraserGlyph,
 };
-const TOOLS: { tool: DrawTool; labelKey: string; icon: typeof Pen }[] =
+const TOOLS: { tool: DrawTool; labelKey: string; icon: Glyph }[] =
   DRAW_TOOL_DEFS.map((d) => ({ tool: d.tool, labelKey: d.labelKey, icon: TOOL_ICON[d.tool] }));
 
 function isTyping(el: Element | null): boolean {
@@ -88,7 +89,7 @@ export function DrawToolbar() {
           const lbl = t(tool.labelKey);
           return (
             <IconBtn key={tool.tool} label={lbl} combo={drawKeys[tool.tool]?.toUpperCase()} active={pen.tool === tool.tool} onClick={() => setPen({ tool: tool.tool })}>
-              <tool.icon />
+              <tool.icon on={pen.tool === tool.tool} />
             </IconBtn>
           );
         })}
@@ -131,8 +132,8 @@ export function DrawToolbar() {
 
         <Separator orientation="vertical" className="h-6" />
 
-        <IconBtn label={t("actions.undo")} combo={shortcutKeys.undo} disabled={!canUndo} onClick={undo}><Undo2 /></IconBtn>
-        <IconBtn label={t("actions.redo")} combo={shortcutKeys.redo} disabled={!canRedo} onClick={redo}><Redo2 /></IconBtn>
+        <IconBtn label={t("actions.undo")} combo={shortcutKeys.undo} disabled={!canUndo} onClick={undo}><NetsuIcon name="undo" /></IconBtn>
+        <IconBtn label={t("actions.redo")} combo={shortcutKeys.redo} disabled={!canRedo} onClick={redo}><NetsuIcon name="redo" /></IconBtn>
 
         <Separator orientation="vertical" className="h-6" />
 
@@ -142,13 +143,13 @@ export function DrawToolbar() {
           active={drawBack}
           onClick={() => setDrawBack(!drawBack)}
         >
-          {drawBack ? <BringToFront /> : <SendToBack />}
+          <NetsuIcon name={drawBack ? "z-front" : "z-back"} />
         </IconBtn>
 
         <Separator orientation="vertical" className="h-6" />
 
         <Button size="sm" onClick={() => setDrawMode(false)}>
-          <Check className="mr-1 size-4" /> {t("draw.done")}
+          <NetsuIcon name="draw-done" className="mr-1" /> {t("draw.done")}
         </Button>
       </div>
     </div>

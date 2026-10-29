@@ -20,10 +20,15 @@ type Mode = { type: "move" } | { type: "rotate" } | { type: "resize"; handle: Re
 // Un item EMMENÉ par le geste (contenu d'un cadre, reste de la multi-sélection) : son wrapper et sa
 // position de départ, de quoi le translater en impératif à chaque frame.
 interface Carried {
-  el: HTMLElement;
+  id: string;
+  // Null when the item is culled (off screen): nothing to move, but its links still follow.
+  el: HTMLElement | null;
   x: number;
   y: number;
   r: number;
+  // Linked to a drawn shape (a link between items): its live geometry is published so the link
+  // follows the carried item during the gesture, not only once it is dropped.
+  live: Geom | null;
 }
 
 interface Drag {
@@ -45,8 +50,16 @@ interface Drag {
   dy: number;
   // Cadre qui tient l'item manipulé : il s'ajuste en direct sur son contenu. `geom` = dernier
   // rectangle calculé (null = rien à changer), commité au relâchement.
-  hug: { id: string; el: HTMLElement | null; state: FrameHug; geom: Geom | null } | null;
+  hug: { id: string; el: HTMLElement | null; state: FrameHug; geom: Geom | null; live: boolean } | null;
+  // The pointer that owns the gesture and the element holding its capture (released at the end).
+  pointerId: number;
+  cap: Element;
+  // A move only starts once the pointer left the press point by MOVE_SLOP screen pixels: a click, or
+  // the jitter of a double-click, never nudges the item, never commits, never costs an undo step.
+  moved: boolean;
 }
+
+const MOVE_SLOP = 3;
 
 const RAD = Math.PI / 180;
 
@@ -76,6 +89,9 @@ export function usePointerTransform(
   },
 ) {
   const [override, setOverride] = useState<Geom | null>(null);
+  // Reactive mirror of `drag.current != null` (a ref read during render goes stale: the cursor stuck on
+  // "grabbing" after a click that never re-rendered the item).
+  const [dragging, setDragging] = useState(false);
   const drag = useRef<Drag | null>(null);
   const raf = useRef<number | null>(null);
   const pending = useRef<Geom | null>(null);
@@ -106,14 +122,17 @@ export function usePointerTransform(
   const carryTick = useCallback(() => {
     const d = drag.current;
     if (!d || !d.carry.length) { carryRaf.current = null; return; }
+    let live: Record<string, Geom> | null = null;
     for (const c of d.carry) {
-      c.el.style.transform = `translate(${c.x + d.dx}px, ${c.y + d.dy}px) rotate(${c.r}deg)`;
+      if (c.el) c.el.style.transform = `translate(${c.x + d.dx}px, ${c.y + d.dy}px) rotate(${c.r}deg)`;
+      if (c.live) (live ??= {})[c.id] = { ...c.live, x: c.x + d.dx, y: c.y + d.dy };
     }
+    if (live) setLiveGeom(live);
     carryRaf.current = requestAnimationFrame(carryTick);
   }, []);
   const stopCarry = useCallback(() => {
     if (carryRaf.current != null) { cancelAnimationFrame(carryRaf.current); carryRaf.current = null; }
-    for (const c of drag.current?.carry ?? []) c.el.style.willChange = "";
+    for (const c of drag.current?.carry ?? []) if (c.el) c.el.style.willChange = "";
   }, []);
 
   // Cadre qui s'ajuste : appliqué en impératif comme le contenu emmené (transform + taille du
@@ -123,9 +142,11 @@ export function usePointerTransform(
     const h = d.hug;
     if (!h) return;
     h.geom = free ? null : frameHugRect(h.state, geomBox(g));
+    const r = h.geom ?? h.state.base;
+    // A frame with links: they follow it while it grows around the item.
+    if (h.live) setLiveGeom({ [h.id]: { x: r.x, y: r.y, w: r.w, h: r.h, rotation: 0 } });
     const el = h.el;
     if (!el) return;
-    const r = h.geom ?? h.state.base;
     el.style.transform = `translate(${r.x}px, ${r.y}px) rotate(0deg)`;
     el.style.width = `${r.w}px`;
     el.style.height = `${r.h}px`;
@@ -135,6 +156,9 @@ export function usePointerTransform(
     (mode: Mode, e: React.PointerEvent) => {
       e.stopPropagation();
       e.preventDefault();
+      // A gesture still open (its pointerup never came) is closed first: its navigation hold and
+      // capture must not leak into the new one.
+      if (drag.current) finishRef.current(true);
       const cap = opts?.captureRef?.current ?? (e.currentTarget as Element);
       try { cap.setPointerCapture?.(e.pointerId); } catch { /* capture best-effort */ }
       // Centre ÉCRAN de l'item (rect du wrapper) : pivot de rotation correct quel que soit
@@ -171,11 +195,18 @@ export function usePointerTransform(
       }
 
       // Publication vivante seulement si un tracé est réellement lié à cet item (sinon, zéro coût).
-      const anchored = opts?.id
-        ? (st.items.find((it) => it.kind === "draw")?.shapes ?? []).some(
-            (s) => s.own === opts.id || s.a1?.id === opts.id || s.a2?.id === opts.id,
-          )
-        : false;
+      const linkedIds = new Set<string>();
+      let boardHasLinks = false;
+      for (const s of st.items.find((it) => it.kind === "draw")?.shapes ?? []) {
+        if (s.own) linkedIds.add(s.own);
+        if (s.a1) linkedIds.add(s.a1.id);
+        if (s.a2) linkedIds.add(s.a2.id);
+        if (s.a1 && s.a2) boardHasLinks = true;
+      }
+      // A lone item moved on a board with links can be dropped INTO a link (links/useInsertOnDrop),
+      // which needs to follow its position too.
+      const overLinks = mode.type === "move" && boardHasLinks && st.selectedIds.length <= 1;
+      const anchored = opts?.id ? linkedIds.has(opts.id) || overLinks : false;
 
       // Ce qui part AVEC l'item : le reste de la multi-sélection, et le contenu d'un cadre. Wrappers
       // et positions de départ lus UNE fois, puis promus en couche le temps du geste (leur transform
@@ -189,9 +220,14 @@ export function usePointerTransform(
         for (const id of ids) {
           const it = st.items.find((i) => i.id === id);
           const el = document.querySelector<HTMLElement>(`[data-board-item="${id}"]`);
-          if (!it || !el) continue; // item invisible (culling) : il rejoindra sa place au commit
-          el.style.willChange = "transform";
-          carry.push({ el, x: it.x, y: it.y, r: it.rotation || 0 });
+          if (!it) continue;
+          // Culled item: it joins its place at commit, but a linked one still publishes its geometry.
+          if (!el && !linkedIds.has(id)) continue;
+          if (el) el.style.willChange = "transform";
+          carry.push({
+            id, el, x: it.x, y: it.y, r: it.rotation || 0,
+            live: linkedIds.has(id) ? { x: it.x, y: it.y, w: it.w, h: it.h, rotation: it.rotation || 0 } : null,
+          });
         }
       }
 
@@ -207,6 +243,7 @@ export function usePointerTransform(
             el: document.querySelector<HTMLElement>(`[data-board-item="${f.id}"]`),
             state: frameHugStart(f, st.items, opts.id),
             geom: null,
+            live: linkedIds.has(f.id),
           };
         }
       }
@@ -227,7 +264,11 @@ export function usePointerTransform(
         dx: 0,
         dy: 0,
         hug,
+        pointerId: e.pointerId,
+        cap,
+        moved: mode.type !== "move",
       };
+      setDragging(true);
       if (carry.length && carryRaf.current == null) carryRaf.current = requestAnimationFrame(carryTick);
       useBoard.getState().beginNavigation();
     },
@@ -238,6 +279,10 @@ export function usePointerTransform(
     (e: React.PointerEvent) => {
       const d = drag.current;
       if (!d) return;
+      if (!d.moved) {
+        if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < MOVE_SLOP) return;
+        d.moved = true;
+      }
       // Delta écran → delta board (compense le zoom).
       const dxs = (e.clientX - d.startX) / d.scale;
       const dys = (e.clientY - d.startY) / d.scale;
@@ -337,14 +382,15 @@ export function usePointerTransform(
     [schedule, applyHug, opts?.keepAspect, opts?.id],
   );
 
-  const onPointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (!drag.current) return;
-      const cap = opts?.captureRef?.current ?? (e.currentTarget as Element);
-      try { cap.releasePointerCapture?.(e.pointerId); } catch { /* noop */ }
-      const hugged = drag.current.hug?.geom
-        ? { id: drag.current.hug.id, geom: { ...drag.current.hug.geom } }
-        : undefined;
+  // Ends the gesture: commit the geometry reached (or drop it), release the capture, give the store
+  // back. Idempotent — pointerup, pointercancel, a lost capture, a window blur and Escape all land here.
+  const finish = useCallback(
+    (commit: boolean) => {
+      const d = drag.current;
+      if (!d) return;
+      try { d.cap.releasePointerCapture?.(d.pointerId); } catch { /* noop */ }
+      const keep = commit && d.moved;
+      const hugged = keep && d.hug?.geom ? { id: d.hug.id, geom: { ...d.hug.geom } } : undefined;
       stopCarry();
       drag.current = null;
       if (raf.current != null) {
@@ -353,16 +399,46 @@ export function usePointerTransform(
       }
       const g = pending.current ?? override;
       pending.current = null;
-      if (g) {
-        onCommit(g, hugged ? { frame: hugged } : undefined);
-        setOverride(null);
+      if (keep && g) onCommit(g, hugged ? { frame: hugged } : undefined);
+      // Carried items and the hugging frame were moved by hand on the DOM: a cancelled or unmoved
+      // gesture puts them back where the store has them.
+      if (!keep) {
+        for (const c of d.carry) if (c.el) c.el.style.transform = `translate(${c.x}px, ${c.y}px) rotate(${c.r}deg)`;
+        const h = d.hug;
+        if (h?.el) {
+          const r = h.state.base;
+          h.el.style.transform = `translate(${r.x}px, ${r.y}px) rotate(0deg)`;
+          h.el.style.width = `${r.w}px`;
+          h.el.style.height = `${r.h}px`;
+        }
       }
+      setOverride(null);
+      setDragging(false);
       // Le store fait de nouveau foi : guides éteints, géométrie vivante rendue.
       clearLive();
       useBoard.getState().endNavigation();
     },
-    [onCommit, override, stopCarry, opts?.captureRef],
+    [onCommit, override, stopCarry],
   );
+  const finishRef = useRef(finish);
+  useEffect(() => { finishRef.current = finish; });
+
+  const onPointerUp = useCallback(() => finish(true), [finish]);
+  const onLostPointerCapture = useCallback(() => finish(true), [finish]);
+
+  // While a gesture lasts: Escape drops it, losing the window (alt-tab, release outside the app)
+  // ends it. Neither can leave the item stuck in "dragging".
+  useEffect(() => {
+    if (!dragging) return;
+    const onKey = (ev: KeyboardEvent) => { if (ev.key === "Escape") finishRef.current(false); };
+    const onBlur = () => finishRef.current(true);
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("blur", onBlur);
+    };
+  }, [dragging]);
 
   useEffect(
     () => () => {
@@ -379,12 +455,15 @@ export function usePointerTransform(
 
   return {
     geom: override ?? geom,
-    dragging: drag.current != null,
+    dragging,
     startMove: (e: React.PointerEvent) => start({ type: "move" }, e),
     startRotate: (e: React.PointerEvent) => start({ type: "rotate" }, e),
     startResize: (handle: ResizeHandle, e: React.PointerEvent) => start({ type: "resize", handle }, e),
     onPointerMove,
     onPointerUp,
     onPointerCancel: onPointerUp,
+    onLostPointerCapture,
+    // Ends the gesture on demand (an item entering edit mode while one is open).
+    abort: () => finishRef.current(true),
   };
 }

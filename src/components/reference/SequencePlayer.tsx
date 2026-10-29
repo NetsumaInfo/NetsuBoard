@@ -5,11 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  SkipBack, SkipForward, Play, Pause, GalleryHorizontal, ImageOff,
-  FlipHorizontal, FlipVertical, BringToFront, SendToBack, Trash2, Copy,
-  Repeat, Repeat2, ArrowRightToLine, Undo2,
-} from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
@@ -28,16 +24,16 @@ const SPEEDS = [0.25, 0.5, 1, 1.25, 1.5, 2];
 
 // Type de boucle (bouton-cycle, partage le champ `playMode` avec la vidéo).
 type SeqLoop = "loop" | "pingpong" | "off";
-const LOOP_META: Record<SeqLoop, { icon: typeof Repeat; labelKey: string }> = {
-  loop: { icon: Repeat, labelKey: "sequence.loop" },
-  pingpong: { icon: Repeat2, labelKey: "sequence.pingpong" },
-  off: { icon: ArrowRightToLine, labelKey: "sequence.once" },
+const LOOP_META: Record<SeqLoop, { iconMode: string; labelKey: string }> = {
+  loop: { iconMode: "loop", labelKey: "sequence.loop" },
+  pingpong: { iconMode: "pingpong", labelKey: "sequence.pingpong" },
+  off: { iconMode: "once", labelKey: "sequence.once" },
 };
 const LOOP_NEXT: Record<SeqLoop, SeqLoop> = { loop: "pingpong", pingpong: "off", off: "loop" };
 
 // `action` = raccourci-commande qui fait la MÊME chose → sa touche paraît dans l'infobulle.
-function CtrlBtn({ icon: Icon, label, onClick, active, action }: {
-  icon: typeof Play; label: string; onClick: () => void; active?: boolean; action?: ShortcutAction;
+function CtrlBtn({ children, label, onClick, active, action }: {
+  children: React.ReactNode; label: string; onClick: () => void; active?: boolean; action?: ShortcutAction;
 }) {
   const combo = useBoard((s) => (action ? s.prefs.shortcutKeys[action] : ""));
   return (
@@ -45,7 +41,7 @@ function CtrlBtn({ icon: Icon, label, onClick, active, action }: {
       <TooltipTrigger
         render={<Button variant={active ? "default" : "ghost"} size="icon-sm" onClick={onClick} aria-label={label} aria-pressed={active} />}
       >
-        <Icon />
+        {children}
       </TooltipTrigger>
       <TooltipContent>
         <ShortcutTip label={label} combo={combo} />
@@ -137,29 +133,37 @@ export function SequencePlayer() {
             </TooltipTrigger>
             <TooltipContent>{t("sequence.playbackSpeed")}</TooltipContent>
           </Tooltip>
-          <CtrlBtn icon={SkipBack} label={t("sequence.prevFrame")} action="prevFrame" onClick={() => goto(cur - 1)} />
+          <CtrlBtn label={t("sequence.prevFrame")} action="prevFrame" onClick={() => goto(cur - 1)}>
+            <NetsuIcon name="seq-step-back" />
+          </CtrlBtn>
           <CtrlBtn
-            icon={playing ? Pause : Play}
             label={playing ? t("sequence.pause") : t("sequence.play")}
             active={playing}
             onClick={() => patchItem(item.id, { seqPlay: !playing }, false)}
-          />
-          <CtrlBtn icon={SkipForward} label={t("sequence.nextFrame")} action="nextFrame" onClick={() => goto(cur + 1)} />
-          <CtrlBtn icon={loopMeta.icon} label={t(loopMeta.labelKey)} active={loopMode !== "off"} onClick={cycleLoop} />
+          >
+            <NetsuIcon name="seq-play" on={playing} />
+          </CtrlBtn>
+          <CtrlBtn label={t("sequence.nextFrame")} action="nextFrame" onClick={() => goto(cur + 1)}>
+            <NetsuIcon name="seq-step-forward" />
+          </CtrlBtn>
+          <CtrlBtn label={t(loopMeta.labelKey)} active={loopMode !== "off"} onClick={cycleLoop}>
+            <NetsuIcon name="seq-loop-mode" mode={loopMeta.iconMode} className="size-5" />
+          </CtrlBtn>
           <CtrlBtn
-            icon={GalleryHorizontal}
             label={showStrip ? t("sequence.hideStrip") : t("sequence.showStrip")}
             active={showStrip}
             onClick={() => setShowStrip((v) => !v)}
-          />
+          >
+            <NetsuIcon name="gallery" on={showStrip} />
+          </CtrlBtn>
 
           {/* Actions génériques de l'item (la séquence n'a pas d'Inspector dédié) */}
           <Separator orientation="vertical" className="mx-0.5 h-6" />
           <IconToggle on={item.flipH} label={t("actions.flipH")} onClick={() => patchItem(item.id, { flipH: !item.flipH })}>
-            <FlipHorizontal />
+            <NetsuIcon name="flip-h" on={!!item.flipH} />
           </IconToggle>
           <IconToggle on={item.flipV} label={t("actions.flipV")} onClick={() => patchItem(item.id, { flipV: !item.flipV })}>
-            <FlipVertical />
+            <NetsuIcon name="flip-v" on={!!item.flipV} />
           </IconToggle>
           {linkUrl && LinkIcon && (
             <IconAction label={t("actions.openLink")} onClick={() => void nr.openExternal(linkUrl)}>
@@ -167,13 +171,13 @@ export function SequencePlayer() {
             </IconAction>
           )}
           {item.prevMedia && (
-            <IconAction label={revertLabel} onClick={() => revertSequence(item.id)}><Undo2 /></IconAction>
+            <IconAction label={revertLabel} onClick={() => revertSequence(item.id)}><NetsuIcon name="seq-revert" /></IconAction>
           )}
-          <IconAction label={t("actions.duplicate")} onClick={() => duplicateItem(item.id)}><Copy /></IconAction>
-          <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><BringToFront /></IconAction>
-          <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><SendToBack /></IconAction>
+          <IconAction label={t("actions.duplicate")} onClick={() => duplicateItem(item.id)}><NetsuIcon name="duplicate" /></IconAction>
+          <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><NetsuIcon name="z-front" /></IconAction>
+          <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><NetsuIcon name="z-back" /></IconAction>
           <IconAction label={t("common:action.delete")} onClick={() => removeItem(item.id)}>
-            <Trash2 className="text-destructive" />
+            <NetsuIcon name="delete" className="text-destructive" />
           </IconAction>
         </div>
       </div>
@@ -229,7 +233,7 @@ export function SequencePlayer() {
                   />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center bg-muted/40 text-muted-foreground">
-                    <ImageOff className="size-5" strokeWidth={1.5} />
+                    <NetsuIcon name="media-missing" className="size-5" />
                   </span>
                 )}
                 <span

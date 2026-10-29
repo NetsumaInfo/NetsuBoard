@@ -143,9 +143,9 @@ test('project recovery downloads directly into its companion folder', () => {
 });
 
 test('the toolbar offers a compact retry action beside recovery notices', () => {
-  assert.match(toolbar, /recoverableOnlineItems\(items\)\.length/);
+  assert.match(toolbar, /countRecoverableOnlineItems\(s\.items\)/);
   assert.match(toolbar, /recoverAllOnlineMedia\(\)/);
   assert.match(toolbar, /notice\.redownloadAll/);
-  assert.match(toolbar, /<RotateCw/);
+  assert.match(toolbar, /<NetsuIcon name="redownload-all" busy={recovering}/);
   assert.match(toolbar, /if \(result\.recovered > 0\) onSave\?\.\(\)/);
 });

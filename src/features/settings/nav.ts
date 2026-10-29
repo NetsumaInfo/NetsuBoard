@@ -3,11 +3,11 @@
 // elle les trois listes divergeraient. Données pures (ids + icônes + clés i18n) : aucun composant de
 // page ici, sinon la barre de titre tirerait tout le code des Paramètres au démarrage.
 import {
-  Boxes, Brush, Cpu, DatabaseBackup, Download, FolderKanban, HardDrive, Info,
-  Languages, Mic, MonitorPlay, Palette, PanelLeft, RefreshCw, Scissors, Sparkles, Terminal,
-  UserRound, Wrench,
+  Boxes, Brush, Cpu, DatabaseBackup, Download, FolderKanban, HardDrive, Info, Languages, Mic,
+  MonitorPlay, Palette, PanelLeft, RefreshCw, Sparkles, Terminal, UserRound, Wrench,
 } from "lucide-react";
 import type { ComponentType } from "react";
+import { AiIndexingGlyph } from "@/components/reference/netsuIcons";
 import { AdobeLogo } from "@/components/HostIcon";
 import { DiscordIcon } from "@/components/DiscordIcon";
 
@@ -62,7 +62,7 @@ export const SETTINGS_PAGES: SettingsPageDef[] = [
     tabs: [
       { id: "models", icon: Boxes },
       { id: "dictation", icon: Mic },
-      { id: "indexing", icon: Scissors },
+      { id: "indexing", icon: AiIndexingGlyph },
     ],
   },
   // Export et Adobe restent DEUX entrées de la nav : le pont Adobe est une destination qu'on cherche

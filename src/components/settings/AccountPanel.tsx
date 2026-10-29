@@ -7,7 +7,7 @@
 // must stay out of the entry chunk of an app that opens without a backend.
 
 import { useEffect, useState } from "react";
-import { LogOut, RefreshCw, UserRound } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { siDiscord } from "simple-icons";
 import { useTranslation } from "react-i18next";
 import { useConvexAuth, useQuery } from "convex/react";
@@ -81,7 +81,7 @@ function AccountInner() {
             <p className="text-sm text-destructive">{t("settings:account.unreachable")}</p>
             <p className="text-xs text-muted-foreground">{t("settings:account.unreachableHint")}</p>
             <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-              <RefreshCw className="size-3.5" /> {t("settings:account.retry")}
+              <NetsuIcon name="refresh" className="size-3.5" /> {t("settings:account.retry")}
             </Button>
           </div>
         ) : pending ? (
@@ -117,7 +117,7 @@ function AccountInner() {
                 />
               ) : (
                 <div className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                  <UserRound className="size-6" />
+                  <NetsuIcon name="account" className="size-6" />
                 </div>
               )}
               {/* Discord avatar decoration (Nitro frame) laid over it, as in the client. */}
@@ -132,7 +132,7 @@ function AccountInner() {
               {user.email && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
             </div>
             <Button variant="outline" size="sm" onClick={() => void signOut()}>
-              <LogOut className="size-3.5" /> {t("settings:account.signOut")}
+              <NetsuIcon name="sign-out" className="size-3.5" /> {t("settings:account.signOut")}
             </Button>
           </div>
           <UsernameField />

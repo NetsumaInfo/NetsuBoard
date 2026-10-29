@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Sparkles, Wrench, Gauge, Bug } from "lucide-react";
+import type { ComponentType } from "react";
+import { BugGlyph, SparklesGlyph, SpeedGlyph, WrenchGlyph } from "@/components/reference/netsuIcons";
 import { CHANGE_KINDS, releaseLines, releaseText, type ChangeKind, type Release } from "@/data/releases";
 import { cn } from "@/lib/utils";
 
@@ -12,11 +13,11 @@ import { cn } from "@/lib/utils";
 // elles s'affichent telle qu'elle a été écrite, plutôt que de recevoir des étiquettes inventées
 // après coup.
 
-const SECTIONS: Record<ChangeKind, { icon: typeof Sparkles; tone: string }> = {
-  feature: { icon: Sparkles, tone: "text-primary" },
-  improvement: { icon: Wrench, tone: "text-foreground" },
-  performance: { icon: Gauge, tone: "text-[var(--color-ok)]" },
-  fix: { icon: Bug, tone: "text-muted-foreground" },
+const SECTIONS: Record<ChangeKind, { icon: ComponentType<{ className?: string }>; tone: string }> = {
+  feature: { icon: SparklesGlyph, tone: "text-primary" },
+  improvement: { icon: WrenchGlyph, tone: "text-foreground" },
+  performance: { icon: SpeedGlyph, tone: "text-[var(--color-ok)]" },
+  fix: { icon: BugGlyph, tone: "text-muted-foreground" },
 };
 
 export function ReleaseNotes({ release, compact = false }: { release: Release; compact?: boolean }) {

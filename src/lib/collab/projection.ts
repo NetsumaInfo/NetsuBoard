@@ -6,6 +6,7 @@ import type {
   BoardPalette,
   Crop,
   EmbedMetadata,
+  FolderState,
   FrameStyle,
   Geometry,
   LinkMetadata,
@@ -29,6 +30,11 @@ export type NativeItem = {
   textStyle?: TextStyle;
   text?: string;
   frameStyle?: FrameStyle;
+  folder?: FolderState | null;
+  parent?: string | null;
+  document?: string | null;
+  linkCard?: string | null;
+  noteStyle?: "card" | "postit" | null;
   playback?: Playback;
   media?: MediaManifest | null;
   link?: LinkMetadata | null;
@@ -198,6 +204,28 @@ function nativeToBoard(item: NativeItem, z: number, mediaUrl: (hash: string) => 
     board.filled = frame.fillMode === "solid";
     board.fillColor = frame.fillColor;
     board.titleBg = frame.titleBackground;
+  }
+
+  if (item.folder?.folded) {
+    board.folder = true;
+    if (item.folder.openWidth !== undefined) board.openW = item.folder.openWidth;
+    if (item.folder.openHeight !== undefined) board.openH = item.folder.openHeight;
+    if (item.folder.cover !== undefined) board.cover = item.folder.cover;
+    if (item.folder.coverStyle !== undefined) board.coverStyle = item.folder.coverStyle;
+  }
+  if (item.parent) board.parent = item.parent;
+  if (item.document) {
+    try {
+      const doc = JSON.parse(item.document);
+      if (Array.isArray(doc)) board.doc = doc;
+    } catch { /* a damaged document leaves the plain-text mirror on screen */ }
+  }
+  if (item.noteStyle) board.noteStyle = item.noteStyle;
+  if (item.linkCard) {
+    try {
+      const card = JSON.parse(item.linkCard);
+      if (card && typeof card === "object") board.linkCard = card;
+    } catch { /* unreadable card: the link shows in its default mode */ }
   }
 
   const playback = item.playback;

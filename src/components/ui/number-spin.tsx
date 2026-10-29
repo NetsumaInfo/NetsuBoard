@@ -27,6 +27,7 @@ export function NumberSpin({
   const shown = draft ?? fmtNumber(value, { maximumFractionDigits: 6, useGrouping: false });
   return (
     <input
+      autoComplete="off"
       type="text" inputMode="decimal" role="spinbutton"
       aria-valuemin={min} aria-valuemax={max} aria-valuenow={value}
       aria-label={ariaLabel} value={shown} disabled={disabled}

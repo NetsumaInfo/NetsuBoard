@@ -1,14 +1,12 @@
 // Sous-panneaux de l'inspecteur : portée de boucle (vidéo/YouTube), texte, cadre, barre d'arrangement.
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import {
-  Trash2, Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Indent, Outdent, Link2, Link2Off, RemoveFormatting, ExternalLink, FileSymlink, Crosshair,
-  Crop, PaintBucket, Film, Package,
-  SquareDashed, SquareDot, ArrowRight, Repeat, Repeat2, Snowflake,
-  AlignHorizontalJustifyStart, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd,
-  AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
-  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter, LayoutGrid, MoreHorizontal,
-  Wand2, Palette, RotateCcw, Magnet,
-} from "lucide-react";
+  ArrangeBottomGlyph, ArrangeHcenterGlyph, ArrangeLeftGlyph, ArrangeRightGlyph, ArrangeTopGlyph, ArrangeVcenterGlyph,
+  AsEmbedGlyph, DistributeHGlyph, DistributeVGlyph, LinkFileGlyph, LinkGlyph, LinkItemGlyph, LiveGlyph, OpenExternalGlyph,
+  LayoutGridGlyph, PreviewGlyph,
+} from "./netsuIcons";
+import { LINK_MODE_SIZE, linkMode, type LinkMode } from "./LinkCard";
+import { refreshShot } from "./liveSite";
 import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
@@ -45,6 +43,7 @@ function TrimNum({ value, empty, placeholder, ariaLabel, onCommit }: {
   const shown = draft ?? (empty ? "" : fmtNumber(value, { maximumFractionDigits: 1, useGrouping: false }));
   return (
     <input
+      autoComplete="off"
       type="text" inputMode="decimal"
       aria-label={ariaLabel} placeholder={placeholder} value={shown}
       onChange={(e) => setDraft(e.target.value)}
@@ -179,7 +178,7 @@ export function TrimControls({ item }: { item: BoardItem }) {
           </SliderPrimitive.Control>
         </SliderPrimitive.Root>
       ) : (
-        <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
+        <NetsuIcon name="arrow-right" className="size-3 shrink-0 text-muted-foreground" />
       )}
 
       <TrimNum
@@ -193,23 +192,19 @@ export function TrimControls({ item }: { item: BoardItem }) {
 // Mode de lecture d'un item vidéo/YouTube — bouton-cycle (une icône qui change à chaque clic) :
 // boucle infinie → aller-retour → figé → boucle. "Figé" ne joue jamais, même au Play global.
 type PlayMode = NonNullable<BoardItem["playMode"]>;
-const PLAY_ICON: Record<PlayMode, ComponentType> = {
-  loop: Repeat, pingpong: Repeat2, off: Snowflake,
-};
 const PLAY_CYCLE: Record<PlayMode, PlayMode> = { loop: "pingpong", pingpong: "off", off: "loop" };
 
 export function PlayModeControls({ item }: { item: BoardItem }) {
   const { t } = useTranslation("reference");
   const patchItem = useBoard((s) => s.patchItem);
   const mode: PlayMode = item.playMode ?? "loop";
-  const Icon = PLAY_ICON[mode];
   return (
     <IconToggle
       on={mode !== "off"}
       label={t(PLAY_KEY[mode])}
       onClick={() => patchItem(item.id, { playMode: PLAY_CYCLE[mode] })}
     >
-      <Icon />
+      <NetsuIcon name="video-play-mode" mode={mode} className="size-5" />
     </IconToggle>
   );
 }
@@ -289,10 +284,10 @@ function LinkControl({ item }: { item: BoardItem }) {
   const labelFor = (i: BoardItem) =>
     (i.text || i.title || i.kind) + (i.kind === "text" ? "" : ` · ${i.kind}`);
 
-  const KINDS: { k: BoardLink["kind"]; icon: ComponentType; label: string }[] = [
-    { k: "url", icon: ExternalLink, label: t("link.kindUrl") },
-    { k: "file", icon: FileSymlink, label: t("link.kindFile") },
-    { k: "item", icon: Crosshair, label: t("link.kindItem") },
+  const KINDS: { k: BoardLink["kind"]; icon: ComponentType<{ className?: string }>; label: string }[] = [
+    { k: "url", icon: OpenExternalGlyph, label: t("link.kindUrl") },
+    { k: "file", icon: LinkFileGlyph, label: t("link.kindFile") },
+    { k: "item", icon: LinkItemGlyph, label: t("link.kindItem") },
   ];
 
   return (
@@ -301,7 +296,7 @@ function LinkControl({ item }: { item: BoardItem }) {
         aria-label={t("link.label")}
         className={cn("inline-flex size-8 items-center justify-center rounded-md outline-none transition-colors hover:bg-foreground/10 data-[popup-open]:bg-foreground/10 [&_svg]:size-4", link ? "text-primary" : "text-foreground")}
       >
-        <Link2 />
+        <NetsuIcon name="link" />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side="top" sideOffset={8} className="z-50 outline-none">
@@ -323,6 +318,7 @@ function LinkControl({ item }: { item: BoardItem }) {
               <label className="block">
                 <span className="sr-only">{t("link.kindUrl")}</span>
                 <input
+                  autoComplete="off" spellCheck={false}
                   value={link?.kind === "url" ? link.target : ""}
                   placeholder="https://…"
                   onChange={(e) => setLink(e.target.value)}
@@ -336,7 +332,7 @@ function LinkControl({ item }: { item: BoardItem }) {
                 onClick={async () => { const f = await nr.chooseAnyFile(); if (f) setLink(f); }}
                 className="flex h-8 w-full items-center gap-2 truncate rounded-md border border-border bg-background px-2 text-xs text-foreground outline-none hover:border-primary"
               >
-                <FileSymlink className="size-3.5 shrink-0 opacity-70" />
+                <NetsuIcon name="link-file" className="size-3.5 shrink-0 opacity-70" />
                 <span className="truncate">{link?.kind === "file" ? link.target : t("link.chooseFile")}</span>
               </button>
             )}
@@ -359,10 +355,10 @@ function LinkControl({ item }: { item: BoardItem }) {
                   }}
                   className="flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md bg-primary px-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
                 >
-                  <ExternalLink className="size-3.5" /> {t("common:action.open")}
+                  <NetsuIcon name="open-external" className="size-3.5" /> {t("common:action.open")}
                 </button>
                 <IconAction label={t("link.remove")} onClick={() => patchItem(item.id, { link: undefined })}>
-                  <Link2Off className="text-destructive" />
+                  <NetsuIcon name="unlink" className="text-destructive" />
                 </IconAction>
               </div>
             )}
@@ -378,6 +374,48 @@ function LinkControl({ item }: { item: BoardItem }) {
 // Ce que le fichier .netsu gardera de CE média, quand le réglage du board ne convient pas : une
 // référence clé qu'on veut en pleine qualité, ou un rush de 2 h qu'on ne veut qu'en lien. Le niveau
 // vit sur l'item (BoardItem.embed) ; « Par défaut » l'efface et rend la main aux réglages du board.
+// Web link display: one line, preview card, or the live page/player.
+const LINK_MODES: { mode: LinkMode; icon: ComponentType<{ className?: string }>; labelKey: string }[] = [
+  { mode: "link", icon: LinkGlyph, labelKey: "linkCard.modeLink" },
+  { mode: "preview", icon: PreviewGlyph, labelKey: "linkCard.modePreview" },
+  { mode: "embed", icon: AsEmbedGlyph, labelKey: "linkCard.modeEmbed" },
+  { mode: "live", icon: LiveGlyph, labelKey: "linkCard.modeLive" },
+];
+
+export function LinkModeControls({ item }: { item: BoardItem }) {
+  const { t } = useTranslation("reference");
+  const current = linkMode(item);
+  const mode = current;
+  return (
+    <>
+      {LINK_MODES.map(({ mode, icon: Icon, labelKey }) => (
+        <IconToggle key={mode} on={current === mode} label={t(labelKey)} onClick={() => setLinkMode(item, mode)}>
+          <Icon />
+        </IconToggle>
+      ))}
+      {mode !== "link" && nr.liveSite.available && (
+        <IconAction label={t("linkCard.refreshPicture")} onClick={() => refreshShot(item.id)}><NetsuIcon name="refresh-picture" /></IconAction>
+      )}
+    </>
+  );
+}
+
+export function setLinkMode(item: BoardItem, mode: LinkMode) {
+  const size = LINK_MODE_SIZE[mode];
+  const cx = item.x + item.w / 2, cy = item.y + item.h / 2;
+  // An embed going back to a player takes the size it had before it became a card.
+  const back = mode === "embed" ? item.linkCard?.embedSize : null;
+  const next = size ?? back;
+  useBoard.getState().patchItem(item.id, {
+    linkCard: {
+      ...item.linkCard,
+      mode,
+      embedSize: linkMode(item) === "embed" ? { w: item.w, h: item.h } : item.linkCard?.embedSize,
+    },
+    ...(next ? { w: next.w, h: next.h, x: cx - next.w / 2, y: cy - next.h / 2 } : null),
+  });
+}
+
 export function EmbedControls({ item }: { item: BoardItem }) {
   const { t } = useTranslation("reference");
   const patchItem = useBoard((s) => s.patchItem);
@@ -388,7 +426,7 @@ export function EmbedControls({ item }: { item: BoardItem }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<IconAction label={t("embed.itemLabel", { level: label })} onClick={() => {}}><Package /></IconAction>}
+        render={<IconAction label={t("embed.itemLabel", { level: label })} onClick={() => {}}><NetsuIcon name="embed-quality" /></IconAction>}
       />
       <DropdownMenuContent align="center" side="top" className="w-64">
         <DropdownMenuLabel>{t("embed.itemTitle")}</DropdownMenuLabel>
@@ -422,20 +460,20 @@ export function TextControls({ item }: { item: BoardItem }) {
       <FontPicker value={item.fontFamily ?? FONT_FAMILIES[0].value} onChange={(v) => patch({ fontFamily: v })} />
       <NumberSpin value={item.fontSize ?? 18} ariaLabel={t("text.fontSize")} onCommit={(v) => patch({ fontSize: v })} />
       <Separator orientation="vertical" className="h-6" />
-      <IconToggle on={item.bold} label={t("text.bold")} onClick={() => patch({ bold: !item.bold })}><Bold /></IconToggle>
-      <IconToggle on={item.italic} label={t("text.italic")} onClick={() => patch({ italic: !item.italic })}><Italic /></IconToggle>
-      <IconToggle on={item.underline} label={t("text.underline")} onClick={() => patch({ underline: !item.underline })}><Underline /></IconToggle>
-      <IconToggle on={item.strike} label={t("text.strike")} onClick={() => patch({ strike: !item.strike })}><Strikethrough /></IconToggle>
+      <IconToggle on={item.bold} label={t("text.bold")} onClick={() => patch({ bold: !item.bold })}><NetsuIcon name="bold" on={!!item.bold} /></IconToggle>
+      <IconToggle on={item.italic} label={t("text.italic")} onClick={() => patch({ italic: !item.italic })}><NetsuIcon name="italic" on={!!item.italic} /></IconToggle>
+      <IconToggle on={item.underline} label={t("text.underline")} onClick={() => patch({ underline: !item.underline })}><NetsuIcon name="underline" on={!!item.underline} /></IconToggle>
+      <IconToggle on={item.strike} label={t("text.strike")} onClick={() => patch({ strike: !item.strike })}><NetsuIcon name="strike" on={!!item.strike} /></IconToggle>
       <Separator orientation="vertical" className="h-6" />
-      <IconToggle on={item.bullet} label={t("text.bullet")} onClick={() => toggleBullet(item, patch)}><List /></IconToggle>
-      <IconToggle on={item.numbered} label={t("text.numbered")} onClick={() => toggleNumbered(item, patch)}><ListOrdered /></IconToggle>
-      <IconAction label={t("text.outdent")} onClick={() => patch({ indent: Math.max(0, indent - 1) })}><Outdent /></IconAction>
-      <IconAction label={t("text.indent")} onClick={() => patch({ indent: Math.min(INDENT_MAX, indent + 1) })}><Indent /></IconAction>
+      <IconToggle on={item.bullet} label={t("text.bullet")} onClick={() => toggleBullet(item, patch)}><NetsuIcon name="bullet-list" on={!!item.bullet} /></IconToggle>
+      <IconToggle on={item.numbered} label={t("text.numbered")} onClick={() => toggleNumbered(item, patch)}><NetsuIcon name="numbered-list" on={!!item.numbered} /></IconToggle>
+      <IconAction label={t("text.outdent")} onClick={() => patch({ indent: Math.max(0, indent - 1) })}><NetsuIcon name="outdent" /></IconAction>
+      <IconAction label={t("text.indent")} onClick={() => patch({ indent: Math.min(INDENT_MAX, indent + 1) })}><NetsuIcon name="indent" /></IconAction>
       <Separator orientation="vertical" className="h-6" />
-      <IconToggle on={item.align === "left" || !item.align} label={t("text.alignLeft")} onClick={() => patch({ align: "left" })}><AlignLeft /></IconToggle>
-      <IconToggle on={item.align === "center"} label={t("text.alignCenter")} onClick={() => patch({ align: "center" })}><AlignCenter /></IconToggle>
-      <IconToggle on={item.align === "right"} label={t("text.alignRight")} onClick={() => patch({ align: "right" })}><AlignRight /></IconToggle>
-      <IconToggle on={item.align === "justify"} label={t("text.alignJustify")} onClick={() => patch({ align: "justify" })}><AlignJustify /></IconToggle>
+      <IconToggle on={item.align === "left" || !item.align} label={t("text.alignLeft")} onClick={() => patch({ align: "left" })}><NetsuIcon name="align-left" on={item.align === "left" || !item.align} /></IconToggle>
+      <IconToggle on={item.align === "center"} label={t("text.alignCenter")} onClick={() => patch({ align: "center" })}><NetsuIcon name="align-center" on={item.align === "center"} /></IconToggle>
+      <IconToggle on={item.align === "right"} label={t("text.alignRight")} onClick={() => patch({ align: "right" })}><NetsuIcon name="align-right" on={item.align === "right"} /></IconToggle>
+      <IconToggle on={item.align === "justify"} label={t("text.alignJustify")} onClick={() => patch({ align: "justify" })}><NetsuIcon name="align-justify" on={item.align === "justify"} /></IconToggle>
       <Separator orientation="vertical" className="h-6" />
       <ColorControl label={t("text.color")} value={item.color ?? "#ffffff"} onChange={(c) => patch({ color: c })} />
       <ColorControl label={t("text.highlight")} value={item.highlight ?? "transparent"} onChange={(c) => patch({ highlight: c })} allowTransparent />
@@ -447,7 +485,7 @@ export function TextControls({ item }: { item: BoardItem }) {
           aria-label={t("text.more")}
           className="inline-flex size-8 items-center justify-center rounded-md text-foreground outline-none transition-colors hover:bg-foreground/10 data-[popup-open]:bg-foreground/10 [&_svg]:size-4"
         >
-          <MoreHorizontal />
+          <NetsuIcon name="more" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" side="top" className="w-52">
           <DropdownMenuGroup>
@@ -470,7 +508,7 @@ export function TextControls({ item }: { item: BoardItem }) {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => clearFormatting(patch)}>
-            <RemoveFormatting /> {t("text.clearFormat")}
+            <NetsuIcon name="clear-format" /> {t("text.clearFormat")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -482,10 +520,10 @@ export function TextControls({ item }: { item: BoardItem }) {
 const FILL_CYCLE: Record<NonNullable<BoardItem["fillMode"]>, NonNullable<BoardItem["fillMode"]>> = {
   none: "tint", tint: "solid", solid: "none",
 };
-const FILL_META: Record<NonNullable<BoardItem["fillMode"]>, { icon: ComponentType; labelKey: string }> = {
-  none: { icon: SquareDashed, labelKey: "frame.fillNone" },
-  tint: { icon: SquareDot, labelKey: "frame.fillTint" },
-  solid: { icon: PaintBucket, labelKey: "frame.fillSolid" },
+const FILL_META: Record<NonNullable<BoardItem["fillMode"]>, { labelKey: string }> = {
+  none: { labelKey: "frame.fillNone" },
+  tint: { labelKey: "frame.fillTint" },
+  solid: { labelKey: "frame.fillSolid" },
 };
 
 // Cadre : titre, police + taille du titre, couleur du contour/titre, et mode de remplissage.
@@ -496,8 +534,22 @@ export function FrameControls({ item }: { item: BoardItem }) {
   const fill = FILL_META[fillMode];
   return (
     <>
+      {/* Folder mode: the frame folds into a card that opens as a sub-board (see boardFolders). */}
+      <IconToggle
+        on={!!item.folder}
+        label={t(item.folder ? "folder.toFrame" : "folder.toFolder")}
+        onClick={() => useBoard.getState().toggleFolder(item.id)}
+      >
+        <NetsuIcon name="folder" on={!!item.folder} />
+      </IconToggle>
+      {item.folder && (
+        <IconAction label={t("folder.open")} onClick={() => useBoard.getState().enterFolder(item.id)}>
+          <NetsuIcon name="folder-open" />
+        </IconAction>
+      )}
+      <Separator orientation="vertical" className="h-6" />
       <input
-        type="text"
+        type="text" autoComplete="off"
         value={item.text ?? ""} placeholder={t("frame.titlePlaceholder")}
         onChange={(e) => patchItem(item.id, { text: e.target.value })}
         className="h-7 w-36 px-2 text-xs rounded border border-border bg-background text-foreground outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary"
@@ -512,7 +564,7 @@ export function FrameControls({ item }: { item: BoardItem }) {
         label={t(fill.labelKey)}
         onClick={() => patchItem(item.id, { fillMode: FILL_CYCLE[fillMode], filled: undefined })}
       >
-        <fill.icon />
+        <NetsuIcon name="frame-fill" mode={fillMode} />
       </IconToggle>
       {fillMode === "solid" && (
         <ColorControl
@@ -525,16 +577,16 @@ export function FrameControls({ item }: { item: BoardItem }) {
   );
 }
 
-const ARRANGE: { mode: ArrangeMode; labelKey: string; icon: typeof Crop }[] = [
-  { mode: "left", labelKey: "arrange.left", icon: AlignHorizontalJustifyStart },
-  { mode: "hcenter", labelKey: "arrange.hcenter", icon: AlignHorizontalJustifyCenter },
-  { mode: "right", labelKey: "arrange.right", icon: AlignHorizontalJustifyEnd },
-  { mode: "top", labelKey: "arrange.top", icon: AlignVerticalJustifyStart },
-  { mode: "vcenter", labelKey: "arrange.vcenter", icon: AlignVerticalJustifyCenter },
-  { mode: "bottom", labelKey: "arrange.bottom", icon: AlignVerticalJustifyEnd },
-  { mode: "hdist", labelKey: "arrange.hdist", icon: AlignHorizontalDistributeCenter },
-  { mode: "vdist", labelKey: "arrange.vdist", icon: AlignVerticalDistributeCenter },
-  { mode: "grid", labelKey: "arrange.grid", icon: LayoutGrid },
+const ARRANGE: { mode: ArrangeMode; labelKey: string; icon: ComponentType<{ className?: string }> }[] = [
+  { mode: "left", labelKey: "arrange.left", icon: ArrangeLeftGlyph },
+  { mode: "hcenter", labelKey: "arrange.hcenter", icon: ArrangeHcenterGlyph },
+  { mode: "right", labelKey: "arrange.right", icon: ArrangeRightGlyph },
+  { mode: "top", labelKey: "arrange.top", icon: ArrangeTopGlyph },
+  { mode: "vcenter", labelKey: "arrange.vcenter", icon: ArrangeVcenterGlyph },
+  { mode: "bottom", labelKey: "arrange.bottom", icon: ArrangeBottomGlyph },
+  { mode: "hdist", labelKey: "arrange.hdist", icon: DistributeHGlyph },
+  { mode: "vdist", labelKey: "arrange.vdist", icon: DistributeVGlyph },
+  { mode: "grid", labelKey: "arrange.grid", icon: LayoutGridGlyph },
 ];
 
 export function ArrangeBar({ count }: { count: number }) {
@@ -543,6 +595,7 @@ export function ArrangeBar({ count }: { count: number }) {
   const tidy = useBoard((s) => s.tidy);
   const setPrefs = useBoard((s) => s.setPrefs);
   const gap = useBoard((s) => s.prefs.arrangeGap);
+  const layout = useBoard((s) => s.prefs.arrangeLayout);
   const removeSelected = useBoard((s) => s.removeSelected);
   const groupSequence = useBoard((s) => s.groupSequence);
   const reset = useBoard((s) => s.reset);
@@ -566,7 +619,7 @@ export function ArrangeBar({ count }: { count: number }) {
       {groupable && (
         <>
           <Separator orientation="vertical" className="mx-1 h-6" />
-          <IconAction label={t("arrange.groupSequence")} onClick={() => groupSequence(selectedIds)}><Film /></IconAction>
+          <IconAction label={t("arrange.groupSequence")} onClick={() => groupSequence(selectedIds)}><NetsuIcon name="group-sequence" /></IconAction>
         </>
       )}
 
@@ -576,7 +629,7 @@ export function ArrangeBar({ count }: { count: number }) {
       <TidyMenu
         trigger={
           <Button variant="ghost" size="icon-sm" aria-label={t("tidy.title")}>
-            <Wand2 />
+            <NetsuIcon name="tidy" mode={layout} />
           </Button>
         }
       />
@@ -598,14 +651,14 @@ export function ArrangeBar({ count }: { count: number }) {
           });
         }}
       >
-        <Magnet />
+        <NetsuIcon name="snap" />
       </IconToggle>
-      <IconAction label={t("palette.extract")} onClick={() => void extractPaletteToBoard()}><Palette /></IconAction>
-      <IconAction label={t("actions.resetAll")} onClick={() => reset("all")}><RotateCcw /></IconAction>
+      <IconAction label={t("palette.extract")} onClick={() => void extractPaletteToBoard()}><NetsuIcon name="extract-palette" /></IconAction>
+      <IconAction label={t("actions.resetAll")} onClick={() => reset("all")}><NetsuIcon name="reset" /></IconAction>
 
       <Separator orientation="vertical" className="h-6" />
       <IconAction label={t("arrange.deleteSelection")} onClick={removeSelected}>
-        <Trash2 className="text-destructive" />
+        <NetsuIcon name="delete" className="text-destructive" />
       </IconAction>
     </div>
   );

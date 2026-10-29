@@ -23,7 +23,7 @@ tauri-build = { version = "2.6.3", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.11.3", features = ["protocol-asset"] }
+tauri = { version = "2.11.3", features = ["protocol-asset", "unstable"] }
 tauri-plugin-log = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
@@ -35,6 +35,9 @@ tauri-plugin-single-instance = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 base64 = "0.22"
+# Ad blocking of the live-site webview (Brave adblock engine, MPL-2.0). Thread-safe build: the
+# default `single-thread` feature would make the engine !Send.
+adblock = { version = "0.13", default-features = false, features = ["embedded-domain-resolver", "full-regex-handling"] }
 lazy_static = "1.5"
 libloading = "0.8"
 # Collaborative device identity (docs/collab.md). The Ed25519 key IS the iroh identity — the
@@ -75,6 +78,8 @@ windows = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
   "Win32_System_Threading",
   "Win32_System_Com",
+  # CreateStreamOnHGlobal: in-memory IStream for the live-site PNG capture and blocked-request bodies.
+  "Win32_System_Com_StructuredStorage",
   "Win32_System_RestartManager",
   "Win32_Graphics_Gdi",
   # DPAPI (CryptProtectData/CryptUnprotectData): at-rest protection of the collaborative key ring,

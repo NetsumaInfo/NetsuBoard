@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Wand2, Eye } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr } from "@/lib/bridge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -174,7 +174,7 @@ export function UpscaleItemDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wand2 className="size-4" /> {t("upscale.title")}
+            <NetsuIcon name="upscale" busy={working} /> {t("upscale.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -250,7 +250,7 @@ export function UpscaleItemDialog({
             <Button variant="ghost" onClick={close} disabled={working}>{t("common:action.cancel")}</Button>
             {canPreview && !preview && (
               <Button variant="outline" onClick={genPreview} disabled={working || !choices.length}>
-                <Eye className="size-4" /> {t("upscale.preview")}
+                <NetsuIcon name="eye" className="size-4" /> {t("upscale.preview")}
               </Button>
             )}
             <Button onClick={validate} disabled={working || !choices.length}>

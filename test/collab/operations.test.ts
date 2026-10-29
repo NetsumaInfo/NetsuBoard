@@ -23,6 +23,16 @@ describe("collaboration operation diff", () => {
     expect(diffBoard([previous], [next])).toEqual([]);
   });
 
+  it("publishes folding and the folder an item lives in", () => {
+    const frame: BoardItem = { ...note(""), id: "f", kind: "frame", text: undefined, w: 640, h: 420 };
+    const pic: BoardItem = { ...note(""), id: "p", kind: "image", text: undefined };
+    const folded = { ...frame, folder: true, openW: 640, openH: 420, w: 260, h: 220 };
+    const ops = diffBoard([frame, pic], [folded, { ...pic, parent: "f" }]);
+    expect(ops).toContainEqual({ type: "setFolder", itemId: "f", folder: { folded: true, openWidth: 640, openHeight: 420, cover: undefined, coverStyle: undefined } });
+    expect(ops).toContainEqual({ type: "setParent", itemId: "p", parent: "f" });
+    expect(diffBoard([folded, { ...pic, parent: "f" }], [frame, pic])).toContainEqual({ type: "setParent", itemId: "p", parent: null });
+  });
+
   it("emits reordering independently from geometry", () => {
     const a = { ...note("a"), id: "a", z: 0 };
     const b = { ...note("b"), id: "b", z: 1 };

@@ -225,6 +225,8 @@ function createRpc() {
     "reference:fetchAsset": ([url, options]) => refStore.fetchAsset(url, options || {}),
     // Résout le vrai média de N'IMPORTE quel lien (fichier direct ou page via OpenGraph) → asset.
     "reference:resolveMedia": ([url, options]) => refStore.resolveMedia(url, options || {}),
+    // Aperçu OpenGraph d'un lien (titre, description, image, favicon) pour les blocs d'une note.
+    "reference:linkMeta": ([url]) => refStore.linkMeta(url),
     // Extrait le VRAI média d'un lien (réseaux sociaux & co) via yt-dlp / gallery-dl.
     "reference:extractMedia": ([url, options]) => extract.extractMedia(url, options || {}),
     // Décompose une vidéo locale en frames image → assets disque → liste de chemins.

@@ -2,7 +2,7 @@
 // The updater itself lives in `@/store/updater`: this component never talks to the Tauri plugin, so
 // the title-bar button and this page can never disagree on a phase or a percentage.
 
-import { Download, Loader2, RefreshCw } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { useTranslation } from "react-i18next";
 import { useUpdater } from "@/store/updater";
 import { UpdateStatusLine } from "@/components/updates/UpdateStatusLine";
@@ -72,13 +72,13 @@ export function UpdateSettings() {
           <UpdateStatusLine phase={phase} info={info} />
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={busy || phase === "downloaded"} onClick={() => void check()}>
-              <RefreshCw className={phase === "checking" ? "size-3.5 animate-spin" : "size-3.5"} /> {t("updates.check")}
+              <NetsuIcon name="refresh" busy={phase === "checking"} className="size-3.5" /> {t("updates.check")}
             </Button>
-            {phase === "available" && <Button size="sm" onClick={() => void download()}><Download className="size-3.5" /> {t("updates.download")}</Button>}
+            {phase === "available" && <Button size="sm" onClick={() => void download()}><NetsuIcon name="update-download" className="size-3.5" /> {t("updates.download")}</Button>}
             {/* Download finished: the remaining action is no longer "install" but "restart". Saying so
                 avoids clicking without knowing the application is about to close. */}
-            {phase === "downloaded" && <Button size="sm" onClick={() => void install()}><RefreshCw className="size-3.5" /> {t("updates.restart")}</Button>}
-            {phase === "installing" && <Button size="sm" disabled><Loader2 className="size-3.5 animate-spin" /> {t("updates.installing")}</Button>}
+            {phase === "downloaded" && <Button size="sm" onClick={() => void install()}><NetsuIcon name="restart" className="size-3.5" /> {t("updates.restart")}</Button>}
+            {phase === "installing" && <Button size="sm" disabled><NetsuIcon name="loading" busy className="size-3.5" /> {t("updates.installing")}</Button>}
           </div>
         </div>
         {(phase === "downloading" || phase === "downloaded") && (

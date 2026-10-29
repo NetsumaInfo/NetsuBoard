@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { nr, type NetsuExportOpts, type NetsuWeight, type ScenePreviewItem } from "@/lib/bridge";
 import i18n from "@/i18n";
 import { withLocalMediaPaths } from "@/lib/collab/currentProject";
+import { sceneItems as folderScene } from "./boardFolders";
 import { useBoard } from "./useReferenceBoard";
 import { type BoardItem, type BoardView, displaySrc } from "./referenceShared";
 import { recoverAllOnlineMedia, recoverOnlineEmbeds } from "./boardMediaActions";
@@ -33,6 +34,10 @@ const durable = (item: BoardItem): BoardItem => {
 
 // Items à PERSISTER : on exclut les placeholders de téléchargement (loading) — transitoires, l'autosave
 // debouncé peut sinon les figer sur disque (spinner bloqué à la réouverture si l'app ferme en plein DL).
+// Every folder level, not just the one on screen (see boardFolders).
+const wholeScene = (st: { items: BoardItem[]; stash: BoardItem[]; folderPath: { id: string }[] }) =>
+  folderScene(st.items, st.stash, st.folderPath.length ? st.folderPath[st.folderPath.length - 1].id : null);
+
 const persistable = (items: BoardItem[]) => items.filter((it) => !it.loading).map(durable);
 // Une archive .netsu n'embarque que le média AFFICHÉ : le fichier gardé en réserve derrière un
 // embed (`localMedia`) resterait sur la machine d'origine, donc son chemin ne veut plus rien dire
@@ -148,6 +153,7 @@ function refsOf(snapshot: BoardItem[]): string[] {
     item.frames?.forEach(add);
     add(item.prevMedia?.ref);
     add(item.localMedia?.ref);
+    add(item.docFile?.ref);
   }
   const refs = [...out];
   snapshotRefs.set(snapshot, refs);
@@ -157,7 +163,7 @@ function refsOf(snapshot: BoardItem[]): string[] {
 function retainedRefs(): string[] {
   const st = useBoard.getState();
   const out = new Set<string>();
-  for (const snapshot of [...st.past, ...st.future, st.items]) {
+  for (const snapshot of [...st.past, ...st.future, st.items, st.stash]) {
     for (const ref of refsOf(snapshot)) out.add(ref);
   }
   return [...out];
@@ -180,7 +186,7 @@ const savable = (name: string) => {
   const st = useBoard.getState();
   return {
     name,
-    items: persistable(st.items),
+    items: persistable(wholeScene(st)),
     view: st.view,
     retain: retainedRefs(),
     adoptLocal: st.prefs.copyLocalIntoProject,
@@ -198,7 +204,7 @@ const collaboration = () => {
 // itself is empty.
 const sceneItems = () => {
   const state = useBoard.getState();
-  return state.collabProjectId ? [] : persistable(state.items);
+  return state.collabProjectId ? [] : persistable(wholeScene(state));
 };
 
 // Un item relu : la `src` d'affichage se recalcule depuis le localisateur durable — pour l'item
@@ -530,7 +536,7 @@ export function useScenePersistence() {
     async (opts: NetsuExportOpts): Promise<NetsuWeight> => {
       const st = useBoard.getState();
       if (!api?.weigh) return { ok: false };
-      const items = await withLocalMediaPaths(exportable(st.items));
+      const items = await withLocalMediaPaths(exportable(wholeScene(st)));
       return api.weigh({ name: st.sceneName, items, view: st.view }, opts);
     },
     [api],
@@ -546,7 +552,7 @@ export function useScenePersistence() {
         // Un board PARTAGÉ désigne ses médias par empreinte : le core, qui ne connaît que des
         // fichiers, écrivait alors un .netsu entièrement fait de placeholders en annonçant un
         // export réussi. Leurs octets sont bien sur ce disque — on lui en donne le chemin.
-        const items = await withLocalMediaPaths(exportable(st.items));
+        const items = await withLocalMediaPaths(exportable(wholeScene(st)));
         const res = await api?.exportBoard({ name: st.sceneName, items, view: st.view }, dest, opts);
         if (res?.ok) {
           const c = res.counts;
@@ -600,7 +606,7 @@ export function useScenePersistence() {
     await api?.saveScene({
       id: HANDOFF_ID,
       name: st.sceneName,
-      items: st.collabProjectId ? [] : persistable(st.items),
+      items: st.collabProjectId ? [] : persistable(wholeScene(st)),
       view: st.view,
       collaboration: st.collabProjectId ? { projectId: st.collabProjectId } : null,
     });

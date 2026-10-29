@@ -47,8 +47,8 @@ test('file-backed projects use the same favorite and trash overlays as internal 
   assert.match(projectCard, /isFavorite/);
   assert.match(projectCard, /onToggleFavorite/);
   assert.match(projectCard, /actions\.addFavorite/);
-  assert.match(projectCard, /<Star[^>]*fill=\{isFavorite/);
-  assert.match(projectCard, /<Trash2 className="size-3\.5"/);
+  assert.match(projectCard, /<NetsuIcon name="card-favorite" on=\{isFavorite\}/);
+  assert.match(projectCard, /<NetsuIcon name="delete" className="size-3\.5"/);
   assert.doesNotMatch(projectCard, /<X[\s>]/);
   assert.match(source, /projectFavoriteKey\(entry\.path\)/);
 });

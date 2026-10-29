@@ -3,7 +3,7 @@
 // Menu contextuel (clic droit) — flavor Base UI (jamais Radix). Mêmes styles que dropdown-menu.
 
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu"
-import { ChevronRightIcon, CheckIcon } from "lucide-react"
+import { NetsuIcon } from "@/components/ui/netsu-icon"
 
 import { cn } from "@/lib/utils"
 
@@ -25,11 +25,11 @@ function ContextMenuContent({
 }: ContextMenuPrimitive.Popup.Props) {
   return (
     <ContextMenuPrimitive.Portal>
-      <ContextMenuPrimitive.Positioner className="isolate z-50 outline-none">
+      <ContextMenuPrimitive.Positioner collisionPadding={8} className="isolate z-50 outline-none">
         <ContextMenuPrimitive.Popup
           data-slot="context-menu-content"
           className={cn(
-            "z-50 min-w-44 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-98 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-98",
+            "z-50 max-h-(--available-height) min-w-44 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-98 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-98",
             className,
           )}
           {...props}
@@ -80,7 +80,7 @@ function ContextMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute right-2 flex items-center justify-center">
         <ContextMenuPrimitive.CheckboxItemIndicator>
-          <CheckIcon />
+          <NetsuIcon name="check" className="size-4" />
         </ContextMenuPrimitive.CheckboxItemIndicator>
       </span>
       {children}
@@ -109,7 +109,7 @@ function ContextMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto" />
+      <NetsuIcon name="next" className="ml-auto" />
     </ContextMenuPrimitive.SubmenuTrigger>
   )
 }

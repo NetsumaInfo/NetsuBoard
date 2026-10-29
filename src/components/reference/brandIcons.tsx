@@ -28,7 +28,7 @@ function glyph(si: SimplePath): AnyIcon {
       width={size}
       height={size}
       fill="currentColor"
-      className={className}
+      className={className ? `brand-motion ${className}` : "brand-motion"}
       role="img"
       aria-label={si.title}
     >

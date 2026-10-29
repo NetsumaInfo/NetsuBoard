@@ -17,6 +17,26 @@ AGPL-3.0-only covers the original code in this repository. It does **not** chang
 - the GLSL shaders (ArtCNN) and anything vendored under `vendor/` carry their own licences and restrictions;
 - licence files already shipped next to bundled resources must stay distributed with those resources.
 
+## Note sheet editor (BlockNote)
+
+The note sheet editor is **BlockNote** (`@blocknote/core`, `react`, `mantine`, `code-block`), licensed **MPL-2.0**, with Mantine and KaTeX (MIT). MPL-2.0 is file-level copyleft: NetsuBoard's own files that use BlockNote are not affected, but a modified copy of a BlockNote source file must stay under MPL-2.0 and its source must be published. Use it as an npm dependency; never patch or vendor its files into `src/`.
+
+BlockNote's `@blocknote/xl-*` packages (multi-column, AI, PDF/DOCX/ODT export) are **GPL-3.0 or commercial**: never add them.
+
+## PDF cards (pdf.js)
+
+PDF cards on the board are rendered by **pdfjs-dist** (pdf.js), licensed **Apache-2.0**. It is an npm dependency bundled by Vite into the renderer (`dist/`), together with its worker file: nothing is staged separately in the installer, so the packaging checklist of `docs/distribution.md` is satisfied by the renderer build. It is loaded lazily, the first time a PDF is added or opened. Do not vendor or patch its files into `src/`.
+
+## Document cards (mammoth, html-to-image)
+
+Word (`.docx`) cards are converted to HTML by **mammoth** (`1.13`, **BSD-2-Clause**). Its runtime dependencies are MIT or BSD-2-Clause (`@xmldom/xmldom`, `base64-js`, `dingbat-to-unicode`, `lop`, `underscore`, `xmlbuilder`), `jszip` is dual **MIT OR GPL-3.0-or-later** (we take it under MIT), and `argparse` (Python-2.0, permissive) is only used by mammoth's command-line tool, which Vite never bundles. The card thumbnail of a text, Markdown, CSV or Word document is rasterised by **html-to-image** (`1.11`, **MIT**). Both are npm dependencies bundled by Vite into lazy renderer chunks, loaded the first time a document is added or opened: nothing is staged in the installer. Spreadsheet formats (`.xlsx`, SheetJS) are deliberately not read: the npm build of SheetJS is outdated and vulnerable, so those files stay plain "file" cards. The CSV parser and the Markdown renderer are our own code (no dependency).
+
+## Live site ad blocking (adblock-rust, EasyList, EasyPrivacy)
+
+The live-site webview, the background-picture webview and the board's own webview (third-party requests of embedded frames only) filter requests with the **`adblock`** crate (Brave's adblock-rust, `0.13`, **MPL-2.0**, file-level copyleft: used as a Cargo dependency, never patched or vendored). Its dependencies are MIT/Apache-2.0 (`addr`, `psl`, `psl-types`, `itertools`, `flatbuffers`). It is built without the default `single-thread` feature so the engine can be shared across threads.
+
+The filter lists, **EasyList** and **EasyPrivacy** (<https://easylist.to>, dual-licensed GPL-3.0-or-later / CC BY-SA 3.0), are **downloaded data, not bundled**: the app fetches them at runtime into the user's cache directory and nothing from them ships in the installer or the repository. They are parsed as data by the engine and no code of theirs is linked. The weekly refresh and the "Refresh lists" action download them again from the same URLs. Do not commit a copy of the lists, and do not add a bundled fallback list without re-checking their licence terms for redistribution.
+
 ## Native player runtime (mpv, FFmpeg)
 
 **The installer ships none of these binaries.** The native player is inherited from NetsuRush and no line of `src/` or `core/` calls it, so `scripts/build.ps1` stages an empty `resources/windows/` and `src-tauri/src/player/bootstrap.rs` logs that playback is unavailable. The paragraphs below apply the day the player is wired up again.

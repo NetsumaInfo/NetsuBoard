@@ -10,7 +10,7 @@
 // touché qu'une fois le geste retombé.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RotateCcw } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -132,7 +132,7 @@ export function ThemeColorsCard() {
           <TooltipTrigger
             render={
               <Button size="sm" variant="ghost" disabled={!touched} onClick={resetThemeColors}>
-                <RotateCcw className="size-3.5" /> {t("appearance.colors.resetAll")}
+                <NetsuIcon name="reset" className="size-3.5" /> {t("appearance.colors.resetAll")}
               </Button>
             }
           />

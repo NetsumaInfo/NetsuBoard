@@ -4,7 +4,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Minus, Square, X, Copy, Pin } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
+import { CloseGlyph, MaximizeGlyph, MinimizeGlyph, RestoreGlyph } from "@/components/ui/window-glyphs";
 import { useShallow } from "zustand/react/shallow";
 import { useApp } from "@/store";
 import { UpdateButton } from "@/components/updates/UpdateButton";
@@ -14,7 +15,7 @@ const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window
 
 /** Title bar button: full bar height, no radius, so neighbouring buttons form one continuous strip. */
 export const TITLEBAR_BTN =
-  "inline-flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-3.5";
+  "group inline-flex h-9 w-11 items-center justify-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset [&_svg]:size-3.5";
 
 async function win() {
   const m = await import("@tauri-apps/api/window");
@@ -61,7 +62,7 @@ export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) 
             className={`${btn} ${onTop ? "text-primary hover:text-primary" : ""}`}
             onClick={togglePinned}
           >
-            <Pin className={onTop ? "fill-current" : ""} />
+            <NetsuIcon name="pin-window" on={onTop} className="size-3.5" />
           </button>
         } />
         <TooltipContent>
@@ -71,7 +72,7 @@ export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) 
       <Tooltip>
         <TooltipTrigger render={
           <button type="button" aria-label={t("windowControls.minimize")} className={btn} onClick={() => void win().then((w) => w.minimize()).catch(() => undefined)}>
-            <Minus />
+            <MinimizeGlyph className="size-3.5" />
           </button>
         } />
         <TooltipContent>{t("windowControls.minimize")}</TooltipContent>
@@ -79,7 +80,7 @@ export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) 
       <Tooltip>
         <TooltipTrigger render={
           <button type="button" aria-label={maxed ? t("windowControls.restore") : t("windowControls.maximize")} className={btn} onClick={() => void win().then((w) => w.toggleMaximize()).catch(() => undefined)}>
-            {maxed ? <Copy className="-scale-x-100" /> : <Square />}
+            {maxed ? <RestoreGlyph className="size-3.5" /> : <MaximizeGlyph className="size-3.5" />}
           </button>
         } />
         <TooltipContent>{maxed ? t("windowControls.restore") : t("windowControls.maximize")}</TooltipContent>
@@ -87,7 +88,7 @@ export function WindowControls({ withUpdate = true }: { withUpdate?: boolean }) 
       <Tooltip>
         <TooltipTrigger render={
           <button type="button" aria-label={t("common:action.close")} className={`${btn} hover:bg-destructive hover:text-primary-foreground`} onClick={() => void win().then((w) => w.close()).catch(() => undefined)}>
-            <X />
+            <CloseGlyph className="size-3.5" />
           </button>
         } />
         <TooltipContent>{t("common:action.close")}</TooltipContent>

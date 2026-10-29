@@ -19,7 +19,7 @@ function loadTs(rel, prelude = '') {
   const js = esbuild.transformSync(prelude + src, { loader: 'ts', format: 'cjs' }).code;
   const mod = new Module(rel, null);
   mod.require = (id) => {
-    if (id.startsWith('./')) return loadTs(path.posix.join(path.posix.dirname(rel.replace(/\\/g, '/')), `${id.slice(2)}.ts`));
+    if (id.startsWith('./') || id.startsWith('../')) return loadTs(path.posix.join(path.posix.dirname(rel.replace(/\\/g, '/')), `${id}.ts`));
     return require(id);
   };
   mod._compile(js, abs);
@@ -40,11 +40,12 @@ test('an arrow drawn between two images is held by both ends', () => {
   assert.equal(shape.a2.id, 'b');
   assert.equal(anchor.anchorCount(shape), 2);
 
-  // L'image d'arrivée part 200 px plus bas : la flèche la suit.
+  // The target image moves 200 px down: the arrow follows it. Anchored at both item centres, it is
+  // a link (links/model AUTO ends): each end leaves from the side facing the other item.
   const moved = { ...b, y: 200 };
   const solved = anchor.resolveShape(shape, anchor.indexItems([a, moved]));
-  assert.deepEqual(solved.p.slice(0, 2), [50, 50]);
-  assert.ok(Math.abs(solved.p[2] - 450) < 1e-9);
+  assert.deepEqual(solved.p.slice(0, 2), [100, 50]);
+  assert.ok(Math.abs(solved.p[2] - 400) < 1e-9);
   assert.ok(Math.abs(solved.p[3] - 250) < 1e-9);
 });
 

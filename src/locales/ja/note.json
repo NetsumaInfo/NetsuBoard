@@ -1,0 +1,281 @@
+{
+  "audioLabel": "音声",
+  "player": {
+    "pause": "一時停止",
+    "play": "再生",
+    "seek": "動画内を移動",
+    "soundOn": "音声をオン",
+    "soundOff": "ミュート"
+  },
+  "blocksUi": {
+    "playbackSpeed": "再生速度",
+    "chooseAudio": "音声を選択…",
+    "audioDrop": "MP3、WAV、FLAC… またはドラッグ＆ドロップ",
+    "audioUrl": "…または音声 URL を貼り付けて Enter",
+    "changeDivider": "区切り線のスタイルを変更",
+    "chooseFile": "ファイルを選択…",
+    "fileDrop": "PDF、Word、Excel、ZIP… またはドラッグ＆ドロップ",
+    "fileUrl": "…またはファイル URL を貼り付けて Enter",
+    "open": "開く",
+    "download": "ダウンロード",
+    "today": "今日",
+    "clear": "クリア",
+    "play": "再生",
+    "fullscreen": "全画面",
+    "chooseVideo": "動画を選択…",
+    "dropFile": "またはファイルをドラッグ＆ドロップ",
+    "videoUrl": "…または動画 URL を貼り付けて Enter"
+  },
+  "finalPass": {
+    "volume": "音量",
+    "convertOptions": "変換 / オプション",
+    "convertTo": "変換先",
+    "copyLink": "リンクをコピー",
+    "pasteAs": "形式を選択して貼り付け"
+  },
+  "delete": "削除",
+  "boardMention": {
+    "untitled": "アイテム"
+  },
+  "blocks": {
+    "bookmark": {
+      "pastePlaceholder": "サイトのリンクを貼り付け…"
+    },
+    "embed": {
+      "pastePlaceholder": "埋め込むリンクを貼り付け（Vimeo、X、TikTok…）",
+      "iframeTitle": "埋め込み"
+    },
+    "toggle": {
+      "collapse": "折りたたむ",
+      "expand": "展開"
+    },
+    "youtube": {
+      "pastePlaceholder": "YouTube のリンクを貼り付け…"
+    }
+  },
+  "callout": {
+    "basic": "基本",
+    "info": "情報",
+    "tip": "ヒント",
+    "warning": "注意",
+    "alert": "警告",
+    "changeEmoji": "絵文字を変更",
+    "presets": "プリセット",
+    "background": "背景色",
+    "style": "コールアウトのスタイル"
+  },
+  "equation": {
+    "group": {
+      "structures": "構造",
+      "calculus": "微積分",
+      "matrices": "行列と連立方程式",
+      "chemistry": "化学（mhchem）"
+    },
+    "template": {
+      "fraction": "分数",
+      "squareRoot": "平方根",
+      "nthRoot": "n 乗根",
+      "exponent": "指数",
+      "subscript": "添字",
+      "binomial": "二項係数",
+      "sum": "総和",
+      "product": "総積",
+      "integral": "積分",
+      "limit": "極限",
+      "derivative": "微分",
+      "partialDerivative": "偏微分",
+      "matrix": "2×2 行列",
+      "determinant": "行列式",
+      "system": "連立方程式",
+      "vector": "ベクトル",
+      "molecule": "分子",
+      "reaction": "反応",
+      "equilibrium": "平衡",
+      "ion": "イオン"
+    },
+    "empty": "空の数式 — クリックして LaTeX を入力",
+    "edit": "数式を編集",
+    "templates": "テンプレート",
+    "input": "数式の LaTeX コード",
+    "error": "LaTeX エラー：{{error}}",
+    "hint": "完全な LaTeX（KaTeX + 化学 \\ce）· Ctrl+Enter で確定 · Escape でキャンセル"
+  },
+  "fileKind": {
+    "other": "ファイル",
+    "doc": "文書",
+    "sheet": "スプレッドシート",
+    "slide": "プレゼンテーション",
+    "archive": "アーカイブ",
+    "video": "動画",
+    "image": "画像",
+    "text": "テキスト"
+  },
+  "gallery": {
+    "chooseImages": "画像を選択…",
+    "dropFiles": "またはファイルをドラッグ＆ドロップ",
+    "imageUrl": "…または画像 URL を貼り付けて Enter",
+    "row": "ストリップ（横スクロール）",
+    "carousel": "カルーセル",
+    "grid": "グリッド",
+    "height": "高さ {{size}}",
+    "imageCount_one": "{{count}} 枚",
+    "imageCount_other": "{{count}} 枚",
+    "add": "追加",
+    "remove": "削除",
+    "removeImage": "この画像を削除",
+    "caption": "キャプション…",
+    "openImage": "画像を開く"
+  },
+  "a11y": {
+    "addImage": "画像を追加",
+    "previousImage": "前の画像",
+    "nextImage": "次の画像",
+    "previousMonth": "前の月",
+    "nextMonth": "次の月",
+    "resizeMedia": "サイズを変更",
+    "inPoint": "イン点",
+    "outPoint": "アウト点"
+  },
+  "lightbox": {
+    "zoomOut": "縮小",
+    "zoomIn": "拡大",
+    "pause": "一時停止（スペース）",
+    "slideshow": "スライドショー（スペース）",
+    "previous": "前へ",
+    "next": "次へ"
+  },
+  "close": "閉じる",
+  "color": {
+    "gray": "グレー",
+    "blue": "青",
+    "green": "緑",
+    "yellow": "黄",
+    "orange": "オレンジ",
+    "red": "赤",
+    "purple": "紫",
+    "pink": "ピンク"
+  },
+  "emoji": {
+    "custom": "絵文字を貼り付けて Enter"
+  },
+  "editor": {
+    "uploadFailed": "ファイルをアップロードできませんでした",
+    "dateToday": "今日の日付"
+  },
+  "untitled": "無題",
+  "paste": {
+    "mention": {
+      "label": "メンション",
+      "desc": "文中のコンパクトなチップ"
+    },
+    "url": {
+      "label": "リンク",
+      "desc": "クリック可能なインラインリンク"
+    },
+    "bookmark": {
+      "label": "ブックマーク",
+      "desc": "カードプレビュー"
+    },
+    "embed": {
+      "label": "埋め込み",
+      "desc": "埋め込みプレーヤー（iframe / YouTube）"
+    }
+  },
+  "sideMenu": {
+    "changeType": "変換",
+    "colors": "色",
+    "rowHeader": "見出し行",
+    "columnHeader": "見出し列"
+  },
+  "slash": {
+    "groups": {
+      "blocks": "ブロック",
+      "media": "メディア",
+      "insert": "挿入"
+    },
+    "callout": {
+      "title": "コールアウト",
+      "desc": "絵文字付きの色付きバナー",
+      "aliases": "コールアウト|ノート|情報"
+    },
+    "toggle": {
+      "title": "トグル",
+      "desc": "折りたたみ可能なセクション",
+      "aliases": "トグル|折りたたみ|アコーディオン"
+    },
+    "equation": {
+      "title": "数式",
+      "desc": "LaTeX 数式（KaTeX）",
+      "aliases": "数式|数学|latex|katex"
+    },
+    "divider": {
+      "title": "区切り線",
+      "desc": "線、破線、点線、星印",
+      "aliases": "区切り|線|hr|---"
+    },
+    "youtube": {
+      "desc": "YouTube 動画を埋め込む",
+      "aliases": "youtube|動画|yt"
+    },
+    "embed": {
+      "title": "埋め込み",
+      "aliases": "埋め込み|iframe|vimeo|twitter|tiktok"
+    },
+    "bookmark": {
+      "title": "ブックマーク",
+      "desc": "Web リンクをプレビュー",
+      "aliases": "ブックマーク|リンク|web"
+    },
+    "video": {
+      "title": "動画",
+      "desc": "ローカルファイルまたは URL を内蔵プレーヤーで再生",
+      "aliases": "動画|mp4|映画|クリップ"
+    },
+    "audio": {
+      "desc": "波形付きの内蔵プレーヤー",
+      "aliases": "音声|サウンド|mp3|音楽|wav|ポッドキャスト"
+    },
+    "file": {
+      "title": "ファイル",
+      "desc": "PDF、Word、Excel、ZIP…（PDF プレビュー）",
+      "aliases": "ファイル|pdf|doc|文書|zip|excel|word"
+    },
+    "gallery": {
+      "title": "画像ギャラリー",
+      "desc": "複数の画像を横一列でスクロール表示",
+      "aliases": "ギャラリー|画像|カルーセル|アルバム"
+    },
+    "date": {
+      "title": "日付",
+      "desc": "文中に日付を挿入",
+      "aliases": "日付|日|カレンダー|今日"
+    }
+  },
+  "blockTypes": {
+    "paragraph": "テキスト",
+    "heading1": "タイトル",
+    "heading2": "サブタイトル",
+    "heading3": "小見出し",
+    "bulletList": "箇条書き",
+    "numberedList": "番号付きリスト",
+    "checkList": "タスクリスト",
+    "quote": "引用",
+    "callout": "コールアウト",
+    "codeBlock": "コードブロック"
+  },
+  "placeOnBoard": "ボードに置く",
+  "menu": {
+    "format": "書式",
+    "bold": "太字",
+    "italic": "斜体",
+    "underline": "下線",
+    "strike": "取り消し線",
+    "code": "コード",
+    "link": "リンク",
+    "linkNeedsUrl": "先にアドレスをコピーしてください",
+    "block": "ブロック",
+    "duplicate": "複製",
+    "moveUp": "上へ",
+    "moveDown": "下へ"
+  }
+}

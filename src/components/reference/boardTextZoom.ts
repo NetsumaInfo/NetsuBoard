@@ -10,8 +10,8 @@ import type { BoardItem } from "./referenceShared";
 
 // Taille écran (px CSS) visée au dézoom.
 export const TEXT_MIN_SCREEN = 12;
-// Agrandissement maximal. Au-delà, le texte déborderait de sa note bien avant d'être lisible.
-export const TEXT_MAX_BOOST = 6;
+// Agrandissement maximal. Au-delà, le texte grossi écrase la composition qu'on regarde au dézoom.
+export const TEXT_MAX_BOOST = 2;
 // Largeur moyenne d'un glyphe en fraction du corps (approximation suffisante : elle ne sert qu'à
 // estimer combien de lignes le texte occupera une fois grossi).
 const CHAR_W = 0.52;

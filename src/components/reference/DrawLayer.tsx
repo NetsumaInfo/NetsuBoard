@@ -12,7 +12,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link2, Trash2, Unlink2 } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBoard } from "./useReferenceBoard";
@@ -21,13 +21,15 @@ import { shapeBBox, hitShape, shifted, handlesFor, editShape, penPath, connector
 import { FLAT_PRESSURE, pressureWidth, tiltLean, usesEraser } from "./tabletInput";
 import { attachShape, detachShape, indexItems, reanchorShape, resolveShapes } from "./drawAnchor";
 import { frameAtPoint } from "./boardFrames";
-import { useLive } from "./boardLive";
+import { isLink } from "./links/model";
+import { useLiveGeom } from "./boardLive";
 import { ShapeView } from "./ShapeView";
 import { ShapeInspector } from "./ShapeInspector";
 
 // Référence stable pour « pas de tracés » : évite un `[]` neuf à chaque render
 // (sinon les props de StaticShapes/HitTargets changent au pan et cassent leur memo).
 const EMPTY_SHAPES: DrawShape[] = [];
+const NO_ITEMS: BoardItem[] = [];
 
 // Tous les tracés + le brouillon en cours. Mémoïsé : ne dépend QUE de `shapes`/`draft`, jamais de
 // `view` → invisible au pan (skip la réconciliation des N formes à chaque frame).
@@ -61,6 +63,8 @@ const HitTargets = memo(function HitTargets({ shapes, hitW, onDown, onMove, onUp
           // A cancelled pen gesture (palm, pinch takeover) emits NO release: without this route the
           // drag stayed armed once the gesture was over.
           onPointerCancel: onUp,
+          // Read by the board menu to aim a right-click at this stroke.
+          "data-draw-shape": s.id,
           style: { cursor: "move" as const },
         };
         const k = `h-${s.id}`;
@@ -126,13 +130,17 @@ export function DrawLayer() {
   // et reconverties ici depuis sa géométrie courante. Pendant un geste, la géométrie vit dans le
   // canal vivant (l'item n'a pas encore été commité) → une flèche suit l'image en direct.
   const stored = drawItem?.shapes ?? EMPTY_SHAPES;
-  const boardItems = useBoard((s) => s.items);
-  const live = useLive();
+  // The scene's items only matter to a stroke bound to a medium (or links) and to the frame hint of a
+  // selected stroke. A board of free strokes would otherwise re-render this layer, and re-resolve
+  // every shape, on each keystroke of a note or each item commit.
+  const anchored = useMemo(() => stored.some((s) => s.own || s.a1 || s.a2), [stored]);
+  const needsItems = anchored || drawSel.length > 0;
+  const boardItems = useBoard((s) => (needsItems ? s.items : NO_ITEMS));
+  const liveGeom = useLiveGeom();
   const anchoredItems = useMemo<BoardItem[]>(() => {
-    const geoms = live.geom;
-    if (!Object.keys(geoms).length) return boardItems;
-    return boardItems.map((it) => (geoms[it.id] ? { ...it, ...geoms[it.id] } : it));
-  }, [boardItems, live.geom]);
+    if (!anchored || !Object.keys(liveGeom).length) return boardItems;
+    return boardItems.map((it) => (liveGeom[it.id] ? { ...it, ...liveGeom[it.id] } : it));
+  }, [boardItems, liveGeom, anchored]);
   const shapes = useMemo(() => resolveShapes(stored, anchoredItems), [stored, anchoredItems]);
 
   // Culling des tracés, même logique que les items : seuls ceux qui croisent le viewport élargi
@@ -141,13 +149,16 @@ export function DrawLayer() {
   // énorme à fort zoom. La vue ne commite qu'une fois par geste : ce filtre est payé au commit,
   // jamais par frame. La sélection et la gomme, elles, continuent de voir la liste complète.
   const drawnShapes = useMemo(() => {
-    if (shapes.length < 40) return shapes;
+    // Links between items belong to the links layer (links/LinkLayer.tsx): it alone draws them,
+    // makes them clickable and edits them.
+    const plain = shapes.some(isLink) ? shapes.filter((s) => !isLink(s)) : shapes;
+    if (plain.length < 40) return plain;
     const el = ref.current;
     const w = (el?.clientWidth || window.innerWidth) / view.scale;
     const h = (el?.clientHeight || window.innerHeight) / view.scale;
     const x = -view.tx / view.scale, y = -view.ty / view.scale;
     const x0 = x - w, y0 = y - h, x1 = x + w * 2, y1 = y + h * 2;
-    return shapes.filter((s) => {
+    return plain.filter((s) => {
       const [a, b, c, d] = shapeBBox(s);
       return a < x1 && c > x0 && b < y1 && d > y0;
     });
@@ -237,7 +248,12 @@ export function DrawLayer() {
     if (ids !== held) selectDrawShapes(ids);
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* best-effort */ }
     const { x, y } = worldFromXY(e.clientX, e.clientY);
-    if (ids.length) drag.current = { ids, lx: x, ly: y, recorded: false };
+    // A link stays tied to its two items: dragging it would pull both ends off their sides.
+    const moving = ids.filter((sid) => {
+      const sh = getShapes().find((s) => s.id === sid);
+      return !sh || !isLink(sh);
+    });
+    if (moving.length) drag.current = { ids: moving, lx: x, ly: y, recorded: false };
   }, [selectDrawShapes, worldFromXY]);
   const onHandleDown = (id: string, k: string, e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -325,7 +341,9 @@ export function DrawLayer() {
         ? (drawSel.includes(hit.id) ? drawSel.filter((id) => id !== hit.id) : [...drawSel, hit.id])
         : drawSel.includes(hit.id) ? drawSel : [hit.id];
       if (ids !== drawSel) selectDrawShapes(ids);
-      if (ids.length) drag.current = { ids, lx: x, ly: y, recorded: false };
+      // A link stays tied to its two items: it is selected here, never dragged off them.
+      const moving = ids.filter((id) => { const sh = shapes.find((s) => s.id === id); return !sh || !isLink(sh); });
+      if (moving.length) drag.current = { ids: moving, lx: x, ly: y, recorded: false };
       return;
     }
     if (tool === "eraser") {
@@ -426,8 +444,9 @@ export function DrawLayer() {
 
   // Sélection résolue. `selShape` — la forme UNIQUE — commande poignées, pastilles et
   // inspecteur ; `selShapes` ne sert qu'à tracer le contour de chaque membre du groupe.
+  // A selected link is shown and edited by the links layer, not here.
   const selShapes = selectMode && drawSel.length
-    ? shapes.filter((s) => drawSel.includes(s.id))
+    ? shapes.filter((s) => drawSel.includes(s.id) && !isLink(s))
     : EMPTY_SHAPES;
   const selShape = selShapes.length === 1 ? selShapes[0] : null;
   // Largeur de la zone cliquable des cibles transparentes, quantifiée à l'octave : une valeur exacte
@@ -563,7 +582,7 @@ export function DrawLayer() {
                       />
                     }
                   >
-                    {selShape.detached ? <Unlink2 /> : <Link2 />}
+                    <NetsuIcon name="link-frame" on={!selShape.detached} className="size-3.5" />
                   </TooltipTrigger>
                   <TooltipContent>{t(selShape.detached ? "actions.linkFrame" : "actions.unlinkFrame")}</TooltipContent>
                 </Tooltip>
@@ -579,7 +598,7 @@ export function DrawLayer() {
                     />
                   }
                 >
-                  <Trash2 />
+                  <NetsuIcon name="delete" className="size-3.5" />
                 </TooltipTrigger>
                 <TooltipContent>{t("common:action.delete")}</TooltipContent>
               </Tooltip>

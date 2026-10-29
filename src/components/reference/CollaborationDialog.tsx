@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useConvexAuth, useQuery } from "convex/react";
-import { AlertTriangle, LogOut, Trash2, UserRound, Users } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { api } from "@/lib/convexApi";
 import { createCollaborativeProject } from "@/lib/collab/session";
 import {
@@ -29,6 +29,7 @@ import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
 import { collabErrorText, unresolvedNames } from "@/lib/collab/errors";
 import { UnreadableMediaError } from "@/lib/collab/media";
 import { prepareShareMedia } from "./boardMediaActions";
+import { sceneItems } from "./boardFolders";
 import { useBoard } from "./useReferenceBoard";
 import { useScenePersistence } from "./useScenePersistence";
 import {
@@ -61,7 +62,7 @@ function Avatar({ url }: { url: string | null }) {
     <img src={url} alt="" className="size-7 rounded-full object-cover" referrerPolicy="no-referrer" />
   ) : (
     <div className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground">
-      <UserRound className="size-4" />
+      <NetsuIcon name="account" className="size-4" />
     </div>
   );
 }
@@ -159,7 +160,9 @@ export function CollaborationDialog({
         // l'adoption : la scène stockée — celle contre laquelle le natif autorise les imports — ne
         // doit connaître que des chemins vivants.
         await prepareShareMedia().catch(() => undefined);
-        const source = useBoard.getState().items;
+        // Every folder level goes into the shared document, not just the one on screen.
+        const st = useBoard.getState();
+        const source = sceneItems(st.items, st.stash, st.folderPath.length ? st.folderPath[st.folderPath.length - 1].id : null);
         const adoption = await persistence.adoptIntoLibrary();
         let created: { projectId: string } | null = null;
         try {
@@ -241,7 +244,7 @@ export function CollaborationDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Users className="size-4" /> {t("collab.title")}
+            <NetsuIcon name="collab" /> {t("collab.title")}
           </DialogTitle>
           <DialogDescription>{t("collab.subtitle")}</DialogDescription>
         </DialogHeader>
@@ -266,7 +269,7 @@ export function CollaborationDialog({
         ) : confirmStaleHead ? (
           <div className="space-y-3 rounded-lg border border-destructive/40 p-3">
             <p className="flex items-center gap-2 text-sm font-medium">
-              <AlertTriangle className="size-4" /> {t("collab.staleHead.confirmTitle")}
+              <NetsuIcon name="warning" className="size-4" /> {t("collab.staleHead.confirmTitle")}
             </p>
             <p className="text-xs text-muted-foreground">
               {t("collab.staleHead.confirmWarning")}
@@ -308,7 +311,7 @@ export function CollaborationDialog({
             {effectiveRole === "owner" && (staleHeads?.length ?? 0) > 0 && (
               <div className="space-y-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
                 <p className="flex items-center gap-2 font-medium">
-                  <AlertTriangle className="size-3.5" /> {t("collab.staleHead.title")}
+                  <NetsuIcon name="warning" className="size-3.5" /> {t("collab.staleHead.title")}
                 </p>
                 <p className="text-muted-foreground">{t("collab.staleHead.warning")}</p>
                 {staleHeads!.map((head) => (
@@ -363,7 +366,7 @@ export function CollaborationDialog({
                         aria-label={t("collab.members.remove")}
                         onClick={() => void memberAction(() => removeMember(projectId!, member.userId))}
                       >
-                        <Trash2 />
+                        <NetsuIcon name="delete" />
                       </Button>
                     </>
                   ) : (
@@ -383,7 +386,7 @@ export function CollaborationDialog({
                       aria-label={t("collab.members.cancelInvite")}
                       onClick={() => void memberAction(() => cancelInvite(member.inviteId))}
                     >
-                      <Trash2 />
+                      <NetsuIcon name="delete" />
                     </Button>
                   )}
                 </div>
@@ -406,11 +409,11 @@ export function CollaborationDialog({
             <div className="flex justify-end">
               {effectiveRole === "owner" ? (
                 <Button variant="destructive" size="sm" onClick={() => setConfirmLifecycle("delete")}>
-                  <Trash2 className="size-3.5" /> {t("collab.lifecycle.delete")}
+                  <NetsuIcon name="delete" className="size-3.5" /> {t("collab.lifecycle.delete")}
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" onClick={() => setConfirmLifecycle("leave")}>
-                  <LogOut className="size-3.5" /> {t("collab.lifecycle.leave")}
+                  <NetsuIcon name="sign-out" className="size-3.5" /> {t("collab.lifecycle.leave")}
                 </Button>
               )}
             </div>
@@ -440,7 +443,7 @@ export function CollaborationDialog({
                   />
                 ) : (
                   <div className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <UserRound className="size-4" />
+                    <NetsuIcon name="account" className="size-4" />
                   </div>
                 )}
                 <span className="min-w-0 flex-1 truncate text-sm">{friend.name || friend.handle}</span>
@@ -481,7 +484,7 @@ export function CollaborationDialog({
             {t("collab.close")}
           </Button>
           <Button size="sm" disabled={busy || !!blocker || !picked.length || (!!projectId && effectiveRole !== "owner") || !!confirmLifecycle || !!confirmStaleHead} onClick={() => void submit()}>
-            {busy ? <Spinner className="size-3.5" /> : <Users className="size-3.5" />} {t(projectId ? "collab.invite" : "collab.create")}
+            <NetsuIcon name="collab" busy={busy} className="size-3.5" /> {t(projectId ? "collab.invite" : "collab.create")}
           </Button>
         </DialogFooter>
       </DialogContent>

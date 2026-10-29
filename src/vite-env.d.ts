@@ -6,3 +6,5 @@ declare module "katex/contrib/mhchem";
 
 // Version de package.json injectée au build (vite `define`) — cf. src/lib/release.ts.
 declare const __APP_VERSION__: string;
+// mammoth (BSD-2-Clause) ships no type declarations.
+declare module "mammoth";

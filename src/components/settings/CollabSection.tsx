@@ -1,9 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import {
-  Check, ChevronDown, ChevronRight, Laptop, Trash2, UserPlus, UserRound, Users, X,
-} from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { api } from "@/lib/convexApi";
 import { refreshNativeCollaborationAuth } from "@/lib/collab/authBridge";
 import { collabErrorText } from "@/lib/collab/errors";
@@ -50,7 +48,7 @@ function Avatar({ url }: { url: string | null }) {
     <img src={url} alt="" className="size-7 rounded-full object-cover" referrerPolicy="no-referrer" />
   ) : (
     <div className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground">
-      <UserRound className="size-4" />
+      <NetsuIcon name="account" className="size-4" />
     </div>
   );
 }
@@ -286,7 +284,7 @@ export function CollabSection() {
     ].filter(Boolean).join(" · ");
     return (
       <div key={project.projectId} className="flex items-center gap-3 py-2">
-        <Users className="size-4 shrink-0 text-muted-foreground" />
+        <NetsuIcon name="collab" className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs">{name}</p>
           {detail && <p className="truncate text-[10px] text-muted-foreground">{detail}</p>}
@@ -305,7 +303,7 @@ export function CollabSection() {
               {t(own ? "collab.projects.delete" : "collab.projects.leave")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setConfirmProject(null)}>
-              <X className="size-3.5" />
+              <NetsuIcon name="close" className="size-3.5" />
             </Button>
           </>
         ) : (
@@ -327,7 +325,7 @@ export function CollabSection() {
               aria-label={t(own ? "collab.projects.delete" : "collab.projects.leave")}
               onClick={() => setConfirmProject(project.projectId)}
             >
-              <Trash2 />
+              <NetsuIcon name="delete" />
             </Button>
           </>
         )}
@@ -341,7 +339,7 @@ export function CollabSection() {
         <h2 className="text-sm font-medium">{t("collab.device.title")}</h2>
         <p className="mt-1 text-xs text-muted-foreground">{t("collab.device.subtitle")}</p>
         <div className="mt-3 flex items-center gap-3 rounded-lg border border-border p-3">
-          <Laptop className="size-4 shrink-0 text-muted-foreground" />
+          <NetsuIcon name="device" className="size-4 shrink-0 text-muted-foreground" />
           {nativeError ? (
             <p className="text-xs text-destructive">{nativeError}</p>
           ) : nativeReady ? (
@@ -354,7 +352,7 @@ export function CollabSection() {
           <div className="mt-2 divide-y divide-border rounded-lg border border-border px-3">
             {devices.map((device) => (
               <div key={device.deviceId} className="flex items-center gap-3 py-2">
-                <Laptop className="size-4 shrink-0 text-muted-foreground" />
+                <NetsuIcon name="device" className="size-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs">
                     {device.label || t("collab.device.unnamed")}
@@ -372,7 +370,7 @@ export function CollabSection() {
                     aria-label={t("collab.device.revoke")}
                     onClick={() => void revokeDevice(device.deviceId)}
                   >
-                    <Trash2 />
+                    <NetsuIcon name="delete" />
                   </Button>
                 )}
               </div>
@@ -418,7 +416,7 @@ export function CollabSection() {
             className="h-8"
           />
           <Button size="sm" disabled={busy || !identifier.trim()} onClick={() => void add()}>
-            <UserPlus className="size-3.5" /> {t("collab.friends.add")}
+            <NetsuIcon name="add-friend" className="size-3.5" /> {t("collab.friends.add")}
           </Button>
         </div>
         {status && <p className="mt-2 text-xs text-muted-foreground">{t(`collab.friends.status.${status}`)}</p>}
@@ -427,10 +425,10 @@ export function CollabSection() {
             {social.incoming.map((request) => (
               <Row key={request.requestId} profile={request}>
                 <Button size="sm" variant="ghost" onClick={() => void respondRequest({ requestId: request.requestId, accept: true })}>
-                  <Check className="size-3.5" /> {t("collab.friends.accept")}
+                  <NetsuIcon name="check" className="size-3.5" /> {t("collab.friends.accept")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => void respondRequest({ requestId: request.requestId, accept: false })}>
-                  <X className="size-3.5" />
+                  <NetsuIcon name="close" className="size-3.5" />
                 </Button>
               </Row>
             ))}
@@ -443,7 +441,7 @@ export function CollabSection() {
                   {request.pending ? t("collab.friends.notYetJoined") : t("collab.friends.awaiting")}
                 </span>
                 <Button size="sm" variant="ghost" onClick={() => void respondRequest({ requestId: request.requestId, accept: false })}>
-                  <X className="size-3.5" />
+                  <NetsuIcon name="close" className="size-3.5" />
                 </Button>
               </Row>
             ))}
@@ -468,10 +466,10 @@ export function CollabSection() {
             {invites.map((invite) => (
               <Row key={invite.inviteId} profile={invite.from}>
                 <Button size="sm" onClick={() => void answerInvite(invite, true)}>
-                  <Check className="size-3.5" /> {t("collab.invites.join")}
+                  <NetsuIcon name="check" className="size-3.5" /> {t("collab.invites.join")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => void answerInvite(invite, false)}>
-                  <X className="size-3.5" />
+                  <NetsuIcon name="close" className="size-3.5" />
                 </Button>
               </Row>
             ))}
@@ -507,7 +505,7 @@ export function CollabSection() {
                   onClick={() => setShowAbsent((current) => !current)}
                   className="flex w-full items-center gap-2 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
                 >
-                  {showAbsent ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                  <NetsuIcon name="chevron-toggle" on={showAbsent} className="size-3.5" />
                   {t("collab.projects.absent", { count: absent.length })}
                 </button>
                 {showAbsent && (

@@ -261,6 +261,41 @@ impl FrameStyle {
     }
 }
 
+/// Folder mode of a frame: folded into a card whose content lives one level down. Stored under its
+/// own key, so a build that predates folders reads the item and simply shows the frame flat.
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FolderState {
+    #[serde(default)]
+    pub folded: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub open_width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub open_height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cover: Option<ItemId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cover_style: Option<CoverStyle>,
+}
+
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CoverStyle {
+    Image,
+    Mosaic,
+}
+
+impl FolderState {
+    fn validate(&self) -> Result<(), CollabError> {
+        optional_positive_finite("folder.openWidth", self.open_width)?;
+        optional_positive_finite("folder.openHeight", self.open_height)?;
+        if let Some(cover) = &self.cover {
+            cover.validate()?;
+        }
+        Ok(())
+    }
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PlayMode {
@@ -769,6 +804,31 @@ pub enum CollabOp {
         item_id: ItemId,
         frame: FrameStyle,
     },
+    SetFolder {
+        item_id: ItemId,
+        folder: Option<FolderState>,
+    },
+    /// Note sheet document: BlockNote JSON, written whole. Its own key, so an older build keeps
+    /// showing the plain-text mirror carried by the item's text.
+    SetDocument {
+        item_id: ItemId,
+        document: Option<String>,
+    },
+    /// How a note sheet sits on the board ("card" or "postit"), under its own key.
+    SetNoteStyle {
+        item_id: ItemId,
+        style: Option<String>,
+    },
+    /// Web link display mode and page details, JSON written whole under its own key.
+    SetLinkCard {
+        item_id: ItemId,
+        card: Option<String>,
+    },
+    /// Folder holding the item; `None` = top level of the board.
+    SetParent {
+        item_id: ItemId,
+        parent: Option<ItemId>,
+    },
     SetPlayback {
         item_id: ItemId,
         playback: Playback,
@@ -853,6 +913,46 @@ impl CollabOp {
             Self::SetFrameStyle { item_id, frame } => {
                 item_id.validate()?;
                 frame.validate()
+            }
+            Self::SetFolder { item_id, folder } => {
+                item_id.validate()?;
+                if let Some(folder) = folder {
+                    folder.validate()?;
+                }
+                Ok(())
+            }
+            Self::SetDocument { item_id, document } => {
+                item_id.validate()?;
+                if let Some(document) = document {
+                    validate_text("note document", document, MAX_TEXT_LEN)?;
+                }
+                Ok(())
+            }
+            Self::SetNoteStyle { item_id, style } => {
+                item_id.validate()?;
+                if let Some(style) = style {
+                    if style != "card" && style != "postit" {
+                        return Err(CollabError::validation("unknown note style"));
+                    }
+                }
+                Ok(())
+            }
+            Self::SetLinkCard { item_id, card } => {
+                item_id.validate()?;
+                if let Some(card) = card {
+                    validate_text("link card", card, MAX_SHORT_TEXT_LEN)?;
+                }
+                Ok(())
+            }
+            Self::SetParent { item_id, parent } => {
+                item_id.validate()?;
+                if let Some(parent) = parent {
+                    parent.validate()?;
+                    if parent == item_id {
+                        return Err(CollabError::validation("item cannot be its own folder"));
+                    }
+                }
+                Ok(())
             }
             Self::SetPlayback { item_id, playback } => {
                 item_id.validate()?;

@@ -117,6 +117,24 @@ function shareablePrevMedia(prev) {
   return /^https?:/i.test(source) ? { sourceUrl: source } : undefined;
 }
 
+/**
+ * Document behind an image item (document card, any type): its bytes are stored as a blob, like any bundled file.
+ * Unreadable file: the field is dropped and the item stays the plain thumbnail image it also is.
+ * @param {any} ctx @param {any} item
+ */
+async function tokenizeDocFile(ctx, item) {
+  const doc = item.docFile;
+  if (!doc || typeof doc !== 'object') return;
+  const ref = String(doc.ref || '');
+  if (!ref || isRemoteRef(ref)) return;
+  try {
+    const { sha } = await blobs.putFileAsync(ctx.handle, ref); // extension from the file itself
+    item.docFile = { ...doc, ref: `asset:${sha}` };
+  } catch (_) {
+    delete item.docFile;
+  }
+}
+
 /** Un item, prêt à être écrit : tokens posés, champs transitoires retirés. */
 async function tokenizeItem(ctx, raw) {
   const item = stripTransient(raw);
@@ -146,6 +164,7 @@ async function tokenizeItem(ctx, raw) {
     return { item, bytes, bundled, referenced };
   }
 
+  await tokenizeDocFile(ctx, item);
   const out = await tokenizeRef(ctx, item, item.id, item.ref, kind);
   item.ref = out.token;
   if (out.missing) item.missing = out.missing;
@@ -276,9 +295,24 @@ function restorePrevMedia(ctx, item) {
   return rest;
 }
 
+/**
+ * Gives the document of a document card a readable path again. Gone for good, the field is dropped.
+ * @param {any} ctx @param {any} item
+ */
+function restoreDocFile(ctx, item) {
+  const doc = item && item.docFile;
+  if (!doc || typeof doc !== 'object') return item;
+  const ref = String(doc.ref || '');
+  if (!ref || isRemoteRef(ref)) return item;
+  const resolved = resolveToken(ctx, ref, 'pdf');
+  if (resolved.path) return { ...item, docFile: { ...doc, ref: resolved.path } };
+  const { docFile: _gone, ...rest } = item;
+  return rest;
+}
+
 /** @param {any} ctx @param {any} raw */
 function detokenizeItem(ctx, raw) {
-  const item = restorePrevMedia(ctx, raw);
+  const item = restoreDocFile(ctx, restorePrevMedia(ctx, raw));
   const kind = String(item.kind || '');
   if (kind === 'sequence') {
     const tokens = Array.isArray(item.frames) ? item.frames : [];

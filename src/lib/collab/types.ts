@@ -42,6 +42,13 @@ export type FrameStyle = {
   fillColor?: string;
   titleBackground?: string;
 };
+export type FolderState = {
+  folded: boolean;
+  openWidth?: number;
+  openHeight?: number;
+  cover?: string;
+  coverStyle?: "image" | "mosaic";
+};
 export type Playback = {
   playMode?: "loop" | "pingpong" | "off";
   frame?: number;
@@ -133,6 +140,11 @@ export type CollabOp =
   | { type: "textInsert"; itemId: string; index: number; text: string }
   | { type: "textDelete"; itemId: string; index: number; len: number }
   | { type: "setFrameStyle"; itemId: string; frame: FrameStyle }
+  | { type: "setFolder"; itemId: string; folder: FolderState | null }
+  | { type: "setParent"; itemId: string; parent: string | null }
+  | { type: "setDocument"; itemId: string; document: string | null }
+  | { type: "setLinkCard"; itemId: string; card: string | null }
+  | { type: "setNoteStyle"; itemId: string; style: "card" | "postit" | null }
   | { type: "setPlayback"; itemId: string; playback: Playback }
   | { type: "setMediaManifest"; itemId: string; manifest: MediaManifest | null }
   | { type: "setLink"; itemId: string; link: LinkMetadata | null }

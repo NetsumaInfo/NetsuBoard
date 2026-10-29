@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, ExternalLink, Download } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { cn } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
 import type { BoardItem } from "./referenceShared";
@@ -244,7 +244,7 @@ export function YoutubeItem({ item, interactive, onReady }: { item: BoardItem; i
         // YouTube refuse la lecture intégrée (vidéo privée/supprimée ou intégration désactivée par
         // l'auteur) → on propose d'ouvrir sur YouTube ou de télécharger une copie locale jouable.
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-card/90 p-3 text-center backdrop-blur">
-          <AlertTriangle className="size-6 text-muted-foreground" strokeWidth={1.5} />
+          <NetsuIcon name="warning" className="size-6 text-muted-foreground" />
           <p className="text-xs font-medium text-foreground">{t("youtube.notEmbeddable")}</p>
           <p className="max-w-[90%] text-[11px] text-muted-foreground">{t("youtube.blocked")}</p>
           <div className="pointer-events-auto mt-1 flex flex-wrap justify-center gap-2">
@@ -254,7 +254,7 @@ export function YoutubeItem({ item, interactive, onReady }: { item: BoardItem; i
               onClick={() => void nr.openExternal(`https://www.youtube.com/watch?v=${item.ref}`)}
               className="inline-flex items-center gap-1.5 rounded bg-muted px-2 py-1 text-[11px] font-medium text-foreground hover:bg-muted/70"
             >
-              <ExternalLink className="size-3.5" /> {t("youtube.openOnYouTube")}
+              <NetsuIcon name="open-external" className="size-3.5" /> {t("youtube.openOnYouTube")}
             </button>
             <button
               type="button"
@@ -262,7 +262,7 @@ export function YoutubeItem({ item, interactive, onReady }: { item: BoardItem; i
               onClick={() => void downloadYoutube(item.id)}
               className="inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90"
             >
-              <Download className="size-3.5" /> {t("actions.download")}
+              <NetsuIcon name="download-media" className="size-3.5" /> {t("actions.download")}
             </button>
           </div>
         </div>

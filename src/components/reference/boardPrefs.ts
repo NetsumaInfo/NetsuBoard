@@ -7,8 +7,10 @@ import type { UpscaleModel, ShaderModel, NetsuLevel, NetsuQuality } from "@/lib/
 import { mergeKeys } from "@/lib/shortcuts";
 import {
   HANDWRITING_FONT, DEFAULT_DRAW_KEYS, DEFAULT_SHORTCUT_KEYS, DOWNLOADABLE_EMBED_PROVIDERS,
-  type DrawKeys, type ShortcutKeys, type EmbedProvider,
+  type DrawKeys, type ShortcutKeys, type EmbedProvider, type RouteStyle,
 } from "./referenceShared";
+import { LABEL_FONT_PX, LINK_COLOR, LINK_WIDTH_PX, type HeadsMode } from "./links/model";
+import type { OrganiseMode } from "./links/graph";
 import {
   DEFAULT_PINNED_BUTTONS, DEFAULT_PINNED_BUTTONS_END, DEFAULT_BAR_BUTTONS, DEFAULT_BAR_BUTTONS_END,
   PINNED_BUTTONS, PINNED_SIDES, type PinnedButtonId, type PinnedSide,
@@ -85,6 +87,7 @@ export interface BoardPrefs {
   defaultNoteBg: string;     // fond de note par défaut ("transparent" possible)
   defaultFrameColor: string; // couleur (contour/titre) par défaut des nouveaux cadres
   defaultFrameFill: "none" | "tint" | "solid"; // remplissage par défaut des nouveaux cadres
+  folderCover: "image" | "mosaic"; // folder card cover when the folder sets none: one image or a 2×2 mosaic
   mediaMaxSize: number;      // côté max d'un média fraîchement posé (px board) — taille de pose
   // Ce que le fichier .netsu garde des médias, par défaut. Un item peut le surcharger (BoardItem.embed).
   // Aperçu par défaut : la plage jouée pèse quelques Mo là où la source en pèse des milliers.
@@ -175,6 +178,20 @@ export interface BoardPrefs {
   autoArrangeOnImport: boolean; // ranger automatiquement un lot importé (dossier, sélection multiple)
   // Accrochage automatique des tracés aux médias (flèche entre deux images, trait posé sur une image).
   autoAnchorDraw: boolean;
+  // With one item selected, dim the links that do not touch it and outline the items they reach.
+  linkFocus: boolean;
+  // Moving an item carries its whole downstream subtree (the items its links lead to) along.
+  linkMoveSubtree: boolean;
+  // Style of a NEW link (Settings > Links); a link keeps its own style once drawn.
+  linkRoute: RouteStyle;
+  linkHeads: HeadsMode;
+  linkColor: string;
+  linkWidth: number;        // screen pixels
+  linkDashed: boolean;
+  linkLabelFont: string;    // "" = the interface font
+  linkLabelSize: number;    // screen pixels
+  linkRecentColors: string[];
+  linkOrganise: OrganiseMode; // last layout picked for "Organise", replayed by its shortcut
   paletteSize: number;     // nombre de couleurs extraites par défaut (3–12)
   // --- Pen tablets. Three machines to serve at once and they do NOT want the same thing: a display
   // tablet next to a mouse (hover works, the keyboard is there), a tablet with no screen (hover
@@ -236,6 +253,7 @@ const PREFS_DEFAULT: BoardPrefs = {
   defaultNoteBg: "transparent",
   defaultFrameColor: "#60a5fa",
   defaultFrameFill: "tint",
+  folderCover: "image",
   mediaMaxSize: 420,
   embedLevel: "preview",
   embedQuality: "standard",
@@ -285,6 +303,17 @@ const PREFS_DEFAULT: BoardPrefs = {
   arrangeDefaultsVersion: 1,
   autoArrangeOnImport: true,
   autoAnchorDraw: true,
+  linkFocus: true,
+  linkMoveSubtree: false,
+  linkRoute: "curved",
+  linkHeads: "end",
+  linkColor: LINK_COLOR,
+  linkWidth: LINK_WIDTH_PX.normal,
+  linkDashed: false,
+  linkLabelFont: "",
+  linkLabelSize: LABEL_FONT_PX,
+  linkRecentColors: [],
+  linkOrganise: "tree-right",
   paletteSize: 6,
   penPressure: true,
   penMinWidth: 0.35,
@@ -321,6 +350,8 @@ export function readPrefs(): BoardPrefs {
       arrangeDefaultsVersion: 1,
       upShader: migrateShader(v.upShader),
       favFonts: Array.isArray(v.favFonts) ? v.favFonts : [],
+      linkRecentColors: Array.isArray(v.linkRecentColors)
+        ? v.linkRecentColors.filter((c: unknown): c is string => typeof c === "string") : [],
       autoDownloadProviders: Array.isArray(v.autoDownloadProviders)
         ? v.autoDownloadProviders : PREFS_DEFAULT.autoDownloadProviders,
       // Un plafond relu depuis un réglage corrompu ne doit jamais devenir « copie illimitée » ni

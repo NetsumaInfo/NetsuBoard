@@ -10,6 +10,7 @@ import { BoardContextMenu } from "./BoardMenu";
 import { SceneDialog } from "./SceneDialog";
 import { ExportDialog } from "./ExportDialog";
 import { Inspector } from "./Inspector";
+import { NoteOverlay } from "./NoteOverlay";
 import { SequencePlayer } from "./SequencePlayer";
 import { CropOverlay } from "./CropOverlay";
 import { ReferenceHome } from "./ReferenceHome";
@@ -44,7 +45,9 @@ export function ReferencePanel() {
   // Landing : toujours l'accueil au montage de l'onglet (le board en session reste dans le store).
   const [mode, setMode] = useState<"home" | "board">("home");
   const [pending, setPending] = useState<Pending | null>(null);
-  const items = useBoard((s) => s.items);
+  // The session is the whole board, every folder level included: an empty folder left open, or a
+  // board whose top level holds only folders, is still a session to resume.
+  const hasSession = useBoard((s) => s.items.length > 0 || s.stash.length > 0 || s.folderPath.length > 0);
   // Épinglé (fenêtre principale au-dessus, format coin) → board flottante, barre d'outils réduite.
   const pinned = useApp((s) => s.pinned);
   const togglePinned = useApp((s) => s.togglePinned);
@@ -101,7 +104,7 @@ export function ReferencePanel() {
   useEffect(() => {
     if (mode !== "board" || !pending || !boardRef.current) return;
     if (pending.files) boardRef.current.addFiles(pending.files);
-    pending.paths?.forEach((p) => boardRef.current?.addPath(p));
+    if (pending.paths?.length) boardRef.current.addPaths(pending.paths);
     setPending(null);
   }, [mode, pending]);
 
@@ -111,7 +114,7 @@ export function ReferencePanel() {
     return (
       <div className={`relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden${pinned ? " nr-shell-bg bg-[var(--color-bg)]" : ""}`}>
         <ReferenceHome
-          hasSession={items.length > 0}
+          hasSession={hasSession}
           onResume={() => setMode("board")}
           onOpen={onOpenScene}
           onNew={() => startNew({})}
@@ -167,19 +170,24 @@ export function ReferencePanel() {
         </Suspense>
       )}
       {!barAfter && bar}
-      <BoardContextMenu
-        board={boardRef}
-        onHome={onHome}
-        onSave={persistence.available ? project.save : undefined}
-        onSaveAs={persistence.available ? project.saveAs : undefined}
-        onOpenProject={pinned && persistence.available ? project.openProject : undefined}
-        onOpen={onOpen}
-        onSettings={() => openSettings()}
-      >
-        <ReferenceBoard ref={boardRef} />
-        <Inspector />
-        <SequencePlayer />
-      </BoardContextMenu>
+      {/* The sheet is a sibling of the board menu, not a child of its trigger: a right-click in the
+          sheet must never reach the board's context menu or change the board selection. */}
+      <div className="relative flex min-h-0 min-w-0 flex-1">
+        <BoardContextMenu
+          board={boardRef}
+          onHome={onHome}
+          onSave={persistence.available ? project.save : undefined}
+          onSaveAs={persistence.available ? project.saveAs : undefined}
+          onOpenProject={pinned && persistence.available ? project.openProject : undefined}
+          onOpen={onOpen}
+          onSettings={() => openSettings()}
+        >
+          <ReferenceBoard ref={boardRef} />
+          <Inspector />
+          <SequencePlayer />
+        </BoardContextMenu>
+        <NoteOverlay />
+      </div>
       {barAfter && bar}
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />

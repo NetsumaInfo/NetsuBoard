@@ -10,7 +10,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FileImage, FileCode2, Repeat } from "lucide-react";
 import { nr } from "@/lib/bridge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -20,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/ui/spinner";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { fmtBytes } from "@/lib/utils";
@@ -32,12 +32,12 @@ import { errorText } from "@/lib/errorText";
 
 type Format = "png" | "jpg" | "svg" | "webp" | "gif";
 
-const FORMATS: { id: Format; label: string; icon: typeof FileImage }[] = [
-  { id: "png", label: "PNG", icon: FileImage },
-  { id: "jpg", label: "JPG", icon: FileImage },
-  { id: "svg", label: "SVG", icon: FileCode2 },
-  { id: "webp", label: "WebP", icon: Repeat },
-  { id: "gif", label: "GIF", icon: Repeat },
+const FORMATS: { id: Format; label: string; icon: string }[] = [
+  { id: "png", label: "PNG", icon: "export-image-png" },
+  { id: "jpg", label: "JPG", icon: "export-image-jpg" },
+  { id: "svg", label: "SVG", icon: "export-image-svg" },
+  { id: "webp", label: "WebP", icon: "export-image-animated" },
+  { id: "gif", label: "GIF", icon: "export-image-animated" },
 ];
 const BOARD_LOOP_FPS = [30, 24, 15, 12];
 // A board is far larger than a clip: past this width an animated export weighs more than it shows.
@@ -180,13 +180,13 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
 
         <div className="flex flex-col gap-4">
           <div className="flex gap-1.5">
-            {FORMATS.map(({ id, label, icon: Icon }) => (
+            {FORMATS.map(({ id, label, icon }) => (
               <Button
                 key={id} size="sm" className="flex-1 gap-1.5 px-2" disabled={busy}
                 variant={format === id ? "default" : "outline"}
                 onClick={() => setFormat(id)}
               >
-                <Icon className="size-3.5" /> {label}
+                <NetsuIcon name={icon} className="size-3.5" /> {label}
               </Button>
             ))}
           </div>
@@ -314,7 +314,7 @@ export function ExportImageDialog({ open, onOpenChange }: { open: boolean; onOpe
         <DialogFooter>
           <Button variant="ghost" onClick={close} disabled={busy && !animated}>{t("common:action.cancel")}</Button>
           <Button onClick={() => void run()} disabled={busy || (animated && (!videos.length || tooLong || (ownDuration && !(duration > 0))))}>
-            {busy && <Spinner />}
+            <NetsuIcon name="export-image" mode={animated ? "animated" : format} busy={busy} />
             {t("exportImage.export")}
           </Button>
         </DialogFooter>

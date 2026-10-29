@@ -7,19 +7,19 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Popover } from "@base-ui/react/popover";
-import { Blocks, Columns3, Grid2x2, LayoutGrid, Rows3, Wand2 } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useBoard } from "./useReferenceBoard";
 import type { ArrangeLayout } from "./boardPrefs";
 
-const LAYOUTS: { value: ArrangeLayout; labelKey: string; icon: typeof LayoutGrid }[] = [
-  { value: "block", labelKey: "tidy.layoutBlock", icon: LayoutGrid },
-  { value: "pack", labelKey: "tidy.layoutPack", icon: Blocks },
-  { value: "grid", labelKey: "tidy.layoutGrid", icon: Grid2x2 },
-  { value: "row", labelKey: "tidy.layoutRow", icon: Columns3 },
-  { value: "col", labelKey: "tidy.layoutCol", icon: Rows3 },
+const LAYOUTS: { value: ArrangeLayout; labelKey: string }[] = [
+  { value: "block", labelKey: "tidy.layoutBlock" },
+  { value: "pack", labelKey: "tidy.layoutPack" },
+  { value: "grid", labelKey: "tidy.layoutGrid" },
+  { value: "row", labelKey: "tidy.layoutRow" },
+  { value: "col", labelKey: "tidy.layoutCol" },
 ];
 
 const UNIFORMS: { value: "none" | "height" | "width" | "area"; labelKey: string }[] = [
@@ -103,7 +103,7 @@ export function TidyMenu({ disabled, trigger }: { disabled?: boolean; trigger: R
                   label={t(l.labelKey)}
                   onClick={() => run({ arrangeLayout: l.value })}
                 >
-                  <l.icon className="size-3.5" />
+                  <NetsuIcon name="tidy" mode={l.value} className="size-3.5" />
                 </Choice>
               ))}
             </div>
@@ -168,7 +168,7 @@ export function TidyMenu({ disabled, trigger }: { disabled?: boolean; trigger: R
             <Popover.Close
               render={
                 <Button className="mt-3 w-full gap-1.5" size="sm" onClick={() => run()} disabled={disabled}>
-                  <Wand2 className="size-3.5" />
+                  <NetsuIcon name="tidy" mode={prefs.arrangeLayout} className="size-3.5" />
                   {t("tidy.apply")}
                 </Button>
               }

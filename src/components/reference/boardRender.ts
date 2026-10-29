@@ -11,7 +11,9 @@ import { collabMediaSrc } from "@/lib/collab/currentProject";
 import { isCollabRef, paletteGrid, type BoardItem, type DrawShape } from "./referenceShared";
 import { rotatedBBox } from "./boardArrange";
 import { formatColor } from "./colorFormat";
-import { resolveShapes } from "./drawAnchor";
+import { indexItems, resolveShapes } from "./drawAnchor";
+import { isLink } from "./links/model";
+import { resolveLinkGeos } from "./links/resolve";
 import { connectorPath, penOutline, penPath, shapeBBox } from "./drawGeometry";
 
 export interface RenderOptions {
@@ -44,11 +46,28 @@ export function visibleItems(items: BoardItem[], only?: Set<string>): BoardItem[
     .sort((a, b) => a.z - b.z);
 }
 
+// Exact path of each exported link (side normals and route of the links layer), keyed by the
+// resolved shape handed to the painters.
+const linkPaths = new WeakMap<DrawShape, { d: string; startAng: number; endAng: number }>();
+
 function shapesOf(items: BoardItem[]): DrawShape[] {
   const layer = items.find((it) => it.kind === "draw");
   if (!layer?.shapes?.length) return [];
-  return resolveShapes(layer.shapes, items);
+  // Links (junctions included) resolve together, parents before their branches.
+  const links = resolveLinkGeos(layer.shapes, indexItems(items), 1).byId;
+  return resolveShapes(layer.shapes, items).flatMap((s) => {
+    if (!isLink(s)) return [s];
+    // A link whose item is not in this scene level is not drawn on screen either.
+    const geo = links.get(s.id);
+    if (!geo) return [];
+    // A link's `fill` is its label style (links/model parseLabelStyle), never a paint.
+    const out = { ...s, p: [geo.e0.x, geo.e0.y, geo.e1.x, geo.e1.y], w: geo.strokeW, fill: undefined };
+    linkPaths.set(out, { d: geo.path.d, startAng: geo.path.startAng, endAng: geo.path.endAng });
+    return [out];
+  });
 }
+
+const pathOf = (s: DrawShape) => linkPaths.get(s) ?? connectorPath(s);
 
 // Emprise du contenu : items (rotation comprise) + tracés.
 export function contentBounds(items: BoardItem[], only?: Set<string>): { x: number; y: number; w: number; h: number } {
@@ -434,7 +453,7 @@ function paintShape(ctx: CanvasRenderingContext2D, s: DrawShape): void {
     if (s.pw?.length) { ctx.fillStyle = s.c; ctx.fill(new Path2D(penOutline(s.p, s.pw, s.w))); }
     else ctx.stroke(new Path2D(penPath(s.p)));
   } else if (s.t === "line" || s.t === "arrow") {
-    const { d, startAng, endAng } = connectorPath(s);
+    const { d, startAng, endAng } = pathOf(s);
     ctx.stroke(new Path2D(d));
     ctx.setLineDash([]);
     const [x1, y1, x2, y2] = s.p;
@@ -577,7 +596,7 @@ function svgShape(s: DrawShape): string {
     if (s.pw?.length) return `<path d="${penOutline(s.p, s.pw, s.w)}" fill="${s.c}" stroke="none"${op}/>`;
     return `<path d="${penPath(s.p)}" ${common} fill="none"/>`;
   }
-  if (s.t === "line" || s.t === "arrow") return `<path d="${connectorPath(s).d}" ${common} fill="none"/>`;
+  if (s.t === "line" || s.t === "arrow") return `<path d="${pathOf(s).d}" ${common} fill="none"/>`;
   if (s.t === "rect") {
     const x = Math.min(s.p[0], s.p[2]), y = Math.min(s.p[1], s.p[3]);
     const w = Math.abs(s.p[2] - s.p[0]), h = Math.abs(s.p[3] - s.p[1]);

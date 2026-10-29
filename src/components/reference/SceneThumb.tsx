@@ -3,7 +3,7 @@
 // visuels sont posés en % d'une bbox commune (avec marge) → reflète la disposition du board.
 
 import { memo, useEffect, useState } from "react";
-import { Film } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr } from "@/lib/bridge";
 import { type BoardItem, displaySrc, youtubeId } from "./referenceShared";
 
@@ -42,7 +42,7 @@ function BoardThumb({ items }: { items: BoardItem[] | null }) {
   if (!items || items.length === 0) {
     return (
       <div className="flex size-full items-center justify-center text-muted-foreground">
-        <Film className="size-6 opacity-30" />
+        <NetsuIcon name="video" className="size-6 opacity-30" />
       </div>
     );
   }
@@ -94,7 +94,7 @@ function BoardThumb({ items }: { items: BoardItem[] | null }) {
           if (!src) {
             return (
               <div key={it.id} className="absolute flex items-center justify-center rounded-[2px] bg-black/40 ring-1 ring-black/30" style={style}>
-                <Film className="size-3 text-white/40" />
+                <NetsuIcon name="video" className="size-3 text-white/40" />
               </div>
             );
           }

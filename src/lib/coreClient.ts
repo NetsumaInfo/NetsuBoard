@@ -4,12 +4,13 @@
 // Dialogs / openExternal passent par les plugins Tauri (chargés à la demande, seulement sous Tauri).
 
 import { convertFileSrc } from "@tauri-apps/api/core";
-import type { NrApi, RefApi } from "./bridge";
+import type { AdblockStatus, LiveSiteInfo, NrApi, RefApi } from "./bridge";
 import i18n from "@/i18n";
 import { rememberImportGrants } from "@/lib/collab/importGrants";
 import { logError } from "@/lib/appLog";
 import { readPreviewSettings } from "@/lib/previewSettings";
 import { beginHeavyCall, isHeavyChannel } from "@/lib/busyBus";
+import { docTypeOf } from "@/components/reference/boardDocs";
 
 const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -455,6 +456,7 @@ const reference: RefApi = {
   ytDuration: (id) => call("reference:ytDuration", [id]),
   fetchAsset: (url, options) => call("reference:fetchAsset", [url, options || {}]),
   resolveMedia: (url, options) => call("reference:resolveMedia", [url, options || {}]),
+  linkMeta: (url) => call("reference:linkMeta", [url]),
   upscaleItem: (opts) => call("reference:upscaleItem", [opts]),
   dropAsset: (p) => call("reference:dropAsset", [p]),
   sweepAssets: (opts) => call("reference:sweepAssets", [opts || {}]),
@@ -644,6 +646,14 @@ export function makeCoreClient(): NrApi {
       isRemote
         ? requestParentFiles(true, IMAGE_EXT)
         : (trustedFileOpen("image", true) as Promise<string[] | null>),
+    chooseDocuments: async () => {
+      const picked = isRemote
+        ? await requestParentFiles(true, [])
+        : ((await trustedFileOpen("any", true)) as string[] | null);
+      // The native dialog has no document filter; images and videos picked here still import as media.
+      const docs = (picked ?? []).filter((p) => docTypeOf(p) !== null);
+      return docs.length ? docs : null;
+    },
     chooseAnyFile: () =>
       isRemote
         ? requestParentFiles(false, []).then((a) => (a && a[0]) || null)
@@ -654,6 +664,91 @@ export function makeCoreClient(): NrApi {
     mediaUrl: (p) => `${BASE}/media?p=${encodeURIComponent(p)}${tkParam}`,
     assetUrl: (p) => assetSrc(p) ?? `${BASE}/media?p=${encodeURIComponent(p)}${tkParam}`,
     ytStreamUrl: (id) => `${BASE}/ytstream?id=${encodeURIComponent(id)}${tkParam}`,
+    liveSite: {
+      available: isTauri,
+      open: async (url, r) => {
+        if (!isTauri) return false;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_open", { url, x: r.x, y: r.y, w: r.w, h: r.h });
+        return true;
+      },
+      bounds: async (r) => {
+        if (!isTauri) return;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_bounds", { x: r.x, y: r.y, w: r.w, h: r.h });
+      },
+      visible: async (on) => {
+        if (!isTauri) return;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_visible", { visible: on });
+      },
+      nav: async (action) => {
+        if (!isTauri) return;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_nav", { action });
+      },
+      url: async () => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        return await invoke<string>("livesite_url").catch(() => null);
+      },
+      capture: async () => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        const b64 = await invoke<string>("livesite_capture");
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes.buffer;
+      },
+      close: async () => {
+        if (!isTauri) return;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_close").catch(() => {});
+      },
+      goto: async (url) => {
+        if (!isTauri) return;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_goto", { url }).catch(() => {});
+      },
+      info: async () => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        return await invoke<LiveSiteInfo>("livesite_info").catch(() => null);
+      },
+      allow: async (hosts) => {
+        if (!isTauri) return;
+        const { invoke } = await import("@tauri-apps/api/core");
+        await invoke("livesite_allow", { hosts }).catch(() => {});
+      },
+      snapshot: async (url, w, h) => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        const b64 = await invoke<string>("livesite_snapshot", { url, w, h }).catch(() => null);
+        if (!b64) return null;
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return bytes.buffer;
+      },
+    },
+    adblock: {
+      status: async () => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        return await invoke<AdblockStatus>("adblock_status").catch(() => null);
+      },
+      setEnabled: async (enabled) => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        return await invoke<AdblockStatus>("adblock_set_enabled", { enabled }).catch(() => null);
+      },
+      refreshLists: async () => {
+        if (!isTauri) return null;
+        const { invoke } = await import("@tauri-apps/api/core");
+        return await invoke<AdblockStatus>("adblock_refresh_lists").catch(() => null);
+      },
+    },
     openExternal: (url) => openUrl(url),
     openPath: (p) => openPath(p),
     revealPath: (p) => revealPath(p),

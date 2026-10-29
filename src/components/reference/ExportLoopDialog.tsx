@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Repeat } from "lucide-react";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr, type LoopFormat } from "@/lib/bridge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -128,7 +128,7 @@ export function ExportLoopDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Repeat className="size-4" /> {t("exportLoop.title")}
+            <NetsuIcon name="export-loop" busy={busy} /> {t("exportLoop.title")}
           </DialogTitle>
           <DialogDescription>{t("exportLoop.subtitle")}</DialogDescription>
         </DialogHeader>
