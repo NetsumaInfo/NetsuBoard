@@ -11,7 +11,6 @@ src-tauri/            Rust shell: WebView2 window, HEVC flag, native mpv player,
 core/server.js        Node service, HTTP on 127.0.0.1, headless, port picked at launch
   ├─ media-server.js  /media (Range/seek) + /stream (live ffmpeg remux) + mediaGuard token
   ├─ ytstream.js      /ytstream — YouTube stream relayed through yt-dlp
-  ├─ appstatic.js     /app — the built renderer, served from resources in release
   ├─ rpc.js           POST /rpc + SSE /events
   ├─ reference.js     board scenes and assets (node:sqlite, JSON-file fallback)
   ├─ netsu.js + netsu/   `.netsu` project container (SQLite, chunked blobs)
@@ -37,7 +36,7 @@ binding. It never owns the Loro document, project keys, peer selection, or colla
 - **`NR_HOME`** = `%LOCALAPPDATA%\NetsuBoard` (`~/.netsuboard` elsewhere), overridable with the `NR_HOME` environment variable. It holds `nr.config.json`, the provisioned runtime, wallpapers and logs. It is deliberately **distinct** from NetsuRush's home: the two applications are installed side by side. Since 0.5.0 the **scene library and the asset store live there too** (`DATA_DIR`, `~/.netsuboard` when `NR_HOME` is unset) — they used to sit in `~/.netsurush`, shared with NetsuRush, where a cleanup on either side could take the other's board media. An existing library is copied over once on first launch; the original is never moved. `identity.rs#board_data_dir` resolves the same root, and the two must not drift: Rust authorises media imports against the library the core wrote.
 - Opening the Vite URL in a plain browser renders the UI against `bridge.ts`'s no-op mock, so the layout is inspectable without the core.
 
-> **Inherited code.** `core/` also contains untrimmed NetsuRush modules (the Adobe bridge, the ML sidecars and the model manifest still read by the cache admin). `rpc.js` still registers some of their channels, but the board reaches none of it, and the `python/` folder those sidecars spawn no longer exists in this repository. Do not extend those modules.
+> **Inherited code.** `core/` also contains untrimmed NetsuRush modules (the ML sidecars and the model manifest still read by the cache admin). `rpc.js` still registers some of their channels, but the board reaches none of it, and the `python/` folder those sidecars spawn no longer exists in this repository. Do not extend those modules.
 
 ## IPC contract — three places, always
 

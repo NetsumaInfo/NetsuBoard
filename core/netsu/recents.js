@@ -8,8 +8,8 @@
 // liste, qui ne stocke QUE des chemins et un titre d'affichage : elle n'est jamais une source de
 // vérité sur le contenu, seulement un carnet d'adresses.
 //
-// Le fichier vit dans NR_HOME (écriture atomique, patron de core/prefs.js) : partagé par l'app, la
-// fenêtre détachée et le panneau CEP, qui n'ont pas le même `localStorage`.
+// Le fichier vit dans NR_HOME (écriture atomique, patron de core/prefs.js) : partagé par l'app et la
+// fenêtre détachée, qui n'ont pas le même `localStorage`.
 
 const path = require('node:path');
 const fs = require('node:fs');

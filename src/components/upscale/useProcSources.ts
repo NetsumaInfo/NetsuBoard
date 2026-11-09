@@ -7,7 +7,6 @@ import { errorText } from "@/lib/errorText";
 
 const SCOPE_KEY = "nr.netsulab.scope";
 const OUT_DIR_KEY = "nr.netsulab.outDir";
-const IMPORT_BACK_KEY = "nr.netsulab.importBack";
 const OUTPUT_NAMING_KEY = "nr.netsulab.outputNaming";
 const RENDER_HISTORY_KEY = "nr.netsulab.renders.v1";
 const REVIEWABLE_VIDEO = /\.(?:avi|m2ts|m4v|mkv|mov|mp4|mts|mxf|ts|webm)$/i;
@@ -195,11 +194,6 @@ export function useProcSources() {
   const outputBases = sources.map((source) => outputNameFor(source).toLocaleLowerCase());
   const outputNamingProblem: "duplicateOutputNames" | null =
     new Set(outputBases).size !== outputBases.length ? "duplicateOutputNames" : null;
-  const [importBack, setImportBackState] = useState(() => readPersistedValue(IMPORT_BACK_KEY, true));
-  const setImportBack = useCallback((value: boolean) => {
-    writePersistedValue(IMPORT_BACK_KEY, value);
-    setImportBackState(value);
-  }, []);
   const [sourcesErr, setSourcesErr] = useState<string | null>(null);
   const [renderHistory, setRenderHistory] = useState<RenderReview[]>(() => {
     const saved = readPersistedValue<unknown>(RENDER_HISTORY_KEY, []);
@@ -299,7 +293,7 @@ export function useProcSources() {
     scope, setScope, audioTracks,
     duration, range, setRange, setSourceRange,
     scenes, picked, detecting, detectScenes, toggleScene, setAllScenes,
-    outDir, chooseOut, importBack, setImportBack,
+    outDir, chooseOut,
     outputNaming, setOutputNaming, outputNamingOverrides, setOutputNamingOverride, outputNamingOverrideFor, outputNamingFor, outputNameFor, outputNamingProblem,
     sourcesErr, setSourcesErr,
     renderedForActive, activeRender, renderReviewOpen,

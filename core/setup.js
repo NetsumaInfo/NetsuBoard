@@ -48,8 +48,7 @@ const SETUP_LABELS = {
 
 // Aucune sélection à assainir : le provisionnement pose le MÊME socle pour tout le monde — ffmpeg,
 // les shaders GLSL et yt-dlp. NetsuBoard n'exécute aucun modèle (l'upscale est du GLSL passé à
-// libplacebo), donc il n'y a ni module ni poids à choisir, et l'extension CEP se synchronise seule
-// au démarrage (core/adobePanel.js) au lieu d'être une case du premier lancement.
+// libplacebo), donc il n'y a ni module ni poids à choisir.
 
 function mlEngineName(backend) {
   if (backend === 'cuda') return 'NVIDIA CUDA';

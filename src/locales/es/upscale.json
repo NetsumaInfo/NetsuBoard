@@ -88,7 +88,6 @@
     "depthFailed": "error del mapa de profundidad",
     "removebgFailed": "error al quitar fondo",
     "chainFailed": "error de la cadena",
-    "adobeImportFailed": "error al importar en Adobe",
     "upscaleUnavailable": "Escalado no disponible: {{err}}. Comprueba que el servicio core y el venv de Python estén activos (reinicia NetsuBoard).",
     "interpolateUnavailable": "Interpolación no disponible: {{err}}. Comprueba que el servicio core y el venv de Python estén activos (reinicia NetsuBoard).",
     "depthUnavailable": "Mapa de profundidad no disponible: {{err}}. Comprueba que el servicio core y el entorno de Python estén activos y reinicia NetsuBoard.",

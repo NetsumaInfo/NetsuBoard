@@ -3,7 +3,7 @@
 //  - Chargement PARESSEUX : seule la langue active est fetchée (chunks Vite par langue×namespace).
 //    Le fr est embarqué en dur (repli immédiat, jamais de clé manquante).
 //  - Init unique par renderer (importé au plus tôt dans main.tsx) → couvre Shell, la fenêtre
-//    Référence détachée et le panneau Adobe remote, qui contournent tous les gates.
+//    Référence détachée, qui contourne tous les gates.
 //
 // Convention de clés : namespace par feature (« derush », « voice »…), clé pointée « section.name ».
 // Dans un composant : useTranslation("derush") puis t("home.title"). Namespace « common » par défaut.
@@ -45,7 +45,6 @@ export const NAMESPACES = [
   "auth",
   "language",
   "derush",
-  "adobe",
   "dictate",
   "reference",
   "upscale",
@@ -146,9 +145,9 @@ i18n.use(initReactI18next).init({
  * ses ressources. Renvoie la langue effectivement activée.
  *
  * `fallback` = préférence app-wide lue côté core (`nr.config.json`). Elle sert quand ce renderer
- * n'a AUCUN choix local : c'est le cas du panneau CEP, qui tourne sur une autre origine que l'app
- * Tauri et n'hérite donc pas de son localStorage — sans elle il retombait sur la langue du système
- * en ignorant le choix de l'utilisateur. Un choix local explicite reste prioritaire.
+ * n'a AUCUN choix local : c'est le cas d'un renderer servi sur une autre origine que l'app
+ * Tauri (navigateur de dev), qui n'hérite donc pas de son localStorage — sans elle il retombait sur la
+ * langue du système en ignorant le choix de l'utilisateur. Un choix local explicite reste prioritaire.
  * Le lookup est fait par l'appelant : `i18n` ne doit dépendre de rien (le bridge, lui, importe i18n).
  */
 export async function initI18n(fallback?: LangCode): Promise<LangCode> {

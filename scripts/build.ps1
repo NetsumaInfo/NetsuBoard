@@ -32,7 +32,6 @@ $stageCore = Join-Path $res 'core'
 $stageScripts = Join-Path $res 'scripts'
 $stageShaders = Join-Path $res 'shaders'
 $stageWindows = Join-Path $res 'windows'
-$stageDist = Join-Path $res 'dist'
 $outDir = Join-Path $root 'src-tauri\target\release\bundle\nsis'
 $manifest = Get-Content (Join-Path $root 'package.json') -Raw | ConvertFrom-Json
 $artifactFilter = "$($manifest.name)_$($manifest.version)_*-setup.exe"
@@ -80,10 +79,10 @@ foreach ($d in @($stageCore, $stageScripts)) {
   New-Item -ItemType Directory -Force -Path $d | Out-Null
 }
 # tauri.conf.json embarque resources\**\* EN ENTIER : tout dossier oublie la part dans l'installeur.
-# Un stage NetsuRush laissait ainsi python\ et adobe-cep\ dans le paquet, alors que NetsuBoard
-# n'embarque aucun sidecar Python et ne pilote aucune application de montage. Le stage est donc une
+# Un stage NetsuRush laissait ainsi python dans le paquet, alors que NetsuBoard n'embarque aucun
+# sidecar Python. Le stage est donc une
 # liste FERMEE : ce qui n'y figure pas est supprime avant le bundle.
-$staged = @('bin', 'core', 'dist', 'scripts', 'shaders', 'windows')
+$staged = @('bin', 'core', 'scripts', 'shaders', 'windows')
 Get-ChildItem -Path $res -Directory -ErrorAction SilentlyContinue |
   Where-Object { $staged -notcontains $_.Name } |
   ForEach-Object {
@@ -105,12 +104,6 @@ $ps1Text = [System.IO.File]::ReadAllText((Join-Path $PSScriptRoot 'setup.ps1'), 
 
 # Aucun stage vendor/ML : OmniShotCut, NOVA-VAD, les poids Real-ESRGAN et sam2 appartenaient aux
 # modules IA, qui n existent plus ici. Seuls les shaders sont stages plus bas.
-
-# dist/ (renderer builde) -> resources/dist : sert la vue remote du panneau CEP en production
-# (core/appstatic.js expose /app quand NR_RESOURCE_DIR/dist/index.html existe).
-if (Test-Path $stageDist) { Remove-Item -Recurse -Force $stageDist }
-New-Item -ItemType Directory -Force -Path $stageDist | Out-Null
-Copy-Item -Recurse -Force (Join-Path $root 'dist\*') $stageDist
 
 # Shaders Turbo (GLSL libplacebo, MIT) -> resources/shaders (lus via NR_RESOURCE_DIR/shaders).
 # Prefere la copie locale vendor/shaders (offline garanti) ; sinon telechargement best-effort.

@@ -11,7 +11,7 @@
 //                jusqu'au dernier checkpoint, ce qui est le bon compromis pour un autosave.
 //
 // `rev` s'incrémente à chaque transaction d'écriture. C'est le compteur que les fenêtres (board
-// détaché, panneau CEP) suivront pour ne recharger que ce qui a bougé, sur le patron de
+// détaché) suivront pour ne recharger que ce qui a bougé, sur le patron de
 // core/prefs.js — un renderer ne lit jamais le fichier directement, seul le core écrit.
 
 const fs = require('node:fs');

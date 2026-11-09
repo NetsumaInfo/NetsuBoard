@@ -1,7 +1,5 @@
 // Types partagés du store (onglets, vue derush).
-export type TabId = "derush" | "search" | "reference" | "notebook" | "script" | "upscale" | "voice" | "chat" | "optimisation" | "transfer" | "adobe" | "settings";
-// Hôte cible actif : l'app Adobe jointe par le panneau CEP. Persisté (localStorage nr.activeHost).
-export type HostId = "ppro" | "aeft";
+export type TabId = "derush" | "search" | "reference" | "notebook" | "script" | "upscale" | "voice" | "chat" | "optimisation" | "transfer" | "settings";
 export type DerushView = "home" | "browser";
 // Sous-onglet de l'onglet Derush : découpage (flux existant), collections (bibliothèque), timeline live.
 export type DerushSection = "decoupage" | "collections" | "timeline";

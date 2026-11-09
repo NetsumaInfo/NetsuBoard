@@ -49,7 +49,7 @@ test('the renderer shares the settings that make a rush read as "already cut"', 
   const detection = fs.readFileSync(path.join(root, 'src', 'components', 'rushes', 'useShotDetection.ts'), 'utf8');
 
   // Le cache de plans est indexé sur (fichier, modèle, seuil, options) : ces trois-là DOIVENT être
-  // partagés, sinon le panneau CEP redemande une détection déjà faite dans l'app.
+  // partagés, sinon une fenêtre détachée redemande une détection déjà faite dans l'app.
   for (const key of ['cutModel', 'cutPreset', 'detectionOptions', 'exportProfiles', 'timelineInsertions']) {
     assert.match(hook, new RegExp(`${key}: state\\.${key}`), key);
   }

@@ -1,4 +1,4 @@
-// Carte des Paramètres : 9 pages thématiques, chacune découpée en onglets. Source UNIQUE, lue par la
+// Carte des Paramètres : 8 pages thématiques, chacune découpée en onglets. Source UNIQUE, lue par la
 // sous-nav de la barre de titre (App), par la nav latérale et par le routeur (SettingsPanel) — sans
 // elle les trois listes divergeraient. Données pures (ids + icônes + clés i18n) : aucun composant de
 // page ici, sinon la barre de titre tirerait tout le code des Paramètres au démarrage.
@@ -8,18 +8,15 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { AiIndexingGlyph } from "@/components/reference/netsuIcons";
-import { AdobeLogo } from "@/components/HostIcon";
 import { DiscordIcon } from "@/components/DiscordIcon";
 
-export type SettingsPage = "account" | "interface" | "media" | "ai" | "export" | "adobe" | "storage" | "system" | "about";
+export type SettingsPage = "account" | "interface" | "media" | "ai" | "export" | "storage" | "system" | "about";
 
 type Icon = ComponentType<{ className?: string }>;
 
 interface SettingsTabDef {
   id: string;
   icon: Icon;
-  /** Rendu pleine largeur, hors de la colonne de lecture (pont Adobe : cartes de statut + snapshot). */
-  wide?: boolean;
 }
 
 export interface SettingsPageDef {
@@ -65,10 +62,7 @@ export const SETTINGS_PAGES: SettingsPageDef[] = [
       { id: "indexing", icon: AiIndexingGlyph },
     ],
   },
-  // Export et Adobe restent DEUX entrées de la nav : le pont Adobe est une destination qu'on cherche
-  // par son nom — enfoui en onglet d'une page « Montage », il devenait introuvable.
   { id: "export", icon: Download, tabs: [{ id: "export", icon: Download }] },
-  { id: "adobe", icon: AdobeLogo, tabs: [{ id: "adobe", icon: AdobeLogo, wide: true }] },
   {
     id: "storage",
     icon: HardDrive,

@@ -88,7 +88,6 @@
     "depthFailed": "depth map failed",
     "removebgFailed": "background removal failed",
     "chainFailed": "chain failed",
-    "adobeImportFailed": "Adobe import failed",
     "upscaleUnavailable": "Upscale unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
     "interpolateUnavailable": "Interpolation unavailable: {{err}}. Check that the core service and the Python venv are running (restart NetsuBoard).",
     "depthUnavailable": "Depth map unavailable: {{err}}. Check that the core service and the Python environment are running, then restart NetsuBoard.",

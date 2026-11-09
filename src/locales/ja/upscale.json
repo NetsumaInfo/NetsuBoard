@@ -88,7 +88,6 @@
     "depthFailed": "深度マップの生成に失敗",
     "removebgFailed": "背景除去失敗",
     "chainFailed": "チェーン失敗",
-    "adobeImportFailed": "Adobe への読み込みに失敗",
     "upscaleUnavailable": "アップスケールを利用できません：{{err}}。core サービスと Python venv が動いているか確認してください（NetsuBoard を再起動）。",
     "interpolateUnavailable": "補間を利用できません：{{err}}。core サービスと Python venv が動いているか確認してください（NetsuBoard を再起動）。",
     "depthUnavailable": "深度マップを利用できません：{{err}}。core サービスと Python 環境が動いているか確認してから、NetsuBoard を再起動してください。",

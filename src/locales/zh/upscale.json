@@ -88,7 +88,6 @@
     "depthFailed": "深度图生成失败",
     "removebgFailed": "抠像失败",
     "chainFailed": "处理链失败",
-    "adobeImportFailed": "Adobe 导入失败",
     "upscaleUnavailable": "超分不可用：{{err}}。检查 core 服务和 Python venv 是否运行（重启 NetsuBoard）。",
     "interpolateUnavailable": "插帧不可用：{{err}}。检查 core 服务和 Python venv 是否运行（重启 NetsuBoard）。",
     "depthUnavailable": "深度图不可用：{{err}}。请检查 core 服务和 Python 环境是否在运行，然后重启 NetsuBoard。",

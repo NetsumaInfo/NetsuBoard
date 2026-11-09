@@ -8,9 +8,8 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Rendu « en remote » (iframe dans le panneau CEP Adobe) : l'app est servie sur localhost mais
-         n'est PAS dans Tauri → on force l'URL du service core via ?core=... AVANT le chargement du
-         bridge (sinon il tomberait en mock). ?remote=1 = mode panneau compact (cf. App.tsx). -->
+    <!-- Browser preview outside Tauri: ?core=<url> pins the core service URL BEFORE the bridge loads
+         (otherwise it would fall back to the mock). -->
     <script>
       (function () {
         try {
@@ -20,9 +19,6 @@
           var p = new URLSearchParams(location.search);
           var core = p.get("core");
           if (core) window.__NR_CORE__ = core;
-          if (p.get("remote") === "1") window.__NR_REMOTE__ = true;
-          var host = p.get("host");
-          if (host) window.__NR_HOST__ = host;
         } catch (e) {}
       })();
     </script>

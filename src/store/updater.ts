@@ -40,7 +40,7 @@ let pendingUpdate: Awaited<ReturnType<typeof import("@tauri-apps/plugin-updater"
 /**
  * L'updater passe par le plugin Tauri : il ne dépend NI du core Node NI du réseau applicatif.
  * C'est ce qui permet de proposer une mise à jour depuis l'écran d'installation quand le core
- * est mort. Hors application (navigateur, panneau CEP), il n'y a rien à mettre à jour.
+ * est mort. Hors application (navigateur), il n'y a rien à mettre à jour.
  */
 export function updaterAvailable() {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;

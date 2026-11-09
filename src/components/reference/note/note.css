@@ -23,7 +23,7 @@
 }
 
 /* Bloc « Bascule » replié (data-toggle-open="false") : masque le groupe de blocs enfants indentés.
-   `:has` = Chromium 105+ (WebView2 récent ; l'app ne tourne PAS dans le vieux CEF du panneau Adobe). */
+   `:has` = Chromium 105+ (WebView2 récent). */
 .bn-block-outer:has(> .bn-block > .bn-block-content[data-content-type="toggle"] [data-toggle-open="false"]) > .bn-block > .bn-block-group {
   display: none;
 }

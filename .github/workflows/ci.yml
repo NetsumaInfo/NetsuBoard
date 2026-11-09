@@ -44,20 +44,18 @@ jobs:
       - name: Type-check du service core
         run: npm run check:core
       # Suites en QUARANTAINE : elles échouent depuis la séparation d'avec NetsuRush (modules Resolve,
-      # Adobe, transfert et sidecars Python que l'application n'atteint plus, ou dont le `python/`
+      # transfert et sidecars Python que l'application n'atteint plus, ou dont le `python/`
       # a disparu). Elles sont listées UNE PAR UNE et non exclues par motif : chaque ligne retirée est
       # une suite réparée, et rien de nouveau ne peut se glisser dans la liste sans être vu en revue.
       # Elles restent exécutées par le job informatif ci-dessous.
       - name: Tests Node (hors quarantaine)
         run: |
-          node --test $(ls test/*.test.cjs | grep -vxF -e test/adobe-jsx-es3.test.cjs \
-            -e test/adobe-timeline-live.test.cjs \
-            -e test/cache-lifecycle.test.cjs -e test/dictation-microphone.test.cjs \
+          node --test $(ls test/*.test.cjs | grep -vxF -e test/cache-lifecycle.test.cjs \
+            -e test/dictation-microphone.test.cjs \
             -e test/export-black-pause.test.cjs \
             -e test/netsulab-interpolate.test.cjs -e test/netsulab-upscale.test.cjs \
             -e test/packaging.test.cjs -e test/preview-generation.test.cjs \
             -e test/shared-prefs.test.cjs -e test/transfer-encoding.test.cjs \
-            -e test/transfer-place-jsx.test.cjs -e test/transfer-ppro-units.test.cjs \
             )
 
   vitest:

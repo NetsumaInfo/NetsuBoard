@@ -685,6 +685,6 @@ export function displaySrc(kind: ItemKind, ref: string): string {
   // core partage son origine avec /rpc et le flux d'événements, et un webview n'ouvre que 6
   // connexions par origine : un board qui monte des dizaines de médias les mettait tous en file
   // derrière quatre créneaux libres. Le protocole asset est intercepté dans le processus, sans
-  // socket. Hors Tauri (navigateur, panneau CEP), `assetUrl` retombe de lui-même sur /media.
+  // socket. Hors Tauri (navigateur), `assetUrl` retombe de lui-même sur /media.
   return nr.assetUrl(ref);
 }

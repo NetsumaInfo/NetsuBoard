@@ -9,9 +9,6 @@
 *.cmd text eol=crlf
 *.nsh text eol=crlf
 
-# Adobe CEP extension: loaded by an old CEF engine, on Windows only.
-adobe-cep/**/*.jsx text eol=crlf
-
 # Binaries — never converted, never diffed as text.
 *.png binary
 *.ico binary

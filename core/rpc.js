@@ -23,7 +23,6 @@ const { createUpscaleLedger } = require("./upscaleLedger"); // registre des sort
 const netsu = require("./netsu"); // format de partage « .netsu » (board → conteneur SQLite type-routé)
 const extract = require("./extract"); // yt-dlp / gallery-dl : extraction du vrai média d'un lien
 const netsuSidecar = require("./netsu/sidecar");
-const { createAdobeBridge } = require("./adobe"); // pont Adobe : panneau CEP Premiere/AE ↔ core
 const setup = require("./setup"); // provisionnement 1er lancement (venv/ffmpeg/poids)
 const ytdlp = require("./ytdlpUpdate"); // yt-dlp : état + mise à jour à la demande (la lib rote vite)
 const compatibility = require('./compatibility'); // matériel + runtimes IA/encodage réellement actifs
@@ -56,10 +55,6 @@ function createRpc() {
   logbus.attach(broadcast);
 
   const refStore = createReferenceStore(DATA_DIR);
-  const adobeBridge = createAdobeBridge({ CONFIG, broadcast });
-  // Le panneau CEP est une COPIE dans %APPDATA% : une mise à jour de NetsuRush ne la touche pas.
-  // On la resynchronise au démarrage (différé, jamais bloquant) quand elle est en retard.
-  setTimeout(() => { adobeBridge.syncPanel().catch(() => {}); }, 1500);
 
   // Paramètres › Stockage. L'index est un singleton (thumbs/proxy/ffmpeg y écrivent sans injection) ;
   // on réutilise la même instance ici pour que lectures et écritures partagent le tampon.
@@ -212,14 +207,6 @@ function createRpc() {
     },
 
 
-    // --- Pont Adobe (panneau CEP Premiere/AE ↔ core) ---
-    "adobe:status": () => adobeBridge.status(),
-    "adobe:snapshot": ([app]) => adobeBridge.snapshot(app),
-    "adobe:launch": ([app]) => adobeBridge.launch(app),
-    "adobe:cmd": ([app, payload]) => adobeBridge.cmd(ev, app, payload),
-    "adobe:installPanel": () => adobeBridge.installPanel(),
-    "adobe:setPanelAutoUpdate": ([on]) => adobeBridge.setPanelAutoUpdate(on),
-    "adobe:import": ([opts]) => adobeBridge.importMedia(ev, opts || {}),
 
     // --- Board de référence (saveAsset binaire : transport base64 à finaliser en P4) ---
     "reference:listScenes": () => refStore.listScenes(),
@@ -386,7 +373,7 @@ function createRpc() {
     const segs = inSec != null && outSec != null ? [{ in: inSec, out: outSec }] : undefined;
     const r = await turbo.runTurbo(sidecars, event, {
       input: src, shader, scale, codec: "hevc_nvenc", outDir: refStore.assetsDir,
-      whole: !segs, segments: segs, importBack: false, baseName: base,
+      whole: !segs, segments: segs, baseName: base,
     });
     if (!r || !r.ok || !r.outputs || !r.outputs.length) return { ok: false, error: (r && r.error) || t("upscaleFailed") };
     return { ok: true, path: remember(r.outputs[0]) };

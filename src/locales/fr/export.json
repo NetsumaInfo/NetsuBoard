@@ -28,13 +28,6 @@
     "insertionAbove": "Placer au-dessus",
     "insertionEnd": "Ajouter à la fin",
     "insertionRippleOverwrite": "Écraser avec décalage",
-    "aeftInsertion": {
-      "insert": "Insérer et décaler les calques",
-      "replace": "Remplacer le calque",
-      "fit": "Adapter à la durée du calque",
-      "above": "Ajouter au-dessus des calques",
-      "end": "Ajouter en fin de composition"
-    },
     "container": "Conteneur",
     "mergeToOne": "Fusionner en un fichier",
     "fileName": "Nom des fichiers",

@@ -151,7 +151,6 @@ function reportEmbed(r, ctx, reportId) {
   addField(fields, 'Fréquence', r.frequencyLabel || r.frequency || '—');
   addField(fields, 'Module', r.moduleLabel || r.module || '—');
   addField(fields, 'Version', `v${(ctx && ctx.app && ctx.app.version) || '?'} · ${r.locale || '?'}`);
-  addField(fields, 'Hôte', `${r.activeHost || '—'} · ${r.hostConnected ? 'connecté' : 'hors ligne'}`);
   addField(fields, 'Testeur', reporterLine(r) || 'anonyme');
 
   // « Autre » ne dit rien dans une liste de rapports : le sujet nommé par le testeur passe en titre.

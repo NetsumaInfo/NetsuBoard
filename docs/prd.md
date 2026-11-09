@@ -100,8 +100,8 @@ Détail et justification dans `docs/invariants.md`. Les trois qui priment :
 
 - **Tout moteur d'upscale IA.** L'upscale reste des shaders : c'est la promesse « pas d'environnement
   ML », pas une étape vers un moteur neuronal.
-- **Tout pilotage d'un logiciel de montage.** Le pont Resolve, les ponts Adobe et le transfert de
-  timeline appartiennent à NetsuRush.
+- **Tout pilotage d'un logiciel de montage.** Aucun pont vers un logiciel de montage, aucun transfert de
+  timeline : ils appartiennent à NetsuRush.
 - **Tout backend de partage ou de collaboration.** Un projet est un fichier ; le partage est un
   fichier.
 - **Tout compte obligatoire.** La connexion Discord existe, mais elle est facultative et traversable :

@@ -11,7 +11,7 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
    (ja/zh n'ont pas de pluriel morphologique → même forme, mais garder les deux clés).
 3. **Ne jamais traduire** : noms propres, noms de modèles, formats, raccourcis clavier (`Espace`,
    `Ctrl+Z` → convention locale si usuelle, sinon garder), identifiants techniques.
-4. **Ton** : concis, direct, registre logiciel pro (comme Resolve/Premiere localisés). Pas de
+4. **Ton** : concis, direct, registre logiciel pro (comme Resolve localisé). Pas de
    familiarité excessive, pas de calque de l'anglais.
 5. **Longueur** : le minimum de mots qui dit exactement ce que fait la chose. Mots courants, un seul
    mot par notion (« qualité », pas « couleurs » pour la même chose). Garder tout fait utile :
@@ -68,20 +68,19 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 
 - **Produit / modules** : NetsuBoard, NetsuRush, Timeline Live. « Derush » n'en fait pas partie :
   c'est le métier, traduit par le mot local du tableau ci-dessus.
-- **Hôtes** : DaVinci Resolve, Resolve, Premiere Pro, After Effects, Fusion, Media Pool, Adobe.
+- **Hôtes** : DaVinci Resolve, Resolve, Fusion, Media Pool.
 - **Services** : Discord, Convex, YouTube, Hugging Face.
 - **Modèles / moteurs** : SigLIP2, Real-ESRGAN, Real-CUGAN, TransNetV2, OmniShotCut, Whisper,
   WhisperX, Parakeet, Canary, Silero, NOVA-VAD, SAM2, MatAnyone, RIFE, Depth Anything, BiRefNet,
   YuNet, SFace, MiniMax, Wan, ArtCNN.
-- **Formats / techno** : HEVC, H.264, mp4, mkv, SRT, VTT, FCPXML, ZXP, CEP, NVENC, ffmpeg, GPU, VRAM,
+- **Formats / techno** : HEVC, H.264, mp4, mkv, SRT, VTT, FCPXML, NVENC, ffmpeg, GPU, VRAM,
   RAM, FPS, ASR, VAD, HSB/RGB/hex.
 
 ## Conventions par langue
 
 - **Menus des logiciels hôtes** : un chemin cité (« Préférences ▸ Système ▸ Mémoire et GPU ») reprend
-  mot pour mot le libellé de Resolve / Premiere / After Effects DANS la langue de l'interface : les
-  trois logiciels existent dans les 6 langues. Vérifié sur Resolve 21.1, Premiere Pro 2026 et
-  After Effects 26 (textes livrés dans les logiciels).
+  mot pour mot le libellé de Resolve DANS la langue de l'interface : le logiciel existe dans les
+  6 langues. Vérifié sur Resolve 21.1 (textes livrés dans le logiciel).
 
 - **ja — espaces** : une espace demi-chasse entre le japonais et les lettres latines, les chiffres
   ou un placeholder (`NetsuBoard の設定`, `10 GB を超えたら`, `{{count}} 件`) ; aucune contre la

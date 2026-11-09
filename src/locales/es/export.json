@@ -28,13 +28,6 @@
     "insertionAbove": "Colocar encima",
     "insertionEnd": "Añadir al final",
     "insertionRippleOverwrite": "Sobrescribir con desplazamiento",
-    "aeftInsertion": {
-      "insert": "Insertar y desplazar capas",
-      "replace": "Reemplazar capa",
-      "fit": "Ajustar a la duración de la capa",
-      "above": "Añadir encima de las capas",
-      "end": "Añadir al final de la composición"
-    },
     "container": "Contenedor",
     "mergeToOne": "Unir en un archivo",
     "fileName": "Nombre de los archivos",

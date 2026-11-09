@@ -11,8 +11,6 @@ import { countLevels, getConsoleSnapshot, serializeConsole } from "@/lib/appCons
 import { bugRelay } from "@/lib/bugRelay";
 import { loadedDiscordProfile } from "@/components/settings/useDiscordProfile";
 import { buildReportText, redact, reportFileName } from "@/components/settings/console/bugReportShared";
-import { useApp } from "@/store";
-import { hostConnected } from "@/store/hostStatus";
 import { cn } from "@/lib/utils";
 
 type State = "idle" | "sending" | "sent" | "saved";
@@ -60,7 +58,6 @@ export function ErrorReportButton({
     setState("sending");
     const logs = getConsoleSnapshot();
     const counts = countLevels(logs);
-    const app = useApp.getState();
     const request: BugReportRequest = {
       category,
       categoryLabel: t(`settings:bugReport.categories.${category}`),
@@ -76,8 +73,6 @@ export function ErrorReportButton({
       // anonyme, jamais une attente — un rapport ne doit pas dépendre d'une session.
       contact: reporterIdentity(),
       locale: i18n.language,
-      activeHost: app.activeHost,
-      hostConnected: hostConnected(app),
       attachments: [],
       consoleLogs: redact(serializeConsole(logs)),
       consoleLogCount: logs.length,

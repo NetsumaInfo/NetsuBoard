@@ -28,13 +28,6 @@
     "insertionAbove": "Oben platzieren",
     "insertionEnd": "Am Ende anhängen",
     "insertionRippleOverwrite": "Ripple-Überschreiben",
-    "aeftInsertion": {
-      "insert": "Einfügen und Ebenen verschieben",
-      "replace": "Ebene ersetzen",
-      "fit": "An Ebenendauer anpassen",
-      "above": "Über den Ebenen hinzufügen",
-      "end": "Am Ende der Komposition hinzufügen"
-    },
     "container": "Container",
     "mergeToOne": "In eine Datei zusammenführen",
     "fileName": "Dateinamen",

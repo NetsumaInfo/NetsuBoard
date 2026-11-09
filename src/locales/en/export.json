@@ -28,13 +28,6 @@
     "insertionAbove": "Place on Top",
     "insertionEnd": "Append at End",
     "insertionRippleOverwrite": "Ripple Overwrite",
-    "aeftInsertion": {
-      "insert": "Insert and shift layers",
-      "replace": "Replace layer",
-      "fit": "Fit to layer duration",
-      "above": "Add above layers",
-      "end": "Append at composition end"
-    },
     "container": "Container",
     "mergeToOne": "Merge into one file",
     "fileName": "File names",

@@ -14,7 +14,6 @@ node_modules
 # Build output / TS incremental
 dist
 dist-ssr
-dist-cep/
 *.tsbuildinfo
 
 # Native addons / binaries (regenerable, never committed)
@@ -65,8 +64,6 @@ src-tauri/resources/bin/
 src-tauri/resources/core/
 src-tauri/resources/python/
 src-tauri/resources/scripts/
-src-tauri/resources/adobe-cep/
-src-tauri/resources/dist/
 src-tauri/resources/vendor/
 # Turbo shaders: build.ps1 overwrites this folder from vendor/shaders, otherwise
 # scripts/fetch-shaders.ps1 rebuilds it. The copy tracked here used to be PARTIAL (no ArtCNN R ONNX

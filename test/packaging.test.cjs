@@ -447,96 +447,6 @@ test('first-run setup never bypasses the gate when the core is temporarily unava
   assert.match(client, /core unreachable/);
 });
 
-// Le panneau CEP est une dépendance runtime du .exe au même titre que core/ ou python/ : sans le
-// stage `adobe-cep`, « Installer le panneau » échoue en bundle ; sans `dist`, la vue remote (mode
-// NOMINAL du panneau) n'a rien à charger puisqu'il n'y a pas de serveur Vite en production.
-test('the package script stages the Adobe CEP panel and the built renderer it serves', () => {
-  const script = fs.readFileSync(path.join(root, 'scripts', 'build.ps1'), 'utf8');
-  assert.match(script, /Join-Path \$root 'adobe-cep\\\*'/);
-  assert.match(script, /Join-Path \$root 'dist\\\*'/);
-
-  // Résolution côté core : les deux stages ne servent que s'ils sont lus sous NR_RESOURCE_DIR.
-  const panelInstall = fs.readFileSync(path.join(root, 'core', 'adobePanel.js'), 'utf8');
-  assert.match(panelInstall, /NR_RESOURCE_DIR/);
-  assert.match(panelInstall, /'adobe-cep', 'CSXS', 'manifest\.xml'/);
-  const appstatic = fs.readFileSync(path.join(root, 'core', 'appstatic.js'), 'utf8');
-  assert.match(appstatic, /NR_RESOURCE_DIR, 'dist'/);
-
-  // Assets RELATIFS obligatoires : servi sous /app/, un build en base "/" chercherait ses chunks
-  // à la racine du core et le panneau resterait blanc.
-  const vite = fs.readFileSync(path.join(root, 'vite.config.ts'), 'utf8');
-  assert.match(vite, /base:\s*"\.\/"/);
-
-  // La copie posée dans %APPDATA% ne suit AUCUNE mise à jour de l'app : sans resynchronisation au
-  // démarrage du core, un utilisateur qui a installé le panneau une fois reste bloqué sur sa version.
-  const rpc = fs.readFileSync(path.join(root, 'core', 'rpc.js'), 'utf8');
-  assert.match(rpc, /syncPanel\(\)/);
-
-  // Manifest : plage de version OUVERTE + CSXS 7.0, sinon Adobe rejette l'extension en SILENCE.
-  const manifest = fs.readFileSync(path.join(root, 'adobe-cep', 'CSXS', 'manifest.xml'), 'utf8');
-  assert.match(manifest, /Host Name="PPRO" Version="\[0\.0,99\.9\]"/);
-  assert.match(manifest, /Host Name="AEFT" Version="\[0\.0,99\.9\]"/);
-  assert.match(manifest, /RequiredRuntime Name="CSXS" Version="7\.0"/);
-});
-
-// La coquille n'a plus de barre à elle : Recharger/Fermer sont rendus par l'entête de l'app et
-// repassent par postMessage. Sans le couple accusé `ready` / chien de garde, un iframe resté blanc
-// enfermerait l'utilisateur dans un panneau vide sans aucun bouton pour en sortir.
-test('the CEP shell drives the remote view from the app header, with a load watchdog', () => {
-  const panel = fs.readFileSync(path.join(root, 'adobe-cep', 'js', 'panel.js'), 'utf8');
-  const html = fs.readFileSync(path.join(root, 'adobe-cep', 'index.html'), 'utf8');
-  const remote = fs.readFileSync(path.join(root, 'src', 'lib', 'remote.ts'), 'utf8');
-
-  assert.doesNotMatch(html, /remoteBar|btnRemoteReload|btnRemoteBack/);
-  assert.match(panel, /d\.type === "nr:panel"/);
-  assert.match(panel, /armReadyWatchdog/);
-  assert.match(panel, /appLoadTimeout/);
-  assert.match(remote, /type: "nr:panel"/);
-  assert.match(remote, /signalPanelReady/);
-});
-
-// NetsuBoost sur hôte Adobe : trois modules core neufs, et un canal `boost:*` par opération. Le stage
-// `core\*` les emporte déjà, mais l'affirmer explicitement est ce qui rend la règle vérifiable — un
-// module déplacé hors de `core/` casserait l'onglet en bundle sans rien casser en dev.
-test('the Adobe NetsuBoost modules ship and stay wired end to end', () => {
-  for (const relative of ['core/adobeBoost.js', 'core/adobeCache.js', 'core/adobePrefs.js']) {
-    assert.equal(fs.existsSync(path.join(root, relative)), true, `${relative} missing`);
-  }
-  const script = fs.readFileSync(path.join(root, 'scripts', 'build.ps1'), 'utf8');
-  assert.match(script, /Join-Path \$root 'core\\\*'/);
-
-  // Les 12 canaux doivent rester alignés aux TROIS endroits : un canal câblé à un seul est une dette
-  // immédiate — le renderer appellerait dans le vide, ou le mock navigateur planterait.
-  const channels = [
-    'diagnose', 'procs', 'scanCache', 'cleanCache', 'purge', 'hygiene',
-    'deletePreviews', 'prefs', 'applyPrefs', 'proxyAudit', 'attachProxies', 'setEnableProxies',
-  ];
-  const rpc = fs.readFileSync(path.join(root, 'core', 'rpc.js'), 'utf8');
-  const client = fs.readFileSync(path.join(root, 'src', 'lib', 'coreClient.ts'), 'utf8');
-  const bridge = fs.readFileSync(path.join(root, 'src', 'lib', 'bridge.ts'), 'utf8');
-  for (const channel of channels) {
-    const method = `boost${channel[0].toUpperCase()}${channel.slice(1)}`;
-    assert.ok(rpc.includes(`"boost:${channel}"`), `boost:${channel} absent de la table H`);
-    assert.ok(client.includes(`call("boost:${channel}"`), `boost:${channel} absent de coreClient`);
-    assert.ok(bridge.includes(`${method}(`), `${method} absent de NrApi`);
-    assert.ok(bridge.includes(`${method}: async`), `${method} absent du mock navigateur`);
-  }
-
-  // La progression de « fermer → purger → rouvrir » n'a de sens que si quelqu'un l'écoute.
-  const boost = fs.readFileSync(path.join(root, 'core', 'adobeBoost.js'), 'utf8');
-  assert.match(boost, /broadcast\("boost:progress"/);
-  assert.match(client, /on\("boost:progress"/);
-
-  // Les opérations envoyées à l'hôte doivent exister dans les jsx, sinon elles reviennent en
-  // « opération inconnue » — visible au runtime seulement, c'est-à-dire jamais ici.
-  const shared = fs.readFileSync(path.join(root, 'src', 'components', 'optimize', 'boost', 'boostShared.ts'), 'utf8');
-  const aeft = fs.readFileSync(path.join(root, 'adobe-cep', 'jsx', 'host-aeft.jsx'), 'utf8');
-  const ppro = fs.readFileSync(path.join(root, 'adobe-cep', 'jsx', 'host-ppro.jsx'), 'utf8');
-  for (const id of ['memory', 'image', 'undo', 'snapshot', 'all']) assert.ok(shared.includes(`"${id}"`), `cible de purge ${id} absente`);
-  for (const mode of ['removeUnused', 'consolidate']) assert.ok(aeft.includes(`"${mode}"`), `hygiène AE ${mode} absente du jsx`);
-  assert.ok(ppro.includes('"consolidateDuplicates"'), 'hygiène Premiere absente du jsx');
-});
-
 // Le Node bundlé n'est pas celui du développeur : `node:sqlite` n'existe sans drapeau qu'à partir de
 // 22.13, et en dessous TOUTES les bases du core (bibliothèque, collections, carnet, scripts, board,
 // index de cache) retombaient en silence sur leur repli JSON dans l'application installée.
@@ -720,7 +630,7 @@ test('uninstall cleanup preserves personal data unless explicitly selected', () 
   assert.match(post, /\$\{If\} \$LOCALAPPDATA != ""/);
 
   // Aucun chemin de NetsuRush : les deux applications s'installent côte à côte et désinstaller
-  // l'une ne doit jamais emporter le home, les données ou le panneau CEP de l'autre.
+  // l'une ne doit jamais emporter le home, les données ou les caches de l'autre.
   assert.doesNotMatch(code, /netsurush/i);
 
   // Aucun script déposé dans %TEMP% et relancé en PowerShell : c'est le motif que les classifieurs

@@ -116,7 +116,6 @@ export interface UpscaleOpts extends ProcessExportOpts {
   outDir: string;
   whole?: boolean;         // rush entier
   segments?: { in: number; out: number }[];   // plage (1) ou plans sélectionnés (N)
-  importBack?: boolean;    // AddItemListToMediaPool des sorties
   baseName?: string;       // nom de base du fichier (sinon dérivé de input)
   outputName?: string;     // nom final choisi par l'utilisateur, sans extension ni suffixe automatique
 }
@@ -124,7 +123,6 @@ export interface UpscaleOpts extends ProcessExportOpts {
 export interface UpscaleResult {
   ok: boolean;
   outputs?: string[];
-  imported?: number;
   total?: number;
   failed?: number;
   error?: string | null;
@@ -167,7 +165,6 @@ export interface UpscaleShaderOpts extends ProcessExportOpts {
   outDir: string;
   whole?: boolean;
   segments?: { in: number; out: number }[];
-  importBack?: boolean;
   baseName?: string;
   outputName?: string;
   parallel?: boolean;
@@ -220,73 +217,6 @@ export type ProcMode = "upscale" | "interpolate" | "depth" | "removebg";
 // ---- Pipeline ordonné (chaîne de transforms) -------------------------------
 // Ops chaînables (vidéo→vidéo). Depth/matte sont DÉRIVÉS → hors chaîne.
 export type PipelineOpKind = "upscale" | "interpolate";
-
-// --- Pont Adobe (panneau CEP Premiere/AE ↔ core) — temps en SECONDES ---
-export type AdobeApp = "ppro" | "aeft";
-
-export interface AdobeClip {
-  name: string;
-  path: string | null;          // null = item synthétique (titre, solide…)
-  tlStart: number | null;       // position timeline (s)
-  tlEnd: number | null;
-  srcIn: number | null;         // trim source (s)
-  srcOut: number | null;
-  // ---- Vérité en FRAMES (Timeline Live). Optionnels : un panneau CEP plus ancien que ces champs
-  // envoie encore un snapshot valide, et le mapping retombe alors sur les secondes × fps.
-  srcFps?: number | null;       // fps de la SOURCE (≠ fps séquence/comp) — base des frames ci-dessous
-  direct?: boolean;             // false = bornes reportées en secondes depuis une séquence imbriquée
-  srcInFrame?: number | null;   // frames source INCLUSIVES (même convention que Resolve)
-  srcOutFrame?: number | null;
-  srcFrames?: number | null;    // longueur totale de la source ; null = inconnue (Premiere ne l'expose pas)
-  tlStartFrame?: number | null; // position timeline en frames de la séquence/comp
-}
-
-export interface AdobeSequence {
-  name: string;
-  fps: number | null;
-  w: number | null;
-  h: number | null;
-  // `name` = nom BRUT de la piste côté hôte (`Track.name`, lecture seule). Optionnel : un panneau
-  // CEP antérieur à ce champ envoie encore un snapshot valide, la piste garde alors son numéro.
-  tracks: { kind: "video" | "audio"; index: number; name?: string; clips: AdobeClip[] }[];
-}
-
-export interface AdobeSnapshot {
-  ok: boolean;
-  app: AdobeApp;
-  appVersion: string;
-  project: string;
-  projectPath: string | null;
-  // Séquence Premiere / comp AE OUVERTE au moment du scan : l'équivalent Adobe de la « timeline
-  // ouverte » de Resolve. Optionnel (panneau antérieur à ce champ → aucune destination par défaut).
-  activeSequence?: string | null;
-  at: number;
-  rushes: { path: string; name: string; fps: number | null; dur: number | null; w: number | null; h: number | null }[];
-  sequences: AdobeSequence[];
-}
-
-export interface AdobeAppStatus {
-  installed: boolean;
-  exe: string | null;
-  running: boolean;
-  panelConnected: boolean;      // heartbeat du panneau < 12 s
-  lastSnapshotAt: number | null;
-}
-
-export interface AdobeBridgeStatus {
-  ok: boolean;
-  ppro: AdobeAppStatus;
-  aeft: AdobeAppStatus;
-  panelInstalled: boolean;      // manifest présent dans %APPDATA%\Adobe\CEP\extensions
-  panelDir?: string;            // chemin d'installation du panneau (dossier extensions CEP)
-  panelVersion?: string | null;          // version livrée avec cette version de NetsuRush
-  panelInstalledVersion?: string | null; // version réellement posée dans Adobe
-  panelBuild?: string | null;            // empreinte COURTE du contenu livré : identifie le build
-  panelAutoUpdate?: boolean;             // réinstallation auto quand le panneau livré change
-  panelOutdated?: boolean;               // copie installée ≠ copie livrée (auto-update coupé)
-  panelUpdatedAt?: number | null;        // dernière mise à jour automatique
-  panelRestartApps?: AdobeApp[];         // apps ouvertes pendant l'installation → à redémarrer
-}
 
 // ---- Provisionnement 1er lancement (app packagée) -------------------------
 export interface SetupItem {
@@ -399,7 +329,7 @@ export interface SetupRunResult {
   verified?: boolean;
 }
 // `setup:run` ne prend AUCUNE option : le socle est le même pour tout le monde, il n'y a ni module
-// ni modèle à choisir. L'extension CEP se pose par `adobe:installPanel`, pas par le provisionnement.
+// ni modèle à choisir.
 
 export interface PlayInfo {
   duration: number;
@@ -911,8 +841,6 @@ export interface BugReportRequest {
   manualSpecs?: string | null;
   contact?: { discordId?: string | null; discordName?: string | null; text?: string | null } | null;
   locale?: string | null;
-  activeHost?: string | null;
-  hostConnected?: boolean;
   /** Pièces jointes : captures, vidéos, fichiers. */
   attachments: { name: string; mimeType: string; sizeBytes: number; dataBase64: string }[];
   consoleLogs: string;
@@ -994,14 +922,6 @@ export interface NrApi {
   // Codecs réellement encodables sur cette machine (sonde ffmpeg cachée côté core) → l'UI masque le
   // reste. `force` relance la sonde en ignorant le cache.
   exportCapabilities(opts?: { force?: boolean }): Promise<ExportCapabilitiesResult>;
-  // Pont Adobe : statut apps/panneau, snapshot projet lu par le panneau CEP, lancement, scan à distance.
-  adobeStatus(): Promise<AdobeBridgeStatus>;
-  adobeSnapshot(app: AdobeApp): Promise<AdobeSnapshot | null>;
-  adobeLaunch(app: AdobeApp): Promise<{ ok: boolean; already?: boolean; error?: string }>;
-  adobeScan(app: AdobeApp): Promise<{ ok: boolean }>;
-  adobeImport(app: AdobeApp, paths: string[]): Promise<{ ok: boolean; count?: number; error?: string }>;
-  adobeInstallPanel(): Promise<{ ok: boolean; dir?: string; debugSet?: string[]; restart?: AdobeApp[]; version?: string | null; error?: string }>;
-  adobeSetPanelAutoUpdate(on: boolean): Promise<{ ok: boolean; autoUpdate?: boolean; error?: string }>;
   upscaleRun(opts: UpscaleOpts): Promise<UpscaleResult>;
   upscaleShaderRun(opts: UpscaleShaderOpts): Promise<UpscaleResult>;
   upscaleTestFrame(opts: UpscaleFrameOpts): Promise<UpscaleFrameResult>;
@@ -1032,8 +952,8 @@ export interface NrApi {
   // attend juste un créneau de connexion.
   //
   // Sous Tauri on passe donc par le protocole ASSET (`convertFileSrc`) : la requête est interceptée
-  // dans le processus par la coquille Rust, sans socket ni pool de connexions. Hors Tauri (panneau
-  // CEP, navigateur) il n'existe pas → repli sur `mediaUrl`.
+  // dans le processus par la coquille Rust, sans socket ni pool de connexions. Hors Tauri
+  // (navigateur) il n'existe pas → repli sur `mediaUrl`.
   assetUrl(filePath: string): string;
   // Flux d'une vidéo YouTube relayé par le core (yt-dlp résout, le core relaie) : source d'un
   // `<video>` ordinaire, donc AUCUN habillage YouTube — cf. core/ytstream.js.
@@ -1189,18 +1109,6 @@ const mock: NrApi = {
   // Hors app : aucune sonde possible → ok:false, donc le renderer ne masque AUCUN codec (l'UI se rend
   // entière dans un navigateur au lieu d'un menu de codecs vide).
   exportCapabilities: async () => ({ ok: false, codecs: [], cpuCodecs: [], hasGpuEncoder: false, hwEncoders: [], codecEncoderOptions: {}, error: "mock" }),
-  adobeStatus: async () => ({
-    ok: false,
-    ppro: { installed: false, exe: null, running: false, panelConnected: false, lastSnapshotAt: null },
-    aeft: { installed: false, exe: null, running: false, panelConnected: false, lastSnapshotAt: null },
-    panelInstalled: false,
-  }),
-  adobeSnapshot: async () => null,
-  adobeLaunch: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-  adobeScan: async () => ({ ok: false }),
-  adobeImport: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-  adobeInstallPanel: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
-  adobeSetPanelAutoUpdate: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
   upscaleRun: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
   upscaleShaderRun: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
   upscaleTestFrame: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),

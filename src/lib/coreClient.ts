@@ -17,7 +17,7 @@ const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window
 // URL d'un fichier local servie par la coquille Rust (protocole `asset`), ou null hors Tauri.
 // Import STATIQUE volontaire : la fonction est synchrone (elle alimente un `src=` en plein rendu),
 // un import à la demande imposerait une promesse à chaque vignette. Le module ne touche à rien à
-// l'évaluation — il lit `__TAURI_INTERNALS__` seulement à l'appel — donc il reste inerte en CEP.
+// l'évaluation — il lit `__TAURI_INTERNALS__` seulement à l'appel — donc il reste inerte hors Tauri.
 //
 // `convertFileSrc` fabrique l'URL côté JS : elle réussit MÊME si la coquille ne sert pas le
 // protocole (binaire compilé avant l'activation d'`assetProtocol`). On sonde donc une fois : un
@@ -287,8 +287,6 @@ function on(channel: string, cb: (p: unknown) => void): () => void {
 }
 
 // ---- Plugins Tauri (chargés paresseusement, no-op hors Tauri) ----
-const VIDEO_EXT = ["mp4", "mov", "mkv", "avi", "m4v", "mxf", "webm", "wmv", "flv", "ts", "m2ts", "mpg", "mpeg"];
-const IMAGE_EXT = ["jpg", "jpeg", "png", "tif", "tiff", "bmp", "webp", "gif", "dpx", "exr"];
 
 async function dlgOpen(opts: Record<string, unknown>): Promise<string | string[] | null> {
   if (!isTauri) return null;
@@ -324,10 +322,6 @@ async function dlgSave(defaultPath?: string): Promise<string | null> {
   return await save({ defaultPath, filters });
 }
 
-// Rendu « en remote » (iframe dans le panneau CEP Adobe) : pas de dialogue Tauri. On demande au
-// panneau PARENT d'ouvrir le sélecteur de fichiers NATIF de CEP (chemins disque réels) via postMessage.
-const isRemote = typeof window !== "undefined" && !!(window as unknown as { __NR_REMOTE__?: boolean }).__NR_REMOTE__;
-
 // `maybe` signifie seulement que le conteneur semble plausible, pas que le codec sera décodé.
 // Règle retenue : accepter `probably`, ou la confirmation MediaSource.
 function browserSupportsMime(video: HTMLVideoElement, mime: string): boolean {
@@ -335,20 +329,6 @@ function browserSupportsMime(video: HTMLVideoElement, mime: string): boolean {
   const mse = typeof MediaSource !== "undefined" && typeof MediaSource.isTypeSupported === "function"
     && MediaSource.isTypeSupported(mime);
   return direct || mse;
-}
-
-// Le panneau distant demande toujours le MP4 H.264, format vidéo le plus compatible de ce flux.
-let _remoteCodec: "h264" | null = null;
-function remoteProxyCodec(): "h264" {
-  if (_remoteCodec) return _remoteCodec;
-  let c: "h264" = "h264";
-  try {
-    const v = document.createElement("video");
-    if (browserSupportsMime(v, 'video/mp4; codecs="avc1.42E01E"')) c = "h264";
-  } catch { /* garde H.264 */ }
-  _remoteCodec = c;
-  try { console.info("[NetsuRush] preview codec (remote):", c); } catch { /* noop */ }
-  return c;
 }
 
 // Le standalone Tauri utilise le WebView2 installé sur le PC, dont la disponibilité HEVC varie
@@ -372,22 +352,6 @@ function standaloneProxyCodec(): "hevc" | "h264" {
   try { console.info("[NetsuRush] preview codec (WebView2):", c); } catch { /* noop */ }
   return c;
 }
-function requestParentFiles(multiple: boolean, exts: string[]): Promise<string[] | null> {
-  return new Promise((resolve) => {
-    if (typeof window === "undefined" || window.parent === window) return resolve(null);
-    const id = `nrfiles-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    const onMsg = (e: MessageEvent) => {
-      const d = e.data as { type?: string; id?: string; paths?: string[] } | null;
-      if (!d || d.type !== "nr:files:result" || d.id !== id) return;
-      window.removeEventListener("message", onMsg);
-      resolve(Array.isArray(d.paths) && d.paths.length ? d.paths : null);
-    };
-    window.addEventListener("message", onMsg);
-    window.parent.postMessage({ type: "nr:files", id, multiple, exts }, "*");
-    setTimeout(() => { window.removeEventListener("message", onMsg); resolve(null); }, 120000);
-  });
-}
-
 async function openUrl(url: string): Promise<boolean> {
   if (!/^https?:\/\//i.test(url)) return false;
   try {
@@ -613,11 +577,9 @@ export function makeCoreClient(): NrApi {
     audioTracks: (p) => call("ffmpeg:audioTracks", [p]),
     detectScenes: (p, threshold, model, options) => call("ffmpeg:detectScenes", [p, threshold, model, options]),
     cachedScenes: (p, model, threshold, options) => call("ffmpeg:cachedScenes", [p, model, threshold, options]),
-    // En remote (panneau CEP) → codec que le moteur SAIT lire : H.264 si dispo, sinon WebM/VP8
-    // (garanti dans tout Chromium, même un CEF sans codecs propriétaires). Sondé une fois.
     proxy: (opts) => {
       const request = { ...opts, settings: opts.settings ?? readPreviewSettings().proxy };
-      const automaticCodec = isRemote ? remoteProxyCodec() : isTauri ? standaloneProxyCodec() : undefined;
+      const automaticCodec = isTauri ? standaloneProxyCodec() : undefined;
       const codec = request.codec ?? (request.settings.format === "hevc" ? automaticCodec : undefined);
       return call("ffmpeg:proxy", [{ ...request, ...(codec ? { codec } : {}) }]);
     },
@@ -629,38 +591,20 @@ export function makeCoreClient(): NrApi {
     imageTiersResolve: (paths) => call("ffmpeg:imageTiersResolve", [paths]),
     imageTiersWarm: (paths) => call("ffmpeg:imageTiersWarm", [paths]),
     exportCapabilities: (opts) => call("export:capabilities", [opts ?? {}]),
-    adobeStatus: () => call("adobe:status"),
-    adobeSnapshot: (app) => call("adobe:snapshot", [app]),
-    adobeLaunch: (app) => call("adobe:launch", [app]),
-    adobeScan: (app) => call("adobe:cmd", [app, { cmd: "scan" }]),
-    adobeImport: (app, paths) => call("adobe:import", [{ app, paths }]),
-    adobeInstallPanel: () => call("adobe:installPanel"),
-    adobeSetPanelAutoUpdate: (on) => call("adobe:setPanelAutoUpdate", [on]),
     upscaleRun: (opts) => call("upscale:run", [opts]),
     upscaleShaderRun: (opts) => call("upscale:shaderRun", [opts]),
     upscaleTestFrame: (opts) => call("upscale:testFrame", [opts]),
     onUpscaleProgress: (cb) => on("upscale:progress", cb as (p: unknown) => void),
     chooseDir: () => dlgOpen({ directory: true }) as Promise<string | null>,
-    chooseFiles: () =>
-      isRemote
-        ? requestParentFiles(true, VIDEO_EXT)
-        : (trustedFileOpen("video", true) as Promise<string[] | null>),
-    chooseImages: () =>
-      isRemote
-        ? requestParentFiles(true, IMAGE_EXT)
-        : (trustedFileOpen("image", true) as Promise<string[] | null>),
+    chooseFiles: () => trustedFileOpen("video", true) as Promise<string[] | null>,
+    chooseImages: () => trustedFileOpen("image", true) as Promise<string[] | null>,
     chooseDocuments: async () => {
-      const picked = isRemote
-        ? await requestParentFiles(true, [])
-        : ((await trustedFileOpen("any", true)) as string[] | null);
+      const picked = (await trustedFileOpen("any", true)) as string[] | null;
       // The native dialog has no document filter; images and videos picked here still import as media.
       const docs = (picked ?? []).filter((p) => docTypeOf(p) !== null);
       return docs.length ? docs : null;
     },
-    chooseAnyFile: () =>
-      isRemote
-        ? requestParentFiles(false, []).then((a) => (a && a[0]) || null)
-        : (trustedFileOpen("any", false) as Promise<string | null>),
+    chooseAnyFile: () => trustedFileOpen("any", false) as Promise<string | null>,
     pathsForFiles: (files) => resolveFilePaths(files),
     warmFilePaths: () => { void ensurePathBridge(); },
     saveFile: (defaultName) => dlgSave(defaultName),

@@ -25,7 +25,6 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const { serveFile, streamMedia, mediaGuard } = require("./media-server");
-const { serveApp } = require("./appstatic");
 const { serveYoutube } = require("./ytstream");
 const { createRpc } = require("./rpc");
 const { killSidecars } = require("./sidecars");
@@ -79,8 +78,6 @@ const server = http.createServer((req, res) => {
       .end(JSON.stringify({ ok: true, app: "netsuboard", port: activePort, channels: rpc.channels.length }));
     return;
   }
-  // Renderer buildé sous /app (vue remote du panneau CEP en production, sans Vite).
-  if (serveApp(req, res, u)) return;
   if (u.pathname === "/media") {
     if (mediaGuard(req, res, u)) return;
     serveFile(req, res, u.searchParams.get("p"));
@@ -110,7 +107,7 @@ const server = http.createServer((req, res) => {
 
 let activePort = FIXED_PORT || PORT_FIRST;
 
-// Le port retenu est publié sur disque : les clients HORS processus (panneau CEP, diagnostic) n'ont
+// Le port retenu est publié sur disque : les clients HORS processus (diagnostic, nettoyage de session) n'ont
 // aucun autre moyen de le connaître, et le renderer Tauri, lui, le tient de la coquille.
 function publishPort(port) {
   process.env.NR_CORE_PORT = String(port); // hérité par les sidecars et le serveur MCP
@@ -118,7 +115,7 @@ function publishPort(port) {
     fs.mkdirSync(NR_HOME, { recursive: true });
     fs.writeFileSync(path.join(NR_HOME, "core-port.json"), JSON.stringify({ port, pid: process.pid, url: `http://${HOST}:${port}` }));
   } catch (error) {
-    console.warn("core: port not published (the Adobe panel will have to search for it)", String(error));
+    console.warn("core: port not published (out-of-process clients will have to search for it)", String(error));
   }
 }
 

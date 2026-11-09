@@ -28,13 +28,6 @@
     "insertionAbove": "置于上方",
     "insertionEnd": "添加到末尾",
     "insertionRippleOverwrite": "波纹覆盖",
-    "aeftInsertion": {
-      "insert": "插入并移动图层",
-      "replace": "替换图层",
-      "fit": "适配图层时长",
-      "above": "添加到图层上方",
-      "end": "添加到合成末尾"
-    },
     "container": "封装格式",
     "mergeToOne": "合并为单个文件",
     "fileName": "文件名",

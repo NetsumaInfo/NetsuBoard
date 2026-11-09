@@ -108,7 +108,7 @@ function baseRequest(over = {}) {
     frequency: 'always', frequencyLabel: 'À chaque fois', module: 'derush', moduleLabel: 'NetsuCut',
     issueText: 'L’app se ferme au lancement de la détection.',
     consoleLogCount: 12, errorCount: 3, warnCount: 1, redactionApplied: true,
-    locale: 'fr', activeHost: 'resolve', hostConnected: true,
+    locale: 'fr',
     ...over,
   };
 }

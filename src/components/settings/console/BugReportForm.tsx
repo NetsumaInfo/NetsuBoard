@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { nr, type BugReportRequest } from "@/lib/bridge";
-import { useApp } from "@/store";
-import { hostConnected } from "@/store/hostStatus";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,8 +84,6 @@ function Choice<T extends string>({ value, options, onChange, label }: {
 // Rien de ce qui a été écrit n'est perdu si l'envoi échoue : le rapport se télécharge.
 export function BugReportForm() {
   const { t, i18n } = useTranslation("settings");
-  const activeHost = useApp((s) => s.activeHost);
-  const connected = useApp(hostConnected);
   const { context } = useBugContext();
 
   const [logs, setLogs] = useState<ConsoleEntry[]>(() => getConsoleSnapshot());
@@ -148,8 +144,6 @@ export function BugReportForm() {
       manualSpecs: context ? null : manualSpecs.trim() || null,
       contact: identity,
       locale: i18n.language,
-      activeHost,
-      hostConnected: connected,
       attachments: files,
       consoleLogs: redacted,
       consoleLogCount: logs.length,

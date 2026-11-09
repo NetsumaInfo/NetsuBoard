@@ -44,8 +44,7 @@
 }
 
 /* Chip sombre des overlays de vignette (numéro, sélection, collection, timeline, durée). rgba EXPLICITE
-   (pas `bg-black/xx` = color-mix Tailwind v4) → s'affiche noir MÊME dans le vieux moteur CEF 99 du
-   panneau Adobe (color-mix = Chrome 111+, absent en CEF 99 → sinon fond transparent = chips invisibles). */
+   (pas `bg-black/xx` = color-mix Tailwind v4) → fond noir garanti, sans dépendre de color-mix. */
 .nr-chip { background-color: rgba(0, 0, 0, 0.72); }
 
 /* Carte des grilles d'aperçus (Découpage, Collections, Timeline Live). `content-visibility` est ce
@@ -411,7 +410,7 @@ html.nr-see-through:not(.nr-see-through-shell) .nr-chrome-page {
 .rdg::-webkit-scrollbar { width: 9px; height: 9px; }
 .rdg::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-fg) 20%, transparent); border-radius: 8px; }
 /* Bloc « Bascule » replié (data-toggle-open="false") : masque le groupe de blocs enfants indentés.
-   `:has` = Chromium 105+ (WebView2 récent ; l'app ne tourne PAS dans le vieux CEF du panneau Adobe). */
+   `:has` = Chromium 105+ (WebView2 récent). */
 .bn-block-outer:has(> .bn-block > .bn-block-content[data-content-type="toggle"] [data-toggle-open="false"]) > .bn-block > .bn-block-group {
   display: none;
 }

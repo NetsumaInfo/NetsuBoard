@@ -1,5 +1,5 @@
 // Canal de publication de l'app. SOURCE UNIQUE du badge « BETA » (barre de titre, écran de
-// connexion, panneau CEP, À propos) : passer à "stable" fait disparaître le badge partout d'un
+// connexion, À propos) : passer à "stable" fait disparaître le badge partout d'un
 // seul coup, sans chasser les libellés dans les composants.
 type ReleaseChannel = "beta" | "stable";
 

@@ -3,9 +3,9 @@
 // Préférences PARTAGÉES entre les renderers de NetsuRush.
 //
 // Pourquoi côté core : les réglages du renderer vivent dans `localStorage`, qui est par ORIGINE.
-// L'app Tauri (tauri://localhost), le panneau CEP (http://127.0.0.1:8730/app ou :1420) et les
-// fenêtres détachées n'ont donc PAS le même stockage — un rush découpé dans l'app apparaissait
-// « pas découpé » dans le panneau, parce que le modèle / le seuil / les options de détection y
+// L'app Tauri (tauri://localhost) et les fenêtres
+// détachées n'ont donc PAS le même stockage — un rush découpé dans l'app apparaissait
+// « pas découpé » dans une autre fenêtre, parce que le modèle / le seuil / les options de détection y
 // étaient restés aux valeurs par défaut et que le cache de plans est indexé sur ce triplet.
 //
 // Le fichier est un simple sac clé→valeur : le core ne connaît RIEN de la forme des réglages, il
@@ -41,8 +41,8 @@ const VRAM_PROFILES = ['economy', 'balanced', 'performance'];
  * Traduit les options de performance de la recherche en variables d'environnement des sidecars.
  *
  * Relu à CHAQUE spawn, comme la langue : basculer une option ne demande donc pas de redémarrer le
- * core. Le fichier fait foi plutôt que l'état en mémoire — une fenêtre détachée ou le panneau CEP
- * écrivent par le même chemin, et c'est le disque qu'ils ont en commun.
+ * core. Le fichier fait foi plutôt que l'état en mémoire — une fenêtre détachée
+ * écrit par le même chemin, et c'est le disque qu'ils ont en commun.
  *
  * Le core valide la FORME sans juger la valeur (python borne ce qui doit l'être) : une clé absente
  * ou mal typée laisse simplement le défaut python en place, jamais une variable vide qui se lirait

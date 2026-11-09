@@ -28,13 +28,6 @@
     "insertionAbove": "上に配置",
     "insertionEnd": "末尾に追加",
     "insertionRippleOverwrite": "リップル上書き",
-    "aeftInsertion": {
-      "insert": "挿入してレイヤーを移動",
-      "replace": "レイヤーを置き換え",
-      "fit": "レイヤーのデュレーションに合わせる",
-      "above": "レイヤーの上に追加",
-      "end": "コンポジションの最後に追加"
-    },
     "container": "コンテナ",
     "mergeToOne": "1 つのファイルに結合",
     "fileName": "ファイル名",

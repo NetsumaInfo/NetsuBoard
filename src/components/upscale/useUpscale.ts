@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { nr, type UpscaleProgress, type UpscaleResult } from "@/lib/bridge";
-import { useApp } from "@/store";
-import { hostImport } from "@/lib/host";
 import { DEFAULT_SETTINGS, RESTORE_MODELS, SHADER_MODELS, UP_MODELS, shaderRuntimeModel, isRtxShader, type UpSettings } from "./upscaleShared";
 import { useSharedProcSources, jobFor, makeRenderReviews } from "./useProcSources";
 import i18n from "@/i18n";
@@ -31,7 +29,7 @@ export type { FrameCompare } from "./useProcSources";
 
 export function useUpscale() {
   const base = useSharedProcSources();
-  const { sources, active, activeKey, scope, range, scenes, picked, outDir, chooseOut, importBack, outputNamingProblem, outputNameFor, setSourcesErr, recordRenders } = base;
+  const { sources, active, activeKey, scope, range, scenes, picked, outDir, chooseOut, outputNamingProblem, outputNameFor, setSourcesErr, recordRenders } = base;
 
   const [settings, setSettings] = useState<UpSettings>(() => {
     const saved = readPersistedObject(SETTINGS_KEY, DEFAULT_SETTINGS);
@@ -150,14 +148,12 @@ export function useUpscale() {
     running.current = true;
     setResult(null); setErr(null); setSourcesErr(null);
     const off = nr.onUpscaleProgress(setBusy);
-    // Import : le core ignore l'hôte actif, donc l'import se fait côté renderer APRÈS l'encodage.
-    const host = useApp.getState().activeHost;
     const restoring = settings.mode === "restore";
     const parallel = !restoring && settings.engine === "turbo" && !shaderRuntimeModel(settings.shader) && settings.tParallel;
     const sourceConcurrency = parallel && sources.length > 1 ? settings.tConcurrency : 1;
     const outputs: string[] = [];
     const reviews: import("./useProcSources").RenderReview[] = [];
-    let imported = 0; let failed = 0; let lastErr: string | null = null;
+    let failed = 0; let lastErr: string | null = null;
     try {
       const completed = await mapConcurrent(sources, sourceConcurrency, async (src, i) => {
         const { whole, segments } = jobFor(src, { multi, scope, range, scenes, picked });
@@ -197,17 +193,11 @@ export function useUpscale() {
       });
       for (const { src, segments, r } of completed) {
         if (r.outputs) { outputs.push(...r.outputs); reviews.push(...makeRenderReviews(src, r.outputs, "upscale", segments)); }
-        imported += r.imported || 0; failed += r.failed || 0;
+        failed += r.failed || 0;
         if (!r.ok) lastErr = r.error || i18n.t("upscale:errors.upscaleFailed");
       }
-      // L'import est regroupé après tous les encodages (les APIs hôte restent séquentielles).
-      if (importBack && outputs.length) {
-        const ir = await hostImport(host, outputs);
-        if (ir.ok) imported += ir.count ?? 0;
-        else if (!lastErr) lastErr = ir.error ?? i18n.t("upscale:errors.adobeImportFailed");
-      }
       recordRenders(reviews);
-      setResult({ ok: outputs.length > 0, outputs, imported, failed, error: outputs.length ? null : lastErr });
+      setResult({ ok: outputs.length > 0, outputs, failed, error: outputs.length ? null : lastErr });
       if (!outputs.length) setErr(lastErr);
     } catch (e) {
       setErr(i18n.t("upscale:errors.upscaleUnavailable", { err: errorText(e) }));
@@ -216,7 +206,7 @@ export function useUpscale() {
       setBusy(null); setBatch(null);
       running.current = false;
     }
-  }, [sources, outDir, chooseOut, scope, range, scenes, picked, settings, importBack, outputNamingProblem, outputNameFor, setSourcesErr, recordRenders]);
+  }, [sources, outDir, chooseOut, scope, range, scenes, picked, settings, outputNamingProblem, outputNameFor, setSourcesErr, recordRenders]);
 
   return {
     ...base,

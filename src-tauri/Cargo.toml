@@ -68,8 +68,6 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 # Windows : accès COM bas niveau au WebView2 (désactivation de la Tracking Prevention,
 # sinon le lecteur YouTube embarqué casse → « Vidéo non disponible »). Versions alignées sur
 # celles que Tauri tire déjà (webview2-com 0.38 / windows-core 0.61) → zéro doublon de crate.
-# `windows` (mêmes 0.61) : reparenting Win32 de la fenêtre app DANS Adobe (SetParent, EnumWindows,
-# AttachThreadInput) — embed « NetsuRush dans After Effects / Premiere ».
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38"
 windows-core = "0.61"
