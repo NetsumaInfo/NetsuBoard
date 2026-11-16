@@ -535,16 +535,18 @@ export function FrameControls({ item }: { item: BoardItem }) {
   return (
     <>
       {/* Folder mode: the frame folds into a card that opens as a sub-board (see boardFolders). */}
-      <IconToggle
-        on={!!item.folder}
-        label={t(item.folder ? "folder.toFrame" : "folder.toFolder")}
-        onClick={() => useBoard.getState().toggleFolder(item.id)}
-      >
-        <NetsuIcon name="folder" on={!!item.folder} />
-      </IconToggle>
+      {!item.clip && (
+        <IconToggle
+          on={!!item.folder}
+          label={t(item.folder ? "folder.toFrame" : "folder.toFolder")}
+          onClick={() => useBoard.getState().toggleFolder(item.id)}
+        >
+          <NetsuIcon name="folder" on={!!item.folder} />
+        </IconToggle>
+      )}
       {item.folder && (
-        <IconAction label={t("folder.open")} onClick={() => useBoard.getState().enterFolder(item.id)}>
-          <NetsuIcon name="folder-open" />
+        <IconAction label={t(item.clip ? "clip.open" : "folder.open")} onClick={() => useBoard.getState().enterFolder(item.id)}>
+          <NetsuIcon name={item.clip ? "music" : "folder-open"} />
         </IconAction>
       )}
       <Separator orientation="vertical" className="h-6" />

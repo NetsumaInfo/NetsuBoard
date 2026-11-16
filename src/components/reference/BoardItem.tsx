@@ -26,6 +26,12 @@ import { startLive } from "./liveSite";
 import { frameTitleFactor, noteTextFactor } from "./boardTextZoom";
 import { useBoard } from "./useReferenceBoard";
 import { registerPlayer } from "./playhead";
+import { clipLook, useClipPlayer } from "./clip/clipPlayer";
+import { openClipId, openClipRaw, readClip } from "./clip/clipSelectors";
+import type { ClipVideo } from "./clip/clipModel";
+import { ClipTile } from "./clip/ClipTile";
+
+const EMPTY_CLIP_VIDEO: ClipVideo = {};
 import { shapeBBox, shifted } from "./drawGeometry";
 import { YoutubeItem } from "./YoutubeItem";
 import { EmbedItem } from "./EmbedItem";
@@ -158,9 +164,15 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   // Portée de boucle valide seulement si out > in (sinon on ignore le out pour éviter un seek en boucle).
   const trimIn = item.trimIn && item.trimIn > 0 ? item.trimIn : 0;
   const trimOut = item.trimOut != null && item.trimOut > trimIn ? item.trimOut : null;
-  // Mode de lecture : "off" ne joue jamais (figé), "pingpong" aller-retour, "loop" (défaut) boucle.
-  const playMode = item.playMode ?? "loop";
-  const playing = !mediaSuspended && onScreen && playMode !== "off";
+  // Inside a playing clip the timeline decides: the video runs while it is present at the playhead,
+  // with the clip's own speed, sound and loop type for it (see clip/clipModel ClipVideo).
+  const clipVideo = useBoard((s) => (openClipId(s) ? readClip(openClipRaw(s))?.videos[item.id] ?? EMPTY_CLIP_VIDEO : null));
+  const clipCue = useClipPlayer((s) => (s.clipId && s.playing ? (s.present.has(item.id) ? "on" : "off") : null));
+  // Mode de lecture : "off" ne joue jamais (figé), "pingpong" aller-retour, "loop" (défaut) boucle,
+  // "once" (clip only) plays the range once and holds its last frame.
+  const playMode: "loop" | "pingpong" | "off" | "once" =
+    clipVideo?.frozen ? "off" : clipVideo?.loop ?? item.playMode ?? "loop";
+  const playing = !mediaSuspended && onScreen && playMode !== "off" && clipCue !== "off";
 
   // Un CUT d'un fichier LOCAL (souvent MKV/HEVC : <video> ne lit pas le conteneur Matroska et le seek
   // mid-file échoue sur /stream copy → on voyait le DÉBUT du fichier, pas le plan) → on lit un PROXY
@@ -301,6 +313,19 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   };
   useEffect(seekIn, [trimIn, useProxy, native]);
 
+  // Clip playback: every appearance starts from the beginning of the range, so each run of the clip
+  // looks the same; the speed applies while a clip is open.
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || clipCue !== "on") return;
+    v.currentTime = useProxy || native ? 0 : trimIn;
+  }, [clipCue, useProxy, native, trimIn]);
+  const speed = clipVideo?.speed ?? 1;
+  useEffect(() => {
+    const v = ref.current;
+    if (v) v.playbackRate = speed;
+  }, [speed, proxUrl, pingpongUrl, item.src]);
+
   // `onLoadedMetadata` n'est PAS un état : c'est un événement, et il est perdu s'il se produit avant
   // que React n'ait attaché le handler — ce qui arrive dès que la source répond vite ou qu'elle est
   // déjà en cache, et à chaque remontage de l'élément. L'appelant qui attend cette annonce (le voile
@@ -338,7 +363,7 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   // manque encore sur certains moteurs, et un rebouclage tardif vaut mieux qu'aucun.
   useEffect(() => {
     const v = ref.current;
-    if (!v || useProxy || playMode !== "loop" || trimOut == null || !playing) return;
+    if (!v || useProxy || (playMode !== "loop" && playMode !== "once") || trimOut == null || !playing) return;
     type FrameHost = HTMLVideoElement & {
       requestVideoFrameCallback?: (cb: () => void) => number;
       cancelVideoFrameCallback?: (handle: number) => void;
@@ -349,7 +374,10 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
     let cancelled = false;
     const tick = () => {
       if (cancelled) return;
-      if (v.currentTime >= trimOut) v.currentTime = trimIn;
+      if (v.currentTime >= trimOut) {
+        if (playMode === "once") { v.pause(); return; }
+        v.currentTime = trimIn;
+      }
       handle = host.requestVideoFrameCallback!(tick);
     };
     handle = host.requestVideoFrameCallback(tick);
@@ -383,8 +411,8 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
       ref={ref}
       src={src ?? undefined}
       poster={poster}
-      muted
-      loop={native || (playMode === "loop" && (useProxy || trimOut == null))}
+      muted={!(clipCue === "on" && clipVideo?.sound)}
+      loop={(native && playMode !== "once") || (playMode === "loop" && (useProxy || trimOut == null))}
       autoPlay={playing && (native || playMode !== "pingpong")}
       // Suspendu (gel, navigation, mode « off ») : métadonnées seules. Sans ça, chaque vidéo montée
       // bufferise en entier même à l'arrêt — jusqu'à MEDIA_BUDGET flux ouverts en plein geste.
@@ -753,7 +781,7 @@ function dropIntoFolder(id: string, g: { x: number; y: number; w: number; h: num
     .filter((x) => { const it = st.items.find((i) => i.id === x); return it && framable(it); });
   if (!ids.length) return false;
   const target = st.items
-    .filter((it) => it.folder && !ids.includes(it.id) && cx >= it.x && cx <= it.x + it.w && cy >= it.y && cy <= it.y + it.h)
+    .filter((it) => it.folder && !it.clip && !ids.includes(it.id) && cx >= it.x && cx <= it.x + it.w && cy >= it.y && cy <= it.y + it.h)
     .sort((a, b) => b.z - a.z)[0];
   return target ? st.moveIntoFolder(target.id, ids) : false;
 }
@@ -1109,7 +1137,7 @@ function ItemContent({ item, editing, live, onYtFallback }: { item: Item; editin
     if (mode === "sheet") return <NoteCardContent item={item} editing={editing} />;
     return mode === "block" ? <TextBlock item={item} editing={editing} /> : <TextNote item={item} editing={editing} />;
   }
-  if (item.kind === "frame") return item.folder ? <FolderContent item={item} /> : <FrameContent item={item} />;
+  if (item.kind === "frame") return item.clip ? <ClipTile item={item} /> : item.folder ? <FolderContent item={item} /> : <FrameContent item={item} />;
   if (item.kind === "palette") return <PaletteContent item={item} />;
   if (item.kind === "image") {
     if (item.docFile && live && item.docFile.type !== "file") {
@@ -1270,6 +1298,9 @@ export const BoardItem = memo(function BoardItem({
   // Médias animés → couche composite dédiée (cf. wrapper du contenu plus bas) pour ne pas figer au pan.
   // YouTube en flux direct est une vidéo comme une autre → même traitement.
   const promote = item.kind === "video" || item.kind === "sequence" || (item.kind === "youtube" && !ytFallback);
+  // Inside a clip: absent at the playhead = a selectable ghost while editing, gone in Present.
+  const look = useClipPlayer((s) => clipLook(s, item.id));
+  const lookOpacity = look === "ghost" ? 0.15 : look === "hidden" ? 0 : 1;
 
   return (
     <div
@@ -1313,12 +1344,14 @@ export const BoardItem = memo(function BoardItem({
       className={cn(
         "absolute left-0 top-0 origin-center touch-none",
         editing ? "cursor-text" : t.dragging ? "cursor-grabbing" : "cursor-grab",
+        look !== "none" && "transition-opacity duration-300",
+        look === "hidden" && "pointer-events-none",
       )}
       style={{
         transform: `translate(${g.x}px, ${g.y}px) rotate(${g.rotation}deg)`,
         width: g.w,
         height: g.h,
-        opacity: item.opacity ?? 1,
+        opacity: (item.opacity ?? 1) * lookOpacity,
         zIndex: item.z,
       }}
     >

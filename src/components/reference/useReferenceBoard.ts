@@ -26,7 +26,8 @@ import {
   topZ,
   bottomZ,
 } from "./referenceShared";
-import { foldFrame, parkInto, sceneItems, splitLevel, switchLevel, unfoldFrame } from "./boardFolders";
+import { foldFrame, parkInto, sceneItems, splitLevel, switchLevel, unfoldFrame, FOLDER_W, FOLDER_H } from "./boardFolders";
+import { boundsOfBoxes, frameAround, makeClip, type ClipData } from "./clip/clipModel";
 import { noteMode } from "./blockModel";
 import { frameContentIds } from "./boardFrames";
 import {
@@ -218,6 +219,11 @@ export interface BoardState {
   moveIntoFolder: (folderId: string, ids: string[]) => boolean;
   setFolderCover: (itemId: string) => void;
   flattenFolders: () => void;
+  // Music clips (see clip/clipModel): copies the items into a new clip folder placed beside them,
+  // and writes a clip's timeline wherever its card lives (level on screen or parked).
+  createClip: (ids: string[]) => string | null;
+  // `record: false` = a computed value (detected beats), not a user edit: no undo entry.
+  patchClip: (folderId: string, next: ClipData, opts?: { tag?: string | null; record?: boolean }) => void;
   newScene: (name?: string) => void;
   clearDirty: () => void;
 }
@@ -1026,7 +1032,8 @@ export const useBoard = create<BoardState>((set, get) => ({
     set((s) => {
       if (isReadOnlyCollaborator(s)) return {};
       const frame = s.items.find((it) => it.id === id && it.kind === "frame");
-      if (!frame) return {};
+      // A clip is a folder for good: unfolded, its timeline would point at items spread on the board.
+      if (!frame || frame.clip) return {};
       recordHistory(s.items, null);
       const next = frame.folder ? unfoldFrame(frame, s.items, s.stash) : foldFrame(frame, s.items, s.stash);
       return { ...next, ...reconcile(next.items, s), dirty: true };
@@ -1096,6 +1103,52 @@ export const useBoard = create<BoardState>((set, get) => ({
         folderPath: [],
         view: s.folderPath[0]?.view ?? s.view,
         ...levelReset(),
+      };
+    }),
+
+  createClip: (ids) => {
+    const s = get();
+    if (isReadOnlyCollaborator(s)) return null;
+    const wanted = new Set(ids);
+    // A clip holds media and notes; a folder or another clip stays on the mood board.
+    const picked = s.items.filter((it) => wanted.has(it.id) && it.kind !== "draw" && !it.folder);
+    const box = boundsOfBoxes(picked.map((it) => ({ x: it.x, y: it.y, w: it.w, h: it.h })));
+    if (!box) return null;
+    const clipId = uid();
+    const copies = picked.map((src) => ({ ...src, id: uid(), parent: clipId }));
+    const frame = frameAround(box);
+    const top = topZ(s.items) + 1;
+    const card: BoardItem = {
+      id: clipId, kind: "frame", ref: "", src: "",
+      x: box.x + box.w + 80, y: box.y, w: FOLDER_W * 1.4, h: FOLDER_H, rotation: 0, z: top,
+      text: i18n.t("reference:clip.defaultName"), fontSize: 14, color: "#a78bfa", fillMode: "tint",
+      folder: true, openW: frame.w, openH: frame.h,
+      clip: makeClip(frame, copies.map((c) => c.id)),
+    };
+    set((st) => {
+      recordHistory(st.items, null);
+      return {
+        items: [...st.items, card],
+        stash: [...st.stash, ...copies],
+        selectedId: clipId, selectedIds: [clipId], drawSel: EMPTY_DRAW_SEL, dirty: true,
+      };
+    });
+    return clipId;
+  },
+
+  patchClip: (folderId, next, opts) =>
+    set((s) => {
+      if (isReadOnlyCollaborator(s)) return {};
+      if (opts?.record !== false) recordHistory(s.items, opts?.tag ?? null);
+      if (s.items.some((it) => it.id === folderId)) {
+        return { items: s.items.map((it) => (it.id === folderId ? { ...it, clip: next } : it)), dirty: true };
+      }
+      // Inside the clip its card is parked. `items` gets a new identity anyway: undo keys the parked
+      // levels by the `items` snapshot, so two entries sharing one array would share one stash.
+      return {
+        items: [...s.items],
+        stash: s.stash.map((it) => (it.id === folderId ? { ...it, clip: next } : it)),
+        dirty: true,
       };
     }),
 

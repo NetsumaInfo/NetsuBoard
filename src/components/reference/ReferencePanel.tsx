@@ -23,6 +23,9 @@ import { useBoardShortcuts } from "./useBoardShortcuts";
 import { useProjectActions } from "./useProjectActions";
 import { useReferencePush } from "./useReferencePush";
 import { useAutosave } from "./useAutosave";
+import { ClipTimeline } from "./clip/ClipTimeline";
+import { ClipLibrary } from "./clip/ClipLibrary";
+import { useClipPlayer, watchOpenClip } from "./clip/clipPlayer";
 
 // LAZY: pulls `convex/react`, which must stay out of the entry chunk of an app that opens without a
 // backend. Renders nothing — it holds the bridge between the board store and the shared document.
@@ -55,6 +58,9 @@ export function ReferencePanel() {
   const pinnedSide = useBoard((s) => s.prefs.pinnedSide);
   const touchUi = useBoard((s) => s.prefs.touchUi);
   const bigTargets = useBoard((s) => s.prefs.bigTargets);
+  // Present shows the clip alone: no toolbar, inspector or timeline.
+  const presenting = useClipPlayer((s) => s.presenting);
+  useEffect(() => watchOpenClip(), []);
 
   // Identité stable : les actions de document alimentent l'effet clavier, qui se réabonnerait à
   // chaque rendu si ce rappel changeait d'identité.
@@ -169,26 +175,31 @@ export function ReferencePanel() {
           <CollabHost />
         </Suspense>
       )}
-      {!barAfter && bar}
+      {!barAfter && !presenting && bar}
       {/* The sheet is a sibling of the board menu, not a child of its trigger: a right-click in the
           sheet must never reach the board's context menu or change the board selection. */}
-      <div className="relative flex min-h-0 min-w-0 flex-1">
-        <BoardContextMenu
-          board={boardRef}
-          onHome={onHome}
-          onSave={persistence.available ? project.save : undefined}
-          onSaveAs={persistence.available ? project.saveAs : undefined}
-          onOpenProject={pinned && persistence.available ? project.openProject : undefined}
-          onOpen={onOpen}
-          onSettings={() => openSettings()}
-        >
-          <ReferenceBoard ref={boardRef} />
-          <Inspector />
-          <SequencePlayer />
-        </BoardContextMenu>
-        <NoteOverlay />
+      <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 min-w-0 flex-1">
+          <BoardContextMenu
+            board={boardRef}
+            onHome={onHome}
+            onSave={persistence.available ? project.save : undefined}
+            onSaveAs={persistence.available ? project.saveAs : undefined}
+            onOpenProject={pinned && persistence.available ? project.openProject : undefined}
+            onOpen={onOpen}
+            onSettings={() => openSettings()}
+          >
+            <ReferenceBoard ref={boardRef} />
+            {!presenting && <Inspector />}
+            {!presenting && <SequencePlayer />}
+          </BoardContextMenu>
+          <NoteOverlay />
+          <ClipLibrary />
+        </div>
+        {/* A music clip's timeline, under the board while the clip is open (see clip/). */}
+        {!presenting && <ClipTimeline />}
       </div>
-      {barAfter && bar}
+      {barAfter && !presenting && bar}
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />
       <CropOverlay />
