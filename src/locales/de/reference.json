@@ -1269,6 +1269,19 @@
     "hideTimeline": "Timeline ausblenden",
     "keySpace": "Leertaste",
     "keysHint": "Leertaste: Wiedergabe · M: schneiden · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom · Rechtsklick auf einen Shot: Optionen",
-    "toLongOrBack": "Spur Lang ↔ Shot"
+    "toLongOrBack": "Spur Lang ↔ Shot",
+    "librarySearch": "Suchen",
+    "libraryFilter": "Typ",
+    "libraryNoMatch": "Keine Treffer",
+    "libraryHint": "Klick: in den aktuellen Shot kopieren",
+    "isMusic": "Musik des Animatic",
+    "useAsMusic": "Musik",
+    "filter": {
+      "all": "Alle",
+      "image": "Bilder",
+      "video": "Videos",
+      "audio": "Töne",
+      "text": "Notizen"
+    }
   }
 }

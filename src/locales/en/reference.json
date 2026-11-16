@@ -1269,6 +1269,19 @@
     "hideTimeline": "Hide the timeline",
     "keySpace": "Space",
     "keysHint": "Space: play · M: cut · ← →: previous / next shot · Ctrl + wheel: zoom · right-click a shot: options",
-    "toLongOrBack": "Long lane ↔ shot"
+    "toLongOrBack": "Long lane ↔ shot",
+    "librarySearch": "Search",
+    "libraryFilter": "Type",
+    "libraryNoMatch": "No match",
+    "libraryHint": "Click: copy into the current shot",
+    "isMusic": "Music of the Animatic",
+    "useAsMusic": "Music",
+    "filter": {
+      "all": "All",
+      "image": "Images",
+      "video": "Videos",
+      "audio": "Sounds",
+      "text": "Notes"
+    }
   }
 }

@@ -14,11 +14,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBoard } from "../useReferenceBoard";
 import {
-  addToShot, clipDuration, cutAt, fitToDuration, neighbourShotStart, patchShot, pruneClip, shotIndexAt,
+  addToShot, clipDuration, cutAt, neighbourShotStart, patchShot, pruneClip, shotIndexAt,
   snapTime, toLong, unassigned, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
-import { framingFromView, probeDuration, seek, setFollow, startPresent, togglePlay, useClipPlayer } from "./clipPlayer";
+import { framingFromView, seek, setClipMusic, setFollow, startPresent, togglePlay, useClipPlayer } from "./clipPlayer";
 import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
 import { ShotTransition } from "./timelineMenus";
 import { ExpandedRow, LongRow, ShotsRow } from "./timelineRows";
@@ -141,13 +141,7 @@ export function ClipTimeline() {
 
   if (!clipId || !clip) return null;
 
-  const setMusic = async (path: string) => {
-    const c = latest();
-    if (!c) return;
-    const d = await probeDuration(path);
-    const name = path.split(/[\\/]/).pop() ?? path;
-    commit(fitToDuration({ ...c, music: { ref: path, name, dur: d }, beats: undefined, bpm: undefined }));
-  };
+  const setMusic = (path: string) => (readonly ? Promise.resolve() : setClipMusic(path));
   const chooseMusic = async () => {
     const path = await nr.chooseAnyFile();
     if (path) await setMusic(path);

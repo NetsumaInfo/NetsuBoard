@@ -1269,6 +1269,19 @@
     "hideTimeline": "タイムラインを隠す",
     "keySpace": "スペース",
     "keysHint": "スペース: 再生 · M: カット · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム · ショットを右クリック: オプション",
-    "toLongOrBack": "ロングトラック ↔ ショット"
+    "toLongOrBack": "ロングトラック ↔ ショット",
+    "librarySearch": "検索",
+    "libraryFilter": "種類",
+    "libraryNoMatch": "一致なし",
+    "libraryHint": "クリック: 現在のショットにコピー",
+    "isMusic": "Animatic の音楽",
+    "useAsMusic": "音楽",
+    "filter": {
+      "all": "すべて",
+      "image": "画像",
+      "video": "動画",
+      "audio": "サウンド",
+      "text": "ノート"
+    }
   }
 }

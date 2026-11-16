@@ -1269,6 +1269,19 @@
     "hideTimeline": "隐藏时间线",
     "keySpace": "空格",
     "keysHint": "空格：播放 · M：剪切 · ← →：上一个 / 下一个镜头 · Ctrl + 滚轮：缩放 · 右键单击镜头：选项",
-    "toLongOrBack": "长轨道 ↔ 镜头"
+    "toLongOrBack": "长轨道 ↔ 镜头",
+    "librarySearch": "搜索",
+    "libraryFilter": "类型",
+    "libraryNoMatch": "无匹配结果",
+    "libraryHint": "单击：复制到当前镜头",
+    "isMusic": "Animatic 的音乐",
+    "useAsMusic": "音乐",
+    "filter": {
+      "all": "全部",
+      "image": "图像",
+      "video": "视频",
+      "audio": "声音",
+      "text": "便签"
+    }
   }
 }

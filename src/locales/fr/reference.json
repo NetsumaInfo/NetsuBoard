@@ -1269,6 +1269,19 @@
     "hideTimeline": "Masquer la timeline",
     "keySpace": "Espace",
     "keysHint": "Espace : lecture · M : couper · ← → : plan précédent / suivant · Ctrl + molette : zoom · clic droit sur un plan : options",
-    "toLongOrBack": "Piste Longs ↔ plan"
+    "toLongOrBack": "Piste Longs ↔ plan",
+    "librarySearch": "Rechercher",
+    "libraryFilter": "Type",
+    "libraryNoMatch": "Aucun résultat",
+    "libraryHint": "Clic : copier dans le plan en cours",
+    "isMusic": "Musique de l’Animatic",
+    "useAsMusic": "Musique",
+    "filter": {
+      "all": "Tout",
+      "image": "Images",
+      "video": "Vidéos",
+      "audio": "Sons",
+      "text": "Notes"
+    }
   }
 }

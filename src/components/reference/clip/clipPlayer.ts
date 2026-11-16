@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { useBoard } from "../useReferenceBoard";
 import { displaySrc, type BoardView } from "../referenceShared";
 import {
-  CLIP_ASPECT, addToShot, animatedIds, cameraAt, clipDuration, presentAt, shotIndexAt, viewForRect,
+  CLIP_ASPECT, addToShot, animatedIds, cameraAt, clipDuration, fitToDuration, presentAt, shotIndexAt, viewForRect,
   type ClipData, type ClipRect,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
@@ -292,6 +292,17 @@ async function analyseMusic(ref: string) {
   } finally {
     if (audioRef === ref) set({ analysing: false });
   }
+}
+
+// Sets the track of the open Animatic (a picked file, a dropped file, a sound of the mood board).
+export async function setClipMusic(ref: string, name?: string) {
+  const id = get().clipId;
+  if (!id || !ref) return;
+  const dur = await probeDuration(ref);
+  const clip = currentClip();
+  if (!clip) return;
+  const label = name || ref.split(/[\\/]/).pop() || ref;
+  useBoard.getState().patchClip(id, fitToDuration({ ...clip, music: { ref, name: label, dur }, beats: undefined, bpm: undefined }));
 }
 
 // Duration of a music file, read from its metadata.
