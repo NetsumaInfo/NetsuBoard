@@ -1142,9 +1142,10 @@
     }
   },
   "clip": {
-    "defaultName": "短片",
-    "create": "创建短片",
-    "open": "打开短片",
+    "defaultName": "Animatic",
+    "create": "创建 Animatic",
+    "toolbar": "创建 Animatic",
+    "open": "打开 Animatic",
     "present": "演示",
     "presentHint": "Esc 退出 · 空格暂停",
     "play": "播放",
@@ -1176,7 +1177,7 @@
     "glideDuration": "时长",
     "transitionHint": "从上一个镜头的过渡",
     "library": "情绪板",
-    "libraryAdd": "复制到短片",
+    "libraryAdd": "复制到 Animatic",
     "libraryEmpty": "情绪板为空",
     "follow": "跟随镜头",
     "long": "长轨道",
@@ -1196,7 +1197,7 @@
       "bl": "左下",
       "br": "右下"
     },
-    "videoSettings": "短片中的视频",
+    "videoSettings": "Animatic 中的视频",
     "videoPlays": "播放",
     "videoFrozen": "静止",
     "videoSound": "声音（降低音乐）",

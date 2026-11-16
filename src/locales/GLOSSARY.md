@@ -51,6 +51,8 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 | transcription | transcription | transcripción | Transkription | 文字起こし | 转录 |
 | board / mood-board | board | tablero | Board | ボード | 画板 |
 | cadre (sur le board) | frame | marco | Rahmen | フレーム | 边框 |
+| Animatic (mood board animé sur une musique ; mot gardé tel quel) | Animatic | Animatic | Animatic | Animatic | Animatic |
+| plan (d'un Animatic) | shot | plano | Shot | ショット | 镜头 |
 | note (adhésive) | note | nota | Notiz | ノート | 便签 |
 | rogner | crop | recortar | zuschneiden | トリミング | 裁剪 |
 | miroir (flip) | flip | voltear | spiegeln | 反転 | 翻转 |

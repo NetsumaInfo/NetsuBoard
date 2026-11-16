@@ -221,7 +221,8 @@ export interface BoardState {
   flattenFolders: () => void;
   // Music clips (see clip/clipModel): copies the items into a new clip folder placed beside them,
   // and writes a clip's timeline wherever its card lives (level on screen or parked).
-  createClip: (ids: string[]) => string | null;
+  // `empty` = the area to use when nothing usable is selected (an empty clip framed on it).
+  createClip: (ids: string[], empty?: { x: number; y: number; w: number; h: number }) => string | null;
   // `record: false` = a computed value (detected beats), not a user edit: no undo entry.
   patchClip: (folderId: string, next: ClipData, opts?: { tag?: string | null; record?: boolean }) => void;
   newScene: (name?: string) => void;
@@ -1106,13 +1107,13 @@ export const useBoard = create<BoardState>((set, get) => ({
       };
     }),
 
-  createClip: (ids) => {
+  createClip: (ids, empty) => {
     const s = get();
     if (isReadOnlyCollaborator(s)) return null;
     const wanted = new Set(ids);
     // A clip holds media and notes; a folder or another clip stays on the mood board.
     const picked = s.items.filter((it) => wanted.has(it.id) && it.kind !== "draw" && !it.folder);
-    const box = boundsOfBoxes(picked.map((it) => ({ x: it.x, y: it.y, w: it.w, h: it.h })));
+    const box = boundsOfBoxes(picked.map((it) => ({ x: it.x, y: it.y, w: it.w, h: it.h }))) ?? empty ?? null;
     if (!box) return null;
     const clipId = uid();
     const copies = picked.map((src) => ({ ...src, id: uid(), parent: clipId }));
@@ -1120,7 +1121,10 @@ export const useBoard = create<BoardState>((set, get) => ({
     const top = topZ(s.items) + 1;
     const card: BoardItem = {
       id: clipId, kind: "frame", ref: "", src: "",
-      x: box.x + box.w + 80, y: box.y, w: FOLDER_W * 1.4, h: FOLDER_H, rotation: 0, z: top,
+      // Beside the items it was made from; an empty one sits in the middle of the screen.
+      x: picked.length ? box.x + box.w + 80 : box.x + box.w / 2 - FOLDER_W * 0.7,
+      y: picked.length ? box.y : box.y + box.h / 2 - FOLDER_H / 2,
+      w: FOLDER_W * 1.4, h: FOLDER_H, rotation: 0, z: top,
       text: i18n.t("reference:clip.defaultName"), fontSize: 14, color: "#a78bfa", fillMode: "tint",
       folder: true, openW: frame.w, openH: frame.h,
       clip: makeClip(frame, copies.map((c) => c.id)),

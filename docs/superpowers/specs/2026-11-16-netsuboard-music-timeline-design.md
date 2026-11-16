@@ -11,7 +11,7 @@ Add animated presentations driven by a piece of music to a mood board: while the
 
 ### Clips live inside the mood board
 
-The mood board itself stays a normal, static board with no timeline. The user places **Clip** objects on it (working name), as many as needed: one per track, per version or per part.
+The mood board itself stays a normal, static board with no timeline. The user places **Animatic** objects on it (named Clip during design; code and data still say `clip`), as many as needed: one per track, per version or per part.
 
 A Clip is a dedicated sub-space. Opening it enters a space with its own items, its own timeline and its own camera; everything below applies inside a Clip. The mood board is for collecting, a Clip is for animating.
 

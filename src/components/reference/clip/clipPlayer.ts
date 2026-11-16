@@ -309,6 +309,20 @@ export function framingFromView(): ClipRect | null {
   return { x: cx - w / 2, y: cy - h / 2, w, h };
 }
 
+// Toolbar button: an animatic from the selection (the card appears beside it), or an empty one
+// framed on the screen and opened at once, ready for media to be dropped in.
+export function newAnimatic() {
+  const s = useBoard.getState();
+  if (openClipId(s)) return;
+  const usable = s.selectedIds.some((id) => {
+    const it = s.items.find((i) => i.id === id);
+    return !!it && it.kind !== "draw" && !it.folder;
+  });
+  const area = framingFromView() ?? { x: 0, y: 0, w: 1600, h: 900 };
+  const id = s.createClip(usable ? s.selectedIds : [], area);
+  if (id && !usable) useBoard.getState().enterFolder(id);
+}
+
 // Board point at the centre of the screen.
 export function viewCentre(): { x: number; y: number } {
   const size = driver?.size() ?? { w: 0, h: 0 };

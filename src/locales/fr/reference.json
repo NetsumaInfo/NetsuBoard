@@ -1142,9 +1142,10 @@
     }
   },
   "clip": {
-    "defaultName": "Clip",
-    "create": "Créer un Clip",
-    "open": "Ouvrir le Clip",
+    "defaultName": "Animatic",
+    "create": "Créer un Animatic",
+    "toolbar": "Créer un Animatic",
+    "open": "Ouvrir l'Animatic",
     "present": "Présenter",
     "presentHint": "Échap pour quitter · Espace pour pause",
     "play": "Lecture",
@@ -1176,7 +1177,7 @@
     "glideDuration": "Durée",
     "transitionHint": "Passage depuis le plan précédent",
     "library": "Mood board",
-    "libraryAdd": "Copier dans le Clip",
+    "libraryAdd": "Copier dans l'Animatic",
     "libraryEmpty": "Le mood board est vide",
     "follow": "Suivre la caméra",
     "long": "Longs",
@@ -1196,7 +1197,7 @@
       "bl": "Bas gauche",
       "br": "Bas droite"
     },
-    "videoSettings": "Vidéo dans le Clip",
+    "videoSettings": "Vidéo dans l'Animatic",
     "videoPlays": "Joue",
     "videoFrozen": "Figée",
     "videoSound": "Son (baisse la musique)",

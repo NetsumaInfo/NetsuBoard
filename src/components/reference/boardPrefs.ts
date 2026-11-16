@@ -336,6 +336,16 @@ function splitZones(v: Record<string, unknown>, startKey: string, endKey: string
   return { [startKey]: known(v[startKey]).filter((id) => !end.includes(id)), [endKey]: end };
 }
 
+function withAnimatic(zones: Record<string, PinnedButtonId[]>) {
+  const start = zones.barButtons;
+  const end = zones.barButtonsEnd ?? [];
+  if (!start || start.includes("animatic") || end.includes("animatic")) return {};
+  const at = start.indexOf("frame");
+  const next = [...start];
+  next.splice(at >= 0 ? at + 1 : next.length, 0, "animatic");
+  return { barButtons: next };
+}
+
 export function readPrefs(): BoardPrefs {
   try {
     const v = JSON.parse(localStorage.getItem(PREFS_KEY) || "");
@@ -362,10 +372,12 @@ export function readPrefs(): BoardPrefs {
       // inconnu ne doit pas laisser la barre sans place.
       ...splitZones(v, "pinnedButtons", "pinnedButtonsEnd"),
       ...splitZones(v, "barButtons", "barButtonsEnd"),
-      ...(v.barLayoutVersion === 1 ? {} : {
+      ...(v.barLayoutVersion === 1 || v.barLayoutVersion === 2 ? {} : {
         barButtons: [...DEFAULT_BAR_BUTTONS], barButtonsEnd: [...DEFAULT_BAR_BUTTONS_END],
       }),
-      barLayoutVersion: 1,
+      // A bar saved before the Animatic button existed gets it once, after the frame button.
+      ...(v.barLayoutVersion === 1 ? withAnimatic(splitZones(v, "barButtons", "barButtonsEnd")) : {}),
+      barLayoutVersion: 2,
       pinnedSide: PINNED_SIDES.some((s) => s.id === v.pinnedSide) ? v.pinnedSide : PREFS_DEFAULT.pinnedSide,
       // fusion (jamais de raccourci manquant si une nouvelle action/outil apparaît après une sauvegarde)
       drawKeys: mergeKeys(DEFAULT_DRAW_KEYS, v.drawKeys),

@@ -1142,9 +1142,10 @@
     }
   },
   "clip": {
-    "defaultName": "クリップ",
-    "create": "クリップを作成",
-    "open": "クリップを開く",
+    "defaultName": "Animatic",
+    "create": "Animatic を作成",
+    "toolbar": "Animatic を作成",
+    "open": "Animatic を開く",
     "present": "プレゼン",
     "presentHint": "Esc で終了 · スペースで一時停止",
     "play": "再生",
@@ -1176,7 +1177,7 @@
     "glideDuration": "長さ",
     "transitionHint": "前のショットからのつなぎ",
     "library": "ムードボード",
-    "libraryAdd": "クリップにコピー",
+    "libraryAdd": "Animatic にコピー",
     "libraryEmpty": "ムードボードは空です",
     "follow": "カメラに追従",
     "long": "ロング",
@@ -1196,7 +1197,7 @@
       "bl": "左下",
       "br": "右下"
     },
-    "videoSettings": "クリップ内の動画",
+    "videoSettings": "Animatic 内の動画",
     "videoPlays": "再生",
     "videoFrozen": "静止",
     "videoSound": "音声 (音楽を下げる)",

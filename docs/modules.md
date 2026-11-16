@@ -57,8 +57,9 @@ Infinite canvas (pan/zoom) where images, local videos and YouTube videos are lai
 
 ## Music clips (`clip/`)
 
-Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`.
+Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`. The interface calls a clip an **Animatic** (the word stays English in every locale); code and stored data say `clip`.
 
+- Entry points: the **Animatic** toolbar button (`clipPlayer.newAnimatic`: from the selection, else an empty one framed on the screen and opened at once) and **Create Animatic** in the right-click menu of a selection.
 - A clip is a folder card with a `clip` field (`clipModel.ts` `ClipData`): music `ref`, shots (start, `from`/`to` 16:9 framings in board coordinates, items with optional `delay`/`early`), the Long lane (free start/end, optional screen pin), per-item video settings, cached beats. Its items are the folder's children, copied in by **Create Clip** (`createClip`): the mood board keeps its originals.
 - A clip never turns back into a frame (`toggleFolder` refuses it), and nothing is dropped into its card: items reach it by Create Clip, the mood board panel (`ClipLibrary.tsx`, copies) or any import while it is open. Items added to an open clip join the shot under the playhead (`clipPlayer.adoptNewItems`).
 - Every timeline edit is `patchClip`, which writes the card wherever it lives (level on screen or `stash`) and records undo; while the clip is open its card is parked, so `items` gets a new identity to keep one stash per undo entry. Computed values (beats) pass `record: false`.

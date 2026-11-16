@@ -1142,9 +1142,10 @@
     }
   },
   "clip": {
-    "defaultName": "Clip",
-    "create": "Clip erstellen",
-    "open": "Clip öffnen",
+    "defaultName": "Animatic",
+    "create": "Animatic erstellen",
+    "toolbar": "Animatic erstellen",
+    "open": "Animatic öffnen",
     "present": "Vorführen",
     "presentHint": "Esc zum Beenden · Leertaste für Pause",
     "play": "Wiedergabe",
@@ -1176,7 +1177,7 @@
     "glideDuration": "Dauer",
     "transitionHint": "Übergang vom vorherigen Shot",
     "library": "Moodboard",
-    "libraryAdd": "In den Clip kopieren",
+    "libraryAdd": "In das Animatic kopieren",
     "libraryEmpty": "Das Moodboard ist leer",
     "follow": "Kamera folgen",
     "long": "Lang",
@@ -1196,7 +1197,7 @@
       "bl": "Unten links",
       "br": "Unten rechts"
     },
-    "videoSettings": "Video im Clip",
+    "videoSettings": "Video im Animatic",
     "videoPlays": "Spielt",
     "videoFrozen": "Standbild",
     "videoSound": "Ton (senkt die Musik)",
