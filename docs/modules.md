@@ -85,6 +85,17 @@ Switching (`switchNoteMode`, lazy BlockNote serialisers): Text and Block keep `t
 - Edits reach the board debounced; one opening is one undo entry.
 - Collaboration: `setDocument` writes the whole JSON (last writer wins per sheet, no character merge yet).
 
+## Sound (`AudioItem.tsx` + `boardAudioPlayer.ts` + `boardAudioActions.ts` + `core/boardAudio.js`)
+
+- An `audio` item is a card for a sound file the webview plays as is (MP3, WAV, FLAC, Ogg, Opus, M4A, AAC). Other audio formats stay document cards.
+- Each card's `<audio>` lives in `boardAudioPlayer.ts`, outside the board DOM: a card the culling unmounts keeps playing. The player is dropped with its item.
+- The loudness outline comes from `reference:audioPeaks` (ffmpeg decodes a 2 kHz mono stream; the core keeps the last 100 outlines in memory).
+- A video is muted unless `sound` is set (Inspector › Sound). The ping-pong file has no audio.
+- Volume (`VolumeControl.tsx`, card and Inspector): a press on the speaker mutes, resting the pointer on it opens the slider, the wheel changes the level. Muted is `sound: false` on a card, `sound` unset on a video. A card also cycles its speed (`speed`) and seeks with the arrow keys on its outline.
+- Video sizes at import come from `reference:probeVideo` (ffprobe headers, rotation and pixel ratio applied), not from opening the file in a `<video>`.
+- `reference:extractAudio` copies one track of a local video (its loop range when set) with `-c:a copy` into the assets folder, in a container picked from the codec (`m4a`, `mp3`, `opus`, `ogg`, `flac`, `wav`, else `mka`).
+- `sound`, `volume` and `loop` are not part of the shared document: a shared board does not sync them.
+
 ## `.netsu` container
 
 `core/netsu/`, façade `core/netsu.js`. The share and project format is a **SQLite container**, no longer a ZIP.
@@ -144,6 +155,23 @@ A video item can be written as an **animated image that loops on its own** where
 - A clip **fills its item as the board shows it** (cover), except the video of an embed card, which fits inside the card.
 - **The cut is inside the filter graph** (`trim=duration`), never an output `-t`: still layers and looped clips are endless inputs, and `palettegen` reads its whole input before emitting anything.
 - A transparent background survives in WebP; GIF always gets the board colour.
+
+## AI agents (`core/mcp.js` + `core/agent.js` + `agentTools.ts`)
+
+An MCP client (Claude Code, Codex, any client that launches a stdio server) drives the board with the same reach as a user.
+
+- **Path of a call.** `core/mcp.js` is a dependency-free stdio MCP server, started by the agent (`claude mcp add netsuboard -- node <resources>/core/mcp.js`). It reads the core port and a per-session secret from `NR_HOME/agent-endpoint.json` on every call and posts `agent:call`. `core/agent.js` broadcasts the call over SSE; `useAgentBridge` in `ReferencePanel` runs it through `runAgentTool` and answers with `agent:reply`. Timeout 120 s.
+- **Tools run in the renderer, through the store and the board handle**, never by writing a scene file: every edit is an undo step, reaches the autosave and syncs to a shared board exactly like a hand edit.
+- **The two tool lists stay in step**: names and schemas in `core/mcp.js` (`TOOLS`), implementations in `agentTools.ts` (`TOOLS`). `test/agent-mcp.test.cjs` fails when one side has a tool the other lacks.
+- **Off by default.** Settings › AI agents turns it on (`localStorage` `nb-agents-enabled`, pushed to the core with `agent:setEnabled`); while off, the core answers every call with an error and never reaches the board. Turning it off fails the calls in flight.
+- Tools that take `ids` act on the selection when none is given, and refuse unknown ids. Ingest tools (`add_media`, `add_folder`, …) wait for the new items to finish loading before answering. `screenshot` returns an MCP image rendered by `renderBoardCanvas`, with the board-to-pixel `mapping` and every item's pixel box, so an agent can check a result and aim the next shape.
+- **Web images are stored, not hotlinked.** `add_media` retries a refused download three times, spaced out, and swaps the hotlink for the local file; a dead link is removed and reported (`failed`), one the site keeps refusing is reported as `remoteOnly`. The core downloader falls back to the 1920 px thumbnail when Wikimedia refuses a full-size original (429).
+- **Nothing lands on top of something else.** Without x/y, a new item goes to the free spot nearest the view centre (40 px clear). An ingest batch is given its start point before it starts, with room for both its provisional grid (anchored on the point) and its final layout (centred on it, once every medium is measured). Arrange, tidy and normalize spread what an alignment piles up, keep framed items in their frame (which hugs them again), and move the group to free space if it lands on neighbours. Every placing answer carries `overlaps`, and `board_state.overlaps` lists the pairs; an item inside a frame is its content, not an overlap.
+- **The board as text**: `board_map` gives one editable line per item (`<id> <kind> "label" @ x,y WxH in:<frame>`) and a character map where each item is drawn with its symbol and `#` marks an overlap; `apply_layout` takes the lines back and applies them in one undo step.
+- **Video for an agent**: `video` sets in/out (checked against the duration), the play mode, cuts new trimmed items, takes a still or a frame sequence (beside the video, or in place with `replace`, undone by `media › revert_sequence`). `contact_sheet` lets the agent SEE a video without extracting anything: frames sampled by the core in memory (`reference:sampleFrame`, YouTube read through `/ytstream`), tiled into one small JPEG with timestamps — no file, no board item, about 50 KB for 12 frames.
+- **Home screen**: `scenes` lists saved boards by date or name, renames, deletes (never the open board) and forgets recent `.netsu` projects without touching the file. `scenes › backup` saves, then keeps a dated copy: for a `.netsu` project the core (`netsu:backupProject`) copies the file and its `-wal`/`-shm` into a sibling `backup-<name>-<YYYY-MM-DD-HHmm>` folder (media folder not included); a saved board becomes a second board named `<name> backup <date>`.
+- **Compound tools**: `batch` runs ops as one undo step (the undo entries the ops push are folded into the first; a failing op restores the pre-batch snapshot and names itself in the error; `$<n>` in an argument stands for the ids op n made; non-store effects such as downloads or files are not reverted). `checkpoint` keeps named in-memory snapshots (items, drawing, parked folders) of the open board and restores one as one undo step. `timeline`, `relayout_frame`, `style_items` (themes dark/pastel/neon) and `text_fit` (same_size, fit_box) are single undo steps. `fit: true` (`add_text`, `update_items`) sizes a plain-text note to its text on its own lines; `valign` and `padding` are text-note fields drawn by `BoardItem` and the canvas render, and are not synced on shared boards. Creating and modifying tools answer with `ids` and `overlaps`.
+- **Drawing is placed by meaning, not by raw points**: `around` (item ids to circle), `box`, `from`/`to` (arrows end on item edges), `x`/`y` + `text` for labels. `add_text` sizes its box to the text.
 
 ## Links
 

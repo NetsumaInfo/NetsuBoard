@@ -29,6 +29,9 @@ import {
   probeNat,
   makeFrameItem,
   topZ,
+  isAudioFile,
+  isCoreFileRef,
+  AUDIO_CARD,
 } from "./referenceShared";
 import { probeImageFast } from "./boardProbe";
 import { loadPdf, renderPdfThumb } from "./boardPdf";
@@ -102,6 +105,17 @@ function liveCenter(id: string, fallback: { x: number; y: number }): { x: number
 
 // Ratio MESURÉ → géométrie de l'item, centrée sur `c`. null quand la mesure a échoué (source
 // illisible) : l'item garde sa taille provisoire plutôt que de s'effondrer sur un ratio inventé.
+// Size of a video on this disk, read by the core from the container headers (ffprobe, a few dozen
+// ms, cached). The fallback opens it in a <video>: for an MKV that meant starting a remux just to
+// learn two numbers. Also returns the length, which bounds the loop range from the start.
+async function measureVideo(path: string, src: string): Promise<{ w: number; h: number; dur?: number }> {
+  if (path && isCoreFileRef(path) && nr.reference?.probeVideo) {
+    const r = await nr.reference.probeVideo(path).catch(() => null);
+    if (r?.ok && r.width && r.height) return { w: r.width, h: r.height, dur: r.duration || undefined };
+  }
+  return src ? probeVideo(src) : { w: 0, h: 0 };
+}
+
 function fitSizeOf(nat: { w: number; h: number }, box: number, c: { x: number; y: number }): Partial<BoardItem> | null {
   if (!nat.w || !nat.h) return null;
   const { w, h } = fitSize(nat.w, nat.h, box);
@@ -135,17 +149,21 @@ type BatchEntry = { path?: string; file?: File; rel: string; name: string; kind:
 function entryKind(nameOrPath: string, mime = ""): "image" | "video" | null {
   const k = kindFromPath(nameOrPath);
   if (k === "image" || k === "video") return k;
+  // An .ogg or .webm sound often comes labelled video/…: the name decides first.
+  if (k === "audio" || isAudioFile(nameOrPath, mime)) return null;
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("video/")) return "video";
   return null;
 }
 
 // A document (PDF, Word, text, Markdown, CSV or any other file) is not an image/video batch entry:
-// it needs its own pass (first screen rendered to a PNG). Images and videos win over this.
+// it needs its own pass (first screen rendered to a PNG). Images, videos and sounds win over this.
 const docKindOf = (nameOrPath: string, mime = ""): DocType | null =>
-  entryKind(nameOrPath, mime) ? null : docTypeOf(nameOrPath, mime);
+  entryKind(nameOrPath, mime) || isAudioFile(nameOrPath, mime) ? null : docTypeOf(nameOrPath, mime);
 
 type DocEntry = { path?: string; file?: File; name: string; type: DocType };
+type AudioEntry = { path?: string; file?: File; name: string };
+const audioExt = (name: string) => (name.match(/\.([a-z0-9]+)$/i)?.[1] ?? "mp3").toLowerCase();
 
 // Size of a local file through the core's media server (HEAD); 0 when it does not say.
 async function remoteSize(url: string): Promise<number> {
@@ -257,18 +275,44 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     async (filePath: string, title?: string, at?: { x: number; y: number }) => {
       const kind = kindFromPath(filePath);
       if (!kind) return;
+      if (kind === "audio") {
+        const c = at ?? centerPoint();
+        addItem({
+          kind, ref: filePath, src: displaySrc(kind, filePath),
+          x: c.x - AUDIO_CARD.w / 2, y: c.y - AUDIO_CARD.h / 2, w: AUDIO_CARD.w, h: AUDIO_CARD.h,
+          rotation: 0, title: title ?? baseTitle(filePath),
+        });
+        return;
+      }
       const src = displaySrc(kind, filePath);
-      const nat = await probeNat(kind, src);
-      place(kind, filePath, src, nat, title ?? baseTitle(filePath), at);
+      const name = title ?? baseTitle(filePath);
+      if (kind !== "video") {
+        const nat = await probeNat(kind, src);
+        place(kind, filePath, src, nat, name, at);
+        return;
+      }
+      // A video lands AT ONCE as a loading card under the cursor: nothing on screen while it was
+      // measured read as "the import did nothing".
+      const box = useBoard.getState().prefs.mediaMaxSize;
+      const c = at ?? centerPoint();
+      const id = addItem({
+        kind, ref: filePath, src: "", loading: true, title: name, rotation: 0,
+        x: c.x - box / 2, y: c.y - (box * 9) / 32, w: box, h: Math.round((box * 9) / 16),
+      });
+      useBoard.getState().setNotice({ kind: "ok", sticky: true, text: i18n.t("reference:ingest.importing", { name }) });
+      const nat = await measureVideo(filePath, src);
+      const size = fitSizeOf(nat, box, liveCenter(id, c));
+      useBoard.getState().patchItem(id, { loading: undefined, src, ...size, ...(nat.dur ? { dur: nat.dur } : null) }, false);
+      useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: 1 }) });
     },
-    [place],
+    [place, addItem, centerPoint],
   );
 
   // Cut (plan détecté) : item vidéo qui boucle sur [inSec, outSec].
   const addCut = useCallback(
     async (filePath: string, inSec: number, outSec: number, title?: string, at?: { x: number; y: number }) => {
       const src = displaySrc("video", filePath);
-      const nat = await probeVideo(src);
+      const nat = await measureVideo(filePath, src);
       place("video", filePath, src, nat, title ?? baseTitle(filePath), at, { trimIn: inSec, trimOut: outSec });
     },
     [place],
@@ -279,7 +323,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     async (filePath: string, cuts: { in: number; out: number; title?: string }[], at?: { x: number; y: number }) => {
       if (!cuts.length) return;
       const src = displaySrc("video", filePath);
-      const nat = await probeVideo(src);
+      const nat = await measureVideo(filePath, src);
       const { w, h } = fitSize(nat.w, nat.h, useBoard.getState().prefs.mediaMaxSize);
       const grid = gridLayout(cuts.length, w, h, at ?? centerPoint());
       cuts.forEach((cut, i) => {
@@ -414,6 +458,69 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
     [centerPoint],
   );
 
+  // Sounds (MP3, WAV, FLAC…): one audio card each, laid out in a column. A file with no disk path is
+  // saved as an asset first, like a document: a card on an objectURL would be silent next session.
+  const addAudios = useCallback(
+    async (entries: AudioEntry[], at?: { x: number; y: number }) => {
+      if (!entries.length) return;
+      const store = useBoard.getState();
+      const origin = at ?? centerPoint();
+      const gap = store.prefs.arrangeGap ?? 24;
+      const top = origin.y - (entries.length * (AUDIO_CARD.h + gap) - gap) / 2;
+      // Cards land AT ONCE, as loading cards, like any other media: the copy of a file without a
+      // disk path can take a while, and nothing on screen meant "the import did nothing".
+      const stamp = Date.now().toString(36);
+      let z = topZ(store.items);
+      const ids = entries.map((_, i) => `audio-${stamp}-${i}`);
+      store.addItems(entries.map((entry, i) => ({
+        id: ids[i],
+        kind: "audio" as const,
+        ref: entry.path ?? "",
+        src: "",
+        x: origin.x - AUDIO_CARD.w / 2,
+        y: top + i * (AUDIO_CARD.h + gap),
+        w: AUDIO_CARD.w,
+        h: AUDIO_CARD.h,
+        rotation: 0,
+        z: ++z,
+        title: entry.name,
+        loading: true,
+      })), false);
+      store.setNotice({
+        kind: "ok", sticky: true,
+        text: entries.length === 1
+          ? i18n.t("reference:ingest.importing", { name: entries[0].name })
+          : i18n.t("reference:ingest.reading", { count: entries.length }),
+      });
+      const failed: string[] = [];
+      for (const [i, entry] of entries.entries()) {
+        let path = entry.path;
+        try {
+          if (!path && entry.file) {
+            const [p] = await nr.pathsForFiles([entry.file]).catch(() => [""]);
+            path = p || undefined;
+          }
+          if (!path) {
+            if (!entry.file || !nr.reference?.saveAsset) throw new Error("no durable source");
+            if (entry.file.size > ASSET_COPY_MAX) throw new Error("file too large to copy");
+            const saved = await nr.reference.saveAsset(await entry.file.arrayBuffer(), audioExt(entry.name), assetOptions(entry.name));
+            if (!saved.ok || !saved.path) throw new Error(saved.error || "asset copy failed");
+            path = saved.path;
+          }
+          useBoard.getState().patchItem(ids[i], { loading: undefined, ref: path, src: displaySrc("audio", path) }, false);
+        } catch (e) {
+          logError("board:ingest", `audio import failed: ${entry.name}: ${errorText(e)}`);
+          failed.push(entry.name);
+          useBoard.getState().removeItem(ids[i]);
+        }
+      }
+      useBoard.getState().setNotice(failed.length
+        ? { kind: "error", text: i18n.t("reference:ingest.copyFailed", { name: failed[0] }) }
+        : { kind: "ok", text: i18n.t("reference:ingest.done", { count: entries.length }) });
+    },
+    [centerPoint],
+  );
+
   // UN fichier déposé, collé ou choisi. Posé AVANT la moindre attente : le placeholder paraît sous le
   // curseur dans la frame du dépôt et la barre d'outils annonce l'import, puis ratio natif et source
   // durable arrivent par patch. L'ancienne voie attendait la résolution du chemin disque PUIS le
@@ -426,6 +533,10 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   // qui rend l'item réparable si ses octets viennent à manquer.
   const addFile = useCallback(
     async (file: File, at?: { x: number; y: number }, extra?: Partial<BoardItem>) => {
+      if (isAudioFile(file.name, file.type)) {
+        await addAudios([{ file, name: file.name }], at);
+        return;
+      }
       const docType = docKindOf(file.name, file.type);
       if (docType) {
         const [p] = await nr.pathsForFiles([file]).catch(() => [""]);
@@ -480,7 +591,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         // le chemin disque — ici l'attente est structurelle.
         [path] = await pending;
         const src = displaySrc(kind, path || "");
-        size = src ? fitSizeOf(await probeNat(kind, src), box, liveCenter(id, c)) : null;
+        size = src ? fitSizeOf(kind === "video" ? await measureVideo(path || "", src) : await probeNat(kind, src), box, liveCenter(id, c)) : null;
         useBoard.getState().patchItem(id, {
           loading: undefined,
           src,
@@ -516,7 +627,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       }
       useBoard.getState().setNotice({ kind: "ok", text: i18n.t("reference:ingest.done", { count: 1 }) });
     },
-    [addItem, centerPoint, addDocs],
+    [addItem, centerPoint, addDocs, addAudios],
   );
 
   // Un LOT posé en BLOC : jamais une pile au même point. Les médias sont rangés (et regroupés dans
@@ -557,7 +668,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       // même z et le cadre, ajouté après ses médias, les recouvrirait — il capterait leurs clics.
       let z = topZ(store.items);
       const batch: BoardItem[] = [];
-      const created: { id: string; kind: ItemKind; src: string; file?: File }[] = [];
+      const created: { id: string; kind: ItemKind; src: string; file?: File; path?: string }[] = [];
       const groupPlan: { id: string | null; childIds: string[] }[] = [];
       const stamp = Date.now().toString(36);
       let cursorY = origin.y;
@@ -590,7 +701,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
           // Taille provisoire : carré pour une image, 16:9 pour une vidéo. Le vrai ratio arrive juste après.
           const id = `${groupKey}-${i}`;
           childIds.push(id);
-          created.push({ id, kind, src, file: f.path ? undefined : f.file });
+          created.push({ id, kind, src, file: f.path ? undefined : f.file, path: f.path });
           batch.push({
             id,
             kind,
@@ -645,10 +756,12 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
       const tick = () => { if (!flushTimer) flushTimer = setTimeout(flush, 150); };
       flush();
       await pool(created, 8, async (c) => {
-        const nat = c.kind === "image" ? await probeImageFast(c.src) : await probeNat(c.kind, c.src);
+        const nat: { w: number; h: number; dur?: number } = c.kind === "image"
+          ? await probeImageFast(c.src)
+          : c.kind === "video" && c.path ? await measureVideo(c.path, c.src) : await probeNat(c.kind, c.src);
         if (nat.w && nat.h) {
           const size = fitSize(nat.w, nat.h, box);
-          queue(c.id, { natW: nat.w, natH: nat.h, w: size.w, h: size.h });
+          queue(c.id, { natW: nat.w, natH: nat.h, w: size.w, h: size.h, ...(nat.dur ? { dur: nat.dur } : null) });
         }
         if (c.file && nr.reference?.saveAsset && c.file.size <= ASSET_COPY_MAX) {
           const name = c.file.name;
@@ -747,12 +860,15 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
   // viewport : import interminable et planche illisible.
   const addFiles = useCallback(
     (files: FileList | File[], at?: { x: number; y: number }, extra?: Partial<BoardItem>) => {
-      const everything = Array.from(files);
-      if (!everything.length) return;
-      // Documents get their own pass, after the rest of the drop has landed.
+      const dropped = Array.from(files);
+      if (!dropped.length) return;
+      // Sounds and documents get their own pass, after the rest of the drop has landed.
+      const sounds = dropped.filter((f) => isAudioFile(f.name, f.type));
+      const everything = dropped.filter((f) => !isAudioFile(f.name, f.type));
       const docs = everything.filter((f) => docKindOf(f.name, f.type));
       const all = everything.filter((f) => !docKindOf(f.name, f.type));
       const runPdfs = async () => {
+        if (sounds.length) await addAudios(sounds.map((file) => ({ file, name: file.name })), at);
         if (!docs.length) return;
         const paths = await nr.pathsForFiles(docs).catch(() => [] as string[]);
         await addDocs(docs.map((file, i) => ({ path: paths[i] || undefined, file, name: file.name, type: docKindOf(file.name, file.type)! })), at);
@@ -776,17 +892,20 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         await runPdfs();
       })();
     },
-    [addFile, addBatch, addDocs],
+    [addFile, addBatch, addDocs, addAudios],
   );
 
   // Paths picked in a file dialog: several at once go through the same batch as a drop (laid out
   // in one pass, measured in parallel, « Import x/y » shown). One by one, each waited for its own
   // probe and landed on the viewport centre.
   const addPaths = useCallback(
-    (all: string[], at?: { x: number; y: number }) => {
+    (picked: string[], at?: { x: number; y: number }) => {
+      const sounds = picked.filter((p) => isAudioFile(p));
+      const all = picked.filter((p) => !isAudioFile(p));
       const docs = all.filter((p) => docKindOf(p));
       const paths = all.filter((p) => !docKindOf(p));
       const runPdfs = async () => {
+        if (sounds.length) await addAudios(sounds.map((p) => ({ path: p, name: p.split(/[\\/]/).pop() || p })), at);
         if (docs.length) await addDocs(docs.map((p) => ({ path: p, name: p.split(/[\\/]/).pop() || p, type: docKindOf(p)! })), at);
       };
       if (!paths.length) { void runPdfs(); return; }
@@ -805,7 +924,7 @@ export function useBoardIngest(centerPoint: () => { x: number; y: number }) {
         await runPdfs();
       })();
     },
-    [addPath, addBatch, addDocs],
+    [addPath, addBatch, addDocs, addAudios],
   );
 
   // Dossier CHOISI (menu) : le core parcourt l'arborescence, puis le lot est posé en cadres.

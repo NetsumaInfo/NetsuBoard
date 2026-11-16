@@ -109,6 +109,7 @@ export const SettingsBoardGlyph = glyph("settings-board");
 export const SettingsInterfaceGlyph = glyph("settings-interface");
 export const SettingsStorageGlyph = glyph("settings-storage");
 export const SettingsConsoleGlyph = glyph("settings-console");
+export const SettingsAgentsGlyph = glyph("sparkles");
 export const SettingsReportGlyph = glyph("settings-report");
 export const SettingsUpdatesGlyph = glyph("settings-updates");
 export const SettingsAboutGlyph = glyph("settings-about");
@@ -136,3 +137,23 @@ export const SparklesGlyph = glyph("sparkles");
 export const WrenchGlyph = glyph("wrench");
 export const SpeedGlyph = glyph("speed");
 export const BugGlyph = glyph("bug");
+
+// Stacking order, drawn still: the tinted square is the selected item, on top of the other one
+// (bring to front) or partly hidden behind it (send to back).
+export function BringFrontGlyph({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className ?? "size-4"} aria-hidden>
+      <path d="M10 14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v5" />
+      <rect x="10" y="10" width="11" height="11" rx="2" fill="currentColor" fillOpacity={0.45} />
+    </svg>
+  );
+}
+
+export function SendBackGlyph({ className }: GlyphProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className ?? "size-4"} aria-hidden>
+      <path d="M3 5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v5h-4v4H5a2 2 0 0 1-2-2z" fill="currentColor" fillOpacity={0.45} />
+      <rect x="10" y="10" width="11" height="11" rx="2" />
+    </svg>
+  );
+}

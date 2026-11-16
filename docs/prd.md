@@ -22,10 +22,9 @@ séparation n'est pas terminée : l'arbre porte encore des modules NetsuRush que
 n'atteint jamais. Ce PRD décrit le produit, pas l'arbre.
 
 Les deux applications restent parentes — même mainteneur, et NetsuBoard télécharge son runtime
-ffmpeg depuis un *release asset* du dépôt NetsuRush. **Le board est une seule fonctionnalité
-présente dans deux dépôts** : quand il évolue d'un côté, le mainteneur reporte le changement de
-l'autre côté à la main ; aucun code, sous-module ou job de synchronisation n'est partagé, donc rien
-ne se propage tout seul. Pour le reste elles s'installent et tournent **côte à côte** : dépôt,
+ffmpeg depuis un *release asset* du dépôt NetsuRush. NetsuRush n'a plus de page board : le board
+n'existe qu'ici, et rien n'est reporté dans l'autre dépôt. Pour le reste elles s'installent et
+tournent **côte à côte** : dépôt,
 déploiement Convex, dossier de travail, ports et serveur de développement distincts. Aucune de ces
 séparations n'est cosmétique.
 

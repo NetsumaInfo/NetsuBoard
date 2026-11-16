@@ -27,7 +27,7 @@ const { t } = require('../i18n');
 const DOC_TYPE = 'board';
 // Kinds dont le `ref` désigne un média local embarquable. Les autres (youtube, embed, text, frame,
 // draw) portent soit un lien tiers, soit aucun média.
-const MEDIA_KINDS = new Set(['image', 'video', 'sequence']);
+const MEDIA_KINDS = new Set(['image', 'video', 'audio', 'sequence']);
 // Champs transitoires : recalculés à l'ouverture, ils n'ont rien à faire dans le fichier.
 const TRANSIENT_FIELDS = ['src', 'loading', 'localMedia'];
 

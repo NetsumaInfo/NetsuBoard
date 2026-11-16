@@ -11,7 +11,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import {
-  SettingsAboutGlyph, SettingsAccountGlyph, SettingsBoardGlyph, SettingsConsoleGlyph, SettingsDiscordGlyph,
+  SettingsAboutGlyph, SettingsAccountGlyph, SettingsAgentsGlyph, SettingsBoardGlyph, SettingsConsoleGlyph, SettingsDiscordGlyph,
   SettingsInterfaceGlyph, SettingsReportGlyph, SettingsStorageGlyph, SettingsUpdatesGlyph, type Glyph,
 } from "@/components/reference/netsuIcons";
 import { cn } from "@/lib/utils";
@@ -25,27 +25,36 @@ import { InterfacePanel } from "./InterfacePanel";
 import { StoragePanel } from "./StoragePanel";
 import { DiscordSettings } from "./DiscordSettings";
 import { AboutPanel } from "./AboutPanel";
+import { AgentsPanel } from "./AgentsPanel";
 import { useSettingsUi, type SettingsSection } from "./useSettingsUi";
 
 // Chargé PARESSEUSEMENT : la page Compte tire `convex/react` et le client Better Auth. En import
 // statique, ils entreraient dans le chunk d'entrée d'une app qui doit s'ouvrir sans backend.
 const AccountPanel = lazy(() => import("./AccountPanel").then((m) => ({ default: m.AccountPanel })));
 
-const SECTIONS: { id: SettingsSection; icon: Glyph; labelKey: string }[] = [
-  // « Compte » en tête, comme dans NetsuRush : c'est la seule porte vers la connexion Discord une
-  // fois le gate passé, et l'écran de connexion promet précisément de la trouver ici.
-  { id: "account", icon: SettingsAccountGlyph, labelKey: "settings:nav.account" },
-  { id: "discord", icon: SettingsDiscordGlyph, labelKey: "settings:nav.discord" },
-  { id: "board", icon: SettingsBoardGlyph, labelKey: "reference:settings.navBoard" },
-  { id: "interface", icon: SettingsInterfaceGlyph, labelKey: "settings:nav.interface" },
+// Three groups, in the order people come for them: the app itself, the people and services around
+// it, then help. A group label replaces the eleven-item flat list.
+type NavGroup = "app" | "connected" | "help";
+const GROUP_LABEL: Record<NavGroup, string> = {
+  app: "settings:navGroup.app",
+  connected: "settings:navGroup.connected",
+  help: "settings:navGroup.help",
+};
+const SECTIONS: { id: SettingsSection; icon: Glyph; labelKey: string; group: NavGroup }[] = [
+  { id: "board", icon: SettingsBoardGlyph, labelKey: "reference:settings.navBoard", group: "app" },
+  { id: "interface", icon: SettingsInterfaceGlyph, labelKey: "settings:nav.interface", group: "app" },
   // « Stockage » avant la console : c'est un réglage du produit, pas un outil de diagnostic.
-  { id: "storage", icon: SettingsStorageGlyph, labelKey: "settings:nav.storage" },
-  { id: "console", icon: SettingsConsoleGlyph, labelKey: "settings:tab.system.console" },
+  { id: "storage", icon: SettingsStorageGlyph, labelKey: "settings:nav.storage", group: "app" },
+  // « Compte » reste la seule porte vers la connexion Discord une fois le gate passé.
+  { id: "account", icon: SettingsAccountGlyph, labelKey: "settings:nav.account", group: "connected" },
+  { id: "discord", icon: SettingsDiscordGlyph, labelKey: "settings:nav.discord", group: "connected" },
+  { id: "agents", icon: SettingsAgentsGlyph, labelKey: "settings:nav.agents", group: "connected" },
+  { id: "console", icon: SettingsConsoleGlyph, labelKey: "settings:tab.system.console", group: "help" },
   // « Signaler » vit juste après la Console : c'est là qu'on arrive après avoir lu ce qui a cassé,
   // et le formulaire joint précisément ce journal.
-  { id: "report", icon: SettingsReportGlyph, labelKey: "settings:nav.report" },
-  { id: "updates", icon: SettingsUpdatesGlyph, labelKey: "settings:nav.updates" },
-  { id: "about", icon: SettingsAboutGlyph, labelKey: "settings:nav.about" },
+  { id: "report", icon: SettingsReportGlyph, labelKey: "settings:nav.report", group: "help" },
+  { id: "updates", icon: SettingsUpdatesGlyph, labelKey: "settings:nav.updates", group: "help" },
+  { id: "about", icon: SettingsAboutGlyph, labelKey: "settings:nav.about", group: "help" },
 ];
 
 export function AppSettings() {
@@ -110,12 +119,18 @@ export function AppSettings() {
         <div className="flex min-h-0 flex-1">
           {/* Nav des sections : trois destinations, jamais plus d'un clic de distance. */}
           <nav aria-label={t("reference:actions.settings")} className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border p-2">
-            {SECTIONS.map((item) => {
+            {SECTIONS.map((item, i) => {
               const on = item.id === section;
               const Icon = item.icon;
+              const first = i === 0 || SECTIONS[i - 1].group !== item.group;
               return (
+                <div key={item.id} className="contents">
+                {first && (
+                  <p className={cn("px-2.5 pb-1 text-xs font-medium text-muted-foreground", i > 0 && "mt-3")}>
+                    {t(GROUP_LABEL[item.group])}
+                  </p>
+                )}
                 <button
-                  key={item.id}
                   type="button"
                   aria-current={on ? "page" : undefined}
                   onClick={() => setSection(item.id)}
@@ -129,6 +144,7 @@ export function AppSettings() {
                     <span className="ml-auto size-1.5 shrink-0 rounded-full bg-destructive" />
                   )}
                 </button>
+                </div>
               );
             })}
           </nav>
@@ -170,6 +186,7 @@ export function AppSettings() {
               {section === "board" && <BoardSettings tab={boardTab} onCapturingChange={setCapturing} />}
               {section === "interface" && <InterfacePanel />}
               {section === "storage" && <StoragePanel />}
+              {section === "agents" && <AgentsPanel />}
               {section === "console" && <ConsolePanel />}
               {section === "report" && <BugReportForm />}
               {section === "updates" && <UpdateSettings />}

@@ -11,8 +11,8 @@ What is still inherited and **live**: first-run setup, cache admin and export ca
 **First-run setup asks nothing.** The runtime is the same for everyone — ffmpeg, the GLSL shaders, yt-dlp — so `setup:run` takes no options and the download starts before the language screen is even answered. There is no model catalogue: nothing in this product can execute a weight. Do not reintroduce one.
 
 - Do **not** re-import a retired module from NetsuRush; the RPC table is the contract of what this product does.
-- The two products stay related: NetsuBoard is [NetsuRush](https://github.com/NetsumaInfo/NetsuRush)'s reference board shipped as its own, far lighter application, under the same maintainer, and it downloads its ffmpeg runtime from a NetsuRush release asset (`docs/distribution.md`). **The board is one feature in two repositories**: when it is changed on one side — a fix, an optimisation, a removed page — the maintainer mirrors the change on the other side by hand. There is no shared code, submodule or sync job, so nothing propagates on its own; when you touch the board, say in the PR what the other repository needs. Everything else is separate: repository, Convex deployment, ports, home and caches.
-- 9 of the 64 Node suites are still quarantined in `.github/workflows/ci.yml`; a failure inside that list is not yours.
+- The two products stay related: NetsuBoard is [NetsuRush](https://github.com/NetsumaInfo/NetsuRush)'s reference board shipped as its own, far lighter application, under the same maintainer, and it downloads its ffmpeg runtime from a NetsuRush release asset (`docs/distribution.md`). NetsuRush no longer has a board page: the board lives only here, and nothing is mirrored to the other repository. Everything else is separate: repository, Convex deployment, ports, home and caches.
+- 9 of the 67 Node suites are still quarantined in `.github/workflows/ci.yml`; a failure inside that list is not yours.
 - Known name/path collisions still in code (tmp caches, log directory) are listed at the end of `docs/invariants.md`. They are defects, not design.
 
 ## Language
@@ -39,7 +39,7 @@ What is still inherited and **live**: first-run setup, cache admin and export ca
 | Rust shell check | `cargo check --locked` (in `src-tauri/`) |
 | Core alone, headless | `npm run core` |
 
-- 5 of the 64 Node suites also have an `npm run test:*` shortcut; the rest run with `node --test`.
+- 5 of the 67 Node suites also have an `npm run test:*` shortcut; the rest run with `node --test`.
 - `test/**/*.test.ts` (collaboration, board) runs under **vitest**, not `node --test`: a TypeScript suite is invisible to `node --test test/*.test.cjs`.
 - `.github/workflows/ci.yml` is the source of truth for what must pass.
 - There is no ESLint and no formatter config: `tsc` is the lint.
@@ -74,6 +74,7 @@ What is still inherited and **live**: first-run setup, cache admin and export ca
 
 ## Key Conventions
 
+- **AI agents (MCP)**: a tool is declared in `core/mcp.js` and implemented in `src/components/reference/agentTools.ts`, always through the board store — see `docs/modules.md`.
 - **Every new IPC channel is added in three places**: handler table in `core/rpc.js`, `NrApi` + implementation in `src/lib/coreClient.ts`, `mock` in `src/lib/bridge.ts`.
 - `core/` is CommonJS; the repo root is `type: module` for the Vite renderer.
 - Import alias `@/` → `src/`.

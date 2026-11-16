@@ -106,7 +106,7 @@ export async function quickUpscale(id: string): Promise<boolean> {
       engine: choice.engine, model: choice.model, shader: choice.shader, scale: choice.scale, denoise: choice.denoise,
     });
     if (!r.ok || !r.path) {
-      st.setNotice({ kind: "error", text: r.error ? tr("notice.failedWith", { error: r.error }) : tr("upscale.upscaleFail") });
+      st.setNotice({ kind: "error", text: r.error ? tr("notice.failedWith", { error: errorText(r.error) }) : tr("upscale.upscaleFail") });
       return false;
     }
     applyUpscaled(item, r.path);

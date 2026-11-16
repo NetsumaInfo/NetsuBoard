@@ -22,6 +22,7 @@ import { useScenePersistence } from "./useScenePersistence";
 import { useBoardShortcuts } from "./useBoardShortcuts";
 import { useProjectActions } from "./useProjectActions";
 import { useReferencePush } from "./useReferencePush";
+import { useAgentBridge } from "./useAgentBridge";
 import { useAutosave } from "./useAutosave";
 
 // LAZY: pulls `convex/react`, which must stay out of the entry chunk of an app that opens without a
@@ -69,6 +70,7 @@ export function ReferencePanel() {
     onTogglePin: togglePinned,
   });
   useReferencePush(boardRef);
+  useAgentBridge({ board: boardRef, persistence, project, goBoard });
   useAutosave(persistence);
   useUnsavedWarning();
   useDeselectOnBlur();

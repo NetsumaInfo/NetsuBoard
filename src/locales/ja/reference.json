@@ -17,7 +17,7 @@
     "zoomIn": "拡大",
     "zoomOut": "縮小",
     "fitAll": "全体表示",
-    "newScene": "新規シーン",
+    "newScene": "新規プロジェクト",
     "attach": "メインウィンドウに戻す",
     "pin": "ピン留め",
     "unpin": "ピン留め解除",
@@ -42,8 +42,8 @@
     "exitDraw": "描画を終了",
     "playAll": "すべて再生",
     "freezeAll": "すべて停止",
-    "saveScene": "シーンを保存",
-    "openScene": "シーンを開く",
+    "saveScene": "プロジェクトを保存",
+    "openScene": "プロジェクトを開く",
     "share": "共有",
     "shareProject": "共有",
     "unsaved": "未保存",
@@ -238,7 +238,7 @@
     "pinnedRemove": "{{label}} をバーから削除",
     "barButtons": "ツールバー",
     "assetSweep": "未使用のメディア",
-    "assetSweepHint": "どのシーンも使っていないファイルを削除します。ボードは変更されません。",
+    "assetSweepHint": "どのプロジェクトも使っていないファイルを削除します。ボードは変更されません。",
     "assetSweepAction": "クリーンアップ",
     "assetSweepFailed": "クリーンアップに失敗しました。",
     "assetSweepDone_one": "{{count}} 件のファイルを削除し、{{mb}} MB を解放しました。",
@@ -249,7 +249,8 @@
     "linkFocus": "選択中の項目のリンクを強調",
     "linksTitle": "接続",
     "linksHint": "新しい接続はこのスタイルを使います。",
-    "linkMoveSubtree": "要素を下流の要素と一緒に移動"
+    "linkMoveSubtree": "要素を下流の要素と一緒に移動",
+    "reuseLastSize": "前回のサイズを使う"
   },
   "inspector": {
     "ytPlayer": "YouTube プレーヤー",
@@ -261,7 +262,8 @@
     "longVideo": "長い動画：最大 {{max}} フレーム",
     "extractingFrames": "抽出中",
     "sequenceCreated_one": "シーケンスを作成 · {{count}} フレーム",
-    "sequenceCreated_other": "シーケンスを作成 · {{count}} フレーム"
+    "sequenceCreated_other": "シーケンスを作成 · {{count}} フレーム",
+    "more": "その他の操作"
   },
   "trim": {
     "start": "ループ開始（秒）",
@@ -374,7 +376,7 @@
     "duplicate": "選択を複製",
     "undo": "元に戻す",
     "redo": "やり直し",
-    "save": "シーンを保存",
+    "save": "プロジェクトを保存",
     "fit": "全体表示",
     "zoomIn": "拡大",
     "zoomOut": "縮小",
@@ -398,7 +400,7 @@
     "toggleMouseThrough": "マウスを透過",
     "prevFrame": "前のフレーム",
     "nextFrame": "次のフレーム",
-    "newScene": "新しいシーン",
+    "newScene": "新しいプロジェクト",
     "openSettings": "設定",
     "togglePin": "ウィンドウを固定",
     "paletteStudio": "パレットジェネレーター",
@@ -462,7 +464,7 @@
     "dotBg": "ドット背景",
     "drawMode": "描画モード",
     "drawBack": "描画を最背面に",
-    "openScene": "シーンを開く",
+    "openScene": "プロジェクトを開く",
     "backHome": "ホームに戻る",
     "alwaysOnTop": "常に最前面",
     "openProject": "プロジェクトを開く",
@@ -515,21 +517,21 @@
     "noEngine": "アップスケールは利用できません：GPU が Vulkan に非対応です。"
   },
   "scene": {
-    "title": "リファレンスシーン",
-    "namePlaceholder": "シーン名",
+    "title": "プロジェクト",
+    "namePlaceholder": "プロジェクト名",
     "saving": "保存中",
     "untitled": "無題",
-    "noScenes": "保存されたシーンはありません。",
-    "delete": "シーンを削除"
+    "noScenes": "保存されたプロジェクトはありません。",
+    "delete": "プロジェクトを削除"
   },
   "home": {
     "deleteOptions": "削除オプション",
     "hideFromList": "一覧から隠す",
-    "deleteScene": "シーンを削除",
+    "deleteScene": "プロジェクトを削除",
     "modified": "更新 {{date}}",
     "sharedBoard": "共有",
-    "dropMedia": "メディアをドラッグ＆ドロップ",
-    "dropHint": "画像と動画に対応",
+    "dropMedia": "ここにファイルをドロップ",
+    "dropHint": "画像・動画・音声に対応",
     "or": "または",
     "createEmpty": "空のプロジェクトを作成",
     "recent": "最近",
@@ -635,14 +637,21 @@
   "board": {
     "clipboardEmpty": "クリップボードが空か、未対応の形式です",
     "clipboardEmptyLink": "クリップボードが空か、リンクを認識できません",
-    "emptyTitle": "画像・動画・リンクをドロップ",
-    "emptyHint": "貼り付け（Ctrl+V）· ホイール：拡大縮小 · 背景をドラッグ：移動",
+    "emptyTitle": "画像・動画・音声・リンクをドロップ",
+    "emptyHint": "ホイール：ズーム · 背景をドラッグ：移動",
     "pastedItems_one": "{{count}} 件を貼り付けました",
     "pastedItems_other": "{{count}} 件を貼り付けました",
     "copiedDone_one": "{{count}} 件をコピーしました",
     "copiedDone_other": "{{count}} 件をコピーしました",
     "cutDone_one": "{{count}} 件を切り取りました",
-    "cutDone_other": "{{count}} 件を切り取りました"
+    "cutDone_other": "{{count}} 件を切り取りました",
+    "start": {
+      "files": "ファイル",
+      "paste": "貼り付け",
+      "text": "テキスト",
+      "note": "ノート",
+      "draw": "描画"
+    }
   },
   "notice": {
     "recoveringMedia": "復元中",
@@ -848,7 +857,7 @@
     "close": "閉じる",
     "create": "作成して招待",
     "invite": "招待",
-    "saveAsBlocked": "共同プロジェクトは共有シーンが管理します。ローカルコピーは書き出しで作成してください。",
+    "saveAsBlocked": "共同プロジェクトは共有版が管理します。ローカルコピーは書き出しで作成してください。",
     "role": {
       "owner": "所有者",
       "editor": "編集可",
@@ -880,8 +889,8 @@
       "leaveWarning": "受信済みの内容は残りますが、このプロジェクトはもう同期できません。",
       "deleteWarning": "接続情報、招待、暗号化された復旧コピーが全メンバー分削除されます。元に戻せません。"
     },
-    "noScene": "先にこのボードをリファレンスシーンとして保存してください。",
-    "willAdopt": "このボードはリファレンスシーンにコピーされます。.netsu ファイルはディスクに残ります。",
+    "noScene": "先にこのボードをプロジェクトとして保存してください。",
+    "willAdopt": "このボードはプロジェクトにコピーされます。.netsu ファイルはディスクに残ります。",
     "failed": "共有に失敗しました。",
     "sync": {
       "queued": "送信待ちの変更があります。デバイスに接続でき次第、自動で送信されます。",
@@ -1140,5 +1149,29 @@
       "codeBlock": "コードブロック",
       "table": "表"
     }
+  },
+  "audio": {
+    "untitled": "サウンド",
+    "play": "再生",
+    "pause": "一時停止",
+    "unplayable": "この形式は再生できません",
+    "loopOn": "ループ",
+    "loopOff": "1回再生",
+    "mute": "ミュート",
+    "unmute": "ミュート解除",
+    "position": "再生位置",
+    "soundOn": "サウンドオン",
+    "soundOff": "サウンドオフ",
+    "turnOn": "サウンドをオン",
+    "turnOff": "ミュート",
+    "extract": "音声を抽出",
+    "extracting": "音声を抽出中…",
+    "extracted": "音声を抽出しました",
+    "noTrack": "この動画には音声がありません",
+    "extractFailed": "音声を抽出できませんでした",
+    "volume": "音量",
+    "speed": "再生速度",
+    "openFile": "ファイルを開く",
+    "showInFolder": "フォルダーで表示"
   }
 }

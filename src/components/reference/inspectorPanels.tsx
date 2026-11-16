@@ -453,12 +453,17 @@ export function TextControls({ item }: { item: BoardItem }) {
   const { t } = useTranslation("reference");
   const patchItem = useBoard((s) => s.patchItem);
   const patch = (p: Partial<BoardItem>) => patchItem(item.id, p);
+  // A size picked here is remembered for the next new note (Settings › Board › New notes).
+  const setSize = (v: number) => {
+    patch({ fontSize: v });
+    useBoard.getState().setPrefs({ lastFontSize: v });
+  };
   const lh = item.lineHeight ?? 1.2;
   const indent = item.indent ?? 0;
   return (
     <>
       <FontPicker value={item.fontFamily ?? FONT_FAMILIES[0].value} onChange={(v) => patch({ fontFamily: v })} />
-      <NumberSpin value={item.fontSize ?? 18} ariaLabel={t("text.fontSize")} onCommit={(v) => patch({ fontSize: v })} />
+      <NumberSpin value={item.fontSize ?? 18} ariaLabel={t("text.fontSize")} onCommit={(v) => setSize(v)} />
       <Separator orientation="vertical" className="h-6" />
       <IconToggle on={item.bold} label={t("text.bold")} onClick={() => patch({ bold: !item.bold })}><NetsuIcon name="bold" on={!!item.bold} /></IconToggle>
       <IconToggle on={item.italic} label={t("text.italic")} onClick={() => patch({ italic: !item.italic })}><NetsuIcon name="italic" on={!!item.italic} /></IconToggle>
@@ -491,7 +496,7 @@ export function TextControls({ item }: { item: BoardItem }) {
           <DropdownMenuGroup>
             <DropdownMenuLabel>{t("text.style")}</DropdownMenuLabel>
             {TEXT_PRESETS.map((p) => (
-              <DropdownMenuItem key={p.labelKey} onClick={() => patch({ fontSize: p.fontSize, bold: p.bold || undefined })}>
+              <DropdownMenuItem key={p.labelKey} onClick={() => { patch({ fontSize: p.fontSize, bold: p.bold || undefined }); useBoard.getState().setPrefs({ lastFontSize: p.fontSize }); }}>
                 <span style={{ fontWeight: p.bold ? 700 : 400 }}>{t(p.labelKey)}</span>
                 <span className="ml-auto text-xs text-muted-foreground">{p.fontSize}</span>
               </DropdownMenuItem>

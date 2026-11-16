@@ -17,7 +17,7 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "fitAll": "Fit all",
-    "newScene": "New scene",
+    "newScene": "New project",
     "attach": "Attach",
     "pin": "Pin",
     "unpin": "Unpin",
@@ -42,8 +42,8 @@
     "exitDraw": "Exit draw",
     "playAll": "Play all",
     "freezeAll": "Freeze all",
-    "saveScene": "Save scene",
-    "openScene": "Open scene",
+    "saveScene": "Save project",
+    "openScene": "Open project",
     "share": "Share",
     "shareProject": "Share",
     "unsaved": "Unsaved",
@@ -238,7 +238,7 @@
     "pinnedRemove": "Remove {{label}} from the bar",
     "barButtons": "Toolbar",
     "assetSweep": "Unused media",
-    "assetSweepHint": "Deletes files no scene uses. Your boards are not touched.",
+    "assetSweepHint": "Deletes files no project uses. Your boards are not touched.",
     "assetSweepAction": "Clean up",
     "assetSweepFailed": "Cleanup failed.",
     "assetSweepDone_one": "{{count}} file removed, {{mb}} MB freed.",
@@ -249,7 +249,8 @@
     "linkFocus": "Highlight links of the selected item",
     "linksTitle": "Links",
     "linksHint": "New links use this style.",
-    "linkMoveSubtree": "Move an item with its downstream items"
+    "linkMoveSubtree": "Move an item with its downstream items",
+    "reuseLastSize": "Reuse last size"
   },
   "inspector": {
     "ytPlayer": "YouTube player",
@@ -261,7 +262,8 @@
     "longVideo": "Long video: {{max}} frames max",
     "extractingFrames": "Extracting",
     "sequenceCreated_one": "Sequence created · Frames: {{count}}",
-    "sequenceCreated_other": "Sequence created · Frames: {{count}}"
+    "sequenceCreated_other": "Sequence created · Frames: {{count}}",
+    "more": "More actions"
   },
   "trim": {
     "start": "Loop start (s)",
@@ -374,7 +376,7 @@
     "duplicate": "Duplicate selection",
     "undo": "Undo",
     "redo": "Redo",
-    "save": "Save scene",
+    "save": "Save project",
     "fit": "Fit all",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
@@ -398,7 +400,7 @@
     "toggleMouseThrough": "Click-through",
     "prevFrame": "Previous frame",
     "nextFrame": "Next frame",
-    "newScene": "New scene",
+    "newScene": "New project",
     "openSettings": "Settings",
     "togglePin": "Pin the window",
     "paletteStudio": "Palette generator",
@@ -462,7 +464,7 @@
     "dotBg": "Dot background",
     "drawMode": "Draw mode",
     "drawBack": "Drawings behind",
-    "openScene": "Open scene",
+    "openScene": "Open project",
     "backHome": "Back to home",
     "alwaysOnTop": "Always on top",
     "openProject": "Open project",
@@ -515,21 +517,21 @@
     "noEngine": "Upscaling unavailable: GPU has no Vulkan."
   },
   "scene": {
-    "title": "Reference scenes",
-    "namePlaceholder": "Scene name",
+    "title": "Projects",
+    "namePlaceholder": "Project name",
     "saving": "Saving",
     "untitled": "Untitled",
-    "noScenes": "No saved scenes.",
-    "delete": "Delete scene"
+    "noScenes": "No saved projects.",
+    "delete": "Delete project"
   },
   "home": {
     "deleteOptions": "Delete options",
     "hideFromList": "Hide from list",
-    "deleteScene": "Delete scene",
+    "deleteScene": "Delete project",
     "modified": "Modified {{date}}",
     "sharedBoard": "Shared",
-    "dropMedia": "Drag and drop media",
-    "dropHint": "Images and videos accepted",
+    "dropMedia": "Drop your files here",
+    "dropHint": "Images, videos and sounds accepted",
     "or": "or",
     "createEmpty": "Create an empty project",
     "recent": "Recent",
@@ -635,14 +637,21 @@
   "board": {
     "clipboardEmpty": "Clipboard empty or not supported",
     "clipboardEmptyLink": "Clipboard empty or link not recognized",
-    "emptyTitle": "Drop images, videos or links",
-    "emptyHint": "Paste (Ctrl+V) · wheel: zoom · drag background: navigate",
+    "emptyTitle": "Drop images, videos, sounds or links",
+    "emptyHint": "Wheel: zoom · drag the background: move around",
     "pastedItems_one": "{{count}} item pasted",
     "pastedItems_other": "{{count}} items pasted",
     "copiedDone_one": "{{count}} item copied",
     "copiedDone_other": "{{count}} items copied",
     "cutDone_one": "{{count}} item cut",
-    "cutDone_other": "{{count}} items cut"
+    "cutDone_other": "{{count}} items cut",
+    "start": {
+      "files": "Files",
+      "paste": "Paste",
+      "text": "Text",
+      "note": "Note",
+      "draw": "Draw"
+    }
   },
   "notice": {
     "recoveringMedia": "Recovering",
@@ -848,7 +857,7 @@
     "close": "Close",
     "create": "Create and invite",
     "invite": "Invite",
-    "saveAsBlocked": "A collaborative project stays owned by its shared scene. Use export for a local copy.",
+    "saveAsBlocked": "A collaborative project stays owned by its shared version. Use export for a local copy.",
     "role": {
       "owner": "Owner",
       "editor": "Can edit",
@@ -880,8 +889,8 @@
       "leaveWarning": "Keep what this device already received. You can no longer sync this project.",
       "deleteWarning": "Rendezvous data, invitations and encrypted recovery copies will be deleted for every member. Cannot be undone."
     },
-    "noScene": "Save this board as a reference scene first.",
-    "willAdopt": "This board will be copied into your reference scenes. The .netsu file stays on your disk.",
+    "noScene": "Save this board as a project first.",
+    "willAdopt": "This board will be copied into your projects. The .netsu file stays on your disk.",
     "failed": "Sharing failed.",
     "sync": {
       "queued": "Changes waiting. Sent automatically once a device is reachable.",
@@ -1140,5 +1149,29 @@
       "codeBlock": "Code block",
       "table": "Table"
     }
+  },
+  "audio": {
+    "untitled": "Sound",
+    "play": "Play",
+    "pause": "Pause",
+    "unplayable": "Can't play this format",
+    "loopOn": "Loop",
+    "loopOff": "Play once",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "position": "Position",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "turnOn": "Turn sound on",
+    "turnOff": "Mute",
+    "extract": "Extract sound",
+    "extracting": "Extracting sound…",
+    "extracted": "Sound extracted",
+    "noTrack": "This video has no sound",
+    "extractFailed": "Couldn't extract the sound",
+    "volume": "Volume",
+    "speed": "Playback speed",
+    "openFile": "Open the file",
+    "showInFolder": "Show in folder"
   }
 }

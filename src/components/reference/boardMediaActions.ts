@@ -4,6 +4,7 @@
 
 import { nr } from "@/lib/bridge";
 import i18n from "@/i18n";
+import { errorText } from "@/lib/errorText";
 import { displaySrc, fitSize, isCollabRef, parseVideoEmbed, probeNat, slideIndex, youtubeId } from "./referenceShared";
 import { useBoard } from "./useReferenceBoard";
 import {
@@ -284,7 +285,7 @@ export async function relocateMissingMedia(): Promise<number> {
     targets.map((it) => ({ id: it.id, name: it.missing?.name || "", size: it.missing?.size })),
   );
   if (!res?.ok) {
-    st.setNotice({ kind: "error", text: tr("notice.failedWith", { error: res?.error || tr("notice.unknown") }) });
+    st.setNotice({ kind: "error", text: tr("notice.failedWith", { error: res?.error ? errorText(res?.error) : tr("notice.unknown") }) });
     return 0;
   }
   for (const hit of res.found) {

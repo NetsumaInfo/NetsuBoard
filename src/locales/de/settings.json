@@ -7,7 +7,8 @@
     "updates": "Updates",
     "report": "Melden",
     "about": "Über",
-    "discord": "Discord"
+    "discord": "Discord",
+    "agents": "KI-Agenten"
   },
   "about": {
     "tagline": "Unendliches Referenz-Board: Bilder, Videos, soziale Netzwerke, Notizen und Zeichnungen.",
@@ -427,8 +428,8 @@
       "title": "Geteilte Boards",
       "members": "Mitglieder: {{count}}",
       "rotation": "Schlüsselwechsel ausstehend",
-      "add": "Zu Szenen hinzufügen",
-      "failed": "Szene konnte nicht hinzugefügt werden",
+      "add": "Zu Projekten hinzufügen",
+      "failed": "Projekt konnte nicht hinzugefügt werden",
       "role": {
         "owner": "Eigentümer",
         "editor": "Kann bearbeiten",
@@ -446,12 +447,12 @@
     "activity": {
       "title": "Aktivität der Zusammenarbeit",
       "dismiss": "Ausblenden",
-      "changed_one": "{{count}} Person hat ein Board geändert, während du weg warst. Öffne seine Szene, um die Änderungen zu holen.",
-      "changed_other": "{{count}} Personen haben ein Board geändert, während du weg warst. Öffne seine Szene, um die Änderungen zu holen.",
-      "key_one": "{{count}} neues Mitglied wartet auf sicheren Zugriff. Öffne die Szene, um den Projektschlüssel zu übertragen.",
-      "key_other": "{{count}} neue Mitglieder warten auf sicheren Zugriff. Öffne die Szene, um den Projektschlüssel zu übertragen.",
-      "media_one": "{{count}} Person wartet auf ein Originalmedium. Öffne die Szene und bleibe online, um es zu übertragen.",
-      "media_other": "{{count}} Personen warten auf ein Originalmedium. Öffne die Szene und bleibe online, um es zu übertragen."
+      "changed_one": "{{count}} Person hat ein Board geändert, während du weg warst. Öffne das Projekt, um die Änderungen zu holen.",
+      "changed_other": "{{count}} Personen haben ein Board geändert, während du weg warst. Öffne das Projekt, um die Änderungen zu holen.",
+      "key_one": "{{count}} neues Mitglied wartet auf sicheren Zugriff. Öffne das Projekt, um den Projektschlüssel zu übertragen.",
+      "key_other": "{{count}} neue Mitglieder warten auf sicheren Zugriff. Öffne das Projekt, um den Projektschlüssel zu übertragen.",
+      "media_one": "{{count}} Person wartet auf ein Originalmedium. Öffne das Projekt und bleibe online, um es zu übertragen.",
+      "media_other": "{{count}} Personen warten auf ein Originalmedium. Öffne das Projekt und bleibe online, um es zu übertragen."
     },
     "peers": {
       "title": "Verbindungen",
@@ -460,5 +461,22 @@
       "direct": "Direkte Verbindung",
       "relayed": "Über ein Relay"
     }
+  },
+  "agents": {
+    "title": "KI-Agenten",
+    "subtitle": "Einen KI-Agenten (Claude Code, Codex…) am Board arbeiten lassen: Bilder hinzufügen, anordnen, schreiben. Jede Aktion lässt sich mit Strg+Z rückgängig machen.",
+    "enable": "KI-Agenten erlauben",
+    "off": "Aus. Kein Agent kann das Board ändern.",
+    "waiting": "An. Warte auf einen Agenten.",
+    "lastCall": "Letzte Aktion um {{time}}",
+    "howto": "Führe einen dieser Befehle einmal in einem Terminal aus, um deinen Agenten zu verbinden:",
+    "otherClients": "Andere MCP-Clients",
+    "copy": "Kopieren",
+    "copied": "Kopiert"
+  },
+  "navGroup": {
+    "app": "App",
+    "connected": "Konto und Dienste",
+    "help": "Hilfe"
   }
 }

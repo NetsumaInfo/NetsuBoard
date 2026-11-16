@@ -17,7 +17,7 @@
     "zoomIn": "Vergrößern",
     "zoomOut": "Verkleinern",
     "fitAll": "Alles einpassen",
-    "newScene": "Neue Szene",
+    "newScene": "Neues Projekt",
     "attach": "Andocken",
     "pin": "Anheften",
     "unpin": "Lösen",
@@ -42,8 +42,8 @@
     "exitDraw": "Zeichnen beenden",
     "playAll": "Alle abspielen",
     "freezeAll": "Alle anhalten",
-    "saveScene": "Szene speichern",
-    "openScene": "Szene öffnen",
+    "saveScene": "Projekt speichern",
+    "openScene": "Projekt öffnen",
     "share": "Teilen",
     "shareProject": "Teilen",
     "unsaved": "Nicht gespeichert",
@@ -238,7 +238,7 @@
     "pinnedRemove": "{{label}} aus der Leiste entfernen",
     "barButtons": "Werkzeugleiste",
     "assetSweep": "Ungenutzte Medien",
-    "assetSweepHint": "Entfernt Dateien ohne Szenenbezug. Deine Boards bleiben unverändert.",
+    "assetSweepHint": "Entfernt Dateien, die kein Projekt mehr nutzt. Deine Boards bleiben unverändert.",
     "assetSweepAction": "Aufräumen",
     "assetSweepFailed": "Aufräumen fehlgeschlagen.",
     "assetSweepDone_one": "{{count}} Datei entfernt, {{mb}} MB freigegeben.",
@@ -249,7 +249,8 @@
     "linkFocus": "Verbindungen des ausgewählten Elements hervorheben",
     "linksTitle": "Verbindungen",
     "linksHint": "Neue Verbindungen nutzen diesen Stil.",
-    "linkMoveSubtree": "Element mit seinen nachfolgenden Elementen verschieben"
+    "linkMoveSubtree": "Element mit seinen nachfolgenden Elementen verschieben",
+    "reuseLastSize": "Letzte Größe übernehmen"
   },
   "inspector": {
     "ytPlayer": "YouTube-Player",
@@ -261,7 +262,8 @@
     "longVideo": "Langes Video: max. {{max}} Frames",
     "extractingFrames": "Extrahieren",
     "sequenceCreated_one": "Sequenz erstellt · Frames: {{count}}",
-    "sequenceCreated_other": "Sequenz erstellt · Frames: {{count}}"
+    "sequenceCreated_other": "Sequenz erstellt · Frames: {{count}}",
+    "more": "Weitere Aktionen"
   },
   "trim": {
     "start": "Schleifenanfang (s)",
@@ -374,7 +376,7 @@
     "duplicate": "Auswahl duplizieren",
     "undo": "Rückgängig",
     "redo": "Wiederherstellen",
-    "save": "Szene speichern",
+    "save": "Projekt speichern",
     "fit": "Alles einpassen",
     "zoomIn": "Vergrößern",
     "zoomOut": "Verkleinern",
@@ -398,7 +400,7 @@
     "toggleMouseThrough": "Für die Maus transparent",
     "prevFrame": "Frame zurück",
     "nextFrame": "Frame vor",
-    "newScene": "Neue Szene",
+    "newScene": "Neues Projekt",
     "openSettings": "Einstellungen",
     "togglePin": "Fenster anheften",
     "paletteStudio": "Palettengenerator",
@@ -462,7 +464,7 @@
     "dotBg": "Punkt-Hintergrund",
     "drawMode": "Zeichenmodus",
     "drawBack": "Zeichnungen im Hintergrund",
-    "openScene": "Szene öffnen",
+    "openScene": "Projekt öffnen",
     "backHome": "Zurück zum Start",
     "alwaysOnTop": "Immer im Vordergrund",
     "openProject": "Projekt öffnen",
@@ -515,21 +517,21 @@
     "noEngine": "Upscale nicht verfügbar: GPU ohne Vulkan."
   },
   "scene": {
-    "title": "Referenzszenen",
-    "namePlaceholder": "Name der Szene",
+    "title": "Projekte",
+    "namePlaceholder": "Name des Projekts",
     "saving": "Wird gespeichert",
     "untitled": "Ohne Titel",
-    "noScenes": "Keine Szene gespeichert.",
-    "delete": "Szene löschen"
+    "noScenes": "Kein Projekt gespeichert.",
+    "delete": "Projekt löschen"
   },
   "home": {
     "deleteOptions": "Löschoptionen",
     "hideFromList": "Aus der Liste ausblenden",
-    "deleteScene": "Szene löschen",
+    "deleteScene": "Projekt löschen",
     "modified": "Geändert {{date}}",
     "sharedBoard": "Geteilt",
-    "dropMedia": "Medien hierher ziehen",
-    "dropHint": "Bilder und Videos werden unterstützt",
+    "dropMedia": "Leg deine Dateien hier ab",
+    "dropHint": "Bilder, Videos und Töne werden angenommen",
     "or": "oder",
     "createEmpty": "Leeres Projekt anlegen",
     "recent": "Zuletzt verwendet",
@@ -635,14 +637,21 @@
   "board": {
     "clipboardEmpty": "Zwischenablage leer oder nicht unterstützt",
     "clipboardEmptyLink": "Zwischenablage leer oder Link nicht erkannt",
-    "emptyTitle": "Bilder, Videos oder Links ablegen",
-    "emptyHint": "Einfügen (Strg+V) · Mausrad: Zoom · Hintergrund ziehen: Navigieren",
+    "emptyTitle": "Bilder, Videos, Töne oder Links ablegen",
+    "emptyHint": "Mausrad: Zoom · Hintergrund ziehen: bewegen",
     "pastedItems_one": "{{count}} Element eingefügt",
     "pastedItems_other": "{{count}} Elemente eingefügt",
     "copiedDone_one": "{{count}} Element kopiert",
     "copiedDone_other": "{{count}} Elemente kopiert",
     "cutDone_one": "{{count}} Element ausgeschnitten",
-    "cutDone_other": "{{count}} Elemente ausgeschnitten"
+    "cutDone_other": "{{count}} Elemente ausgeschnitten",
+    "start": {
+      "files": "Dateien",
+      "paste": "Einfügen",
+      "text": "Text",
+      "note": "Notiz",
+      "draw": "Zeichnen"
+    }
   },
   "notice": {
     "recoveringMedia": "Wiederherstellung",
@@ -848,7 +857,7 @@
     "close": "Schließen",
     "create": "Erstellen und einladen",
     "invite": "Einladen",
-    "saveAsBlocked": "Kollaboratives Projekt bleibt an seine geteilte Szene gebunden. Für eine lokale Kopie exportieren.",
+    "saveAsBlocked": "Kollaboratives Projekt bleibt an seine geteilte Fassung gebunden. Für eine lokale Kopie exportieren.",
     "role": {
       "owner": "Eigentümer",
       "editor": "Darf bearbeiten",
@@ -880,8 +889,8 @@
       "leaveWarning": "Bereits empfangene Daten bleiben auf diesem Gerät. Das Projekt wird nicht mehr synchronisiert.",
       "deleteWarning": "Vermittlungsdaten, Einladungen und verschlüsselte Sicherungen werden für alle Mitglieder unwiderruflich gelöscht."
     },
-    "noScene": "Speichere dieses Board zuerst als Referenzszene.",
-    "willAdopt": "Dieses Board wird in deine Referenzszenen kopiert. Die .netsu-Datei bleibt auf deiner Festplatte.",
+    "noScene": "Speichere dieses Board zuerst als Projekt.",
+    "willAdopt": "Dieses Board wird in deine Projekte kopiert. Die .netsu-Datei bleibt auf deiner Festplatte.",
     "failed": "Freigabe fehlgeschlagen.",
     "sync": {
       "queued": "Änderungen warten. Sie werden gesendet, sobald ein Gerät erreichbar ist.",
@@ -1140,5 +1149,29 @@
       "codeBlock": "Codeblock",
       "table": "Tabelle"
     }
+  },
+  "audio": {
+    "untitled": "Ton",
+    "play": "Abspielen",
+    "pause": "Pause",
+    "unplayable": "Format nicht abspielbar",
+    "loopOn": "Endlosschleife",
+    "loopOff": "Einmal abspielen",
+    "mute": "Stummschalten",
+    "unmute": "Ton an",
+    "position": "Position",
+    "soundOn": "Ton an",
+    "soundOff": "Ton aus",
+    "turnOn": "Ton einschalten",
+    "turnOff": "Stummschalten",
+    "extract": "Ton extrahieren",
+    "extracting": "Ton wird extrahiert…",
+    "extracted": "Ton extrahiert",
+    "noTrack": "Dieses Video hat keinen Ton",
+    "extractFailed": "Ton konnte nicht extrahiert werden",
+    "volume": "Lautstärke",
+    "speed": "Wiedergabegeschwindigkeit",
+    "openFile": "Datei öffnen",
+    "showInFolder": "Im Ordner anzeigen"
   }
 }

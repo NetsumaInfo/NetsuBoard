@@ -37,6 +37,8 @@ import { useOnScreen } from "./useOnScreen";
 import { requestCurrentCollabMedia } from "@/lib/collab/currentProject";
 import { onOpenDoc } from "./boardPdf";
 import { subtreeCarry } from "./links/linkActions";
+import { AudioContent } from "./AudioItem";
+import { chromePx } from "./boardChrome";
 
 // pdf.js, mammoth and the viewers only load when a document card is opened.
 const PdfViewer = lazy(() => import("./PdfViewer"));
@@ -361,6 +363,21 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
 
   const src = pingpongUrl ?? streamSrc ?? (useProxy ? proxUrl : item.src);
 
+  // Sound only when asked for on this video (Inspector › Sound). The ping-pong file is encoded
+  // without audio: a backwards range has nothing to hear. When the webview refuses to start a clip
+  // with sound on its own (autoplay policy), it plays muted rather than not at all.
+  const audible = !!item.sound && !pingpongUrl;
+  const volume = item.volume ?? 1;
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = !audible;
+    v.volume = Math.min(1, Math.max(0, volume));
+    if (audible && playing && v.paused) {
+      v.play().catch(() => { v.muted = true; void v.play().catch(() => undefined); });
+    }
+  }, [audible, volume, playing, src]);
+
   // Sous-titres JAMAIS imposés : ni une piste incrustée dans le conteneur, ni celle que la WebView
   // allume d'elle-même d'après la langue du système. Une planche de références montre des images,
   // pas du texte gravé par-dessus. Une piste in-band peut arriver APRÈS les métadonnées, d'où
@@ -377,6 +394,19 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
   // Affiche native : la frame fixe déjà résolue reste peinte jusqu'à la première frame décodée —
   // pas de flash noir au montage ni au retour du mode timbre-poste (cf. boardVideoLod).
   const poster = !streamSrc && localRef ? knownThumb(item.ref, posterTime(item)) ?? undefined : undefined;
+  // First picture not decoded yet and no poster to hold its place: a loading veil instead of a black
+  // box, so a fresh import reads as "on its way", not as "broken". Reset on every new source.
+  const [paintedSrc, setPaintedSrc] = useState<string | null>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || !src) return;
+    const done = () => setPaintedSrc(src);
+    if (v.readyState >= 2) { done(); return; }
+    v.addEventListener("loadeddata", done);
+    v.addEventListener("playing", done);
+    return () => { v.removeEventListener("loadeddata", done); v.removeEventListener("playing", done); };
+  }, [src, retry.attempt]);
+  const veiled = !!src && paintedSrc !== src && !poster;
   const video = (
     <video
       key={retry.attempt}
@@ -427,7 +457,16 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
       <track kind="captions" />
     </video>
   );
-  return item.crop ? <div className="relative h-full w-full overflow-hidden">{video}</div> : video;
+  return (
+    <div className={cn("relative h-full w-full", item.crop && "overflow-hidden")}>
+      {video}
+      {veiled && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-muted/40 text-muted-foreground">
+          <NetsuIcon name="loading" busy className="size-7" />
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Vidéo locale minuscule à l'écran → frame d'affiche à la place du lecteur : plus de décodeur, plus
@@ -642,8 +681,13 @@ function TextNote({ item, editing }: { item: Item; editing: boolean }) {
     fontStyle: item.italic ? "italic" : "normal",
     textDecoration: deco || "none",
     lineHeight: item.lineHeight ?? 1.2,
-    paddingLeft: item.indent ? item.indent * 24 + 12 : undefined, // retrait (palier 24px) + p-3 de base
+    // Inner margin set by an agent (default: the p-3 of the class) and vertical alignment of the text.
+    ...(item.padding !== undefined ? { padding: item.padding } : null),
+    paddingLeft: item.indent ? item.indent * 24 + (item.padding ?? 12) : undefined, // retrait (palier 24px) + p-3 de base
   };
+  const valign = item.valign === "middle" || item.valign === "bottom"
+    ? { display: "flex", flexDirection: "column", justifyContent: item.valign === "middle" ? "center" : "flex-end" } as const
+    : null;
 
   if (editing) {
     // Commit LIVE (onChange) : le texte est toujours sauvé, quel que soit le mode de sortie d'édition
@@ -702,7 +746,7 @@ function TextNote({ item, editing }: { item: Item; editing: boolean }) {
   // pour qu'il épouse chaque ligne du texte multi-lignes.
   const hl = item.highlight && item.highlight !== "transparent";
   return (
-    <div className="relative h-full w-full overflow-hidden whitespace-pre-wrap break-words p-3" style={style}>
+    <div className="relative h-full w-full overflow-hidden whitespace-pre-wrap break-words p-3" style={valign ? { ...style, ...valign } : style}>
       {item.text ? (
         hl ? (
           <span style={{ background: item.highlight, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone", padding: "0.05em 0.15em" }}>
@@ -882,14 +926,14 @@ function MissingContent({ item }: { item: Item }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted/30 p-3 text-center">
       <NetsuIcon name="file-missing" className="size-7 shrink-0 text-muted-foreground" />
-      <p className="line-clamp-2 text-xs font-medium text-foreground break-all">
+      <p className="line-clamp-2 text-sm font-medium text-foreground break-all">
         {collaborativeReason === "waiting"
           ? t("item.mediaWaiting")
           : collaborativeReason === "removed"
             ? t("item.mediaRemoved")
             : item.missing?.name || t("item.missingMedia")}
       </p>
-      {!!item.missing?.size && <p className="text-[10px] text-muted-foreground">{t("item.mediaSize", { size: humanSize(item.missing.size) })}</p>}
+      {!!item.missing?.size && <p className="text-xs text-muted-foreground">{t("item.mediaSize", { size: humanSize(item.missing.size) })}</p>}
       {/* Le lien d'origine passe DEVANT le sélecteur de fichiers : quand il existe, c'est la voie qui
           rend le média sans rien demander à l'utilisateur. */}
       {canReload && (
@@ -898,7 +942,7 @@ function MissingContent({ item }: { item: Item }) {
           disabled={reloading}
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => void reload()}
-          className="mt-1 inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          className="mt-1 inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <NetsuIcon name="reload-media" busy={reloading} className="size-3.5" />
           {t("item.reloadMedia")}
@@ -909,7 +953,7 @@ function MissingContent({ item }: { item: Item }) {
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => collaborativeReason === "waiting" ? retry() : void relocate()}
         className={cn(
-          "inline-flex items-center gap-1.5 rounded px-2 py-1 text-[11px] font-medium",
+          "inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           canReload
             ? "text-muted-foreground hover:bg-muted hover:text-foreground"
             : "mt-1 bg-primary text-primary-foreground hover:bg-primary/90",
@@ -924,8 +968,9 @@ function MissingContent({ item }: { item: Item }) {
           type="button"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => void relocateMissingMedia()}
-          className="text-[10px] text-muted-foreground underline-offset-2 hover:underline"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
+          <NetsuIcon name="relocate-missing" className="size-3.5" />
           {t("item.relocateAll", { count: missingCount })}
         </button>
       )}
@@ -1119,6 +1164,7 @@ function ItemContent({ item, editing, live, onYtFallback }: { item: Item; editin
     return <ImageContent item={item} />;
   }
   if (item.kind === "video") return <VideoWithStill item={item} />;
+  if (item.kind === "audio") return <AudioContent item={item} />;
   if (item.kind === "sequence") return <SequenceContent item={item} />;
   // Embed / YouTube : `live` (double-clic) rend l'iframe cliquable (play, scroll, liens). Sinon
   // pointer-events:none → le clic sélectionne / déplace l'item (le drag du board n'est pas volé).
@@ -1145,6 +1191,10 @@ export const BoardItem = memo(function BoardItem({
   // Store actions are stable references: read once, never subscribed. Eight selectors per item meant
   // eight subscriptions to re-run on every store change, times every mounted item.
   const { select, patchItem, toggleSelect, bringToFront, updateItem, removeItem, moveBy, setEditing } = useBoard.getState();
+  // Selection outline in SCREEN pixels (chrome scale): a primary line wrapped in a dark one, so it
+  // reads on a white reference as on a black one, and neither swells when zoomed in nor vanishes
+  // zoomed out. Only selected items follow the zoom here.
+  const selPx = useBoard((s) => (selected ? chromePx(s.view.scale) : 0));
 
   // Mode interactif des embeds/YouTube : double-clic → l'iframe devient cliquable (play/scroll/liens).
   // On en sort dès que l'item n'est plus seul sélectionné (clic ailleurs / Échap) → on peut le déplacer.
@@ -1331,12 +1381,15 @@ export const BoardItem = memo(function BoardItem({
           item.kind === "frame" ? "overflow-visible" : "overflow-hidden",
           item.kind === "frame" ? "" : "shadow-lg ring-1",
           item.kind === "text" || item.kind === "frame" ? "" : "bg-black/40",
-          selected ? "ring-2 ring-primary" : item.kind === "frame" ? "" : "ring-black/30",
+          selected ? "" : item.kind === "frame" ? "" : "ring-black/30",
           // Markdown block: its own hairline border and soft shadow, matching radius (see TextBlock).
           item.kind === "text" && noteMode(item) === "block" && "shadow-[0_1px_2px_rgba(0,0,0,0.08),0_8px_18px_-8px_rgba(0,0,0,0.25)]",
           item.kind === "text" && noteMode(item) === "block" && !selected && "ring-0",
         )}
         style={{
+          boxShadow: selected
+            ? `0 0 0 ${2 * selPx}px var(--color-primary), 0 0 0 ${3.5 * selPx}px color-mix(in srgb, black 60%, transparent)`
+            : undefined,
           background: item.kind === "text" && noteMode(item) === "text" ? item.bg : undefined,
           borderRadius: item.kind === "text" && noteMode(item) === "block" ? blockRadius(item) : undefined,
         }}
@@ -1390,13 +1443,13 @@ export const BoardItem = memo(function BoardItem({
 
       {/* Indice d'interaction (embed/YouTube) : double-clic pour activer, clic ailleurs pour déplacer */}
       {(liveable || docLive) && primary && !editing && (
-        <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover/90 px-2 py-0.5 text-[10px] font-medium text-popover-foreground shadow ring-1 ring-foreground/10">
+        <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover/90 px-2 py-0.5 text-xs font-medium text-popover-foreground shadow ring-1 ring-foreground/10">
           {live ? tr("item.interactiveActive") : tr("item.interactiveHint")}
         </span>
       )}
 
       {item.kind === "embed" && linkMode(item) === "live" && primary && !editing && (
-        <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover/90 px-2 py-0.5 text-[10px] font-medium text-popover-foreground shadow ring-1 ring-foreground/10">
+        <span className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-popover/90 px-2 py-0.5 text-xs font-medium text-popover-foreground shadow ring-1 ring-foreground/10">
           {tr("linkCard.liveHint")}
         </span>
       )}

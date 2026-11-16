@@ -7,7 +7,7 @@
 import { useState, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
-import { Layout2x2Glyph, LayoutColumnsGlyph, LayoutRowsGlyph } from "./netsuIcons";
+import { BringFrontGlyph, Layout2x2Glyph, LayoutColumnsGlyph, LayoutRowsGlyph, SendBackGlyph } from "./netsuIcons";
 import { nr } from "@/lib/bridge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -16,12 +16,12 @@ import { useBoard } from "./useReferenceBoard";
 import { useHideOnBlur } from "./useAppFocus";
 import { IconToggle, IconAction } from "./inspectorControls";
 import { TrimControls, TextControls, FrameControls, ArrangeBar, PlayModeControls, EmbedControls, LinkModeControls } from "./inspectorPanels";
-import { displaySrc, probeImage, youtubeId, isCollabRef, isCoreFileRef, paletteSize, type PaletteLayout } from "./referenceShared";
+import { youtubeId, isCollabRef, paletteSize, type PaletteLayout } from "./referenceShared";
 import { noteMode } from "./blockModel";
 import { NoteModeSwitch, BlockControls } from "./TextModeControls";
 import { convertToEmbed, downloadMediaFromEmbed, downloadYoutube } from "./boardMediaActions";
 import { quickUpscale } from "./boardUpscale";
-import { extractPaletteToBoard, regeneratePalette } from "./boardPaletteActions";
+import { regeneratePalette } from "./boardPaletteActions";
 import { COLOR_FORMATS, COLOR_FORMAT_LABEL } from "./colorFormat";
 import { UpscaleItemDialog } from "./UpscaleItemDialog";
 import { ExportLoopDialog } from "./ExportLoopDialog";
@@ -29,10 +29,12 @@ import { loopExportable } from "./boardLoopExport";
 import { iconForLink } from "./brandIcons";
 import { enclosingFrame } from "./boardFrames";
 import { openFolderCoverId } from "./boardFolders";
-
-// Cadence supposée d'une source en mode « même que la vidéo » (la vraie vient du core, après coup) :
-// haute exprès, l'avertissement « vidéo longue » doit se déclencher plutôt trop tôt que trop tard.
-const ASSUMED_SOURCE_FPS = 30;
+import { mediaActions } from "./itemActions";
+import { VolumeControl } from "./VolumeControl";
+import { AudioInspectorControls } from "./AudioItem";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu";
 
 // Dispositions d'un bloc palette. Les icônes disent la FORME obtenue : une bande de pastilles côte à
 // côte, une pile, ou un carré.
@@ -53,8 +55,6 @@ export function Inspector() {
   const bringToFront = useBoard((s) => s.bringToFront);
   const sendToBack = useBoard((s) => s.sendToBack);
   const setCropping = useBoard((s) => s.setCropping);
-  const setNotice = useBoard((s) => s.setNotice);
-  const addSequenceFrom = useBoard((s) => s.addSequenceFrom);
   const prefs = useBoard((s) => s.prefs);
   const [upOpen, setUpOpen] = useState(false);
   const [loopOpen, setLoopOpen] = useState(false);
@@ -100,8 +100,6 @@ export function Inspector() {
   const upscalable = (item.kind === "image" || item.kind === "video")
     && !/^(data:|blob:)/i.test(item.ref)
     && !isCollabRef(item.ref);
-  // Extractible en frames = vidéo à FICHIER local (décomposée en images → item séquence).
-  const framesExtractable = item.kind === "video" && isCoreFileRef(item.ref);
   // Média extrait d'un post (rebasculable en carte embed) ; lien à ouvrir dans le navigateur.
   const extracted = (item.kind === "image" || item.kind === "video") && !!item.sourceUrl;
   const linkUrl =
@@ -111,37 +109,10 @@ export function Inspector() {
   // Cadre qui entoure l'élément. Lu hors abonnement : l'inspecteur se rend déjà à chaque changement
   // de l'item sélectionné, et s'abonner à la liste entière le réveillerait à chaque commit du store.
   const framedBy = enclosingFrame(item, useBoard.getState().items);
-
-  // Décompose la vidéo en frames d'aperçu sur la PLAGE DE BOUCLE [in, out] (sinon vidéo entière), élargie
-  // de la MARGE des Paramètres (garde quelques secondes autour pour réajuster). Cadence/qualité/plafond
-  // viennent aussi des Paramètres. Crée une séquence en place, ratio ajusté. Prévient avant si trop long.
-  const extractFrames = async () => {
-    const { seqFps: fps, seqMaxFrames: max, seqHeight: height, seqMarginSec: margin } = prefs;
-    // Cadence « source » : la vraie valeur n'est connue qu'au retour du core → estimation prudente
-    // (cadence courante haute) pour l'avertissement « vidéo trop longue » avant lancement.
-    const estFps = fps > 0 ? fps : ASSUMED_SOURCE_FPS;
-    const tin = item.trimIn && item.trimIn > 0 ? item.trimIn : 0;
-    const tout = item.trimOut != null && item.trimOut > tin ? item.trimOut : 0;
-    const inSec = tout > 0 ? Math.max(0, tin - margin) : undefined;
-    const outSec = tout > 0 ? tout + margin : undefined;
-    const range = inSec != null && outSec != null ? outSec - inSec : item.dur ?? 0;
-    const long = range === 0 || range * estFps > max;
-    setNotice({
-      kind: "ok",
-      sticky: true,
-      text: long
-        ? t("inspector.longVideo", { max })
-        : t("inspector.extractingFrames"),
-    });
-    const r = await nr.reference?.extractFrames?.({ path: item.ref, fps, max, height, in: inSec, out: outSec });
-    if (r?.ok && r.frames?.length) {
-      const nat = await probeImage(displaySrc("image", r.frames[0]));
-      addSequenceFrom(item.id, r.frames, nat.w && nat.h ? { w: nat.w, h: nat.h } : undefined, r.fps || estFps);
-      setNotice({ kind: "ok", text: t("inspector.sequenceCreated", { count: r.frames.length }) });
-    } else {
-      setNotice({ kind: "error", text: r?.error ? t("notice.failedWith", { error: r.error }) : t("notice.extractFailed") });
-    }
-  };
+  const hasOwnControls = isMedia || isText || isFrame || trimmable || item.kind === "palette" || item.kind === "audio"
+    || item.kind === "embed" || !!linkUrl || extracted;
+  // The sound switch stays in the row; everything else that pulls something out goes in "More".
+  const tools = mediaActions(item, { openLoop: () => setLoopOpen(true), sound: false });
 
   return (
     <div data-note-toolbar className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
@@ -155,6 +126,11 @@ export function Inspector() {
             <IconToggle on={item.flipV} label={t("actions.flipV")} onClick={() => patchItem(item.id, { flipV: !item.flipV })}>
               <NetsuIcon name="flip-v" on={!!item.flipV} />
             </IconToggle>
+            {croppable && (
+              <IconAction label={t("actions.crop")} active={!!item.crop} onClick={() => setCropping(item.id)}>
+                <NetsuIcon name="crop" />
+              </IconAction>
+            )}
           </>
         )}
         {isText && <NoteModeSwitch item={item} />}
@@ -166,6 +142,7 @@ export function Inspector() {
           </Button>
         )}
         {isFrame && <FrameControls item={item} />}
+        {item.kind === "audio" && <AudioInspectorControls item={item} />}
         {/* Palette : afficher/masquer les valeurs, choisir leur NOTATION (c'est elle qui part dans le
             presse-papiers — chaque outil de destination attend la sienne), et recalculer depuis les
             médias d'origine. */}
@@ -225,17 +202,19 @@ export function Inspector() {
             </IconAction>
           </>
         )}
-        {/* Palette : extraire les couleurs de CE média et poser le bloc juste dessous. (Les séquences
-            ont leur propre barre et ne passent pas par cet inspecteur.) */}
-        {(item.kind === "image" || item.kind === "video") && (
-          <IconAction label={t("palette.extract")} onClick={() => void extractPaletteToBoard()}>
-            <NetsuIcon name="extract-palette" />
-          </IconAction>
-        )}
         {trimmable && (
           <>
             <Separator orientation="vertical" className="h-6" />
             <PlayModeControls item={item} />
+            {/* Sound: off by default, a board of clips stays silent. Kept in view: it is a state. */}
+            {item.kind === "video" && (
+              <VolumeControl
+                volume={item.volume ?? 1}
+                muted={!item.sound}
+                onVolume={(v) => patchItem(item.id, { volume: v, sound: v > 0 || undefined })}
+                onToggleMute={() => patchItem(item.id, { sound: !item.sound || undefined, ...(!item.sound && item.volume === 0 ? { volume: 1 } : null) })}
+              />
+            )}
             <Separator orientation="vertical" className="h-6" />
             <TrimControls item={item} />
           </>
@@ -291,13 +270,9 @@ export function Inspector() {
           </IconAction>
         )}
 
-        {/* Disposition */}
-        <Separator orientation="vertical" className="h-6" />
-        {croppable && (
-          <IconAction label={t("actions.crop")} active={!!item.crop} onClick={() => setCropping(item.id)}>
-            <NetsuIcon name="crop" />
-          </IconAction>
-        )}
+        {/* Disposition. Its separator only when a group stands before it: an item with nothing of its
+            own (a sound used to start the row this way) must not open on a lone divider. */}
+        {hasOwnControls && <Separator orientation="vertical" className="h-6" />}
         {/* Upscale : « rapide » lance directement avec les préréglages des Paramètres du board,
             sinon la popup laisse choisir modèle/échelle et voir un aperçu. */}
         {upscalable && (
@@ -306,16 +281,6 @@ export function Inspector() {
             onClick={() => (prefs.upQuick ? void quickUpscale(item.id) : setUpOpen(true))}
           >
             <NetsuIcon name="upscale" />
-          </IconAction>
-        )}
-        {framesExtractable && (
-          <IconAction label={t("inspector.extractFrames")} onClick={() => void extractFrames()}>
-            <NetsuIcon name="extract-frames" />
-          </IconAction>
-        )}
-        {loopExportable(item) && (
-          <IconAction label={t("exportLoop.menu")} onClick={() => setLoopOpen(true)}>
-            <NetsuIcon name="export-loop" />
           </IconAction>
         )}
         {item.prevMedia && (
@@ -351,8 +316,36 @@ export function Inspector() {
             <NetsuIcon name="link-frame" on={!item.detached} />
           </IconAction>
         )}
-        <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><NetsuIcon name="z-front" /></IconAction>
-        <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><NetsuIcon name="z-back" /></IconAction>
+        {/* Stacking order stays in view: used all the time, on every kind of item. */}
+        <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}>
+          <BringFrontGlyph />
+        </IconAction>
+        <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}>
+          <SendBackGlyph />
+        </IconAction>
+        {/* Rare actions that pull something out of the media wait behind "More". Only shown when
+            there is one: a text note already has its own "More", an audio card has none. */}
+        {tools.length > 0 && (
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger
+                render={<DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label={t("inspector.more")} />} />}
+              >
+                <NetsuIcon name="more" />
+              </TooltipTrigger>
+              <TooltipContent side="top" sideOffset={12}>{t("inspector.more")}</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" side="top" className="min-w-52">
+              <DropdownMenuGroup>
+                {tools.map((a) => (
+                  <DropdownMenuItem key={a.id} onClick={a.run}>
+                    <NetsuIcon name={a.icon} on={a.on} /> {a.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <IconAction label={t("common:action.delete")} onClick={() => removeItem(item.id)}>
           <NetsuIcon name="delete" className="text-destructive" />
         </IconAction>

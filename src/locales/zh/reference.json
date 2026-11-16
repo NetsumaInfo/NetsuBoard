@@ -17,7 +17,7 @@
     "zoomIn": "放大",
     "zoomOut": "缩小",
     "fitAll": "全部适配",
-    "newScene": "新建场景",
+    "newScene": "新建项目",
     "attach": "放回主窗口",
     "pin": "固定",
     "unpin": "取消固定",
@@ -42,8 +42,8 @@
     "exitDraw": "退出绘图",
     "playAll": "全部播放",
     "freezeAll": "全部冻结",
-    "saveScene": "保存场景",
-    "openScene": "打开场景",
+    "saveScene": "保存项目",
+    "openScene": "打开项目",
     "share": "共享",
     "shareProject": "共享",
     "unsaved": "未保存",
@@ -238,7 +238,7 @@
     "pinnedRemove": "从工具栏移除 {{label}}",
     "barButtons": "工具栏",
     "assetSweep": "未使用的媒体",
-    "assetSweepHint": "删除无场景引用的文件。画板内容不受影响。",
+    "assetSweepHint": "删除无项目引用的文件。画板内容不受影响。",
     "assetSweepAction": "清理",
     "assetSweepFailed": "清理失败。",
     "assetSweepDone_one": "已移除 {{count}} 个文件，释放 {{mb}} MB。",
@@ -249,7 +249,8 @@
     "linkFocus": "突出显示所选项目的链接",
     "linksTitle": "连接",
     "linksHint": "新连接使用此样式。",
-    "linkMoveSubtree": "移动元素时带上其下游元素"
+    "linkMoveSubtree": "移动元素时带上其下游元素",
+    "reuseLastSize": "沿用上次的大小"
   },
   "inspector": {
     "ytPlayer": "YouTube 播放器",
@@ -261,7 +262,8 @@
     "longVideo": "视频过长：最多 {{max}} 帧",
     "extractingFrames": "正在提取",
     "sequenceCreated_one": "序列已创建 · {{count}} 帧",
-    "sequenceCreated_other": "序列已创建 · {{count}} 帧"
+    "sequenceCreated_other": "序列已创建 · {{count}} 帧",
+    "more": "更多操作"
   },
   "trim": {
     "start": "循环起点（秒）",
@@ -374,7 +376,7 @@
     "duplicate": "为所选创建副本",
     "undo": "撤销",
     "redo": "重做",
-    "save": "保存场景",
+    "save": "保存项目",
     "fit": "全部适配",
     "zoomIn": "放大",
     "zoomOut": "缩小",
@@ -398,7 +400,7 @@
     "toggleMouseThrough": "鼠标穿透",
     "prevFrame": "上一帧",
     "nextFrame": "下一帧",
-    "newScene": "新建场景",
+    "newScene": "新建项目",
     "openSettings": "设置",
     "togglePin": "固定窗口",
     "paletteStudio": "调色板生成器",
@@ -462,7 +464,7 @@
     "dotBg": "圆点背景",
     "drawMode": "绘图模式",
     "drawBack": "绘图在最后",
-    "openScene": "打开场景",
+    "openScene": "打开项目",
     "backHome": "返回首页",
     "alwaysOnTop": "总在最前",
     "openProject": "打开项目",
@@ -515,21 +517,21 @@
     "noEngine": "无法使用超分辨率：GPU 不支持 Vulkan。"
   },
   "scene": {
-    "title": "参考场景",
-    "namePlaceholder": "场景名称",
+    "title": "项目",
+    "namePlaceholder": "项目名称",
     "saving": "保存中",
     "untitled": "未命名",
-    "noScenes": "没有已保存的场景。",
-    "delete": "删除场景"
+    "noScenes": "没有已保存的项目。",
+    "delete": "删除项目"
   },
   "home": {
     "deleteOptions": "删除选项",
     "hideFromList": "从列表隐藏",
-    "deleteScene": "删除场景",
+    "deleteScene": "删除项目",
     "modified": "修改于 {{date}}",
     "sharedBoard": "已共享",
-    "dropMedia": "拖放媒体",
-    "dropHint": "支持图片和视频",
+    "dropMedia": "把文件拖到这里",
+    "dropHint": "支持图片、视频和声音",
     "or": "或",
     "createEmpty": "新建空项目",
     "recent": "最近",
@@ -635,14 +637,21 @@
   "board": {
     "clipboardEmpty": "剪贴板为空或不支持",
     "clipboardEmptyLink": "剪贴板为空或链接无法识别",
-    "emptyTitle": "拖入图片、视频或链接",
-    "emptyHint": "粘贴（Ctrl+V）· 滚轮缩放 · 拖动背景平移",
+    "emptyTitle": "拖入图片、视频、声音或链接",
+    "emptyHint": "滚轮：缩放 · 拖动背景：移动",
     "pastedItems_one": "已粘贴 {{count}} 个元素",
     "pastedItems_other": "已粘贴 {{count}} 个元素",
     "copiedDone_one": "已复制 {{count}} 个元素",
     "copiedDone_other": "已复制 {{count}} 个元素",
     "cutDone_one": "已剪切 {{count}} 个元素",
-    "cutDone_other": "已剪切 {{count}} 个元素"
+    "cutDone_other": "已剪切 {{count}} 个元素",
+    "start": {
+      "files": "文件",
+      "paste": "粘贴",
+      "text": "文本",
+      "note": "笔记",
+      "draw": "绘画"
+    }
   },
   "notice": {
     "recoveringMedia": "正在恢复",
@@ -848,7 +857,7 @@
     "close": "关闭",
     "create": "创建并邀请",
     "invite": "邀请",
-    "saveAsBlocked": "协作项目仍由共享场景管理。请使用导出创建本地副本。",
+    "saveAsBlocked": "协作项目仍由共享版本管理。请使用导出创建本地副本。",
     "role": {
       "owner": "所有者",
       "editor": "可编辑",
@@ -880,8 +889,8 @@
       "leaveWarning": "已收到的内容会保留，但无法再同步此项目。",
       "deleteWarning": "将删除所有成员的连接数据、邀请和加密恢复副本。无法撤销。"
     },
-    "noScene": "请先将此画板保存为参考场景。",
-    "willAdopt": "此画板将复制到参考场景。.netsu 文件仍保留在你的磁盘上。",
+    "noScene": "请先将此画板保存为项目。",
+    "willAdopt": "此画板将复制到项目。.netsu 文件仍保留在你的磁盘上。",
     "failed": "共享失败。",
     "sync": {
       "queued": "有改动等待中。有设备可连接时将自动发送。",
@@ -1140,5 +1149,29 @@
       "codeBlock": "代码块",
       "table": "表格"
     }
+  },
+  "audio": {
+    "untitled": "声音",
+    "play": "播放",
+    "pause": "暂停",
+    "unplayable": "无法播放此格式",
+    "loopOn": "循环",
+    "loopOff": "播放一次",
+    "mute": "静音",
+    "unmute": "取消静音",
+    "position": "位置",
+    "soundOn": "声音已开启",
+    "soundOff": "声音已关闭",
+    "turnOn": "开启声音",
+    "turnOff": "静音",
+    "extract": "提取声音",
+    "extracting": "正在提取声音…",
+    "extracted": "已提取声音",
+    "noTrack": "此视频没有声音",
+    "extractFailed": "无法提取声音",
+    "volume": "音量",
+    "speed": "播放速度",
+    "openFile": "打开文件",
+    "showInFolder": "在文件夹中显示"
   }
 }

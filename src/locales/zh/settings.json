@@ -7,7 +7,8 @@
     "updates": "更新",
     "report": "反馈",
     "about": "关于",
-    "discord": "Discord"
+    "discord": "Discord",
+    "agents": "AI 智能体"
   },
   "about": {
     "tagline": "无限参考画板：图片、视频、社交媒体、便笺与绘制。",
@@ -427,8 +428,8 @@
       "title": "共享画板",
       "members": "成员：{{count}} 位",
       "rotation": "等待密钥轮换",
-      "add": "添加到场景",
-      "failed": "无法添加此场景",
+      "add": "添加到项目",
+      "failed": "无法添加此项目",
       "role": {
         "owner": "所有者",
         "editor": "可编辑",
@@ -446,12 +447,12 @@
     "activity": {
       "title": "协作动态",
       "dismiss": "隐藏",
-      "changed_one": "你不在时有 {{count}} 人修改了画板。打开对应场景即可获取更改。",
-      "changed_other": "你不在时有 {{count}} 人修改了画板。打开对应场景即可获取更改。",
-      "key_one": "{{count}} 位新成员正在等待安全访问。请打开对应场景以传递项目密钥。",
-      "key_other": "{{count}} 位新成员正在等待安全访问。请打开对应场景以传递项目密钥。",
-      "media_one": "{{count}} 人正在等待原始媒体。请打开对应场景并保持在线以完成传输。",
-      "media_other": "{{count}} 人正在等待原始媒体。请打开对应场景并保持在线以完成传输。"
+      "changed_one": "你不在时有 {{count}} 人修改了画板。打开对应项目即可获取更改。",
+      "changed_other": "你不在时有 {{count}} 人修改了画板。打开对应项目即可获取更改。",
+      "key_one": "{{count}} 位新成员正在等待安全访问。请打开对应项目以传递项目密钥。",
+      "key_other": "{{count}} 位新成员正在等待安全访问。请打开对应项目以传递项目密钥。",
+      "media_one": "{{count}} 人正在等待原始媒体。请打开对应项目并保持在线以完成传输。",
+      "media_other": "{{count}} 人正在等待原始媒体。请打开对应项目并保持在线以完成传输。"
     },
     "peers": {
       "title": "连接",
@@ -460,5 +461,22 @@
       "direct": "直连",
       "relayed": "经由中继"
     }
+  },
+  "agents": {
+    "title": "AI 智能体",
+    "subtitle": "让 AI 智能体（Claude Code、Codex 等）操作画板：添加图片、整理、写字。每个操作都可用 Ctrl+Z 撤销。",
+    "enable": "允许 AI 智能体",
+    "off": "已关闭。任何智能体都无法改动画板。",
+    "waiting": "已开启。等待智能体连接。",
+    "lastCall": "最近操作：{{time}}",
+    "howto": "在终端中运行以下任一命令一次，即可连接你的智能体：",
+    "otherClients": "其他 MCP 客户端",
+    "copy": "复制",
+    "copied": "已复制"
+  },
+  "navGroup": {
+    "app": "应用",
+    "connected": "账号与服务",
+    "help": "帮助"
   }
 }

@@ -3,6 +3,7 @@
 // pellicule) et une pellicule de vignettes numérotées s'affiche en bas du board (frame active cernée,
 // clic = saut). Avance auto pilotée par le contenu (BoardItem) ; ici on ne pilote que seqPlay/frame.
 
+import { BringFrontGlyph, SendBackGlyph } from "./netsuIcons";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
@@ -174,8 +175,8 @@ export function SequencePlayer() {
             <IconAction label={revertLabel} onClick={() => revertSequence(item.id)}><NetsuIcon name="seq-revert" /></IconAction>
           )}
           <IconAction label={t("actions.duplicate")} onClick={() => duplicateItem(item.id)}><NetsuIcon name="duplicate" /></IconAction>
-          <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><NetsuIcon name="z-front" /></IconAction>
-          <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><NetsuIcon name="z-back" /></IconAction>
+          <IconAction label={t("actions.bringToFront")} onClick={() => bringToFront(item.id)}><BringFrontGlyph /></IconAction>
+          <IconAction label={t("actions.sendToBack")} onClick={() => sendToBack(item.id)}><SendBackGlyph /></IconAction>
           <IconAction label={t("common:action.delete")} onClick={() => removeItem(item.id)}>
             <NetsuIcon name="delete" className="text-destructive" />
           </IconAction>

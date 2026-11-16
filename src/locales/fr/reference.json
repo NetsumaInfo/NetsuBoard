@@ -17,7 +17,7 @@
     "zoomIn": "Zoomer",
     "zoomOut": "Dézoomer",
     "fitAll": "Tout cadrer",
-    "newScene": "Nouvelle scène",
+    "newScene": "Nouveau projet",
     "attach": "Rattacher",
     "pin": "Épingler",
     "unpin": "Désépingler",
@@ -42,8 +42,8 @@
     "exitDraw": "Quitter le dessin",
     "playAll": "Tout lire",
     "freezeAll": "Tout figer",
-    "saveScene": "Enregistrer la scène",
-    "openScene": "Ouvrir une scène",
+    "saveScene": "Enregistrer le projet",
+    "openScene": "Ouvrir un projet",
     "share": "Partager",
     "shareProject": "Partager",
     "unsaved": "Non enregistré",
@@ -238,7 +238,7 @@
     "pinnedRemove": "Retirer {{label}} de la barre",
     "barButtons": "Barre d'outils",
     "assetSweep": "Médias inutilisés",
-    "assetSweepHint": "Supprime les fichiers inutilisés par les scènes. Tes boards ne sont pas touchés.",
+    "assetSweepHint": "Supprime les fichiers que plus aucun projet n'utilise. Tes boards ne sont pas touchés.",
     "assetSweepAction": "Nettoyer",
     "assetSweepFailed": "Le nettoyage a échoué.",
     "assetSweepDone_one": "{{count}} fichier retiré, {{mb}} Mo libérés.",
@@ -249,7 +249,8 @@
     "linkFocus": "Mettre en avant les liens de l'élément sélectionné",
     "linksTitle": "Liens",
     "linksHint": "Les nouveaux liens prennent ce style.",
-    "linkMoveSubtree": "Déplacer un élément avec ses éléments en aval"
+    "linkMoveSubtree": "Déplacer un élément avec ses éléments en aval",
+    "reuseLastSize": "Reprendre la dernière taille"
   },
   "inspector": {
     "ytPlayer": "Lecteur YouTube",
@@ -261,7 +262,8 @@
     "longVideo": "Vidéo longue : {{max}} frames max",
     "extractingFrames": "Extraction",
     "sequenceCreated_one": "Séquence créée · {{count}} frame",
-    "sequenceCreated_other": "Séquence créée · {{count}} frames"
+    "sequenceCreated_other": "Séquence créée · {{count}} frames",
+    "more": "Plus d'actions"
   },
   "trim": {
     "start": "Début de boucle (s)",
@@ -374,7 +376,7 @@
     "duplicate": "Dupliquer la sélection",
     "undo": "Annuler",
     "redo": "Rétablir",
-    "save": "Enregistrer la scène",
+    "save": "Enregistrer le projet",
     "fit": "Tout cadrer",
     "zoomIn": "Zoomer",
     "zoomOut": "Dézoomer",
@@ -398,7 +400,7 @@
     "toggleMouseThrough": "Transparent à la souris",
     "prevFrame": "Image précédente",
     "nextFrame": "Image suivante",
-    "newScene": "Nouvelle scène",
+    "newScene": "Nouveau projet",
     "openSettings": "Paramètres",
     "togglePin": "Épingler la fenêtre",
     "paletteStudio": "Générateur de palettes",
@@ -462,7 +464,7 @@
     "dotBg": "Fond à points",
     "drawMode": "Mode dessin",
     "drawBack": "Dessins en arrière-plan",
-    "openScene": "Ouvrir une scène",
+    "openScene": "Ouvrir un projet",
     "backHome": "Retour à l'accueil",
     "alwaysOnTop": "Toujours au premier plan",
     "openProject": "Ouvrir un projet",
@@ -515,21 +517,21 @@
     "noEngine": "Upscale indisponible : GPU sans Vulkan."
   },
   "scene": {
-    "title": "Scènes de référence",
-    "namePlaceholder": "Nom de la scène",
+    "title": "Projets",
+    "namePlaceholder": "Nom du projet",
     "saving": "Enregistrement",
     "untitled": "Sans titre",
-    "noScenes": "Aucune scène enregistrée.",
-    "delete": "Supprimer la scène"
+    "noScenes": "Aucun projet enregistré.",
+    "delete": "Supprimer le projet"
   },
   "home": {
     "deleteOptions": "Options de suppression",
     "hideFromList": "Masquer de la liste",
-    "deleteScene": "Supprimer la scène",
+    "deleteScene": "Supprimer le projet",
     "modified": "Modifié {{date}}",
     "sharedBoard": "Partagé",
-    "dropMedia": "Glisser-déposer des médias",
-    "dropHint": "Images et vidéos acceptées",
+    "dropMedia": "Dépose tes fichiers ici",
+    "dropHint": "Images, vidéos et sons acceptés",
     "or": "ou",
     "createEmpty": "Créer un projet vide",
     "recent": "Récent",
@@ -635,14 +637,21 @@
   "board": {
     "clipboardEmpty": "Presse-papiers vide ou non pris en charge",
     "clipboardEmptyLink": "Presse-papiers vide ou lien non reconnu",
-    "emptyTitle": "Dépose images, vidéos ou liens",
-    "emptyHint": "Coller (Ctrl+V) · molette : zoom · glisser le fond : naviguer",
+    "emptyTitle": "Dépose images, vidéos, sons ou liens",
+    "emptyHint": "Molette : zoom · glisser le fond : se déplacer",
     "pastedItems_one": "{{count}} élément collé",
     "pastedItems_other": "{{count}} éléments collés",
     "copiedDone_one": "{{count}} élément copié",
     "copiedDone_other": "{{count}} éléments copiés",
     "cutDone_one": "{{count}} élément coupé",
-    "cutDone_other": "{{count}} éléments coupés"
+    "cutDone_other": "{{count}} éléments coupés",
+    "start": {
+      "files": "Fichiers",
+      "paste": "Coller",
+      "text": "Texte",
+      "note": "Note",
+      "draw": "Dessiner"
+    }
   },
   "notice": {
     "recoveringMedia": "Récupération",
@@ -848,7 +857,7 @@
     "close": "Fermer",
     "create": "Créer et inviter",
     "invite": "Inviter",
-    "saveAsBlocked": "Un projet collaboratif reste piloté par sa scène partagée. Utilise l'export pour une copie locale.",
+    "saveAsBlocked": "Un projet collaboratif reste piloté par sa version partagée. Utilise l'export pour une copie locale.",
     "role": {
       "owner": "Propriétaire",
       "editor": "Peut modifier",
@@ -880,8 +889,8 @@
       "leaveWarning": "Tu gardes ce que ton appareil a déjà reçu. Tu ne pourras plus synchroniser ce projet.",
       "deleteWarning": "Rendez-vous, invitations et sauvegardes chiffrées seront supprimés pour tous les membres. Irréversible."
     },
-    "noScene": "Enregistre d'abord ce board comme scène de référence.",
-    "willAdopt": "Ce board sera copié dans tes scènes de référence. Le fichier .netsu reste sur ton disque.",
+    "noScene": "Enregistre d'abord ce board comme projet.",
+    "willAdopt": "Ce board sera copié dans tes projets. Le fichier .netsu reste sur ton disque.",
     "failed": "Le partage a échoué.",
     "sync": {
       "queued": "Modifications en attente. Envoi automatique dès qu'un appareil est joignable.",
@@ -1140,5 +1149,29 @@
       "codeBlock": "Bloc de code",
       "table": "Tableau"
     }
+  },
+  "audio": {
+    "untitled": "Son",
+    "play": "Lire",
+    "pause": "Pause",
+    "unplayable": "Format non lisible",
+    "loopOn": "En boucle",
+    "loopOff": "Lire une fois",
+    "mute": "Couper le son",
+    "unmute": "Remettre le son",
+    "position": "Position",
+    "soundOn": "Son activé",
+    "soundOff": "Son coupé",
+    "turnOn": "Activer le son",
+    "turnOff": "Couper le son",
+    "extract": "Extraire le son",
+    "extracting": "Extraction du son…",
+    "extracted": "Son extrait",
+    "noTrack": "Cette vidéo n'a pas de son",
+    "extractFailed": "Impossible d'extraire le son",
+    "volume": "Volume",
+    "speed": "Vitesse de lecture",
+    "openFile": "Ouvrir le fichier",
+    "showInFolder": "Afficher dans le dossier"
   }
 }

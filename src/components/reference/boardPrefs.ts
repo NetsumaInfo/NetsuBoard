@@ -83,6 +83,10 @@ export interface BoardPrefs {
   favFonts: string[];        // polices favorites (épinglées en tête du FontPicker)
   defaultFont: string;       // police par défaut des nouvelles notes
   defaultFontSize: number;   // taille par défaut
+  // New notes take the size last chosen on a note instead of `defaultFontSize`: writing several
+  // notes at the same size no longer means setting it again on each one.
+  reuseLastFontSize: boolean;
+  lastFontSize: number | null;
   defaultTextColor: string;  // couleur de texte par défaut
   defaultNoteBg: string;     // fond de note par défaut ("transparent" possible)
   defaultFrameColor: string; // couleur (contour/titre) par défaut des nouveaux cadres
@@ -249,6 +253,8 @@ const PREFS_DEFAULT: BoardPrefs = {
   favFonts: [],
   defaultFont: HANDWRITING_FONT,
   defaultFontSize: 28,
+  reuseLastFontSize: true,
+  lastFontSize: null,
   defaultTextColor: "#ffffff",
   defaultNoteBg: "transparent",
   defaultFrameColor: "#60a5fa",
@@ -373,4 +379,9 @@ export function readPrefs(): BoardPrefs {
     };
   } catch { /* défaut ci-dessous */ }
   return PREFS_DEFAULT;
+}
+
+/** Size of a new text note: the last size picked on a note when that setting is on. */
+export function newNoteFontSize(p: Pick<BoardPrefs, "defaultFontSize" | "reuseLastFontSize" | "lastFontSize">): number {
+  return p.reuseLastFontSize && p.lastFontSize && p.lastFontSize > 0 ? p.lastFontSize : p.defaultFontSize;
 }

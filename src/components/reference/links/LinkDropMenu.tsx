@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useBoard } from "../useReferenceBoard";
 import { makeBlockItem, makeNoteItem, makeTextItem, topZ, type BoardItem } from "../referenceShared";
 import { MODE_ICONS } from "../TextModeControls";
+import { newNoteFontSize } from "../boardPrefs";
 import { autoAnchor } from "./model";
 import { applyLinkEnd, newLinkStyle, type LinkDrop } from "./useLinkGesture";
 import { drawShapesOf } from "./useLinkScene";
@@ -18,7 +19,7 @@ function makeItem(kind: DropKind, z: number): BoardItem {
   if (kind === "note") return makeNoteItem(0, 0, z);
   if (kind === "block") return makeBlockItem(0, 0, z);
   const p = useBoard.getState().prefs;
-  return { ...makeTextItem(0, 0, z), fontFamily: p.defaultFont, fontSize: p.defaultFontSize, color: p.defaultTextColor, bg: p.defaultNoteBg };
+  return { ...makeTextItem(0, 0, z), fontFamily: p.defaultFont, fontSize: newNoteFontSize(p), color: p.defaultTextColor, bg: p.defaultNoteBg };
 }
 
 // Creates the item centred on the drop point and links it. addItem records the history entry; the

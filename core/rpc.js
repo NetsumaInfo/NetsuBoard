@@ -7,7 +7,7 @@
 // (utilisé pour e.sender.send des progressions) est remplacé par un shim qui diffuse en SSE.
 
 const path = require("path");
-const { CONFIG, DATA_DIR, saveConfig } = require("./config");
+const { CONFIG, DATA_DIR, NR_HOME, saveConfig } = require("./config");
 const { t, pickLanguage } = require("./i18n");
 const ffmpeg = require("./ffmpeg");
 const thumbs = require("./thumbs");
@@ -34,6 +34,9 @@ const logbus = require("./logbus"); // journal centralisé (core + sidecars pyth
 const { createDiscordRpc } = require("./discordRpc"); // Rich Presence Discord (client IPC maison, named pipe)
 const bugreport = require("./bugreport"); // envoi d'un rapport de bug → webhook Discord (Console)
 const bugContext = require("./bugContext"); // instantané machine joint au rapport (specs auto)
+const { createAgentRelay } = require("./agent"); // AI agents (MCP) → board, relayed to the renderer
+const boardAudio = require("./boardAudio"); // audio cards: track copied out of a video, loudness outline
+const boardProbe = require("./boardProbe"); // video size/length from the container headers (import)
 
 const JSONH = { "Content-Type": "application/json" };
 const MAX_RPC_BODY = 128 * 1024 * 1024;
@@ -53,6 +56,7 @@ function createRpc() {
   const ev = { sender: { send: (ch, p) => broadcast(ch, p) } };
   // Branche le journal sur la diffusion SSE et capte les console.* du core (démarrage, erreurs RPC).
   logbus.attach(broadcast);
+  const agent = createAgentRelay({ home: NR_HOME, broadcast, clientCount: () => clients.size });
 
   const refStore = createReferenceStore(DATA_DIR);
 
@@ -238,6 +242,11 @@ function createRpc() {
     "reference:estimateLoop": ([opts]) => loopExport.estimateLoop(opts || {}),
     // The whole board as a looping animated image: still layers and playing clips, stacked.
     "reference:exportBoardLoop": ([opts]) => loopExport.exportBoardLoop(ev, opts || {}),
+    // AI agents: core/mcp.js calls agent:call, the board answers with agent:reply (cf. core/agent.js).
+    "agent:status": () => agent.status(),
+    "agent:setEnabled": ([on]) => agent.setEnabled(on),
+    "agent:call": ([secret, tool, args]) => agent.call(secret, tool, args),
+    "agent:reply": ([id, result]) => agent.reply(id, result),
     "reference:push": ([payload]) => {
       broadcast("reference:push", payload);
       return null;
@@ -260,6 +269,12 @@ function createRpc() {
     "reference:sampleFrame": ([filePath, opts]) => ffmpeg.sampleFrame(filePath, opts || {}),
     // Cadence + duree exactes d'un fichier local : ce qu'il faut pour avancer d'UNE image.
     "reference:playInfo": ([filePath]) => ffmpeg.playInfo(filePath),
+    // Audio track of a local video copied as is (no re-encode) into the app assets: an audio card.
+    "reference:extractAudio": ([opts]) => boardAudio.extractTrack(refStore.assetsDir, opts || {}),
+    // Loudness outline drawn on an audio card.
+    "reference:audioPeaks": ([filePath, bins]) => boardAudio.peaks(filePath, bins),
+    // Size of a local video as shown (rotation, anamorphic) and its length, without opening a stream.
+    "reference:probeVideo": ([filePath]) => boardProbe.probeVideo(filePath),
 
     // --- Partage « .netsu » : export (board courant → archive) / import (archive → scène) ---
     // L'export encode ses clips un par un : il rend compte item par item, sinon un board fourni
@@ -280,6 +295,7 @@ function createRpc() {
     "netsu:saveProject": ([filePath, scene]) => netsu.saveProject(refStore, filePath, scene),
     "netsu:saveProjectAs": ([opts]) => netsu.saveProjectAs(refStore, opts || {}),
     "netsu:closeProject": ([filePath]) => netsu.closeProject(filePath),
+    "netsu:backupProject": ([filePath]) => netsu.backupProject(filePath),
     // --- Paramètres › Stockage : mesurer, libérer, mettre à l'abri ---
     // Le renderer ne désigne jamais un fichier à supprimer : il demande une PORTÉE et joint les
     // localisateurs du board affiché (travail non encore enregistré). Le core recalcule lui-même ce
@@ -454,6 +470,7 @@ function createRpc() {
 
   return {
     handle, broadcast, channels: Object.keys(H), stopCache: cachePolicy.stop,
+    publishAgent: (port) => agent.publish(port),
     stopDiscord: discordRpc.stop,
     closeProjects: () => netsu.closeAllProjects(),
   };

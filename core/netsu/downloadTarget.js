@@ -6,9 +6,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const sidecar = require('./sidecar');
 
-/** @param {string} projectPath @param {'image'|'video'} kind */
+/** @param {string} projectPath @param {'image'|'video'|'audio'} kind */
 function bucketDir(projectPath, kind) {
-  return path.join(sidecar.sidecarDirFor(projectPath), kind === 'video' ? 'videos' : 'images');
+  return path.join(sidecar.sidecarDirFor(projectPath), kind === 'video' ? 'videos' : kind === 'audio' ? 'other' : 'images');
 }
 
 /** @param {string} projectPath @param {string} title */
@@ -17,7 +17,7 @@ function sequenceDir(projectPath, title) {
 }
 
 /**
- * @param {string} projectPath @param {'image'|'video'} kind @param {string} title
+ * @param {string} projectPath @param {'image'|'video'|'audio'} kind @param {string} title
  * @param {Buffer|Uint8Array} bytes @param {string} ext
  */
 function writeBuffer(projectPath, kind, title, bytes, ext) {

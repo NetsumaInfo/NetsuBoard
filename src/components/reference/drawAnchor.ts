@@ -14,7 +14,7 @@ import { shapeBBox } from "./drawGeometry";
 import { isLink, linkEndpoints } from "./links/model";
 
 // Kinds qui peuvent porter un tracé : tout ce qui est un média ou un conteneur visible.
-export const ANCHORABLE = new Set(["image", "video", "youtube", "embed", "sequence", "frame", "palette", "text"]);
+export const ANCHORABLE = new Set(["image", "video", "audio", "youtube", "embed", "sequence", "frame", "palette", "text"]);
 
 // Part des points d'une forme qui doit tomber dans un item pour qu'elle lui appartienne.
 const OWN_COVERAGE = 0.8;

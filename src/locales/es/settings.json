@@ -7,7 +7,8 @@
     "updates": "Actualizaciones",
     "report": "Informar",
     "about": "Acerca de",
-    "discord": "Discord"
+    "discord": "Discord",
+    "agents": "Agentes IA"
   },
   "about": {
     "tagline": "Tablero de referencia infinito: imágenes, vídeos, redes sociales, notas y dibujo.",
@@ -427,8 +428,8 @@
       "title": "Tableros compartidos",
       "members": "Miembros: {{count}}",
       "rotation": "rotación de clave pendiente",
-      "add": "Añadir a escenas",
-      "failed": "No se pudo añadir esta escena",
+      "add": "Añadir a proyectos",
+      "failed": "No se pudo añadir este proyecto",
       "role": {
         "owner": "Propietario",
         "editor": "Puede editar",
@@ -446,12 +447,12 @@
     "activity": {
       "title": "Actividad colaborativa",
       "dismiss": "Ocultar",
-      "changed_one": "{{count}} persona modificó un tablero mientras no estabas. Abre su escena para recuperar los cambios.",
-      "changed_other": "{{count}} personas modificaron un tablero mientras no estabas. Abre su escena para recuperar los cambios.",
-      "key_one": "{{count}} miembro nuevo espera acceso seguro. Abre la escena para entregar la clave del proyecto.",
-      "key_other": "{{count}} miembros nuevos esperan acceso seguro. Abre la escena para entregar la clave del proyecto.",
-      "media_one": "{{count}} persona espera un medio original. Abre la escena y mantente en línea para transferirlo.",
-      "media_other": "{{count}} personas esperan un medio original. Abre la escena y mantente en línea para transferirlo."
+      "changed_one": "{{count}} persona modificó un tablero mientras no estabas. Abre el proyecto para recuperar los cambios.",
+      "changed_other": "{{count}} personas modificaron un tablero mientras no estabas. Abre el proyecto para recuperar los cambios.",
+      "key_one": "{{count}} miembro nuevo espera acceso seguro. Abre el proyecto para entregar la clave del proyecto.",
+      "key_other": "{{count}} miembros nuevos esperan acceso seguro. Abre el proyecto para entregar la clave del proyecto.",
+      "media_one": "{{count}} persona espera un medio original. Abre el proyecto y mantente en línea para transferirlo.",
+      "media_other": "{{count}} personas esperan un medio original. Abre el proyecto y mantente en línea para transferirlo."
     },
     "peers": {
       "title": "Conexiones",
@@ -460,5 +461,22 @@
       "direct": "Conexión directa",
       "relayed": "A través de un relé"
     }
+  },
+  "agents": {
+    "title": "Agentes IA",
+    "subtitle": "Deja que un agente IA (Claude Code, Codex…) trabaje en el tablero: añadir imágenes, ordenar, escribir. Cada acción se deshace con Ctrl+Z.",
+    "enable": "Permitir agentes IA",
+    "off": "Desactivado. Ningún agente puede tocar el tablero.",
+    "waiting": "Activado. Esperando a un agente.",
+    "lastCall": "Última acción a las {{time}}",
+    "howto": "Ejecuta uno de estos comandos una vez, en una terminal, para conectar tu agente:",
+    "otherClients": "Otros clientes MCP",
+    "copy": "Copiar",
+    "copied": "Copiado"
+  },
+  "navGroup": {
+    "app": "Aplicación",
+    "connected": "Cuenta y servicios",
+    "help": "Ayuda"
   }
 }

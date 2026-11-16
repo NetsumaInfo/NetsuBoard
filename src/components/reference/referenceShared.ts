@@ -12,7 +12,7 @@ import { embedSrc } from "./embeds";
 import type { ColorFormat } from "./colorFormat";
 import type { DocType } from "./boardDocs";
 
-export type ItemKind = "image" | "video" | "youtube" | "embed" | "text" | "frame" | "draw" | "sequence" | "palette";
+export type ItemKind = "image" | "video" | "audio" | "youtube" | "embed" | "text" | "frame" | "draw" | "sequence" | "palette";
 
 // Ce qu'un fichier .netsu garde des médias. L'ordre est celui du plus léger au plus lourd : il est
 // repris tel quel par le dialogue de partage, les réglages du board et l'inspecteur d'item.
@@ -223,6 +223,12 @@ export interface BoardItem {
   trimIn?: number;
   trimOut?: number;
   dur?: number;       // durée du média (s) quand connue → borne le sélecteur de portée
+  // Sound of a video (kind "video"): unset = muted, the board stays silent unless asked. An audio
+  // card always plays its sound. `volume` 0..1 (unset = 1) applies to both.
+  sound?: boolean;
+  volume?: number;
+  // Audio card (kind "audio"): start again at the end. Unset = play once.
+  loop?: boolean;
   // Ce que le fichier .netsu garde de CE média, quand le défaut du board ne convient pas (une
   // référence clé qu'on veut en pleine qualité, un rush de 2 h qu'on ne veut qu'en lien).
   // Non renseigné = réglage du board. Sémantique : core/netsu/levels.js.
@@ -263,6 +269,8 @@ export interface BoardItem {
   bg?: string;        // fond de la note ("transparent" possible)
   highlight?: string; // surlignage DERRIÈRE le texte (distinct de `bg`, "transparent" = aucun)
   lineHeight?: number; // interligne (multiplicateur ; défaut 1.2)
+  padding?: number;    // inner margin in px on every side (default 12)
+  valign?: "top" | "middle" | "bottom"; // vertical alignment of the text in its box (default top)
   indent?: number;     // niveau d'indentation (paliers de 24px de marge gauche ; 0 = aucun)
   bullet?: boolean;    // liste à puces (les puces sont écrites dans le texte, ce flag = état du bouton)
   numbered?: boolean;  // liste numérotée (mêmes principes que `bullet` : « 1. » écrits dans le texte)
@@ -397,6 +405,9 @@ export function makeBlockItem(x: number, y: number, z: number): BoardItem {
 export function makeNoteItem(x: number, y: number, z: number): BoardItem {
   return { id: uid(), kind: "text", ref: "", src: "", x, y, w: 300, h: 240, rotation: 0, z, text: "", doc: [] };
 }
+
+// Audio card: a wide strip (play button, title, loudness outline, time).
+export const AUDIO_CARD = { w: 380, h: 120 } as const;
 
 // Item texte par défaut (note adhésive).
 export function makeTextItem(x: number, y: number, z: number): BoardItem {
@@ -590,10 +601,19 @@ export function screenToBoard(view: BoardView, px: number, py: number): { x: num
 // Extensions d'image / vidéo (consommées par kindFromPath ET le moteur d'embeds isVideoUrl/isImageUrl).
 export const IMAGE_RE = /\.(jpg|jpeg|png|gif|webp|bmp|tif|tiff|avif|svg)$/i;
 export const VIDEO_RE = /\.(mp4|mov|mkv|m4v|avi|webm|wmv|flv|mts|m2ts|ts|mpg|mpeg|3gp)$/i;
+// Audio the webview plays as is. Other formats (AIFF, WMA, AC-3…) stay documents: no card could play them.
+export const AUDIO_RE = /\.(mp3|wav|flac|ogg|oga|opus|m4a|aac|weba)$/i;
+
+/** Audio file by name, or by MIME type when the name has no usable extension. */
+export function isAudioFile(nameOrPath: string, mime = ""): boolean {
+  if (AUDIO_RE.test(nameOrPath)) return true;
+  return !IMAGE_RE.test(nameOrPath) && !VIDEO_RE.test(nameOrPath) && !/\.[a-z0-9]{1,5}$/i.test(nameOrPath) && mime.startsWith("audio/");
+}
 
 export function kindFromPath(p: string): ItemKind | null {
   if (IMAGE_RE.test(p)) return "image";
   if (VIDEO_RE.test(p)) return "video";
+  if (AUDIO_RE.test(p)) return "audio";
   return null;
 }
 

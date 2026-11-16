@@ -23,9 +23,23 @@ const MIME_EXT = {
   'video/x-matroska': 'mkv', 'video/x-msvideo': 'avi', 'video/ogg': 'ogv', 'video/mpeg': 'mpg',
 };
 const VIDEO_EXTS = new Set(['mp4', 'webm', 'mov', 'mkv', 'm4v', 'avi', 'ogv', 'mpg', 'mpeg']);
+const AUDIO_EXTS = new Set(['mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'weba', 'mka', 'ac3', 'eac3']);
+
+// upload.wikimedia.org/wikipedia/<wiki>/<a>/<ab>/<name> → its 1920 px thumbnail; null for anything
+// else (a thumbnail already, another host).
+function wikimediaThumb(u) {
+  if (u.hostname !== 'upload.wikimedia.org') return null;
+  const m = u.pathname.match(/^\/wikipedia\/([^/]+)\/([0-9a-f])\/([0-9a-f]{2})\/([^/]+)$/);
+  if (!m) return null;
+  const [, wiki, a, ab, name] = m;
+  // Thumbnails of PDFs and TIFFs are named per page; a vector's thumbnail is a PNG.
+  if (/\.(pdf|tiff?|djvu)$/i.test(name)) return null;
+  const suffix = /\.svg$/i.test(name) ? '.png' : '';
+  return `https://upload.wikimedia.org/wikipedia/${wiki}/thumb/${a}/${ab}/${name}/1920px-${name}${suffix}`;
+}
 
 // GET avec suivi de redirections + User-Agent (certains CDN refusent l'UA par défaut de Node).
-function download(url, redirects) {
+function download(url, redirects, retried) {
   return new Promise((resolve, reject) => {
     if ((redirects || 0) > 5) return reject(new Error(t('downloadTooManyRedirects')));
     let u;
@@ -44,6 +58,20 @@ function download(url, redirects) {
       if (sc >= 300 && sc < 400 && res.headers.location) {
         res.resume();
         return resolve(download(new URL(res.headers.location, u).toString(), (redirects || 0) + 1));
+      }
+      // Wikimedia refuses full-size originals with 429 and asks for a standard thumbnail size
+      // instead (mediawiki.org/wiki/Common_thumbnail_sizes): 1920 px is the largest common one.
+      const thumb = sc === 429 && wikimediaThumb(u);
+      if (thumb) {
+        res.resume();
+        return resolve(download(thumb, redirects, retried));
+      }
+      // Rate limited (CDNs): one more try after the delay the server asks for, capped. An agent
+      // dropping a dozen images in one call hits this where a hand drop never would.
+      if ((sc === 429 || sc === 503) && !retried) {
+        res.resume();
+        const wait = Math.min(5000, (Number(res.headers['retry-after']) || 1.5) * 1000);
+        return setTimeout(() => resolve(download(url, redirects, true)), wait);
       }
       if (sc !== 200) { res.resume(); return reject(new Error('HTTP ' + sc)); }
       const chunks = [];
@@ -143,6 +171,8 @@ const EXT_OK = new Set([
   'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'avif', 'svg', 'tif', 'tiff',
   // vidéos (blobs collés/déposés sans chemin disque → persistés comme les images)
   'mp4', 'webm', 'mov', 'mkv', 'm4v', 'avi', 'ogv',
+  // audio (audio cards; also the track copied out of a video)
+  'mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'm4a', 'aac', 'weba', 'mka', 'ac3', 'eac3',
   // documents behind a document card (PDF, Word, text, Markdown, CSV, any other file); `bin` keeps
   // the bytes of a file whose extension is not listed. Mirrors DOC_SAVE_EXTS in boardDocs.ts.
   'pdf', 'docx', 'doc', 'odt', 'rtf', 'xlsx', 'xls', 'ods', 'pptx', 'ppt', 'odp', 'zip', 'rar', '7z',
@@ -309,7 +339,7 @@ function createReferenceStore(dataDir) {
       const e = EXT_OK.has(String(ext || '').toLowerCase()) ? String(ext).toLowerCase() : 'png';
       if (options.projectPath) {
         try {
-          const kind = VIDEO_EXTS.has(e) ? 'video' : 'image';
+          const kind = VIDEO_EXTS.has(e) ? 'video' : AUDIO_EXTS.has(e) ? 'audio' : 'image';
           return {
             ok: true,
             path: downloadTarget.writeBuffer(String(options.projectPath), kind, String(options.title || kind), buf, e),
@@ -598,4 +628,4 @@ function writeExportFile(filePath, data, encoding) {
   }
 }
 
-module.exports = { createReferenceStore, scanFolder, writeExportFile, downloadBytes: download };
+module.exports = { createReferenceStore, scanFolder, writeExportFile, downloadBytes: download, wikimediaThumb };

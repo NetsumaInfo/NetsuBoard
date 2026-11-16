@@ -38,7 +38,7 @@ const INDENT_STEP = 24;
 const UI_FONT = "Inter, system-ui, sans-serif";
 
 // Kinds sans pixels propres (iframe) : rendus en cartouche titré.
-const CARD_KINDS = new Set(["youtube", "embed"]);
+const CARD_KINDS = new Set(["audio", "youtube", "embed"]);
 
 export function visibleItems(items: BoardItem[], only?: Set<string>): BoardItem[] {
   return items
@@ -173,10 +173,15 @@ async function mediaSource(item: BoardItem, side = 1600): Promise<CanvasImageSou
 
   // `collab:` n'est pas un chemin : le core ne peut rien en ouvrir, la voie relisible est la suivante.
   if (ref && !isCollabRef(ref) && !/^(https?:|data:|blob:)/i.test(ref) && nr.reference?.sampleFrame) {
-    const shot = await nr.reference.sampleFrame(ref, {
-      at: item.kind === "video" ? item.trimIn ?? 0 : 0,
-      side: Math.max(16, Math.min(4096, Math.round(side))),
-    }).catch(() => null);
+    // Capped like the video fallback below: one medium the core is slow to read must not hold the
+    // whole render (an agent screenshot gives up after 120 s).
+    const shot = await Promise.race([
+      nr.reference.sampleFrame(ref, {
+        at: item.kind === "video" ? item.trimIn ?? 0 : 0,
+        side: Math.max(16, Math.min(4096, Math.round(side))),
+      }).catch(() => null),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 10000)),
+    ]);
     if (shot?.ok && shot.png) {
       const el = await loadImage(`data:image/png;base64,${shot.png}`, false);
       if (el && naturalSize(el).w) return el;
@@ -189,8 +194,24 @@ async function mediaSource(item: BoardItem, side = 1600): Promise<CanvasImageSou
     if (el && naturalSize(el).w) return el;
   }
   const live = liveMedia(item.id);
-  if (live && naturalSize(live).w) return live;
+  if (live && naturalSize(live).w && readable(live)) return live;
   return null;
+}
+
+// A remote image without CORS, shown on screen, paints but taints: one of them made the WHOLE
+// export fail at `toDataURL`. Probed on a 1×1 canvas, it is drawn as its card instead.
+function readable(el: CanvasImageSource): boolean {
+  try {
+    const probe = document.createElement("canvas");
+    probe.width = probe.height = 1;
+    const ctx = probe.getContext("2d");
+    if (!ctx) return false;
+    ctx.drawImage(el, 0, 0, 1, 1);
+    ctx.getImageData(0, 0, 1, 1);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ── Rendu canvas ─────────────────────────────────────────────────────────────
@@ -233,7 +254,8 @@ function paintText(ctx: CanvasRenderingContext2D, item: BoardItem): void {
   const size = item.fontSize ?? 18;
   const font = item.fontFamily ?? UI_FONT;
   const lh = (item.lineHeight ?? 1.2) * size;
-  const padLeft = TEXT_PAD + (item.indent ? item.indent * INDENT_STEP : 0);
+  const pad = item.padding ?? TEXT_PAD;
+  const padLeft = pad + (item.indent ? item.indent * INDENT_STEP : 0);
 
   if (item.bg && item.bg !== "transparent") {
     ctx.fillStyle = item.bg;
@@ -245,14 +267,16 @@ function paintText(ctx: CanvasRenderingContext2D, item: BoardItem): void {
   const style = item.italic ? "italic " : "";
   ctx.font = `${style}${weight} ${size}px ${font}`;
   ctx.textBaseline = "top";
-  const maxW = Math.max(1, item.w - padLeft - TEXT_PAD);
+  const maxW = Math.max(1, item.w - padLeft - pad);
   const lines = wrapText(ctx, item.text ?? "", maxW);
   const align = item.align ?? "left";
   ctx.textAlign = align === "center" ? "center" : align === "right" ? "right" : "left";
-  const anchorX = align === "center" ? item.w / 2 : align === "right" ? item.w - TEXT_PAD : padLeft;
+  const anchorX = align === "center" ? item.w / 2 : align === "right" ? item.w - pad : padLeft;
+  const free = Math.max(0, item.h - pad * 2 - lines.length * lh);
+  const top = pad + (item.valign === "middle" ? free / 2 : item.valign === "bottom" ? free : 0);
 
   lines.forEach((line, i) => {
-    const y = TEXT_PAD + i * lh;
+    const y = top + i * lh;
     if (item.highlight && item.highlight !== "transparent" && line) {
       const w = ctx.measureText(line).width;
       const x = align === "center" ? anchorX - w / 2 : align === "right" ? anchorX - w : anchorX;

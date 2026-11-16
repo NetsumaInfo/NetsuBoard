@@ -60,6 +60,7 @@ if ($LASTEXITCODE -ne 0) { throw 'fetch-node echoue' }
 Write-Host '== 4/5 Stage des ressources (core/scripts/shaders) =='
 $required = @(
   'core\server.js',
+  'core\mcp.js',
   'scripts\setup.ps1'
   # Aucun uninstall-cleanup.ps1 : la desinstallation nettoie en NSIS natif (installer-hooks.nsh).
   # Copier un .ps1 dans %TEMP% pour le lancer en -ExecutionPolicy Bypass est le motif que les
@@ -79,7 +80,7 @@ foreach ($d in @($stageCore, $stageScripts)) {
   New-Item -ItemType Directory -Force -Path $d | Out-Null
 }
 # tauri.conf.json embarque resources\**\* EN ENTIER : tout dossier oublie la part dans l'installeur.
-# Un stage NetsuRush laissait ainsi python dans le paquet, alors que NetsuBoard n'embarque aucun
+# Un stage NetsuRush laissait ainsi python\ dans le paquet, alors que NetsuBoard n'embarque aucun
 # sidecar Python. Le stage est donc une
 # liste FERMEE : ce qui n'y figure pas est supprime avant le bundle.
 $staged = @('bin', 'core', 'scripts', 'shaders', 'windows')

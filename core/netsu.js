@@ -374,6 +374,40 @@ async function writeProjectAs(refStore, { scene, destPath, fromPath, sourceScene
   }
 }
 
+/**
+ * Copy of a project for safekeeping, taken before a big change: the file and its -wal/-shm journals
+ * go into a sibling folder `backup-<name>-<YYYY-MM-DD-HHmm>`. Queued behind pending writes so the
+ * copy never lands in the middle of one. The media folder next to the project is not copied.
+ * @param {string} filePath
+ */
+function backupProject(filePath) {
+  const resolved = path.resolve(String(filePath || ""));
+  if (path.extname(resolved).toLowerCase() !== ".netsu" || !fs.existsSync(resolved)) {
+    return Promise.resolve({ ok: false, error: t("invalidArchive") });
+  }
+  return queued(resolved, async () => {
+    try {
+      const d = new Date();
+      const p2 = (n) => String(n).padStart(2, "0");
+      const stamp = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}`;
+      const base = path.basename(resolved, path.extname(resolved));
+      const dir = path.join(path.dirname(resolved), `backup-${base}-${stamp}`);
+      fs.mkdirSync(dir, { recursive: true });
+      const files = [];
+      for (const suffix of ["", "-wal", "-shm"]) {
+        const src = resolved + suffix;
+        if (!fs.existsSync(src)) continue;
+        const dest = path.join(dir, path.basename(src));
+        fs.copyFileSync(src, dest);
+        files.push(dest);
+      }
+      return { ok: true, dir, files };
+    } catch (e) {
+      return { ok: false, error: String((e && e.message) || e) };
+    }
+  });
+}
+
 /** Referme un projet (le journal WAL est replié dans le fichier). */
 function closeProject(filePath) {
   return { ok: true, closed: sessions.closeSession(filePath) };
@@ -433,7 +467,7 @@ function relocateFrom(dirPath, wanted) {
 
 module.exports = {
   exportBoard, importBoard, weigh, zipStore, unzip,
-  openProject, saveProject, saveProjectAs, closeProject, closeAllProjects,
+  openProject, saveProject, saveProjectAs, closeProject, backupProject, closeAllProjects,
   previewProject, recentProjects, forgetProject: recents.forget, deleteProject, relocateFrom,
   linkSourceScene: recents.linkSource,
 };

@@ -395,6 +395,15 @@ export function BoardSettings({ tab, onCapturingChange }: {
             <NumberSpin value={prefs.defaultFontSize} ariaLabel={t("settings.defaultSize")} onCommit={(v) => setPrefs({ defaultFontSize: v })} />
           </div>
           <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">
+              {t("settings.reuseLastSize")}
+              {prefs.reuseLastFontSize && prefs.lastFontSize ? ` (${prefs.lastFontSize})` : ""}
+            </span>
+            <Seg active={prefs.reuseLastFontSize} onClick={() => setPrefs({ reuseLastFontSize: !prefs.reuseLastFontSize })}>
+              {prefs.reuseLastFontSize ? t("settings.enabled") : t("settings.disabled")}
+            </Seg>
+          </div>
+          <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-muted-foreground">{t("settings.textColor")}</span>
             <ColorPicker value={prefs.defaultTextColor} onChange={(c) => setPrefs({ defaultTextColor: c })} ariaLabel={t("settings.defaultTextColor")} side="bottom" />
           </div>

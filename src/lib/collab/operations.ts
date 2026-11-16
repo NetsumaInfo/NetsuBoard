@@ -177,7 +177,7 @@ function automaticAsset(ref: string, item: BoardItem): MediaAsset | null {
   return {
     remoteUrl: ref,
     displayName,
-    mime: item.kind === "video" ? "video/*" : "image/*",
+    mime: item.kind === "video" ? "video/*" : item.kind === "audio" ? "audio/*" : "image/*",
     size: 0,
     sourceUrl: item.sourceUrl,
   };

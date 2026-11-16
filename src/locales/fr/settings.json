@@ -7,7 +7,8 @@
     "updates": "Mises à jour",
     "report": "Signaler",
     "about": "À propos",
-    "discord": "Discord"
+    "discord": "Discord",
+    "agents": "Agents IA"
   },
   "about": {
     "tagline": "Board de référence infini : images, vidéos, réseaux sociaux, notes et dessin.",
@@ -427,8 +428,8 @@
       "title": "Boards partagés",
       "members": "Membres : {{count}}",
       "rotation": "rotation de clé en attente",
-      "add": "Ajouter aux scènes",
-      "failed": "Impossible d'ajouter cette scène",
+      "add": "Ajouter aux projets",
+      "failed": "Impossible d'ajouter ce projet",
       "role": {
         "owner": "Propriétaire",
         "editor": "Peut modifier",
@@ -446,12 +447,12 @@
     "activity": {
       "title": "Activité collaborative",
       "dismiss": "Masquer",
-      "changed_one": "{{count}} personne a modifié un board pendant ton absence. Ouvre sa scène pour récupérer les changements.",
-      "changed_other": "{{count}} personnes ont modifié un board pendant ton absence. Ouvre sa scène pour récupérer les changements.",
-      "key_one": "{{count}} nouveau membre attend l'accès chiffré. Ouvre la scène pour transmettre la clé du projet.",
-      "key_other": "{{count}} nouveaux membres attendent l'accès chiffré. Ouvre la scène pour transmettre la clé du projet.",
-      "media_one": "{{count}} personne attend un média original. Ouvre la scène et reste en ligne pour le transmettre.",
-      "media_other": "{{count}} personnes attendent un média original. Ouvre la scène et reste en ligne pour le transmettre."
+      "changed_one": "{{count}} personne a modifié un board pendant ton absence. Ouvre le projet pour récupérer les changements.",
+      "changed_other": "{{count}} personnes ont modifié un board pendant ton absence. Ouvre le projet pour récupérer les changements.",
+      "key_one": "{{count}} nouveau membre attend l'accès chiffré. Ouvre le projet pour transmettre la clé du projet.",
+      "key_other": "{{count}} nouveaux membres attendent l'accès chiffré. Ouvre le projet pour transmettre la clé du projet.",
+      "media_one": "{{count}} personne attend un média original. Ouvre le projet et reste en ligne pour le transmettre.",
+      "media_other": "{{count}} personnes attendent un média original. Ouvre le projet et reste en ligne pour le transmettre."
     },
     "peers": {
       "title": "Connexions",
@@ -460,5 +461,22 @@
       "direct": "Connexion directe",
       "relayed": "Via relais"
     }
+  },
+  "agents": {
+    "title": "Agents IA",
+    "subtitle": "Laisser un agent IA (Claude Code, Codex…) travailler sur le board : ajouter des images, ranger, écrire. Chaque action s’annule avec Ctrl+Z.",
+    "enable": "Autoriser les agents IA",
+    "off": "Désactivé. Aucun agent ne peut toucher au board.",
+    "waiting": "Activé. En attente d’un agent.",
+    "lastCall": "Dernière action à {{time}}",
+    "howto": "Lancez une de ces commandes une fois, dans un terminal, pour brancher votre agent :",
+    "otherClients": "Autres clients MCP",
+    "copy": "Copier",
+    "copied": "Copié"
+  },
+  "navGroup": {
+    "app": "Application",
+    "connected": "Compte et services",
+    "help": "Aide"
   }
 }

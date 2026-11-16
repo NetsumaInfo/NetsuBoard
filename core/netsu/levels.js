@@ -42,7 +42,7 @@ const MAX_MARGIN_SEC = 30;
 const LONG_CLIP_SEC = 120;
 
 // Kinds qui portent un média local embarquable.
-const MEDIA_KINDS = new Set(['image', 'video', 'sequence']);
+const MEDIA_KINDS = new Set(['image', 'video', 'audio', 'sequence']);
 // Kinds dont le contenu vit chez un tiers : il n'y a rien à embarquer, jamais.
 const REMOTE_KINDS = new Set(['youtube', 'embed']);
 

@@ -50,6 +50,8 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 | dictée | dictation | dictado | Diktat | 音声入力 | 语音输入 |
 | transcription | transcription | transcripción | Transkription | 文字起こし | 转录 |
 | board / mood-board | board | tablero | Board | ボード | 画板 |
+| projet (board enregistré ; jamais « scène » à l'écran) | project | proyecto | Projekt | プロジェクト | 项目 |
+| son (audio) | sound | sonido | Ton | サウンド | 声音 |
 | cadre (sur le board) | frame | marco | Rahmen | フレーム | 边框 |
 | note (adhésive) | note | nota | Notiz | ノート | 便签 |
 | rogner | crop | recortar | zuschneiden | トリミング | 裁剪 |

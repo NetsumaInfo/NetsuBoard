@@ -17,7 +17,7 @@
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
     "fitAll": "Encuadrar todo",
-    "newScene": "Nueva escena",
+    "newScene": "Nuevo proyecto",
     "attach": "Acoplar",
     "pin": "Fijar",
     "unpin": "Dejar de fijar",
@@ -42,8 +42,8 @@
     "exitDraw": "Salir del dibujo",
     "playAll": "Reproducir todo",
     "freezeAll": "Congelar todo",
-    "saveScene": "Guardar la escena",
-    "openScene": "Abrir una escena",
+    "saveScene": "Guardar el proyecto",
+    "openScene": "Abrir un proyecto",
     "share": "Compartir",
     "shareProject": "Compartir",
     "unsaved": "Sin guardar",
@@ -238,7 +238,7 @@
     "pinnedRemove": "Quitar {{label}} de la barra",
     "barButtons": "Barra de herramientas",
     "assetSweep": "Medios sin usar",
-    "assetSweepHint": "Elimina los archivos que no usa ninguna escena. Tus tableros no se tocan.",
+    "assetSweepHint": "Elimina los archivos que no usa ningún proyecto. Tus tableros no se tocan.",
     "assetSweepAction": "Limpiar",
     "assetSweepFailed": "La limpieza ha fallado.",
     "assetSweepDone_one": "{{count}} archivo retirado, {{mb}} MB liberados.",
@@ -249,7 +249,8 @@
     "linkFocus": "Resaltar los enlaces del elemento seleccionado",
     "linksTitle": "Enlaces",
     "linksHint": "Los nuevos enlaces usan este estilo.",
-    "linkMoveSubtree": "Mover un elemento con sus elementos siguientes"
+    "linkMoveSubtree": "Mover un elemento con sus elementos siguientes",
+    "reuseLastSize": "Reutilizar el último tamaño"
   },
   "inspector": {
     "ytPlayer": "Reproductor de YouTube",
@@ -261,7 +262,8 @@
     "longVideo": "Vídeo largo: máx. {{max}} fotogramas",
     "extractingFrames": "Extrayendo",
     "sequenceCreated_one": "Secuencia creada · Fotogramas: {{count}}",
-    "sequenceCreated_other": "Secuencia creada · Fotogramas: {{count}}"
+    "sequenceCreated_other": "Secuencia creada · Fotogramas: {{count}}",
+    "more": "Más acciones"
   },
   "trim": {
     "start": "Inicio del bucle (s)",
@@ -374,7 +376,7 @@
     "duplicate": "Duplicar la selección",
     "undo": "Deshacer",
     "redo": "Rehacer",
-    "save": "Guardar la escena",
+    "save": "Guardar el proyecto",
     "fit": "Encuadrar todo",
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
@@ -398,7 +400,7 @@
     "toggleMouseThrough": "Transparente al ratón",
     "prevFrame": "Fotograma anterior",
     "nextFrame": "Fotograma siguiente",
-    "newScene": "Nueva escena",
+    "newScene": "Nuevo proyecto",
     "openSettings": "Ajustes",
     "togglePin": "Fijar la ventana",
     "paletteStudio": "Generador de paletas",
@@ -462,7 +464,7 @@
     "dotBg": "Fondo de puntos",
     "drawMode": "Modo dibujo",
     "drawBack": "Dibujos al fondo",
-    "openScene": "Abrir una escena",
+    "openScene": "Abrir un proyecto",
     "backHome": "Volver al inicio",
     "alwaysOnTop": "Siempre al frente",
     "openProject": "Abrir un proyecto",
@@ -515,21 +517,21 @@
     "noEngine": "Escalado no disponible: GPU sin Vulkan."
   },
   "scene": {
-    "title": "Escenas de referencia",
-    "namePlaceholder": "Nombre de la escena",
+    "title": "Proyectos",
+    "namePlaceholder": "Nombre del proyecto",
     "saving": "Guardando",
     "untitled": "Sin título",
-    "noScenes": "Ninguna escena guardada.",
-    "delete": "Eliminar la escena"
+    "noScenes": "Ningún proyecto guardado.",
+    "delete": "Eliminar el proyecto"
   },
   "home": {
     "deleteOptions": "Opciones de eliminación",
     "hideFromList": "Ocultar de la lista",
-    "deleteScene": "Eliminar la escena",
+    "deleteScene": "Eliminar el proyecto",
     "modified": "Modificado {{date}}",
     "sharedBoard": "Compartido",
-    "dropMedia": "Arrastra y suelta medios",
-    "dropHint": "Se aceptan imágenes y vídeos",
+    "dropMedia": "Suelta tus archivos aquí",
+    "dropHint": "Se aceptan imágenes, vídeos y sonidos",
     "or": "o",
     "createEmpty": "Crear un proyecto vacío",
     "recent": "Recientes",
@@ -635,14 +637,21 @@
   "board": {
     "clipboardEmpty": "Portapapeles vacío o no compatible",
     "clipboardEmptyLink": "Portapapeles vacío o enlace no reconocido",
-    "emptyTitle": "Suelta imágenes, vídeos o enlaces",
-    "emptyHint": "Pegar (Ctrl+V) · rueda: zoom · arrastrar el fondo: navegar",
+    "emptyTitle": "Suelta imágenes, vídeos, sonidos o enlaces",
+    "emptyHint": "Rueda: zoom · arrastra el fondo: moverte",
     "pastedItems_one": "{{count}} elemento pegado",
     "pastedItems_other": "{{count}} elementos pegados",
     "copiedDone_one": "{{count}} elemento copiado",
     "copiedDone_other": "{{count}} elementos copiados",
     "cutDone_one": "{{count}} elemento cortado",
-    "cutDone_other": "{{count}} elementos cortados"
+    "cutDone_other": "{{count}} elementos cortados",
+    "start": {
+      "files": "Archivos",
+      "paste": "Pegar",
+      "text": "Texto",
+      "note": "Nota",
+      "draw": "Dibujar"
+    }
   },
   "notice": {
     "recoveringMedia": "Recuperando",
@@ -848,7 +857,7 @@
     "close": "Cerrar",
     "create": "Crear e invitar",
     "invite": "Invitar",
-    "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su escena compartida. Usa la exportación para una copia local.",
+    "saveAsBlocked": "Un proyecto colaborativo sigue controlado por su versión compartida. Usa la exportación para una copia local.",
     "role": {
       "owner": "Propietario",
       "editor": "Puede editar",
@@ -880,8 +889,8 @@
       "leaveWarning": "Conservas lo ya recibido en este dispositivo. Ya no podrás sincronizar el proyecto.",
       "deleteWarning": "Los datos de conexión, las invitaciones y las copias cifradas se eliminarán para todos. No se puede deshacer."
     },
-    "noScene": "Guarda primero este tablero como escena de referencia.",
-    "willAdopt": "Este tablero se copiará a tus escenas de referencia. El archivo .netsu permanece en tu disco.",
+    "noScene": "Guarda primero este tablero como proyecto.",
+    "willAdopt": "Este tablero se copiará a tus proyectos. El archivo .netsu permanece en tu disco.",
     "failed": "No se pudo compartir.",
     "sync": {
       "queued": "Cambios en espera. Se enviarán automáticamente cuando haya un dispositivo disponible.",
@@ -1140,5 +1149,29 @@
       "codeBlock": "Bloque de código",
       "table": "Tabla"
     }
+  },
+  "audio": {
+    "untitled": "Sonido",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "unplayable": "Formato no reproducible",
+    "loopOn": "En bucle",
+    "loopOff": "Reproducir una vez",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "position": "Posición",
+    "soundOn": "Sonido activado",
+    "soundOff": "Sonido desactivado",
+    "turnOn": "Activar sonido",
+    "turnOff": "Silenciar",
+    "extract": "Extraer sonido",
+    "extracting": "Extrayendo sonido…",
+    "extracted": "Sonido extraído",
+    "noTrack": "Este vídeo no tiene sonido",
+    "extractFailed": "No se pudo extraer el sonido",
+    "volume": "Volumen",
+    "speed": "Velocidad de reproducción",
+    "openFile": "Abrir el archivo",
+    "showInFolder": "Mostrar en la carpeta"
   }
 }

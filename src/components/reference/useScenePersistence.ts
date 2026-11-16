@@ -248,7 +248,7 @@ export function useScenePersistence() {
         useBoard.setState({ dirty: false });
         flash(tr("notice.projectSaved", { name: fileLabel(st.filePath) }), "ok");
       } else {
-        flash(tr("notice.failedWith", { error: res?.error || tr("notice.unknown") }), "error");
+        flash(tr("notice.failedWith", { error: res?.error ? errorText(res?.error) : tr("notice.unknown") }), "error");
       }
       return res;
     } catch (e) {
@@ -280,7 +280,7 @@ export function useScenePersistence() {
         useBoard.setState({ filePath: res.path ?? dest, fileReadonly: false, sceneId: null, sceneName: fileLabel(res.path ?? dest), dirty: false });
         flash(tr("notice.projectSaved", { name: fileLabel(res.path ?? dest) }), "ok");
       } else {
-        flash(tr("notice.failedWith", { error: res?.error || tr("notice.unknown") }), "error");
+        flash(tr("notice.failedWith", { error: res?.error ? errorText(res?.error) : tr("notice.unknown") }), "error");
       }
       return res;
     } catch (e) {
@@ -294,7 +294,7 @@ export function useScenePersistence() {
     async (srcPath: string) => {
       const res = await api?.openProject(srcPath);
       if (!res?.ok || !res.scene) {
-        flash(tr("notice.openFailedWith", { error: res?.error || tr("notice.unknown") }), "error");
+        flash(tr("notice.openFailedWith", { error: res?.error ? errorText(res?.error) : tr("notice.unknown") }), "error");
         return false;
       }
       const items = hydrate(res.scene.items as BoardItem[]);
@@ -342,7 +342,7 @@ export function useScenePersistence() {
           useBoard.setState({ sceneId: res.id ?? st.sceneId, sceneName: finalName, dirty: false });
           flash(tr("notice.sceneSaved", { name: finalName }), "ok");
         } else {
-          flash(res?.error ? tr("notice.failedWith", { error: res.error }) : tr("notice.saveFailed"), "error");
+          flash(res?.error ? tr("notice.failedWith", { error: errorText(res.error) }) : tr("notice.saveFailed"), "error");
         }
         return res;
       } catch (e) {
@@ -574,7 +574,7 @@ export function useScenePersistence() {
     async (srcPath: string) => {
       const res = await api?.importBoard(srcPath);
       if (!res?.ok || !res.scene) {
-        flash(res?.type ? tr("notice.typeUnsupported", { type: res.type }) : tr("notice.importFailedWith", { error: res?.error || tr("notice.unknown") }), "error");
+        flash(res?.type ? tr("notice.typeUnsupported", { type: res.type }) : tr("notice.importFailedWith", { error: res?.error ? errorText(res?.error) : tr("notice.unknown") }), "error");
         return null;
       }
       const items = hydrate(res.scene.items as BoardItem[]);

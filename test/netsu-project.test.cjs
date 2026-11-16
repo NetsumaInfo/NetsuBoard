@@ -579,3 +579,27 @@ test('un média extrait garde son lien d’origine ET sa copie locale', async ()
     sessions.closeSession(file);
   }
 });
+
+test('un son posé dans le projet survit aux enregistrements et à la réouverture', async () => {
+  const { projectsDir, refStore } = workspace();
+  const file = path.join(projectsDir, 'projet.netsu');
+  const session = sessions.openSession(file, { create: true });
+  try {
+    // Ce que fait un son déposé sans chemin disque : ses octets écrits dans le dossier compagnon.
+    const downloadTarget = require('../core/netsu/downloadTarget');
+    const dropped = downloadTarget.writeBuffer(file, 'audio', 'Ambiance', Buffer.from('ID3 son'), 'mp3');
+    const sound = { id: 's1', kind: 'audio', title: 'Ambiance.mp3', ref: dropped, x: 0, y: 0, w: 380, h: 120, z: 0 };
+    // Le ménage du dossier compagnon emportait tout fichier qu'aucun item « média » ne réclamait.
+    await saveBoardProject({ session, refStore, scene: { name: 'P', items: [sound, note('n', 400)] } });
+    const reopened = readBoardProject({ session, refStore }).scene.items.find((it) => it.id === 's1');
+    assert.ok(reopened.ref, 'le son garde un localisateur');
+    assert.equal(fs.existsSync(path.resolve(reopened.ref)), true);
+    assert.equal(reopened.missing, undefined);
+
+    await saveBoardProject({ session, refStore, scene: { name: 'P', items: [reopened, note('n', 400)] } });
+    const again = readBoardProject({ session, refStore }).scene.items.find((it) => it.id === 's1');
+    assert.equal(fs.existsSync(path.resolve(again.ref)), true);
+  } finally {
+    sessions.closeSession(file);
+  }
+});

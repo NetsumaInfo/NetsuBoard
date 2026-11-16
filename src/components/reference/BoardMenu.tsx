@@ -4,7 +4,7 @@
 
 import { useState, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { WebGlyph } from "./netsuIcons";
+import { WebGlyph, BringFrontGlyph, SendBackGlyph } from "./netsuIcons";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { enclosingFrame } from "./boardFrames";
 import { requestOpenDoc } from "./boardPdf";
@@ -28,8 +28,8 @@ import { useBoard } from "./useReferenceBoard";
 import { AddLinkDialog } from "./AddLinkDialog";
 import { ExportImageDialog } from "./ExportImageDialog";
 import { ExportLoopDialog } from "./ExportLoopDialog";
-import { loopExportable } from "./boardLoopExport";
 import { extractPaletteToBoard } from "./boardPaletteActions";
+import { mediaActions } from "./itemActions";
 import type { BoardHandle } from "./ReferenceBoard";
 
 export function BoardContextMenu({
@@ -234,10 +234,10 @@ export function BoardContextMenu({
                         </ContextMenuItem>
                       )}
                       <ContextMenuItem onClick={() => store().bringToFront(item.id)}>
-                        <NetsuIcon name="z-front" /> {t("actions.bringToFront")}
+                        <BringFrontGlyph /> {t("actions.bringToFront")}
                       </ContextMenuItem>
                       <ContextMenuItem onClick={() => store().sendToBack(item.id)}>
-                        <NetsuIcon name="z-back" /> {t("actions.sendToBack")}
+                        <SendBackGlyph /> {t("actions.sendToBack")}
                       </ContextMenuItem>
                       <ContextMenuSeparator />
                       <ContextMenuSub>
@@ -291,9 +291,10 @@ export function BoardContextMenu({
                     // correcte : une source qui a changé, un fichier repris par le ménage ou une
                     // synchronisation en retard donnent une case plausible et périmée.
                     const reload = reloadableMedia(item) && item.kind !== "embed";
-                    const loop = loopExportable(item);
+                    // Sound and everything pulled out of the media: the list the Inspector's "More" reads.
+                    const tools = mediaActions(item, { openLoop: () => setLoopItem(item) });
                     const asEmbed = (item.kind === "image" || item.kind === "video") && !!item.sourceUrl;
-                    if (!linkUrl && !reload && !loop && !asEmbed && item.kind !== "embed") return null;
+                    if (!linkUrl && !reload && !tools.length && !asEmbed && item.kind !== "embed") return null;
                     const LinkIcon = linkUrl ? iconForLink(linkUrl) : WebGlyph;
                     return (
                       <ContextMenuSub>
@@ -314,11 +315,11 @@ export function BoardContextMenu({
                               <NetsuIcon name="download-media" /> {item.localMedia ? t("actions.restoreDownload") : t("boardMenu.downloadMedia")}
                             </ContextMenuItem>
                           )}
-                          {loop && (
-                            <ContextMenuItem onClick={() => setLoopItem(item)}>
-                              <NetsuIcon name="export-loop" /> {t("exportLoop.menu")}
+                          {tools.map((tool) => (
+                            <ContextMenuItem key={tool.id} onClick={tool.run}>
+                              <NetsuIcon name={tool.icon} on={tool.on} /> {tool.label}
                             </ContextMenuItem>
-                          )}
+                          ))}
                           {asEmbed && (
                             <ContextMenuItem onClick={() => convertToEmbed(item.id)}>
                               <NetsuIcon name="as-embed" /> {t("boardMenu.showAsEmbed")}
@@ -540,7 +541,7 @@ export function BoardContextMenu({
                   </ContextMenuCheckboxItem>
                   {hasDraw && (
                     <ContextMenuCheckboxItem checked={drawBack} onCheckedChange={() => store().setDrawBack(!drawBack)}>
-                      <NetsuIcon name="z-back" /> {t("boardMenu.drawBack")}
+                      <SendBackGlyph /> {t("boardMenu.drawBack")}
                     </ContextMenuCheckboxItem>
                   )}
                 </ContextMenuSubContent>

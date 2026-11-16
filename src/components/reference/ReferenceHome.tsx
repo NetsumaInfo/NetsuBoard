@@ -5,6 +5,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, Users } from "lucide-react";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
+import { errorText } from "@/lib/errorText";
 import { cn, uiLocale } from "@/lib/utils";
 import { nr } from "@/lib/bridge";
 import { logError } from "@/lib/appLog";
@@ -404,7 +405,7 @@ export function ReferenceHome({
     if (!result) return;
     setProjects(result.recents);
     if (!result.ok) {
-      useBoard.getState().setNotice({ text: t("notice.failedWith", { error: result.error || t("notice.unknown") }), kind: "error" });
+      useBoard.getState().setNotice({ text: t("notice.failedWith", { error: result.error ? errorText(result.error) : t("notice.unknown") }), kind: "error" });
       return;
     }
     const st = useBoard.getState();

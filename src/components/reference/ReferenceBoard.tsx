@@ -44,7 +44,7 @@ import { isPalm, isTouchFirst, kindOf, usesBarrel, watchPen, type PointerKind } 
 import { boundsOf, rotatedBBox } from "./boardArrange";
 import { useLiveGuides } from "./boardLive";
 import { watchMouseThroughExit } from "./boardMouseThrough";
-import { clampMediaOpacity } from "./boardPrefs";
+import { clampMediaOpacity, newNoteFontSize } from "./boardPrefs";
 import { itemToPngBlob } from "./boardRender";
 import { primeBoardThumbs } from "./boardImageLod";
 import { posterTime } from "./boardVideoLod";
@@ -86,12 +86,13 @@ export interface BoardHandle {
   addVideoUrl: (url: string, opts?: { allowGenericEmbed?: boolean }) => boolean;
   addUrl: (url: string, opts?: { allowGenericEmbed?: boolean }) => Promise<boolean>;
   addPath: (path: string, title?: string) => void;
-  addPaths: (paths: string[]) => void;
+  // `at` = top-left of the batch (an agent placing it on free space); default = view centre.
+  addPaths: (paths: string[], at?: { x: number; y: number }) => void;
   addCut: (path: string, inSec: number, outSec: number, title?: string) => void;
   addCuts: (path: string, cuts: { in: number; out: number; title?: string }[]) => void;
   addSequence: (paths: string[]) => void;
   // Import GROUPÉ d'un dossier : un cadre par dossier, contenu rangé, une seule entrée d'annulation.
-  addFolder: (dirPath: string) => void;
+  addFolder: (dirPath: string, at?: { x: number; y: number }) => void;
   addPaste: (data: DataTransfer) => Promise<boolean>;
   pasteClipboard: () => void;
   // Colle le presse-papiers INTERNE (items copiés dans le board) au centre du viewport.
@@ -130,6 +131,13 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   const selectedIds = useBoard((s) => s.selectedIds);
   const selectedId = useBoard((s) => s.selectedId);
   const editingId = useBoard((s) => s.editingId);
+  // The "drop something here" help is for a board nobody has touched yet: anything placed, drawn or
+  // undone in this scene, a note open or the pen out, and it is gone for good.
+  const pristine = useBoard((s) =>
+    s.past.length === 0 && s.future.length === 0 && !s.drawMode && !s.noteOpenId && !s.editingId
+    && s.folderPath.length === 0
+    && !s.items.some((it) => it.kind !== "draw" || (it.shapes?.length ?? 0) > 0));
+  const readOnlyBoard = useBoard((s) => s.collabProjectId !== null && s.collabRole === "viewer");
   const focusReq = useBoard((s) => s.focusReq);
   const setView = useBoard((s) => s.setView);
   const select = useBoard((s) => s.select);
@@ -665,6 +673,46 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
     });
   }, [focusReq, commitView]);
 
+  // Coller depuis le menu contextuel : pas de DataTransfer → on lit le presse-papier async.
+  const pasteFromClipboard = useCallback(async () => {
+    try {
+      const clip = await navigator.clipboard.read();
+      for (const it of clip) {
+        const t = it.types.find((x) => x.startsWith("image/") || x.startsWith("video/"));
+        if (t) {
+          const ext = t.split("/")[1] || "png";
+          ingest.addFiles([new File([await it.getType(t)], `collage.${ext}`, { type: t })]);
+          return;
+        }
+      }
+    } catch { /* pas de média accessible */ }
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      if (text) { void ingest.addUrl(text); return; }
+    } catch { /* presse-papier inaccessible */ }
+    useBoard.getState().setNotice({ kind: "error", text: t("board.clipboardEmpty") });
+  }, [ingest, t]);
+  const addNote = useCallback(() => {
+    const c = centerPoint();
+    const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
+    const note = makeNoteItem(c.x - 150, c.y - 120, z);
+    addItem(note);
+    useBoard.getState().openNote(note.id);
+  }, [addItem, centerPoint]);
+  const addText = useCallback(() => {
+    const c = centerPoint();
+    const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
+    const note = makeTextItem(c.x - 120, c.y - 70, z);
+    // Applique les défauts de note configurés (Paramètres).
+    const p = useBoard.getState().prefs;
+    Object.assign(note, {
+      fontFamily: p.defaultFont, fontSize: newNoteFontSize(p),
+      color: p.defaultTextColor, bg: p.defaultNoteBg,
+    });
+    addItem(note);
+    useBoard.getState().setEditing(note.id);
+  }, [addItem, centerPoint]);
+
   useImperativeHandle(
     ref,
     () => ({
@@ -672,31 +720,14 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       addVideoUrl: ingest.addVideoUrl,
       addUrl: ingest.addUrl,
       addPath: ingest.addPath,
-      addPaths: (paths: string[]) => ingest.addPaths(paths),
+      addPaths: (paths: string[], at?: { x: number; y: number }) => ingest.addPaths(paths, at),
       addCut: ingest.addCut,
       addCuts: ingest.addCuts,
       addSequence: (paths: string[]) => void ingest.addSequence(paths),
-      addFolder: (dirPath: string) => void ingest.addFolder(dirPath),
+      addFolder: (dirPath: string, at?: { x: number; y: number }) => void ingest.addFolder(dirPath, at),
       addPaste: ingest.addPaste,
       // Coller depuis le menu contextuel : pas de DataTransfer → on lit le presse-papier async.
-      pasteClipboard: async () => {
-        try {
-          const clip = await navigator.clipboard.read();
-          for (const it of clip) {
-            const t = it.types.find((x) => x.startsWith("image/") || x.startsWith("video/"));
-            if (t) {
-              const ext = t.split("/")[1] || "png";
-              ingest.addFiles([new File([await it.getType(t)], `collage.${ext}`, { type: t })]);
-              return;
-            }
-          }
-        } catch { /* pas de média accessible */ }
-        try {
-          const text = (await navigator.clipboard.readText()).trim();
-          if (text) { void ingest.addUrl(text); return; }
-        } catch { /* presse-papier inaccessible */ }
-        useBoard.getState().setNotice({ kind: "error", text: t("board.clipboardEmpty") });
-      },
+      pasteClipboard: () => void pasteFromClipboard(),
       pasteItems: () => {
         const c = centerPoint();
         return useBoard.getState().pasteClipboard(c.x, c.y);
@@ -719,26 +750,8 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         addItem(note);
         useBoard.getState().setEditing(note.id);
       },
-      addNote: () => {
-        const c = centerPoint();
-        const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
-        const note = makeNoteItem(c.x - 150, c.y - 120, z);
-        addItem(note);
-        useBoard.getState().openNote(note.id);
-      },
-      addText: () => {
-        const c = centerPoint();
-        const z = useBoard.getState().items.reduce((m, it) => Math.max(m, it.z), 0) + 1;
-        const note = makeTextItem(c.x - 120, c.y - 70, z);
-        // Applique les défauts de note configurés (Paramètres).
-        const p = useBoard.getState().prefs;
-        Object.assign(note, {
-          fontFamily: p.defaultFont, fontSize: p.defaultFontSize,
-          color: p.defaultTextColor, bg: p.defaultNoteBg,
-        });
-        addItem(note);
-        useBoard.getState().setEditing(note.id);
-      },
+      addNote,
+      addText,
       // Cadre. Sur une SÉLECTION, il l'encadre : le cadre épouse les limites des éléments choisis et
       // passe SOUS eux — sinon il les recouvre et capte leurs clics. Un cadre porte son contenu quand
       // on le déplace, donc encadrer une sélection revient à la grouper. Sans sélection, cadre vide
@@ -791,7 +804,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         if (r) zoomAt(r.width / 2, r.height / 2, factor);
       },
     }),
-    [ingest.addFiles, ingest.addVideoUrl, ingest.addUrl, ingest.addPath, ingest.addPaths, ingest.addCut, ingest.addCuts, ingest.addSequence, ingest.addPaste, addItem, centerPoint, fit, fitSelection, commitView, zoomAt, t],
+    [ingest.addFiles, ingest.addVideoUrl, ingest.addUrl, ingest.addPath, ingest.addPaths, ingest.addCut, ingest.addCuts, ingest.addSequence, ingest.addPaste, addItem, addNote, addText, pasteFromClipboard, centerPoint, fit, fitSelection, commitView, zoomAt, t],
   );
 
 
@@ -939,10 +952,33 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         />
       )}
 
-      {!items.some((it) => it.kind !== "draw") && (
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-          <NetsuIcon name="media-missing" className="size-8" />
-          <p className="text-sm">{t("board.emptyTitle")}</p>
+      {pristine && (
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <NetsuIcon name="empty-board" className="size-8" />
+          <p className="text-sm text-foreground">{t("board.emptyTitle")}</p>
+          {/* Everything a board takes, one press away: the drop is not the only way in. */}
+          {!readOnlyBoard && (
+            <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-1.5">
+              {([
+                ["add-image", "board.start.files", () => void nr.chooseFiles().then((p) => { if (p?.length) ingest.addPaths(p); })],
+                ["paste", "board.start.paste", () => void pasteFromClipboard()],
+                ["add-text", "board.start.text", addText],
+                ["note", "board.start.note", addNote],
+                ["draw-toggle", "board.start.draw", () => useBoard.getState().setDrawMode(true)],
+              ] as const).map(([icon, key, run]) => (
+                <button
+                  key={key}
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={run}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground transition-colors hover:border-primary/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&_svg]:size-4"
+                >
+                  <NetsuIcon name={icon} />
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+          )}
           <p className="text-xs">{t("board.emptyHint")}</p>
         </div>
       )}

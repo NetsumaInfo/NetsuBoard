@@ -110,7 +110,7 @@ let activePort = FIXED_PORT || PORT_FIRST;
 // Le port retenu est publié sur disque : les clients HORS processus (diagnostic, nettoyage de session) n'ont
 // aucun autre moyen de le connaître, et le renderer Tauri, lui, le tient de la coquille.
 function publishPort(port) {
-  process.env.NR_CORE_PORT = String(port); // hérité par les sidecars et le serveur MCP
+  process.env.NR_CORE_PORT = String(port);
   try {
     fs.mkdirSync(NR_HOME, { recursive: true });
     fs.writeFileSync(path.join(NR_HOME, "core-port.json"), JSON.stringify({ port, pid: process.pid, url: `http://${HOST}:${port}` }));
@@ -122,6 +122,7 @@ function publishPort(port) {
 function onListening() {
   activePort = /** @type {any} */ (server.address())?.port || activePort;
   publishPort(activePort);
+  rpc.publishAgent(activePort);
   console.log(`NetsuBoard core: http://${HOST}:${activePort} (${rpc.channels.length} channels)`);
   // Chauffe la sonde d'encodeurs en arrière-plan : NetsuCut récupère ensuite immédiatement le bon
   // moteur NVENC/AMF/QSV (ou son repli CPU) au premier survol.

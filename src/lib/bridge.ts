@@ -627,6 +627,13 @@ export interface RefApi {
   sampleFrame(path: string, opts?: { at?: number; to?: number; count?: number; side?: number }): Promise<{ ok: boolean; png?: string; pngs?: string[]; error?: string }>;
   // Cadence EXACTE d'un fichier local (23,976 et non 24) : un pas d'une image la demande.
   playInfo(path: string): Promise<{ duration: number; fps: number; codec: string; native: boolean; error?: string }>;
+  // Audio track of a local video copied as is into the app assets (an audio card is placed from it).
+  // `start`/`end` keep only the loop range; omitted = the whole track.
+  extractAudio(opts: { path: string; track?: number; start?: number; end?: number }): Promise<{ ok: boolean; path?: string; codec?: string; duration?: number; error?: string }>;
+  // Loudness outline of a local audio file, `bins` values between 0 and 1.
+  audioPeaks(path: string, bins?: number): Promise<{ ok: boolean; peaks?: number[]; duration?: number; error?: string }>;
+  // Displayed size (rotation and pixel ratio applied) and length of a local video, from ffprobe.
+  probeVideo(path: string): Promise<{ ok: boolean; width?: number; height?: number; duration?: number; error?: string }>;
   // `index` = numéro de slide (1-based) d'un post carrousel : le lien de partage le porte
   // (`img_index`, `/photo/N`) et on ne rapporte alors QUE ce média. Omis = tout le post.
   extractMedia(url: string, options?: { projectPath?: string; title?: string; index?: number }): Promise<{ ok: boolean; items?: { path: string; kind: "image" | "video" }[]; error?: string }>;
@@ -674,6 +681,7 @@ export interface RefApi {
   saveProject(filePath: string, scene: NetsuScene): Promise<NetsuProjectSave>;
   saveProjectAs(opts: { scene: NetsuScene; destPath: string; fromPath?: string | null; sourceSceneId?: string | null }): Promise<NetsuProjectSave>;
   closeProject(filePath: string): Promise<{ ok: boolean; closed?: boolean }>;
+  backupProject(filePath: string): Promise<{ ok: boolean; dir?: string; files?: string[]; error?: string }>;
   recentProjects(type?: string): Promise<NetsuRecent[]>;
   // Rattache l'entrée récente d'un .netsu à la scène née de sa conversion en board partagé.
   linkSource(filePath: string, sourceSceneId: string): Promise<NetsuRecent[]>;
@@ -786,6 +794,26 @@ export interface CutClip {
   shots: CutShot[];
 }
 
+// AI agents (MCP). core/mcp.js forwards tool calls; the board carries them out and replies.
+export interface AgentStatus {
+  enabled: boolean;
+  renderer: boolean;
+  lastCall: number;
+  node: string;
+  script: string;
+}
+export interface AgentCall {
+  id: string;
+  tool: string;
+  args: Record<string, unknown>;
+}
+export interface AgentAnswer {
+  ok: boolean;
+  result?: unknown;
+  error?: string;
+  image?: { data: string; mimeType: string };
+}
+
 // Console / journal (debug + bêta-test). Une entrée du flux SSE `console:log` (core + sidecars python).
 export interface ConsoleLogEntry {
   id: number;
@@ -888,6 +916,11 @@ export interface NrApi {
   discordSetPrefs(patch: Partial<DiscordPrefs>): Promise<DiscordState>;
   discordSetContext(ctx: { board?: string | null; items?: string | null }): Promise<DiscordState>;
   onDiscordChanged(cb: (s: DiscordState) => void): () => void;
+  agentStatus(): Promise<AgentStatus>;
+  agentSetEnabled(on: boolean): Promise<AgentStatus>;
+  agentReply(id: string, answer: AgentAnswer): Promise<boolean>;
+  onAgentCall(cb: (call: AgentCall) => void): () => void;
+  onAgentStatus(cb: (s: AgentStatus) => void): () => void;
   // Rapport de bug → webhook Discord (configuré hors dépôt). `configured` = webhook présent côté core.
   bugReport(request: BugReportRequest): Promise<BugReportResponse>;
   // État du canal d'envoi + plafonds de pièces jointes, lus AVANT que le testeur rédige.
@@ -1067,6 +1100,11 @@ const mock: NrApi = {
   consoleLogs: async () => ({ ok: true, logs: [] }),
   consoleClear: async () => ({ ok: true }),
   onConsoleLog: () => () => {},
+  agentStatus: async () => ({ enabled: false, renderer: false, lastCall: 0, node: "", script: "" }),
+  agentSetEnabled: async () => ({ enabled: false, renderer: false, lastCall: 0, node: "", script: "" }),
+  agentReply: async () => false,
+  onAgentCall: () => () => {},
+  onAgentStatus: () => () => {},
   bugReport: async () => ({ ok: false, message: i18n.t("common:mock.outsideApp") }),
   bugStatus: async () => ({ ok: true, configured: false, maxAttachments: 8, maxAttachmentMB: 10 }),
   bugContext: async () => ({ ok: false as const }),
@@ -1185,6 +1223,9 @@ const mock: NrApi = {
       writeFile: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       sampleFrame: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       playInfo: async () => ({ duration: 0, fps: 0, codec: "", native: false }),
+      extractAudio: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      audioPeaks: async () => ({ ok: false, error: "mock" }),
+      probeVideo: async () => ({ ok: false, error: "mock" }),
       extractMedia: async () => ({ ok: false, error: "mock" }),
       extractFrames: async () => ({ ok: false, error: "mock" }),
       exportLoop: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
@@ -1208,6 +1249,7 @@ const mock: NrApi = {
       saveProject: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       saveProjectAs: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       closeProject: async () => ({ ok: true, closed: false }),
+      backupProject: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       recentProjects: async () => [],
       linkSource: async () => [],
       storageAudit: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
