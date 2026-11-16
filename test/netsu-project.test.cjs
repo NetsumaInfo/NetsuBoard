@@ -579,3 +579,34 @@ test('un média extrait garde son lien d’origine ET sa copie locale', async ()
     sessions.closeSession(file);
   }
 });
+
+test('the music of a clip is kept with the project and found again on reading', async () => {
+  const { root, projectsDir, refStore } = workspace();
+  const song = writeFile(root, 'song.mp3', 'des octets de musique');
+  const file = path.join(projectsDir, 'projet.netsu');
+  const session = sessions.openSession(file, { create: true });
+  try {
+    const frame = { x: 0, y: 0, w: 1600, h: 900 };
+    const clip = {
+      v: 1, snap: true, long: [], videos: {},
+      music: { ref: song, name: 'song.mp3', dur: 42 },
+      shots: [{ id: 's1', start: 0, from: frame, to: frame, items: [{ id: 'n1' }], transition: 'cut' }],
+    };
+    const card = { id: 'c1', kind: 'frame', folder: true, x: 0, y: 0, w: 260, h: 220, z: 0, text: 'Clip', clip };
+    const scene = { name: 'Projet', items: [card, { ...note('n1', 0), parent: 'c1' }] };
+    const res = await saveBoardProject({ session, refStore, scene });
+    assert.equal(res.ok, true);
+
+    const read = readBoardProject({ session, refStore });
+    const back = read.scene.items.find((it) => it.id === 'c1');
+    assert.equal(path.resolve(back.clip.music.ref), path.resolve(song));
+    assert.equal(back.clip.music.dur, 42);
+    assert.deepEqual(back.clip.shots[0].items, [{ id: 'n1' }]);
+
+    // Saved again unchanged: the music token is stable, nothing is rewritten.
+    const again = await saveBoardProject({ session, refStore, scene });
+    assert.equal(again.counts.changed, 0);
+  } finally {
+    sessions.closeSession(file);
+  }
+});

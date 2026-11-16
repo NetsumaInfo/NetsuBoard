@@ -135,12 +135,31 @@ async function tokenizeDocFile(ctx, item) {
   }
 }
 
+/**
+ * Music of a clip card: its bytes are stored as a blob, like a document card's file. Unreadable,
+ * the clip keeps its timeline without a track.
+ * @param {any} ctx @param {any} item
+ */
+async function tokenizeClipMusic(ctx, item) {
+  const music = item.clip && item.clip.music;
+  if (!music || typeof music !== 'object') return;
+  const ref = String(music.ref || '');
+  if (!ref || isRemoteRef(ref)) return;
+  try {
+    const { sha } = await blobs.putFileAsync(ctx.handle, ref);
+    item.clip = { ...item.clip, music: { ...music, ref: `asset:${sha}` } };
+  } catch (_) {
+    item.clip = { ...item.clip, music: { ...music, ref: '' } };
+  }
+}
+
 /** Un item, prêt à être écrit : tokens posés, champs transitoires retirés. */
 async function tokenizeItem(ctx, raw) {
   const item = stripTransient(raw);
   const shareablePrev = shareablePrevMedia(item.prevMedia);
   if (shareablePrev) item.prevMedia = shareablePrev;
   else delete item.prevMedia;
+  await tokenizeClipMusic(ctx, item);
   const kind = String(item.kind || '');
   if (!MEDIA_KINDS.has(kind)) return { item, bytes: 0, bundled: 0, referenced: 0 };
 
@@ -310,9 +329,23 @@ function restoreDocFile(ctx, item) {
   return rest;
 }
 
+/**
+ * Gives a clip's music a readable path again. Gone for good, the track is dropped and the timeline
+ * stays.
+ * @param {any} ctx @param {any} item
+ */
+function restoreClipMusic(ctx, item) {
+  const music = item && item.clip && item.clip.music;
+  if (!music || typeof music !== 'object') return item;
+  const ref = String(music.ref || '');
+  if (!ref || isRemoteRef(ref)) return item;
+  const resolved = resolveToken(ctx, ref, 'audio');
+  return { ...item, clip: { ...item.clip, music: { ...music, ref: resolved.path || '' } } };
+}
+
 /** @param {any} ctx @param {any} raw */
 function detokenizeItem(ctx, raw) {
-  const item = restoreDocFile(ctx, restorePrevMedia(ctx, raw));
+  const item = restoreClipMusic(ctx, restoreDocFile(ctx, restorePrevMedia(ctx, raw)));
   const kind = String(item.kind || '');
   if (kind === 'sequence') {
     const tokens = Array.isArray(item.frames) ? item.frames : [];
