@@ -824,6 +824,12 @@ pub enum CollabOp {
         item_id: ItemId,
         card: Option<String>,
     },
+    /// Music clip timeline of a folder card, JSON written whole under its own key. An older build
+    /// does not read the key and shows the clip as a plain folder.
+    SetClip {
+        item_id: ItemId,
+        clip: Option<String>,
+    },
     /// Folder holding the item; `None` = top level of the board.
     SetParent {
         item_id: ItemId,
@@ -941,6 +947,13 @@ impl CollabOp {
                 item_id.validate()?;
                 if let Some(card) = card {
                     validate_text("link card", card, MAX_SHORT_TEXT_LEN)?;
+                }
+                Ok(())
+            }
+            Self::SetClip { item_id, clip } => {
+                item_id.validate()?;
+                if let Some(clip) = clip {
+                    validate_text("clip", clip, MAX_TEXT_LEN)?;
                 }
                 Ok(())
             }

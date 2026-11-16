@@ -33,6 +33,20 @@ describe("collaboration operation diff", () => {
     expect(diffBoard([folded, { ...pic, parent: "f" }], [frame, pic])).toContainEqual({ type: "setParent", itemId: "p", parent: null });
   });
 
+  it("publishes a clip timeline whole, and only when it changes", () => {
+    const frame = { x: 0, y: 0, w: 1600, h: 900 };
+    const clip = {
+      v: 1 as const, snap: true, long: [], videos: {},
+      shots: [{ id: "s", start: 0, from: frame, to: frame, items: [{ id: "p" }], transition: "cut" as const }],
+    };
+    const card: BoardItem = { ...note(""), id: "c", kind: "frame", text: undefined, folder: true, w: 260, h: 220 };
+    const withClip = { ...card, clip };
+    expect(diffBoard([card], [withClip])).toContainEqual({ type: "setClip", itemId: "c", clip: JSON.stringify(clip) });
+    expect(diffBoard([withClip], [{ ...withClip, clip: { ...clip } }])).toEqual([]);
+    const cut = { ...clip, snap: false };
+    expect(diffBoard([withClip], [{ ...withClip, clip: cut }])).toContainEqual({ type: "setClip", itemId: "c", clip: JSON.stringify(cut) });
+  });
+
   it("emits reordering independently from geometry", () => {
     const a = { ...note("a"), id: "a", z: 0 };
     const b = { ...note("b"), id: "b", z: 1 };

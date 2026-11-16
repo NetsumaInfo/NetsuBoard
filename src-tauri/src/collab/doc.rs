@@ -111,6 +111,8 @@ pub struct ItemProjection {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub link_card: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub clip: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub note_style: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub playback: Option<Playback>,
@@ -485,6 +487,7 @@ fn project_projection_from_doc(
             parent: atomic(&item, "parent")?,
             document: atomic(&item, "document")?,
             link_card: atomic(&item, "linkCard")?,
+            clip: atomic(&item, "clip")?,
             note_style: atomic(&item, "noteStyle")?,
             playback: atomic(&item, "playback")?,
             media: atomic(&item, "media")?,
@@ -574,6 +577,9 @@ fn apply_one(doc: &LoroDoc, op: &CollabOp) -> Result<(), DocError> {
         }
         CollabOp::SetLinkCard { item_id, card } => {
             set_atomic(doc, item_id.as_str(), "linkCard", card)?
+        }
+        CollabOp::SetClip { item_id, clip } => {
+            set_atomic(doc, item_id.as_str(), "clip", clip)?
         }
         CollabOp::SetParent { item_id, parent } => {
             set_atomic(doc, item_id.as_str(), "parent", parent)?
