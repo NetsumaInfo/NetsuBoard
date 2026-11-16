@@ -891,7 +891,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         {/* Cadre de la zone de pose : aplat très léger + contour, SOUS la couche des items (zIndex 0
             contre 1) — son aplat ne teinte donc jamais un média, quel que soit son plan.
             Épaisseur ÷ scale → reste ~1,5px à l'écran quel que soit le zoom. */}
-        {placeFrame && contentBounds && (
+        {placeFrame && contentBounds && !presenting && (
           <div
             className="pointer-events-none absolute rounded-2xl"
             style={{

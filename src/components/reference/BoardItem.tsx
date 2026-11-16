@@ -1300,6 +1300,7 @@ export const BoardItem = memo(function BoardItem({
   const promote = item.kind === "video" || item.kind === "sequence" || (item.kind === "youtube" && !ytFallback);
   // Inside a clip: absent at the playhead = a selectable ghost while editing, gone in Present.
   const look = useClipPlayer((s) => clipLook(s, item.id));
+  const presenting = useClipPlayer((s) => s.presenting);
   const lookOpacity = look === "ghost" ? 0.15 : look === "hidden" ? 0 : 1;
 
   return (
@@ -1436,7 +1437,7 @@ export const BoardItem = memo(function BoardItem({
 
       {/* Inside a folder, the image shown on the folder's card is marked: one quiet chip, so
           nobody has to guess which picture is the cover. */}
-      {isCover && (
+      {isCover && !presenting && (
         <span className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white shadow">
           <NetsuIcon name="set-cover" className="size-3" /> {tr("folder.cover")}
         </span>
