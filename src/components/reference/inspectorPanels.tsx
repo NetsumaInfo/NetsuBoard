@@ -551,7 +551,7 @@ export function FrameControls({ item }: { item: BoardItem }) {
       )}
       {item.folder && (
         <IconAction label={t(item.clip ? "clip.open" : "folder.open")} onClick={() => useBoard.getState().enterFolder(item.id)}>
-          <NetsuIcon name={item.clip ? "music" : "folder-open"} />
+          <NetsuIcon name={item.clip ? "animatic" : "folder-open"} />
         </IconAction>
       )}
       <Separator orientation="vertical" className="h-6" />

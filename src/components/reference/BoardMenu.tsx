@@ -194,7 +194,7 @@ export function BoardContextMenu({
                   )}
                   {item.kind === "frame" && item.folder && (
                     <ContextMenuItem onClick={() => store().enterFolder(item.id)}>
-                      <NetsuIcon name={item.clip ? "music" : "folder-open"} /> {t(item.clip ? "clip.open" : "folder.open")}
+                      <NetsuIcon name={item.clip ? "animatic" : "folder-open"} /> {t(item.clip ? "clip.open" : "folder.open")}
                     </ContextMenuItem>
                   )}
                   {item.clip && (
@@ -442,7 +442,7 @@ export function BoardContextMenu({
 
               {clipable && (
                 <ContextMenuItem onClick={() => store().createClip(store().selectedIds)}>
-                  <NetsuIcon name="music" /> {t("clip.create")}
+                  <NetsuIcon name="animatic" /> {t("clip.create")}
                 </ContextMenuItem>
               )}
               {hasSampleable && (

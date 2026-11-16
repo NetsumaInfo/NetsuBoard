@@ -202,11 +202,11 @@ export function ClipTimeline() {
           <NetsuIcon name="add" />
         </TipButton>
         <TipButton label={t("clip.toLong")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(toLong(c, sel)); }}>
-          <NetsuIcon name="layers" />
+          <NetsuIcon name="lane-long" />
         </TipButton>
         <Popover>
           <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
-            <NetsuIcon name="frame" /> {t("clip.framing")}
+            <NetsuIcon name="framing" /> {t("clip.framing")}
           </PopoverTrigger>
           <PopoverContent side="top" className="w-60 p-1.5">
             <div className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">{t("clip.framingHint")}</div>
@@ -221,7 +221,7 @@ export function ClipTimeline() {
           <NetsuIcon name="gallery" />
         </TipButton>
         <TipButton label={t("clip.follow")} active={follow} onClick={() => setFollow(!follow)}>
-          <NetsuIcon name="eye" />
+          <NetsuIcon name="camera-follow" on={follow} />
         </TipButton>
         <Button size="sm" className="gap-1.5" onClick={() => startPresent()}>
           <NetsuIcon name="monitor-play" /> {t("clip.present")}
@@ -361,7 +361,7 @@ export function ClipTimeline() {
                           <>
                             {it?.kind === "video" && <VideoMenu clip={clip} item={it} bar={b - a} commit={commit} />}
                             <MiniButton label={t("clip.toLong")} onClick={() => { const c = latest(); if (c) commit(toLong(c, [si.id])); }}>
-                              <NetsuIcon name="layers" className="size-3" />
+                              <NetsuIcon name="lane-long" className="size-3" />
                             </MiniButton>
                             <MiniButton label={t("clip.removeFromShot")} onClick={() => { const c = latest(); if (c) commit(removeFromShot(c, i, [si.id])); }}>
                               <NetsuIcon name="close" className="size-3" />
@@ -495,7 +495,7 @@ function ShotTransition({ clip, index, readonly, commit }: { clip: ClipData; ind
   return (
     <Popover>
       <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
-        <NetsuIcon name={glide ? "route-curved" : "cut"} /> {t(glide ? "clip.glide" : "clip.cutTransition")}
+        <NetsuIcon name={glide ? "glide" : "cut"} /> {t(glide ? "clip.glide" : "clip.cutTransition")}
       </PopoverTrigger>
       <PopoverContent side="top" className="w-56 p-2">
         <div className="pb-1.5 text-[11px] text-muted-foreground">{t("clip.transitionHint")}</div>
@@ -527,7 +527,7 @@ function PinMenu({ corner, size, onChange }: { corner: PinCorner | null; size: n
     <Popover>
       <Tooltip>
         <TooltipTrigger render={<PopoverTrigger render={<button type="button" aria-label={t("clip.pin")} className={cn("rounded p-0.5 hover:bg-foreground/15", corner && "bg-foreground/20")} />} />}>
-          <NetsuIcon name="pin-window" className="size-3" />
+          <NetsuIcon name="pin-screen" on={!!corner} className="size-3" />
         </TooltipTrigger>
         <TooltipContent side="top">{t("clip.pin")}</TooltipContent>
       </Tooltip>

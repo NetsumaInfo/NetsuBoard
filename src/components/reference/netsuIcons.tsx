@@ -16,7 +16,7 @@ function glyph(name: string): Glyph {
 export const AddTextGlyph = glyph("add-text");
 export const AddBlockGlyph = glyph("add-block");
 export const AddFrameGlyph = glyph("add-frame");
-export const AnimaticGlyph = glyph("music");
+export const AnimaticGlyph = glyph("animatic");
 export const DrawToggleGlyph = glyph("draw-toggle");
 export const PaletteStudioGlyph = glyph("palette-studio");
 export const ExtractPaletteGlyph = glyph("extract-palette");

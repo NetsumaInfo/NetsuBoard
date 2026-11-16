@@ -56,7 +56,7 @@ export function ClipTile({ item }: { item: BoardItem }) {
         <img src={poster} alt="" draggable={false} className="pointer-events-none absolute inset-0 h-full w-full object-cover" />
       ) : (
         <span className="pointer-events-none absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 opacity-40" style={{ color }}>
-          <NetsuIcon name="music" className="size-16" />
+          <NetsuIcon name="animatic" className="size-16" />
         </span>
       )}
       {hover != null && count > 1 && (
@@ -69,7 +69,7 @@ export function ClipTile({ item }: { item: BoardItem }) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/85 to-transparent px-3 pb-2 pt-10 text-white">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 truncate font-medium" style={{ fontSize: item.fontSize ?? 14, fontFamily: item.fontFamily }}>
-            <NetsuIcon name="music" className="size-3.5 shrink-0" />
+            <NetsuIcon name="animatic" className="size-3.5 shrink-0" />
             <span className="truncate">{label}</span>
           </div>
           <div className="truncate text-xs opacity-80">
