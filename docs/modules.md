@@ -55,6 +55,20 @@ Infinite canvas (pan/zoom) where images, local videos and YouTube videos are lai
 - Changing level clears the selection and the undo history; folding, unfolding and dropping an item on a card are one undo entry each (`stash` is restored with the snapshot).
 - Collaboration: `setFolder` and `setParent` ops, each under its own key, so an older build shows the board flat. A shared board has one drawing layer, at the top level.
 
+## Music clips (`clip/`)
+
+Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`.
+
+- A clip is a folder card with a `clip` field (`clipModel.ts` `ClipData`): music `ref`, shots (start, `from`/`to` 16:9 framings in board coordinates, items with optional `delay`/`early`), the Long lane (free start/end, optional screen pin), per-item video settings, cached beats. Its items are the folder's children, copied in by **Create Clip** (`createClip`): the mood board keeps its originals.
+- A clip never turns back into a frame (`toggleFolder` refuses it), and nothing is dropped into its card: items reach it by Create Clip, the mood board panel (`ClipLibrary.tsx`, copies) or any import while it is open. Items added to an open clip join the shot under the playhead (`clipPlayer.adoptNewItems`).
+- Every timeline edit is `patchClip`, which writes the card wherever it lives (level on screen or `stash`) and records undo; while the clip is open its card is parked, so `items` gets a new identity to keep one stash per undo entry. Computed values (beats) pass `record: false`.
+- `clipPlayer.ts` owns playback outside React: one clock (the music `<audio>`, else `performance.now`), the set of items present at the playhead (replaced only when it changes), and the camera. Follow camera and Present drive the board view through `registerViewDriver`, the same imperative path as a pan, and commit it when they stop.
+- `clipLook` gives each item its state: ghost (15 %) when absent while editing, hidden in Present, hidden on the board while a pinned Long item is drawn by the screen overlay (`ClipStage.tsx`).
+- Videos inside a playing clip run only while present, restart from their range on each appearance, and take the clip's speed (×0.25–×4, **Fit to bar** computes it once), sound (the music drops to 25 %) and loop type (`once` holds the last frame).
+- `audioAnalysis.ts` decodes the track in the renderer (`fetch` of its display URL + `decodeAudioData`): peaks for the waveform, an onset envelope, tempo by autocorrelation and a phase-aligned beat grid. Plain JS, no model. **M** cuts at the playhead, snapped to the nearest beat when snapping is on.
+- `.netsu`: the music is a project media (`core/netsu/project.js` `tokenizeProjectClip`, export `board.js` `tokenizeClipMusic` / `restoreClipMusic`); unreadable, the clip keeps its timeline without a track.
+- Collaboration: `setClip` writes the timeline JSON under its own key; an older build ignores it and shows a plain folder. The music file itself is not shared yet: a collaborator sees the timeline and picks the track on their side.
+
 ## PDF cards (`boardPdf.ts` + `PdfViewer.tsx`)
 
 A PDF is an `image` item showing page 1 (other document types: see Documents below) (rendered once with pdf.js at ~1024 px, saved as a PNG asset), plus `docFile: { ref, name, type: "pdf", pages }` pointing at the document. The collaboration kind enum stays closed: peers see the thumbnail, never the file. Double-click (or the context menu entry) makes the card live: `PdfViewer` (lazy) opens the document, stacks every page and renders only those near the scroller's visible area; leaving live mode unmounts it and destroys the pdf.js document. `docFile.ref` is a media ref like any other: kept by `refsOf`, adopted into the project folder on save, bundled as a blob in a shared `.netsu`.

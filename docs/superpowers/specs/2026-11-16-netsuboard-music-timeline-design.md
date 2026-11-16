@@ -1,7 +1,7 @@
 # NetsuBoard Music Clips Design
 
 **Date:** 2026-11-16
-**Status:** Draft — design in progress, not implemented.
+**Status:** First version and its comfort pass implemented (see `docs/modules.md`, Music clips). Storyboard mode and video export are later.
 
 ## Goal
 
@@ -179,4 +179,6 @@ A third mode, kept for a later version. It is a grid of thumbnails, one per shot
 ## Open questions
 
 - A shared board has a single drawing layer at the top level: drawing inside a Clip in collaboration.
-- Constraints: no JS-driven animation on the board (CSS transitions only), see `AGENTS.md`.
+- Sharing the music file through collaboration media (today only the timeline is shared).
+- The tile's shot posters are the first image of each shot, not a render of what the camera sees.
+- Item appearance and disappearance fade with CSS transitions; the camera moves through the board's imperative view path (the one a pan uses), not through a React render per frame.
