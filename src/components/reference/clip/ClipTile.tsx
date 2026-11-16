@@ -60,7 +60,7 @@ export function ClipTile({ item }: { item: BoardItem }) {
         </span>
       )}
       {hover != null && count > 1 && (
-        <div className="pointer-events-none absolute inset-x-3 top-2 flex gap-0.5">
+        <div className="pointer-events-none absolute inset-x-3 top-12 flex gap-0.5">
           {Array.from({ length: count }, (_, i) => (
             <span key={i} className={`h-1 flex-1 rounded-full ${i === hover ? "bg-white" : "bg-white/35"}`} />
           ))}
@@ -76,28 +76,37 @@ export function ClipTile({ item }: { item: BoardItem }) {
             {clip ? `${formatTime(clipDuration(clip))} · ${t("clip.shotCount", { count })}` : null}
             {clip?.music?.name ? ` · ${clip.music.name}` : ""}
           </div>
+          <div className="truncate text-[11px] opacity-60">{t("clip.openHint")}</div>
         </div>
       </div>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <button
-              type="button"
-              aria-label={t("clip.present")}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                useBoard.getState().enterFolder(item.id);
-                startPresent();
-              }}
-              className="absolute bottom-2 right-2 flex size-8 items-center justify-center rounded-full bg-white/90 text-black shadow transition-transform hover:scale-105"
-            />
-          }
+      <div className="absolute right-2 top-2 flex gap-1.5" onPointerDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); useBoard.getState().enterFolder(item.id); }}
+          className="flex h-8 items-center gap-1.5 rounded-full bg-black/60 px-3 text-xs font-medium text-white shadow backdrop-blur transition-colors hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-white"
         >
-          <NetsuIcon name="seq-play" className="size-4" />
-        </TooltipTrigger>
-        <TooltipContent>{t("clip.present")}</TooltipContent>
-      </Tooltip>
+          <NetsuIcon name="animatic" className="size-4" /> {t("clip.openShort")}
+        </button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <button
+                type="button"
+                aria-label={t("clip.present")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  useBoard.getState().enterFolder(item.id);
+                  startPresent();
+                }}
+                className="flex size-8 items-center justify-center rounded-full bg-white/90 text-black shadow transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-white"
+              />
+            }
+          >
+            <NetsuIcon name="seq-play" className="size-4" />
+          </TooltipTrigger>
+          <TooltipContent>{t("clip.present")}</TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   );
 }

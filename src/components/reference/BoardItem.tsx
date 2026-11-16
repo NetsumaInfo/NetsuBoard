@@ -1259,7 +1259,7 @@ export const BoardItem = memo(function BoardItem({
   // commit du store, soit un coût quadratique sur une planche chargée. Lecture hors abonnement,
   // relue à chaque rendu de l'item — ce qui inclut le survol et tout déplacement.
   const [hover, setHover] = useState(false);
-  const isCover = useBoard((s) => item.kind === "image" && s.folderPath.length > 0 && openFolderCoverId(s) === item.id);
+  const isCover = useBoard((s) => item.kind === "image" && s.folderPath.length > 0 && !openClipId(s) && openFolderCoverId(s) === item.id);
   const showChrome = (hover || selected) && !editing;
   const framedBy = showChrome && framable(item) ? enclosingFrame(item, useBoard.getState().items) : null;
 

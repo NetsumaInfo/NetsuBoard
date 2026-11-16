@@ -1253,6 +1253,22 @@
       "draw": "Dessin",
       "sequence": "Séquence",
       "palette": "Palette"
-    }
+    },
+    "openShort": "Ouvrir",
+    "openHint": "Double-clic pour ouvrir",
+    "rename": "Renommer",
+    "mergePrev": "Fusionner avec le plan précédent",
+    "deleteShot": "Supprimer le plan",
+    "outside_one": "{{count}} élément hors timeline",
+    "outside_other": "{{count}} éléments hors timeline",
+    "outsideHint": "Les ajouter au plan sous la tête de lecture",
+    "musicError": "Musique introuvable",
+    "zoomIn": "Zoomer la timeline",
+    "zoomOut": "Dézoomer la timeline",
+    "showTimeline": "Afficher la timeline",
+    "hideTimeline": "Masquer la timeline",
+    "keySpace": "Espace",
+    "keysHint": "Espace : lecture · M : couper · ← → : plan précédent / suivant · Ctrl + molette : zoom · clic droit sur un plan : options",
+    "toLongOrBack": "Piste Longs ↔ plan"
   }
 }

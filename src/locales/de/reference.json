@@ -1253,6 +1253,22 @@
       "draw": "Zeichnung",
       "sequence": "Sequenz",
       "palette": "Palette"
-    }
+    },
+    "openShort": "Öffnen",
+    "openHint": "Doppelklick zum Öffnen",
+    "rename": "Umbenennen",
+    "mergePrev": "Mit vorherigem Shot zusammenführen",
+    "deleteShot": "Shot löschen",
+    "outside_one": "{{count}} Element außerhalb der Timeline",
+    "outside_other": "{{count}} Elemente außerhalb der Timeline",
+    "outsideHint": "Zum Shot unter dem Abspielkopf hinzufügen",
+    "musicError": "Musik nicht gefunden",
+    "zoomIn": "Timeline vergrößern",
+    "zoomOut": "Timeline verkleinern",
+    "showTimeline": "Timeline einblenden",
+    "hideTimeline": "Timeline ausblenden",
+    "keySpace": "Leertaste",
+    "keysHint": "Leertaste: Wiedergabe · M: schneiden · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom · Rechtsklick auf einen Shot: Optionen",
+    "toLongOrBack": "Spur Lang ↔ Shot"
   }
 }

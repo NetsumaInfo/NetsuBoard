@@ -32,7 +32,8 @@ import { extractPaletteToBoard } from "./boardPaletteActions";
 import { mediaActions } from "./itemActions";
 import type { BoardHandle } from "./ReferenceBoard";
 import { openClipId } from "./clip/clipSelectors";
-import { startPresent } from "./clip/clipPlayer";
+import { newAnimatic, startPresent } from "./clip/clipPlayer";
+import { ClipItemMenu } from "./clip/ClipItemMenu";
 
 export function BoardContextMenu({
   board,
@@ -91,6 +92,7 @@ export function BoardContextMenu({
   const hasDraw = useBoard((s) => s.items.some((i) => i.kind === "draw" && (i.shapes?.length ?? 0) > 0));
   const background = useBoard((s) => s.background);
   const inFolder = useBoard((s) => s.folderPath.length > 0);
+  const inClip = useBoard((s) => !!openClipId(s));
   // Right-click landed on an item, a drawn shape or inside a multi-selection.
   const targeted = useBoard((s) => s.selectedIds.length > 0 || s.drawSel.length > 0);
   const canUndo = useBoard((s) => s.past.length > 0);
@@ -170,6 +172,7 @@ export function BoardContextMenu({
               space, otherwise the two lists stack into a menu taller than the window. */}
           {targeted ? (
             <>
+              <ClipItemMenu />
               {item && (
                 <>
                   {item.kind === "text" && noteMode(item) === "sheet" && (
@@ -216,12 +219,12 @@ export function BoardContextMenu({
                       {t(item.folder ? "folder.toFrame" : "folder.toFolder")}
                     </ContextMenuItem>
                   )}
-                  {inFolder && item.kind === "image" && (
+                  {inFolder && !inClip && item.kind === "image" && (
                     <ContextMenuItem onClick={() => store().setFolderCover(item.id)}>
                       <NetsuIcon name="set-cover" /> {t("folder.setCover")}
                     </ContextMenuItem>
                   )}
-                  {(item.kind === "frame" || item.kind === "text" || (inFolder && item.kind === "image")) && <ContextMenuSeparator />}
+                  {(item.kind === "frame" || item.kind === "text" || (inFolder && !inClip && item.kind === "image")) && <ContextMenuSeparator />}
                   <ContextMenuItem onClick={() => store().duplicateItem(item.id)}>
                     <NetsuIcon name="duplicate" /> {t("actions.duplicate")}
                   </ContextMenuItem>
@@ -441,7 +444,7 @@ export function BoardContextMenu({
               )}
 
               {clipable && (
-                <ContextMenuItem onClick={() => store().createClip(store().selectedIds)}>
+                <ContextMenuItem onClick={() => newAnimatic()}>
                   <NetsuIcon name="animatic" /> {t("clip.create")}
                 </ContextMenuItem>
               )}

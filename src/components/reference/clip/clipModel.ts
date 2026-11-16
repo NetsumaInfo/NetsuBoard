@@ -265,6 +265,40 @@ export function mergeShot(clip: ClipData, index: number): ClipData {
   return { ...clip, shots: [...clip.shots.slice(0, index - 1), merged, ...clip.shots.slice(index + 1)] };
 }
 
+// Deletes a shot: the previous one stretches over its time (the first shot: the next one starts at
+// 0 instead). The last shot left cannot go. Items only in the deleted shot leave the timeline.
+export function deleteShot(clip: ClipData, index: number): ClipData {
+  if (clip.shots.length < 2 || index < 0 || index >= clip.shots.length) return clip;
+  if (index === 0) {
+    const [, next, ...rest] = clip.shots;
+    return { ...clip, shots: [{ ...next, start: 0 }, ...rest] };
+  }
+  return { ...clip, shots: clip.shots.filter((_, k) => k !== index) };
+}
+
+// Start of the shot before or after the one under t (for the arrow keys).
+export function neighbourShotStart(clip: ClipData, t: number, dir: -1 | 1): number {
+  const i = shotIndexAt(clip, t);
+  if (dir < 0) {
+    // Inside a shot, the first press goes back to its start.
+    if (t - clip.shots[i].start > 0.05) return clip.shots[i].start;
+    return clip.shots[Math.max(0, i - 1)].start;
+  }
+  return i + 1 < clip.shots.length ? clip.shots[i + 1].start : clipDuration(clip);
+}
+
+// Items of the level that no lane of the timeline shows.
+export function unassigned(clip: ClipData, itemIds: string[]): string[] {
+  const shown = animatedIds(clip);
+  return itemIds.filter((id) => !shown.has(id));
+}
+
+// Tick spacing for a ruler: the smallest step that leaves at least `minPx` between labels.
+export function rulerStep(pxPerSec: number, minPx = 64): number {
+  for (const s of [0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300]) if (s * pxPerSec >= minPx) return s;
+  return 600;
+}
+
 export function patchShot(clip: ClipData, index: number, patch: Partial<Shot>): ClipData {
   return { ...clip, shots: clip.shots.map((s, k) => (k === index ? { ...s, ...patch } : s)) };
 }

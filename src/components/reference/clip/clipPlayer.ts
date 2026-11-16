@@ -45,6 +45,10 @@ export interface ClipPlayerState {
   expanded: string | null;
   // Mood board side panel inside the clip.
   library: boolean;
+  // The music file could not be read (moved, deleted, unsupported).
+  musicError: boolean;
+  // Timeline folded down to its toolbar, to give the board room.
+  folded: boolean;
 }
 
 export const useClipPlayer = create<ClipPlayerState>(() => ({
@@ -59,6 +63,8 @@ export const useClipPlayer = create<ClipPlayerState>(() => ({
   analysing: false,
   expanded: null,
   library: false,
+  musicError: false,
+  folded: false,
 }));
 
 const set = useClipPlayer.setState;
@@ -249,6 +255,9 @@ function loadMusic(clip: ClipData | null) {
     set({ wave: null });
     return;
   }
+  set({ musicError: false });
+  el.onerror = () => { if (audioRef === ref) set({ musicError: true }); };
+  el.onloadeddata = () => { if (audioRef === ref) set({ musicError: false }); };
   el.src = musicSrc(ref);
   el.load();
   void analyseMusic(ref);
@@ -320,7 +329,21 @@ export function newAnimatic() {
   });
   const area = framingFromView() ?? { x: 0, y: 0, w: 1600, h: 900 };
   const id = s.createClip(usable ? s.selectedIds : [], area);
-  if (id && !usable) useBoard.getState().enterFolder(id);
+  // Opened at once: its timeline is the point of making one.
+  if (id) useBoard.getState().enterFolder(id);
+}
+
+// Frames the board on the camera at the playhead, once the level on screen has laid out.
+export function frameCamera() {
+  requestAnimationFrame(() => {
+    const clip = currentClip();
+    const size = driver?.size();
+    if (!clip || !driver || !size?.w || !size.h) return;
+    const r = cameraAt(clip, get().time);
+    // A margin around the framing, so its handles stay on screen.
+    const pad = { x: r.x - r.w * 0.06, y: r.y - r.h * 0.12, w: r.w * 1.12, h: r.h * 1.24 };
+    driver.commit(viewForRect(pad, size.w, size.h));
+  });
 }
 
 // Board point at the centre of the screen.
@@ -360,9 +383,13 @@ export function watchOpenClip(): () => void {
       if (get().presenting) stopPresent();
       pause();
       lastView = null;
-      set({ clipId: id, time: 0, expanded: null, present: new Set(), follow: false });
+      set({ clipId: id, time: 0, expanded: null, present: new Set(), follow: false, musicError: false });
       knownIds = null;
-      if (id) applyTime(0);
+      if (id) {
+        applyTime(0);
+        // Present frames the view itself; otherwise show the first shot as the camera sees it.
+        if (!get().presenting) frameCamera();
+      }
     }
     loadMusic(id ? currentClip() : null);
     adoptNewItems();

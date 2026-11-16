@@ -1,0 +1,249 @@
+// Lanes of the Animatic timeline: the Long lane, the shots (with their right-click menu and inline
+// rename) and the items of the expanded shot.
+
+import { useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
+import { NetsuIcon } from "@/components/ui/netsu-icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { useBoard } from "../useReferenceBoard";
+import type { BoardItem } from "../referenceShared";
+import {
+  deleteShot, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, setLongPin, setLongSpan,
+  setShotItemTiming, shotEnd, shotItemSpan, toLong, addToShot, type ClipData,
+} from "./clipModel";
+import { framingFromView, seek, useClipPlayer } from "./clipPlayer";
+import { Bar, MiniButton, itemName } from "./timelineParts";
+import { PinMenu, VideoMenu, type Commit } from "./timelineMenus";
+
+type Drag = (e: ReactPointerEvent, onMove: (dt: number) => void, onEnd?: () => void) => void;
+
+interface RowProps {
+  clip: ClipData;
+  width: number;
+  dur: number;
+  readonly: boolean;
+  commit: Commit;
+  latest: () => ClipData | null;
+  drag: Drag;
+  snapT: (t: number, c: ClipData) => number;
+  byId: Map<string, BoardItem>;
+  selectedIds: string[];
+}
+
+const xOf = (sec: number, dur: number, width: number) => (sec / dur) * width;
+
+export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snapT, byId, selectedIds }: RowProps) {
+  const { t } = useTranslation("reference");
+  return (
+    <div className="flex min-h-7 flex-col gap-0.5 py-0.5">
+      {clip.long.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t("clip.longEmpty")}</div>}
+      {clip.long.map((l) => (
+        <div key={l.id} className="relative h-6">
+          <Bar
+            left={xOf(l.start, dur, width)}
+            width={xOf(l.end - l.start, dur, width)}
+            label={itemName(byId.get(l.id), t)}
+            tone="long"
+            selected={selectedIds.includes(l.id)}
+            onSelect={() => useBoard.getState().select(l.id)}
+            onMove={readonly ? undefined : (e) => {
+              const s0 = l.start, len = l.end - l.start;
+              drag(e, (dt) => { const c = latest(); if (c) { const s = snapT(s0 + dt, c); commit(setLongSpan(c, l.id, s, s + len), "clip-long"); } });
+            }}
+            onLeft={readonly ? undefined : (e) => { const s0 = l.start; drag(e, (dt) => { const c = latest(); if (c) commit(setLongSpan(c, l.id, snapT(s0 + dt, c), l.end), "clip-long"); }); }}
+            onRight={readonly ? undefined : (e) => { const e0 = l.end; drag(e, (dt) => { const c = latest(); if (c) commit(setLongSpan(c, l.id, l.start, snapT(e0 + dt, c)), "clip-long"); }); }}
+            extra={!readonly && (
+              <>
+                <PinMenu
+                  corner={l.pin?.corner ?? null}
+                  size={l.pin?.size ?? 0.22}
+                  onChange={(pin, tag) => { const c = latest(); if (c) commit(setLongPin(c, l.id, pin), tag); }}
+                />
+                <MiniButton label={t("clip.backToShot")} onClick={() => { const c = latest(); if (c) commit(longToShot(c, l.id)); }}>
+                  <NetsuIcon name="move-down" className="size-3" />
+                </MiniButton>
+              </>
+            )}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, snapT, selectedIds, shotAtHead }: RowProps & { shotAtHead: number }) {
+  const { t } = useTranslation("reference");
+  const expanded = useClipPlayer((s) => s.expanded);
+  const [menuShot, setMenuShot] = useState(0);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const name = (i: number) => clip.shots[i].label || t("clip.shotN", { n: i + 1 });
+  const at = (i: number, fn: (c: ClipData, i: number) => ClipData) => { const c = latest(); if (c) commit(fn(c, i)); };
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger
+        className="relative block h-9"
+        onContextMenuCapture={(e) => {
+          const idx = (e.target as HTMLElement).closest("[data-shot]")?.getAttribute("data-shot");
+          if (idx == null) return;
+          setMenuShot(Number(idx));
+          seek(clip.shots[Number(idx)].start + 0.001);
+        }}
+      >
+        {clip.shots.map((s, i) => {
+          const a = xOf(s.start, dur, width), b = xOf(shotEnd(clip, i), dur, width);
+          const open = expanded === s.id;
+          return (
+            <div
+              key={s.id}
+              data-shot={i}
+              className={cn(
+                "absolute top-0.5 flex h-8 items-center gap-1 overflow-hidden rounded-md border px-1",
+                i === shotAtHead ? "border-[#a78bfa] bg-[#a78bfa]/25" : "border-border bg-muted/60 hover:bg-muted",
+              )}
+              style={{ left: a, width: Math.max(4, b - a - 1) }}
+            >
+              <button
+                type="button"
+                aria-label={t(open ? "clip.collapse" : "clip.expand")}
+                aria-expanded={open}
+                className="shrink-0 rounded p-0.5 hover:bg-foreground/10"
+                onClick={() => useClipPlayer.setState({ expanded: open ? null : s.id })}
+              >
+                <NetsuIcon name="chevron-toggle" on={open} className="size-3" />
+              </button>
+              {renaming === s.id ? (
+                <input
+                  autoFocus
+                  defaultValue={s.label ?? ""}
+                  placeholder={t("clip.shotN", { n: i + 1 })}
+                  aria-label={t("clip.rename")}
+                  className="min-w-0 flex-1 rounded bg-background px-1 text-xs outline-none ring-1 ring-primary"
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === "Escape") setRenaming(null);
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  }}
+                  onBlur={(e) => {
+                    const label = e.target.value.trim();
+                    setRenaming(null);
+                    at(i, (c, k) => patchShot(c, k, { label: label || undefined }));
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="min-w-0 flex-1 truncate text-left font-medium"
+                  onClick={() => seek(s.start + 0.001)}
+                  onDoubleClick={() => !readonly && setRenaming(s.id)}
+                >
+                  {name(i)}
+                </button>
+              )}
+              <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground">{s.items.length}</span>
+            </div>
+          );
+        })}
+        {/* Boundaries: drag to move (snapped), double-click to merge. */}
+        {!readonly && clip.shots.slice(1).map((s, k) => {
+          const i = k + 1;
+          return (
+            <Tooltip key={`b-${s.id}`}>
+              <TooltipTrigger
+                render={
+                  <div
+                    className="absolute top-0 z-10 h-9 w-2 -translate-x-1/2 cursor-ew-resize"
+                    style={{ left: xOf(s.start, dur, width) }}
+                    onPointerDown={(e) => { const t0 = s.start; drag(e, (dt) => { const c = latest(); if (c) commit(moveBoundary(c, i, snapT(t0 + dt, c)), "clip-boundary"); }); }}
+                    onDoubleClick={() => at(i, mergeShot)}
+                  />
+                }
+              >
+                <span className="mx-auto block h-full w-0.5 bg-foreground/50" />
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("clip.boundaryHint")}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </ContextMenuTrigger>
+      {!readonly && (
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => setRenaming(clip.shots[menuShot]?.id ?? null)}>
+            <NetsuIcon name="edit-label" /> {t("clip.rename")}
+          </ContextMenuItem>
+          <ContextMenuItem
+            disabled={!selectedIds.length}
+            onClick={() => at(menuShot, (c, k) => addToShot(c, k, useBoard.getState().selectedIds))}
+          >
+            <NetsuIcon name="add" /> {t("clip.addToShot")}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => { const r = framingFromView(); if (r) at(menuShot, (c, k) => patchShot(c, k, { from: r, to: r })); }}>
+            <NetsuIcon name="framing" /> {t("clip.frameBoth")}
+          </ContextMenuItem>
+          {menuShot > 0 && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => at(menuShot, (c, k) => patchShot(c, k, { transition: "cut" }))}>
+                <NetsuIcon name="cut" /> {t("clip.cutTransition")}
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => at(menuShot, (c, k) => patchShot(c, k, { transition: "glide" }))}>
+                <NetsuIcon name="glide" /> {t("clip.glide")}
+              </ContextMenuItem>
+              <ContextMenuItem onClick={() => at(menuShot, mergeShot)}>
+                <NetsuIcon name="back" /> {t("clip.mergePrev")}
+              </ContextMenuItem>
+            </>
+          )}
+          <ContextMenuSeparator />
+          <ContextMenuItem variant="destructive" disabled={clip.shots.length < 2} onClick={() => at(menuShot, deleteShot)}>
+            <NetsuIcon name="delete" /> {t("clip.deleteShot")}
+          </ContextMenuItem>
+        </ContextMenuContent>
+      )}
+    </ContextMenu>
+  );
+}
+
+export function ExpandedRow({ clip, width, dur, readonly, commit, latest, drag, snapT, byId, selectedIds, index }: RowProps & { index: number }) {
+  const { t } = useTranslation("reference");
+  const s = clip.shots[index];
+  const start = s.start, end = shotEnd(clip, index);
+  return (
+    <div className="flex flex-col gap-0.5 py-0.5">
+      {s.items.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t("clip.shotEmpty")}</div>}
+      {s.items.map((si) => {
+        const [a, b] = shotItemSpan(clip, index, si);
+        const it = byId.get(si.id);
+        return (
+          <div key={si.id} className="relative h-6">
+            <Bar
+              left={xOf(a, dur, width)}
+              width={xOf(b - a, dur, width)}
+              label={itemName(it, t)}
+              tone="item"
+              selected={selectedIds.includes(si.id)}
+              onSelect={() => useBoard.getState().select(si.id)}
+              onLeft={readonly ? undefined : (e) => { const a0 = a; drag(e, (dt) => { const c = latest(); if (c) commit(setShotItemTiming(c, index, si.id, { delay: snapT(a0 + dt, c) - start }), "clip-item"); }); }}
+              onRight={readonly ? undefined : (e) => { const b0 = b; drag(e, (dt) => { const c = latest(); if (c) commit(setShotItemTiming(c, index, si.id, { early: end - snapT(b0 + dt, c) }), "clip-item"); }); }}
+              extra={!readonly && (
+                <>
+                  {it?.kind === "video" && <VideoMenu clip={clip} item={it} bar={b - a} commit={commit} />}
+                  <MiniButton label={t("clip.toLong")} onClick={() => { const c = latest(); if (c) commit(toLong(c, [si.id])); }}>
+                    <NetsuIcon name="lane-long" className="size-3" />
+                  </MiniButton>
+                  <MiniButton label={t("clip.removeFromShot")} onClick={() => { const c = latest(); if (c) commit(removeFromShot(c, index, [si.id])); }}>
+                    <NetsuIcon name="close" className="size-3" />
+                  </MiniButton>
+                </>
+              )}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}

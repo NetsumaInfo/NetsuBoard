@@ -1253,6 +1253,22 @@
       "draw": "绘图",
       "sequence": "序列",
       "palette": "调色板"
-    }
+    },
+    "openShort": "打开",
+    "openHint": "双击打开",
+    "rename": "重命名",
+    "mergePrev": "与上一个镜头合并",
+    "deleteShot": "删除镜头",
+    "outside_one": "{{count}} 个元素不在时间线上",
+    "outside_other": "{{count}} 个元素不在时间线上",
+    "outsideHint": "加入播放头所在的镜头",
+    "musicError": "找不到音乐",
+    "zoomIn": "放大时间线",
+    "zoomOut": "缩小时间线",
+    "showTimeline": "显示时间线",
+    "hideTimeline": "隐藏时间线",
+    "keySpace": "空格",
+    "keysHint": "空格：播放 · M：剪切 · ← →：上一个 / 下一个镜头 · Ctrl + 滚轮：缩放 · 右键单击镜头：选项",
+    "toLongOrBack": "长轨道 ↔ 镜头"
   }
 }

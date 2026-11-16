@@ -1253,6 +1253,22 @@
       "draw": "描画",
       "sequence": "シーケンス",
       "palette": "パレット"
-    }
+    },
+    "openShort": "開く",
+    "openHint": "ダブルクリックで開く",
+    "rename": "名前を変更",
+    "mergePrev": "前のショットと結合",
+    "deleteShot": "ショットを削除",
+    "outside_one": "タイムライン外の要素 {{count}} 個",
+    "outside_other": "タイムライン外の要素 {{count}} 個",
+    "outsideHint": "再生ヘッドの位置のショットに追加",
+    "musicError": "音楽が見つかりません",
+    "zoomIn": "タイムラインを拡大",
+    "zoomOut": "タイムラインを縮小",
+    "showTimeline": "タイムラインを表示",
+    "hideTimeline": "タイムラインを隠す",
+    "keySpace": "スペース",
+    "keysHint": "スペース: 再生 · M: カット · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム · ショットを右クリック: オプション",
+    "toLongOrBack": "ロングトラック ↔ ショット"
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  addToShot, cameraAt, clipDuration, cutAt, fitSpeed, fitToDuration, frameAround, itemBar, laneOf,
+  addToShot, cameraAt, clipDuration, cutAt, deleteShot, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
@@ -115,6 +115,28 @@ describe("clip model", () => {
     expect(c.shots[0].items.map((s) => s.id)).toEqual(["a"]);
     c = fitToDuration({ ...c, music: { ref: "m", name: "m", dur: 10 } });
     expect(c.shots).toHaveLength(1);
+  });
+
+  it("deletes a shot into its neighbour and keeps the last one", () => {
+    let c = cutAt(cutAt(clip(), 10), 15);
+    expect(deleteShot(c, 1).shots.map((s) => s.start)).toEqual([0, 15]);
+    expect(deleteShot(c, 0).shots.map((s) => s.start)).toEqual([0, 15]);
+    c = deleteShot(deleteShot(c, 2), 1);
+    expect(deleteShot(c, 0).shots).toHaveLength(1);
+  });
+
+  it("steps between shot starts", () => {
+    const c = cutAt(cutAt(clip(), 10), 15);
+    expect(neighbourShotStart(c, 12, 1)).toBe(15);
+    expect(neighbourShotStart(c, 12, -1)).toBe(10);
+    expect(neighbourShotStart(c, 10, -1)).toBe(0);
+    expect(neighbourShotStart(c, 16, 1)).toBe(20);
+  });
+
+  it("lists items no lane shows, and spaces ruler ticks", () => {
+    expect(unassigned(toLong(clip(), ["a"]), ["a", "b", "c"])).toEqual(["c"]);
+    expect(rulerStep(100)).toBe(1);
+    expect(rulerStep(10)).toBe(10);
   });
 
   it("normalises a damaged clip", () => {

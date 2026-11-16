@@ -1253,6 +1253,22 @@
       "draw": "Drawing",
       "sequence": "Sequence",
       "palette": "Palette"
-    }
+    },
+    "openShort": "Open",
+    "openHint": "Double-click to open",
+    "rename": "Rename",
+    "mergePrev": "Merge with previous shot",
+    "deleteShot": "Delete shot",
+    "outside_one": "{{count}} item outside the timeline",
+    "outside_other": "{{count}} items outside the timeline",
+    "outsideHint": "Add them to the shot under the playhead",
+    "musicError": "Music not found",
+    "zoomIn": "Zoom in on the timeline",
+    "zoomOut": "Zoom out of the timeline",
+    "showTimeline": "Show the timeline",
+    "hideTimeline": "Hide the timeline",
+    "keySpace": "Space",
+    "keysHint": "Space: play · M: cut · ← →: previous / next shot · Ctrl + wheel: zoom · right-click a shot: options",
+    "toLongOrBack": "Long lane ↔ shot"
   }
 }
