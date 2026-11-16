@@ -148,7 +148,8 @@ export function ReferencePanel() {
   // planche. La barre pleine reste en haut.
   const vertical = pinned && isVerticalSide(pinnedSide);
   const barAfter = pinned && (pinnedSide === "bottom" || pinnedSide === "right");
-  const bar = (!pinned || pinnedToolbar) ? (
+  // Present shows the clip alone: no toolbar.
+  const bar = (!pinned || pinnedToolbar) && !presenting ? (
     // `key` : les deux barres n'ont pas le même contenu, la nouvelle apparaît en fondu plutôt
     // que de remplacer l'ancienne d'un trait pendant que la fenêtre change de format.
     <Toolbar
@@ -175,7 +176,7 @@ export function ReferencePanel() {
           <CollabHost />
         </Suspense>
       )}
-      {!barAfter && !presenting && bar}
+      {!barAfter && bar}
       {/* The sheet is a sibling of the board menu, not a child of its trigger: a right-click in the
           sheet must never reach the board's context menu or change the board selection. */}
       <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
@@ -199,7 +200,7 @@ export function ReferencePanel() {
         {/* A music clip's timeline, under the board while the clip is open (see clip/). */}
         {!presenting && <ClipTimeline />}
       </div>
-      {barAfter && !presenting && bar}
+      {barAfter && bar}
       <SceneDialog open={sceneDlg} onOpenChange={setSceneDlg} persistence={persistence} />
       <ExportDialog open={exportDlg} onOpenChange={setExportDlg} onExport={persistence.exportBoard} onWeigh={persistence.weigh} />
       <CropOverlay />

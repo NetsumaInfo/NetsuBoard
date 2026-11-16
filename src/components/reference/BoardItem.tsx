@@ -1345,14 +1345,13 @@ export const BoardItem = memo(function BoardItem({
       className={cn(
         "absolute left-0 top-0 origin-center touch-none",
         editing ? "cursor-text" : t.dragging ? "cursor-grabbing" : "cursor-grab",
-        look !== "none" && "transition-opacity duration-300",
         look === "hidden" && "pointer-events-none",
       )}
       style={{
         transform: `translate(${g.x}px, ${g.y}px) rotate(${g.rotation}deg)`,
         width: g.w,
         height: g.h,
-        opacity: (item.opacity ?? 1) * lookOpacity,
+        opacity: item.opacity ?? 1,
         zIndex: item.z,
       }}
     >
@@ -1369,8 +1368,11 @@ export const BoardItem = memo(function BoardItem({
           // Markdown block: its own hairline border and soft shadow, matching radius (see TextBlock).
           item.kind === "text" && noteMode(item) === "block" && "shadow-[0_1px_2px_rgba(0,0,0,0.08),0_8px_18px_-8px_rgba(0,0,0,0.25)]",
           item.kind === "text" && noteMode(item) === "block" && !selected && "ring-0",
+          // Clip ghost / hidden: on this inner layer, so it multiplies with the item's own opacity.
+          look !== "none" && "transition-opacity duration-300",
         )}
         style={{
+          opacity: lookOpacity === 1 ? undefined : lookOpacity,
           background: item.kind === "text" && noteMode(item) === "text" ? item.bg : undefined,
           borderRadius: item.kind === "text" && noteMode(item) === "block" ? blockRadius(item) : undefined,
         }}
