@@ -144,6 +144,7 @@ export type CollabOp =
   | { type: "setParent"; itemId: string; parent: string | null }
   | { type: "setDocument"; itemId: string; document: string | null }
   | { type: "setLinkCard"; itemId: string; card: string | null }
+  | { type: "setClip"; itemId: string; clip: string | null }
   | { type: "setNoteStyle"; itemId: string; style: "card" | "postit" | null }
   | { type: "setPlayback"; itemId: string; playback: Playback }
   | { type: "setMediaManifest"; itemId: string; manifest: MediaManifest | null }

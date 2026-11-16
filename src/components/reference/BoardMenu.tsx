@@ -31,6 +31,8 @@ import { ExportLoopDialog } from "./ExportLoopDialog";
 import { extractPaletteToBoard } from "./boardPaletteActions";
 import { mediaActions } from "./itemActions";
 import type { BoardHandle } from "./ReferenceBoard";
+import { openClipId } from "./clip/clipSelectors";
+import { startPresent } from "./clip/clipPlayer";
 
 export function BoardContextMenu({
   board,
@@ -72,6 +74,11 @@ export function BoardContextMenu({
   );
   // ≥2 items sélectionnés → actions de groupe (ranger, uniformiser).
   const multi = useBoard((s) => s.selectedIds.length >= 2);
+  // A clip is made from media and notes of a level that is not itself a clip.
+  const clipable = useBoard((s) => !openClipId(s) && s.selectedIds.some((id) => {
+    const it = s.items.find((i) => i.id === id);
+    return !!it && it.kind !== "draw" && !it.folder;
+  }));
   // Au moins un média dont on peut lire les pixels → extraction de palette (sélection, ou board entier).
   const hasSampleable = useBoard((s) => {
     const pool = s.selectedIds.length ? s.items.filter((i) => s.selectedIds.includes(i.id)) : s.items;
@@ -187,7 +194,12 @@ export function BoardContextMenu({
                   )}
                   {item.kind === "frame" && item.folder && (
                     <ContextMenuItem onClick={() => store().enterFolder(item.id)}>
-                      <NetsuIcon name="folder-open" /> {t("folder.open")}
+                      <NetsuIcon name={item.clip ? "music" : "folder-open"} /> {t(item.clip ? "clip.open" : "folder.open")}
+                    </ContextMenuItem>
+                  )}
+                  {item.clip && (
+                    <ContextMenuItem onClick={() => { store().enterFolder(item.id); startPresent(); }}>
+                      <NetsuIcon name="monitor-play" /> {t("clip.present")}
                     </ContextMenuItem>
                   )}
                   {item.folder && (
@@ -198,7 +210,7 @@ export function BoardContextMenu({
                       <NetsuIcon name="folder-mosaic" on={(item.coverStyle ?? store().prefs.folderCover) === "mosaic"} /> {t("folder.coverMosaic")}
                     </ContextMenuCheckboxItem>
                   )}
-                  {item.kind === "frame" && (
+                  {item.kind === "frame" && !item.clip && (
                     <ContextMenuItem onClick={() => store().toggleFolder(item.id)}>
                       {item.folder ? <NetsuIcon name="frame" /> : <NetsuIcon name="folder" />}
                       {t(item.folder ? "folder.toFrame" : "folder.toFolder")}
@@ -428,6 +440,11 @@ export function BoardContextMenu({
                 </>
               )}
 
+              {clipable && (
+                <ContextMenuItem onClick={() => store().createClip(store().selectedIds)}>
+                  <NetsuIcon name="music" /> {t("clip.create")}
+                </ContextMenuItem>
+              )}
               {hasSampleable && (
                 <ContextMenuItem onClick={() => void extractPaletteToBoard()}>
                   <NetsuIcon name="extract-palette" /> {t("palette.extract")}

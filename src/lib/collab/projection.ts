@@ -1,6 +1,7 @@
 import type { BoardItem, DrawShape, ItemKind } from "@/components/reference/referenceShared";
 // `embeds.ts` ne dépend que du modèle (aucun pont natif) : importable ici sans traîner le bridge.
 import { embedSrc } from "@/components/reference/embeds";
+import { normalizeClip } from "@/components/reference/clip/clipModel";
 import type {
   Appearance,
   BoardPalette,
@@ -34,6 +35,7 @@ export type NativeItem = {
   parent?: string | null;
   document?: string | null;
   linkCard?: string | null;
+  clip?: string | null;
   noteStyle?: "card" | "postit" | null;
   playback?: Playback;
   media?: MediaManifest | null;
@@ -226,6 +228,12 @@ function nativeToBoard(item: NativeItem, z: number, mediaUrl: (hash: string) => 
       const card = JSON.parse(item.linkCard);
       if (card && typeof card === "object") board.linkCard = card;
     } catch { /* unreadable card: the link shows in its default mode */ }
+  }
+  if (item.clip) {
+    try {
+      const clip = normalizeClip(JSON.parse(item.clip));
+      if (clip) board.clip = clip;
+    } catch { /* unreadable timeline: the clip shows as a plain folder */ }
   }
 
   const playback = item.playback;

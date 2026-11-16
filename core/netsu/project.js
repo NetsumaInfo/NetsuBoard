@@ -204,11 +204,26 @@ async function tokenizeProjectDoc(ctx, item) {
   else delete item.docFile;
 }
 
+/**
+ * The music of a clip card is a project media like any other: stored or referenced the same way.
+ * Not storable, the clip keeps its timeline without a track (name and length stay for the layout).
+ * @param {any} ctx @param {any} item
+ */
+async function tokenizeProjectClip(ctx, item) {
+  const music = item.clip && item.clip.music;
+  if (!music || typeof music !== 'object') return;
+  const ref = String(music.ref || '');
+  if (!ref) return;
+  const out = await tokenizeProjectRef(ctx, ref, 'audio', { title: music.name || item.text || 'music' });
+  item.clip = { ...item.clip, music: { ...music, ref: out.token || '' } };
+}
+
 /** Un item de la scène, prêt à être écrit : tokens posés, champs transitoires retirés. */
 async function tokenizeProjectItem(ctx, raw) {
   const item = stripTransient(raw);
   await tokenizeProjectPrev(ctx, item);
   await tokenizeProjectDoc(ctx, item);
+  await tokenizeProjectClip(ctx, item);
   const kind = String(item.kind || '');
   if (!MEDIA_KINDS.has(kind)) return { item, unresolved: false };
 
@@ -415,6 +430,7 @@ async function saveBoardProject({ session, refStore, scene }) {
     const refs = item.kind === 'sequence' ? item.frames || [] : [item.ref];
     if (item.prevMedia && item.prevMedia.ref) refs.push(item.prevMedia.ref);
     if (item.docFile && item.docFile.ref) refs.push(item.docFile.ref);
+    if (item.clip && item.clip.music && item.clip.music.ref) refs.push(item.clip.music.ref);
     for (const token of refs) {
       const value = String(token || '');
       if (value.startsWith('ref:')) keepMediaIds.add(value.slice(4));

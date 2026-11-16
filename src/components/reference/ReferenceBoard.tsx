@@ -48,6 +48,8 @@ import { clampMediaOpacity, newNoteFontSize } from "./boardPrefs";
 import { itemToPngBlob } from "./boardRender";
 import { primeBoardThumbs } from "./boardImageLod";
 import { posterTime } from "./boardVideoLod";
+import { registerViewDriver, useClipPlayer } from "./clip/clipPlayer";
+import { ClipFramings, ClipLetterbox, PinnedLongItems } from "./clip/ClipStage";
 
 const clampScale = (s: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, s));
 
@@ -143,6 +145,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   const select = useBoard((s) => s.select);
   const selectRegion = useBoard((s) => s.selectRegion);
   const addItem = useBoard((s) => s.addItem);
+  const presenting = useClipPlayer((s) => s.presenting);
 
   const [over, setOver] = useState(false);
   const pan = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
@@ -224,6 +227,14 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
   const scheduleGesture = useCallback(() => {
     if (rafId.current == null) rafId.current = requestAnimationFrame(applyGesture);
   }, [applyGesture]);
+
+  // The clip camera (Follow camera, Present) drives the view through the same imperative path as a
+  // pan, and commits it when it stops.
+  useEffect(() => registerViewDriver({
+    apply: (v) => { liveView.current = v; scheduleGesture(); },
+    commit: (v) => { liveView.current = null; setView(v); },
+    size: () => size.current,
+  }), [scheduleGesture, setView]);
 
   // Le culling suit la vue COMMITÉE (fit, focus, fin de pan/zoom).
   useLayoutEffect(() => { syncViewport(view, size.current.w, size.current.h); }, [view, syncViewport]);
@@ -893,7 +904,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         {/* Cadre de la zone de pose : aplat très léger + contour, SOUS la couche des items (zIndex 0
             contre 1) — son aplat ne teinte donc jamais un média, quel que soit son plan.
             Épaisseur ÷ scale → reste ~1,5px à l'écran quel que soit le zoom. */}
-        {placeFrame && contentBounds && (
+        {placeFrame && contentBounds && !presenting && (
           <div
             className="pointer-events-none absolute rounded-2xl"
             style={{
@@ -923,14 +934,18 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
             />
           ))}
         </div>
+        {/* Clip camera framings, in board coordinates, above the items. */}
+        <ClipFramings />
       </div>
+      <ClipLetterbox />
+      <PinnedLongItems />
 
       {/* Guides de l'aimant : lignes fines tracées pendant un geste, dans le repère board. */}
       <SnapGuides view={view} />
 
       <LiveSiteLayer containerRef={containerRef} />
 
-      <FolderBreadcrumb />
+      {!presenting && <FolderBreadcrumb />}
 
       {/* calque de dessin maison (SVG plein board, suit le pan/zoom) + barre du mode dessin */}
       <DrawLayer />

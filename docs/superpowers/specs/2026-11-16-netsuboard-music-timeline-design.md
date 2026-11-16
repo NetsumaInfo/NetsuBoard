@@ -1,7 +1,7 @@
 # NetsuBoard Music Clips Design
 
 **Date:** 2026-11-16
-**Status:** Draft — design in progress, not implemented.
+**Status:** First version and its comfort pass implemented (see `docs/modules.md`, Music clips). Storyboard mode and video export are later.
 
 ## Goal
 
@@ -11,7 +11,7 @@ Add animated presentations driven by a piece of music to a mood board: while the
 
 ### Clips live inside the mood board
 
-The mood board itself stays a normal, static board with no timeline. The user places **Clip** objects on it (working name), as many as needed: one per track, per version or per part.
+The mood board itself stays a normal, static board with no timeline. The user places **Animatic** objects on it (named Clip during design; code and data still say `clip`), as many as needed: one per track, per version or per part.
 
 A Clip is a dedicated sub-space. Opening it enters a space with its own items, its own timeline and its own camera; everything below applies inside a Clip. The mood board is for collecting, a Clip is for animating.
 
@@ -179,4 +179,6 @@ A third mode, kept for a later version. It is a grid of thumbnails, one per shot
 ## Open questions
 
 - A shared board has a single drawing layer at the top level: drawing inside a Clip in collaboration.
-- Constraints: no JS-driven animation on the board (CSS transitions only), see `AGENTS.md`.
+- Sharing the music file through collaboration media (today only the timeline is shared).
+- The tile's shot posters are the first image of each shot, not a render of what the camera sees.
+- Item appearance and disappearance fade with CSS transitions; the camera moves through the board's imperative view path (the one a pan uses), not through a React render per frame.

@@ -13,11 +13,11 @@ import {
   AddTextGlyph, AddBlockGlyph, AddFrameGlyph, DrawToggleGlyph, PaletteStudioGlyph, ExtractPaletteGlyph,
   TidyGlyph, SnapGlyph, ZoomOutGlyph, ZoomInGlyph, FitAllGlyph, FreezeGlyph, UndoGlyph, RedoGlyph,
   MouseThroughGlyph, SettingsGlyph, SaveGlyph, SaveAsGlyph, OpenSceneGlyph, ShareGlyph, NewSceneGlyph,
-  HomeGlyph, type Glyph,
+  HomeGlyph, AnimaticGlyph, type Glyph,
 } from "./netsuIcons";
 
 export type PinnedButtonId =
-  | "text" | "note" | "frame" | "draw" | "palette" | "extractPalette" | "tidy"
+  | "text" | "note" | "frame" | "animatic" | "draw" | "palette" | "extractPalette" | "tidy"
   | "snap" | "zoomOut" | "zoomIn" | "fit" | "freeze"
   | "undo" | "redo" | "mouseThrough" | "settings" | "save" | "saveAs" | "openProject"
   | "share" | "newScene" | "home";
@@ -26,6 +26,7 @@ export const PINNED_BUTTONS: { id: PinnedButtonId; labelKey: string; icon: Glyph
   { id: "text", labelKey: "toolbar.addText", icon: AddTextGlyph },
   { id: "note", labelKey: "toolbar.addBlock", icon: AddBlockGlyph },
   { id: "frame", labelKey: "toolbar.addFrame", icon: AddFrameGlyph },
+  { id: "animatic", labelKey: "clip.toolbar", icon: AnimaticGlyph },
   { id: "draw", labelKey: "toolbar.draw", icon: DrawToggleGlyph },
   { id: "palette", labelKey: "palette.studio.open", icon: PaletteStudioGlyph },
   { id: "extractPalette", labelKey: "shortcut.extractPalette", icon: ExtractPaletteGlyph },
@@ -59,7 +60,7 @@ export const DEFAULT_PINNED_BUTTONS_END: PinnedButtonId[] = ["undo", "redo", "mo
 
 // Barre PLEINE (fenêtre normale) : mêmes boutons, mêmes deux extrémités, autour du nom du projet.
 export const DEFAULT_BAR_BUTTONS: PinnedButtonId[] = [
-  "home", "text", "note", "frame", "draw", "palette", "extractPalette", "tidy",
+  "home", "text", "note", "frame", "animatic", "draw", "palette", "extractPalette", "tidy",
   "snap", "zoomOut", "zoomIn", "fit", "freeze",
 ];
 export const DEFAULT_BAR_BUTTONS_END: PinnedButtonId[] = [

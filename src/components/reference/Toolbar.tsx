@@ -24,7 +24,7 @@ import { convexConfigured } from "@/lib/convexEnv";
 import { useBoard } from "./useReferenceBoard";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import {
-  AddTextGlyph, AddBlockGlyph, AddFrameGlyph, DrawToggleGlyph, PaletteStudioGlyph, ExtractPaletteGlyph,
+  AddTextGlyph, AddBlockGlyph, AddFrameGlyph, AnimaticGlyph, DrawToggleGlyph, PaletteStudioGlyph, ExtractPaletteGlyph,
   TidyGlyph, SnapGlyph, ZoomOutGlyph, ZoomInGlyph, FitAllGlyph, FreezeGlyph, UndoGlyph, RedoGlyph,
   MouseThroughGlyph, SettingsGlyph, SaveGlyph, SaveAsGlyph, OpenSceneGlyph, NewSceneGlyph,
   HomeGlyph, PinWindowGlyph, DetachGlyph, AttachGlyph, type Glyph, type GlyphProps,
@@ -48,6 +48,8 @@ import { ExportImageDialog } from "./ExportImageDialog";
 import { askMouseThrough, setMouseThrough } from "./boardMouseThrough";
 import { extractPaletteToBoard } from "./boardPaletteActions";
 import { isVerticalSide, type PinnedButtonId } from "./toolbarButtons";
+import { openClipId } from "./clip/clipSelectors";
+import { newAnimatic } from "./clip/clipPlayer";
 import type { BoardHandle } from "./ReferenceBoard";
 import type { ShortcutAction } from "./referenceShared";
 
@@ -134,6 +136,8 @@ export function Toolbar({
   const snap = useBoard((s) => s.prefs.snap);
   const setPrefs = useBoard((s) => s.setPrefs);
   const readOnly = useBoard((s) => s.collabProjectId !== null && s.collabRole === "viewer");
+  // An animatic does not hold another one.
+  const inClip = useBoard((s) => !!openClipId(s));
   const rotationRequired = useBoard((s) => s.collabRotationRequired);
   const syncQueued = useBoard((s) => s.collabOfflineQueued);
   const shared = useBoard((s) => s.collabProjectId !== null);
@@ -166,6 +170,8 @@ export function Toolbar({
     // The "note" id is persisted in user prefs: it now adds a text block (a sheet is in the Add menu).
     note: <IconBtn icon={AddBlockGlyph} label={t("toolbar.addBlock")} disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addBlock(); }} />,
     frame: <IconBtn icon={AddFrameGlyph} label={t("toolbar.addFrame")} action="addFrame" disabled={readOnly} onClick={() => { leaveDraw(); board.current?.addFrame(); }} />,
+    // Animatic: from the selection when there is one, else an empty one, opened to receive media.
+    animatic: <IconBtn icon={AnimaticGlyph} label={t("clip.toolbar")} disabled={readOnly || inClip} onClick={() => { leaveDraw(); newAnimatic(); }} />,
     draw: (
       <IconBtn
         icon={DrawToggleGlyph}

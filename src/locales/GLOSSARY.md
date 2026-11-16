@@ -53,6 +53,8 @@ référence unique : tout agent traducteur DOIT l'appliquer pour la cohérence e
 | projet (board enregistré ; jamais « scène » à l'écran) | project | proyecto | Projekt | プロジェクト | 项目 |
 | son (audio) | sound | sonido | Ton | サウンド | 声音 |
 | cadre (sur le board) | frame | marco | Rahmen | フレーム | 边框 |
+| Animatic (mood board animé sur une musique ; mot gardé tel quel) | Animatic | Animatic | Animatic | Animatic | Animatic |
+| plan (d'un Animatic) | shot | plano | Shot | ショット | 镜头 |
 | note (adhésive) | note | nota | Notiz | ノート | 便签 |
 | rogner | crop | recortar | zuschneiden | トリミング | 裁剪 |
 | miroir (flip) | flip | voltear | spiegeln | 反転 | 翻转 |

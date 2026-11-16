@@ -346,6 +346,7 @@ function addItemOps(item: BoardItem, resolveAsset: AssetResolver): CollabOp[] {
   if (item.parent) ops.push({ type: "setParent", itemId: item.id, parent: item.parent });
   if (item.doc) ops.push({ type: "setDocument", itemId: item.id, document: JSON.stringify(item.doc) });
   if (item.linkCard) ops.push({ type: "setLinkCard", itemId: item.id, card: JSON.stringify(item.linkCard) });
+  if (item.clip) ops.push({ type: "setClip", itemId: item.id, clip: JSON.stringify(item.clip) });
   if (item.noteStyle) ops.push({ type: "setNoteStyle", itemId: item.id, style: item.noteStyle });
   if (item.crop) ops.push({ type: "setCrop", itemId: item.id, crop: crop(item) });
   if (trim(item)) ops.push({ type: "setTrim", itemId: item.id, trim: trim(item) });
@@ -481,6 +482,9 @@ export function diffBoard(
     }
     if (!same(old.linkCard ?? null, item.linkCard ?? null)) {
       ops.push({ type: "setLinkCard", itemId: item.id, card: item.linkCard ? JSON.stringify(item.linkCard) : null });
+    }
+    if (old.clip !== item.clip && !same(old.clip ?? null, item.clip ?? null)) {
+      ops.push({ type: "setClip", itemId: item.id, clip: item.clip ? JSON.stringify(item.clip) : null });
     }
     if ((old.parent ?? null) !== (item.parent ?? null)) {
       ops.push({ type: "setParent", itemId: item.id, parent: item.parent ?? null });

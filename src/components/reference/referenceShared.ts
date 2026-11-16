@@ -11,6 +11,7 @@ import { collabMediaSrc } from "@/lib/collab/currentProject";
 import { embedSrc } from "./embeds";
 import type { ColorFormat } from "./colorFormat";
 import type { DocType } from "./boardDocs";
+import type { ClipData } from "./clip/clipModel";
 
 export type ItemKind = "image" | "video" | "audio" | "youtube" | "embed" | "text" | "frame" | "draw" | "sequence" | "palette";
 
@@ -292,6 +293,9 @@ export interface BoardItem {
   openH?: number;
   cover?: string;
   coverStyle?: "image" | "mosaic"; // unset = the board setting (Paramètres › Dossiers)
+  // Music clip (see clip/clipModel): a folder whose level is animated against a track. Present on
+  // the folder card only; its items are the folder's children.
+  clip?: ClipData;
   // Folder holding this item. Unset = top level of the board. Only written when the item leaves
   // the level on screen: items on the current level never rely on it (see boardFolders).
   parent?: string;
