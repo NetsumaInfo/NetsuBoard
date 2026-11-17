@@ -98,6 +98,7 @@ export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snap
             left={xOf(l.start, dur, width)}
             width={xOf(l.end - l.start, dur, width)}
             label={itemName(byId.get(l.id), t)}
+            thumb={byId.get(l.id)?.kind === "image" ? byId.get(l.id)!.src : undefined}
             tone="long"
             selected={selectedIds.includes(l.id)}
             onSelect={(add) => pickBar(l.id, add)}
@@ -376,6 +377,7 @@ export function ExpandedRow({ clip, width, dur, readonly, commit, latest, drag, 
               left={xOf(a, dur, width)}
               width={xOf(b - a, dur, width)}
               label={itemName(it, t)}
+              thumb={it?.kind === "image" ? it.src : undefined}
               tone="item"
               selected={selectedIds.includes(si.id)}
               onSelect={(add) => pickBar(si.id, add)}

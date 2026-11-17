@@ -25,7 +25,7 @@ import {
   useClipPlayer,
 } from "./clipPlayer";
 import { VolumeControl } from "../VolumeControl";
-import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
+import { LABEL_W, Playhead, dragIsFree, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
 import { BlockMenu, FxMenu, ShotTransition, TempoMenu } from "./timelineMenus";
 import { ClipStoryboard } from "./ClipStoryboard";
 import { ExpandedRow, LongRow, ShotsRow, boardOrder } from "./timelineRows";
@@ -129,7 +129,7 @@ export function ClipTimeline() {
   // a mark made at the playhead sticks to beats only.
   const reach = Math.max(0.03, (6 / Math.max(1, width)) * dur);
   const snapT = useCallback((x: number, c: ClipData) =>
-    (c.snap ? snapTime(x, snapPoints(c, [useClipPlayer.getState().time]), reach) : x), [reach]);
+    (c.snap && !dragIsFree() ? snapTime(x, snapPoints(c, [useClipPlayer.getState().time]), reach) : x), [reach]);
   const snapBeat = useCallback((x: number, c: ClipData) => (c.snap ? snapTime(x, c.beats, reach) : x), [reach]);
   // The given items enter or leave at the playhead (snapped), with a line saying what happened.
   const markAt = useCallback((which: "in" | "out", ids: string[]) => {

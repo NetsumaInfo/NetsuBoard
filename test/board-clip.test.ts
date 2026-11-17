@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addMark, addToShot, beatGrid, copyShotPiece, cutAtMarks, pasteShotPiece, patchMark, removeMark, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
-  longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
+  longToShot, makeClip, setLongPin, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
 import { analyse, computePeaks } from "@/components/reference/clip/audioAnalysis";
@@ -383,5 +383,21 @@ describe("storyboard sheet text", () => {
     expect(wrapText("abcdefghijklmn", 50, measure)).toEqual(["abcde", "fghij", "klmn"]);
     expect(wrapText("one two three four five six seven", 100, measure, 2)).toEqual(["one two", "three fou…"]);
     expect(wrapText("   ", 100, measure)).toEqual([]);
+  });
+});
+
+describe("clip over collaboration", () => {
+  it("keeps every field through the JSON a peer receives", () => {
+    let c = setTempo(clip(30), 120, 0.25);
+    c = cutAt(c, 10);
+    c = patchShot(c, 1, { label: "Drop", note: "push in", transition: "glide", glide: 1 });
+    c = setShotItemTiming(c, 0, "a", { delay: 1, early: 2 });
+    c = toLong(c, ["b"], [2, 20]);
+    c = setLongPin(c, "b", { corner: "tr", size: 0.3 });
+    c = setVideo(c, "a", { speed: 2, loop: "once", sound: true });
+    c = setFx(c, ["a"], { kind: "zoom", dur: 0.5, opacity: 0.8 });
+    c = addMark(c, 12, "Chorus");
+    const back = normalizeClip(JSON.parse(JSON.stringify(c)));
+    expect(back).toEqual(c);
   });
 });

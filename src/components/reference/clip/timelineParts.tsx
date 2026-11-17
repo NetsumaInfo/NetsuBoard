@@ -57,14 +57,19 @@ export function Row({ label, width, children }: { label: string; width: number; 
   );
 }
 
+// Alt held during a drag: the edge moves freely, without snapping.
+let free = false;
+export const dragIsFree = () => free;
+
 // Pointer drag converted to seconds along a track of the given width.
 export function useTimeDrag(width: number, dur: number) {
   return useCallback((e: ReactPointerEvent, onMove: (dt: number) => void, onEnd?: () => void) => {
     e.stopPropagation();
     e.preventDefault();
     const x0 = e.clientX;
-    const move = (ev: PointerEvent) => onMove(((ev.clientX - x0) / Math.max(1, width)) * dur);
+    const move = (ev: PointerEvent) => { free = ev.altKey; onMove(((ev.clientX - x0) / Math.max(1, width)) * dur); };
     const up = () => {
+      free = false;
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", up);
@@ -171,8 +176,8 @@ export function Waveform({ clip, width, scroller }: { clip: ClipData; width: num
 
 // A bar of the Long lane or of an expanded shot. Click selects (Ctrl / Shift: adds or removes), drag
 // moves, the edges trim. It takes the keyboard focus: Enter selects, Delete takes it off the lane.
-export function Bar({ left, width, label, tone, selected, onSelect, onMove, onLeft, onRight, onDelete, extra }: {
-  left: number; width: number; label: string; tone: "long" | "item"; selected: boolean;
+export function Bar({ left, width, label, thumb, tone, selected, onSelect, onMove, onLeft, onRight, onDelete, extra }: {
+  left: number; width: number; label: string; thumb?: string; tone: "long" | "item"; selected: boolean;
   onSelect: (additive: boolean) => void;
   onMove?: (e: ReactPointerEvent) => void;
   onLeft?: (e: ReactPointerEvent) => void;
@@ -212,6 +217,7 @@ export function Bar({ left, width, label, tone, selected, onSelect, onMove, onLe
       }}
     >
       {onLeft && <span className="absolute inset-y-0 left-0 w-1.5 cursor-ew-resize bg-foreground/20 opacity-0 group-hover:opacity-100" onPointerDown={(e) => { e.stopPropagation(); onLeft(e); }} />}
+      {thumb && width > 60 && <img src={thumb} alt="" draggable={false} loading="lazy" className="size-4 shrink-0 rounded-sm object-cover" />}
       <span className="min-w-0 flex-1 truncate">{label}</span>
       <span className="flex shrink-0 items-center gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100" onPointerDown={(e) => e.stopPropagation()}>{extra}</span>
       {onRight && <span className="absolute inset-y-0 right-0 w-1.5 cursor-ew-resize bg-foreground/20 opacity-0 group-hover:opacity-100" onPointerDown={(e) => { e.stopPropagation(); onRight(e); }} />}
