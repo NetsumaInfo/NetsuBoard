@@ -1180,7 +1180,7 @@
     "toolbar": "Animatic erstellen",
     "open": "Animatic öffnen",
     "present": "Vorführen",
-    "presentHint": "Esc zum Beenden · Leertaste für Pause",
+    "presentHint": "Esc zum Beenden · Leertaste: Pause · ← →: Shots",
     "play": "Wiedergabe",
     "pause": "Pause",
     "shotN": "Shot {{n}}",

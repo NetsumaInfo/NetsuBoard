@@ -1180,7 +1180,7 @@
     "toolbar": "Create Animatic",
     "open": "Open Animatic",
     "present": "Present",
-    "presentHint": "Esc to leave · Space to pause",
+    "presentHint": "Esc to leave · Space: pause · ← →: shots",
     "play": "Play",
     "pause": "Pause",
     "shotN": "Shot {{n}}",

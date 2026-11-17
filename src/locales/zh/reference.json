@@ -1180,7 +1180,7 @@
     "toolbar": "创建 Animatic",
     "open": "打开 Animatic",
     "present": "演示",
-    "presentHint": "Esc 退出 · 空格暂停",
+    "presentHint": "Esc 退出 · 空格：暂停 · ← →：镜头",
     "play": "播放",
     "pause": "暂停",
     "shotN": "镜头 {{n}}",

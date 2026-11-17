@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { useBoard } from "../useReferenceBoard";
 import { displaySrc, type BoardView } from "../referenceShared";
 import {
-  CLIP_ASPECT, addToShot, animatedIds, cameraAt, clipDuration, fitToDuration, presentAt, shotEnd, shotIndexAt, viewForRect,
+  CLIP_ASPECT, addToShot, animatedIds, cameraAt, clipDuration, fitToDuration, neighbourShotStart, presentAt, shotEnd, shotIndexAt, viewForRect,
   type ClipData, type ClipRect,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
@@ -233,6 +233,12 @@ function onKey(e: KeyboardEvent) {
   // would also leave the Animatic.
   if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); stopPresent(); }
   else if (e.key === " ") { e.preventDefault(); e.stopImmediatePropagation(); togglePlay(); }
+  else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const clip = currentClip();
+    if (clip) seek(neighbourShotStart(clip, get().time, e.key === "ArrowLeft" ? -1 : 1) + 0.001);
+  }
 }
 function onFullscreen() {
   if (!document.fullscreenElement && get().presenting) stopPresent();

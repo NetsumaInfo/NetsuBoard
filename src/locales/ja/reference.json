@@ -1180,7 +1180,7 @@
     "toolbar": "Animatic を作成",
     "open": "Animatic を開く",
     "present": "プレゼン",
-    "presentHint": "Esc で終了 · スペースで一時停止",
+    "presentHint": "Esc で終了 · スペース: 一時停止 · ← →: ショット",
     "play": "再生",
     "pause": "一時停止",
     "shotN": "ショット {{n}}",

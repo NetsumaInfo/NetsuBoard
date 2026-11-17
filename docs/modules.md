@@ -69,6 +69,11 @@ Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`.
 - `audioAnalysis.ts` decodes the track in the renderer (`fetch` of its display URL + `decodeAudioData`): peaks for the waveform, an onset envelope, tempo by autocorrelation and a phase-aligned beat grid. Plain JS, no model. **M** cuts at the playhead, snapped to the nearest beat when snapping is on.
 - `.netsu`: the music is a project media (`core/netsu/project.js` `tokenizeProjectClip`, export `board.js` `tokenizeClipMusic` / `restoreClipMusic`); unreadable, the clip keeps its timeline without a track.
 - Collaboration: `setClip` writes the timeline JSON under its own key; an older build ignores it and shows a plain folder. The music file itself is not shared yet: a collaborator sees the timeline and picks the track on their side.
+- Editing in bulk (all pure, in `clipModel.ts`): `markIn` / `markOut` (keys I and O) make the selection enter or leave at the playhead; `cascade` staggers the entries of a shot on the beats; `shotsPerItem` deals the selection into one shot per item, framed on it, from the playhead; `cutOnBeats` cuts every n beats; `cameraMove` writes a ready-made move (static, zoom in or out, pan) and `cameraMoveOf` recognises it; `moveShot` reorders shot contents while the time slots stay.
+- Per-item appearance (`fx`: fade, zoom, slide or cut, duration, opacity) is CSS on the item's inner layer (`clipFxStyle` in `BoardItem.tsx`); the hidden pose only applies in Present.
+- Mood board panel (`ClipLibrary.tsx`, `clipDnd.ts`): a searchable, filterable, multi-select list; a drag carries the source ids under `application/x-netsu-animatic` and lands on the board, a shot, a storyboard card or the Long lane. Items are copied, their layout kept around the drop point.
+- Storyboard (`ClipStoryboard.tsx`) and the Animatic card show what each shot's camera sees, rendered off screen by `renderBoardCanvas` with `rect` (`shotThumbs.tsx`: debounced, queued one at a time, cached by content).
+- Keys inside an Animatic: Space (short press) play, M cut, I / O mark, L loop the shot, ← → previous / next shot, Home / End. In Present: Escape, Space, ← →.
 
 ## PDF cards (`boardPdf.ts` + `PdfViewer.tsx`)
 

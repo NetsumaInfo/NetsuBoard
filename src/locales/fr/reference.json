@@ -1180,7 +1180,7 @@
     "toolbar": "Créer un Animatic",
     "open": "Ouvrir l'Animatic",
     "present": "Présenter",
-    "presentHint": "Échap pour quitter · Espace pour pause",
+    "presentHint": "Échap pour quitter · Espace : pause · ← → : plans",
     "play": "Lecture",
     "pause": "Pause",
     "shotN": "Plan {{n}}",
