@@ -81,6 +81,7 @@ Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`.
 - Storyboard notes (`Shot.note`): a line of intent per shot, edited on its card. **Export as image** (`storyboardSheet.ts`) draws every shot's camera view with its number, name, time and note on one PNG, written through `nr.saveFile` + `reference.writeFile`.
 - The waveform keeps about 60 peaks a second of music and draws only the visible part of the track, redrawn as it scrolls, so it stays sharp at any zoom. The editing tools of the toolbar scroll on a narrow window; the view controls and **Present** (from the start, the playhead or the current shot) stay in view.
 - An empty Animatic shows how to fill it (`ClipEmpty.tsx`) until its first item lands. Storyboard cards reorder with Ctrl+← →.
+- Editing speed (`rate`, ×1 / ×0.75 / ×0.5, not saved) slows the music, the clock and the clip's videos together; Present always plays at ×1.
 - Keys inside an Animatic: Space (short press) play, Shift+Space play the shot under the playhead once from its start (`previewShot`), M cut, K mark, I / O mark, L loop the shot, ← → previous / next shot, Shift+← → move the nearest cut by one beat (`nudgeCut`), Home / End. In Present: Escape, Space, ← →.
 
 ## PDF cards (`boardPdf.ts` + `PdfViewer.tsx`)

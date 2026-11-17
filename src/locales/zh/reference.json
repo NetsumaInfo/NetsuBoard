@@ -1379,6 +1379,8 @@
     "presentFrom": "从…开始演示",
     "presentStart": "从头开始",
     "presentHere": "从播放头开始",
-    "presentShot": "从此镜头开始"
+    "presentShot": "从此镜头开始",
+    "rate": "播放速度",
+    "rateHint": "放慢以便剪切 · 演示始终以 ×1 播放"
   }
 }

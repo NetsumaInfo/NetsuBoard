@@ -1379,6 +1379,8 @@
     "presentFrom": "Présenter depuis…",
     "presentStart": "Depuis le début",
     "presentHere": "Depuis la tête de lecture",
-    "presentShot": "Depuis ce plan"
+    "presentShot": "Depuis ce plan",
+    "rate": "Vitesse de lecture",
+    "rateHint": "Ralentir pour couper plus facilement · Présenter joue toujours à ×1"
   }
 }

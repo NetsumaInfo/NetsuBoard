@@ -1379,6 +1379,8 @@
     "presentFrom": "ここから発表…",
     "presentStart": "最初から",
     "presentHere": "再生ヘッドから",
-    "presentShot": "このショットから"
+    "presentShot": "このショットから",
+    "rate": "再生速度",
+    "rateHint": "遅くしてカットしやすく · 発表は常に ×1 で再生"
   }
 }

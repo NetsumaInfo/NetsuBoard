@@ -333,7 +333,9 @@ function VideoContent({ item, streamSrc, onStreamError, onReady }: {
     if (!v || clipCue !== "on") return;
     v.currentTime = useProxy || native ? 0 : trimIn;
   }, [clipCue, useProxy, native, trimIn]);
-  const speed = clipVideo?.speed ?? 1;
+  // The editing speed of the Animatic (×0.5…) slows its videos with the music.
+  const workRate = useClipPlayer((s) => (clipVideo ? s.rate : 1));
+  const speed = (clipVideo?.speed ?? 1) * workRate;
   useEffect(() => {
     const v = ref.current;
     if (v) v.playbackRate = speed;

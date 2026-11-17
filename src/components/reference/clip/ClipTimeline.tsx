@@ -21,7 +21,7 @@ import {
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
 import {
-  framingFromView, previewShot, redetectBeats, seek, setClipMusic, setFollow, setLoop, setMusicVolume, startPresent, toggleMusicMute, togglePlay,
+  framingFromView, previewShot, redetectBeats, seek, setClipMusic, setFollow, setLoop, setMusicVolume, setRate, startPresent, toggleMusicMute, togglePlay,
   useClipPlayer,
 } from "./clipPlayer";
 import { VolumeControl } from "../VolumeControl";
@@ -34,6 +34,7 @@ import { pasteShot, useShotClipboard } from "./clipClipboard";
 
 const AUDIO_EXT = /\.(mp3|wav|m4a|aac|flac|ogg|opus|wma|aiff?)$/i;
 const ZOOM_MAX = 40;
+const RATES = [1, 0.75, 0.5];
 // Height of the tracks area, set by dragging the top edge of the timeline (this device only).
 const HEIGHT_KEY = "netsuboard.animatic.height";
 const HEIGHT_MIN = 72;
@@ -67,6 +68,7 @@ export function ClipTimeline() {
   const storyboard = useClipPlayer((s) => s.storyboard);
   const musicVolume = useClipPlayer((s) => s.musicVolume);
   const musicMuted = useClipPlayer((s) => s.musicMuted);
+  const rate = useClipPlayer((s) => s.rate);
   const copiedShot = useShotClipboard((s) => s.copied?.name ?? null);
   const shotAtHead = useClipPlayer((s) => {
     const c = readClip(raw);
@@ -295,6 +297,20 @@ export function ClipTimeline() {
             <NetsuIcon name="play-pause" on={playing} />
           </TipButton>
           <TimeLabel dur={dur} />
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant={rate === 1 ? "ghost" : "secondary"} size="sm" className="w-12 shrink-0 px-1 tabular-nums"
+                  aria-label={t("clip.rate")}
+                  onClick={() => setRate(RATES[(RATES.indexOf(useClipPlayer.getState().rate) + 1) % RATES.length])}
+                />
+              }
+            >
+              ×{rate.toLocaleString()}
+            </TooltipTrigger>
+            <TooltipContent side="top">{t("clip.rateHint")}</TooltipContent>
+          </Tooltip>
           <Separator orientation="vertical" className="mx-1 h-5" />
           <Tooltip>
             <TooltipTrigger render={<Button variant="ghost" size="sm" className="max-w-56 gap-1.5" onClick={() => void chooseMusic()} disabled={readonly} />}>

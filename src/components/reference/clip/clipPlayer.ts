@@ -56,6 +56,8 @@ export interface ClipPlayerState {
   // Music level on this device (kept in localStorage), and muted while working.
   musicVolume: number;
   musicMuted: boolean;
+  // Playback speed while editing (×0.5 to tap cuts on a fast track); Present always plays at ×1.
+  rate: number;
 }
 
 const VOLUME_KEY = "netsuboard.animatic.volume";
@@ -84,6 +86,7 @@ export const useClipPlayer = create<ClipPlayerState>(() => ({
   storyboard: false,
   musicVolume: readVolume(),
   musicMuted: false,
+  rate: 1,
 }));
 
 const set = useClipPlayer.setState;
@@ -165,7 +168,7 @@ function tick() {
   const clip = currentClip();
   if (!clip || !get().playing) return;
   const dur = clipDuration(clip);
-  let t = hasMusic(clip) ? audio!.currentTime : clockFrom + (performance.now() - clockAt) / 1000;
+  let t = hasMusic(clip) ? audio!.currentTime : clockFrom + ((performance.now() - clockAt) / 1000) * get().rate;
   // Loop on the shot that was under the playhead when the loop started.
   if (stopAt && t >= stopAt.end) {
     const back = stopAt.back;
@@ -197,6 +200,7 @@ export function play() {
   if (t >= dur - 0.05) t = 0;
   armLoop(clip, t);
   if (hasMusic(clip)) {
+    audio!.playbackRate = get().rate;
     audio!.currentTime = t;
     void audio!.play().catch(() => undefined);
   }
@@ -215,6 +219,16 @@ export function pause() {
   set({ playing: false });
   // The camera drove the view imperatively: the store learns where it ended.
   if (lastView && driver && (get().follow || get().presenting)) driver.commit(lastView);
+}
+
+// Speed of playback while editing. The clock without music restarts from where it is, so the
+// playhead does not jump.
+export function setRate(rate: number) {
+  const now = get().time;
+  clockFrom = now;
+  clockAt = performance.now();
+  set({ rate });
+  if (audio) audio.playbackRate = rate;
 }
 
 export function togglePlay() {
@@ -298,6 +312,7 @@ export function startPresent(from = 0) {
   requestAnimationFrame(() => {
     if (!currentClip()) return;
     viewBeforePresent = useBoard.getState().view;
+    setRate(1);
     set({ presenting: true });
     window.addEventListener("keydown", onKey, true);
     document.addEventListener("fullscreenchange", onFullscreen);

@@ -1379,6 +1379,8 @@
     "presentFrom": "Presentar desde…",
     "presentStart": "Desde el principio",
     "presentHere": "Desde el cabezal",
-    "presentShot": "Desde este plano"
+    "presentShot": "Desde este plano",
+    "rate": "Velocidad de reproducción",
+    "rateHint": "Ralentiza para cortar más fácil · Presentar siempre va a ×1"
   }
 }

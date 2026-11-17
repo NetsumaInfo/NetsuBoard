@@ -1379,6 +1379,8 @@
     "presentFrom": "Present from…",
     "presentStart": "From the start",
     "presentHere": "From the playhead",
-    "presentShot": "From this shot"
+    "presentShot": "From this shot",
+    "rate": "Playback speed",
+    "rateHint": "Slow down to cut more easily · Present always plays at ×1"
   }
 }

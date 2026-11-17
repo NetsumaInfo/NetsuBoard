@@ -1379,6 +1379,8 @@
     "presentFrom": "Präsentieren ab…",
     "presentStart": "Von Anfang an",
     "presentHere": "Ab dem Abspielkopf",
-    "presentShot": "Ab diesem Shot"
+    "presentShot": "Ab diesem Shot",
+    "rate": "Wiedergabegeschwindigkeit",
+    "rateHint": "Verlangsamen, um leichter zu schneiden · Präsentieren spielt immer mit ×1"
   }
 }
