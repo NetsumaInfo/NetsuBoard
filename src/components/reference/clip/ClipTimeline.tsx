@@ -28,6 +28,7 @@ import { VolumeControl } from "../VolumeControl";
 import { LABEL_W, Playhead, dragIsFree, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
 import { BlockMenu, FxMenu, ShotTransition, TempoMenu } from "./timelineMenus";
 import { ClipStoryboard } from "./ClipStoryboard";
+import { ClipExportDialog } from "./ClipExportDialog";
 import { ExpandedRow, LongRow, ShotsRow, boardOrder } from "./timelineRows";
 import { MarkLines, RulerMarks } from "./ClipMarks";
 import { pasteShot, useShotClipboard } from "./clipClipboard";
@@ -87,6 +88,7 @@ export function ClipTimeline() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [view, setView] = useState(0);
   const [zoom, setZoom] = useState(1);
+  const [exporting, setExporting] = useState(false);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -420,6 +422,10 @@ export function ClipTimeline() {
         <TipButton label={t(folded ? "clip.showTimeline" : "clip.hideTimeline")} onClick={() => useClipPlayer.setState({ folded: !folded })}>
           <NetsuIcon name="chevron-toggle" on={!folded} />
         </TipButton>
+        <TipButton label={t("clip.export.open")} onClick={() => setExporting(true)}>
+          <NetsuIcon name="render" />
+        </TipButton>
+        {exporting && clip && <ClipExportDialog clip={clip} open={exporting} onOpenChange={setExporting} />}
         <div className="flex shrink-0">
           <Button size="sm" className="gap-1.5 rounded-r-none" onClick={() => startPresent()}>
             <NetsuIcon name="monitor-play" /> {t("clip.present")}

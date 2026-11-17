@@ -569,6 +569,20 @@ export interface LoopExportOpts {
   flipH?: boolean;
   flipV?: boolean;
 }
+// A piece of a video's sound in an Animatic export: source seconds [from, to], heard at `at`.
+export interface AnimaticSoundPiece { path: string; from: number; to: number; at: number; speed?: number }
+export interface AnimaticExportOpts {
+  out: string;
+  fps: number;
+  width: number;
+  height: number;
+  duration: number;
+  cpu?: boolean;
+  // The music, lowered inside the `duck` spans (seconds) where a video plays with its sound on.
+  music?: { path: string; duck?: [number, number][] } | null;
+  sounds?: AnimaticSoundPiece[];
+}
+
 // One entry of a whole-board export: a still layer, or a video placed by its centre (output pixels).
 export type BoardLoopEntry =
   | { png: string }
@@ -656,6 +670,13 @@ export interface RefApi {
   // `duration` omitted = the longest loop of the stack. `seamless` bends each clip's speed a little
   // so that it plays a whole number of times and the file wraps without a jump.
   exportBoardLoop(opts: { out: string; format: LoopFormat; fps: number; duration?: number; seamless?: boolean; quality?: number; lossless?: boolean; gifPalette?: GifPalette; stack: BoardLoopEntry[] }): Promise<{ ok: boolean; path?: string; bytes?: number; duration?: number; cancelled?: boolean; error?: string }>;
+  // An Animatic as an MP4: `animaticExportStart` opens ffmpeg (hardware H.264, libx264 with `cpu`
+  // or when there is none), the frames follow in order as base64 JPEG, `animaticExportFinish`
+  // writes the file. `hardware` on a failure = the hardware encoder gave up: retry with `cpu`.
+  animaticExportStart(opts: AnimaticExportOpts): Promise<{ ok: boolean; id?: number; encoder?: string; width?: number; height?: number; fps?: number; audio?: boolean; error?: string }>;
+  animaticExportFrames(id: number, frames: string[]): Promise<{ ok: boolean; error?: string; hardware?: boolean }>;
+  animaticExportFinish(id: number): Promise<{ ok: boolean; path?: string; bytes?: number; error?: string; hardware?: boolean }>;
+  animaticExportCancel(): Promise<{ ok: boolean; cancelled: boolean }>;
   // Partage « .netsu » : exporte la scène (items + vue) dans une archive à `destPath` selon `opts`
   // (mode complet / léger / liens, seuil d'embarquement, gel des liens distants). Importe une archive
   // → scène reconstruite (tokens d'assets → chemins locaux ; gros médias non retrouvés = placeholders).
@@ -1233,6 +1254,10 @@ const mock: NrApi = {
       onLoopProgress: () => () => {},
       estimateLoop: async () => ({ ok: false, stale: true }),
       exportBoardLoop: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      animaticExportStart: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      animaticExportFrames: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      animaticExportFinish: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
+      animaticExportCancel: async () => ({ ok: true, cancelled: false }),
       exportBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       importBoard: async () => ({ ok: false, error: i18n.t("common:mock.appUnavailable") }),
       onShareProgress: () => () => {},

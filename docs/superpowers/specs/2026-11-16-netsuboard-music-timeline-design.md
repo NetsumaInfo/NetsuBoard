@@ -1,7 +1,7 @@
 # NetsuBoard Music Clips Design
 
 **Date:** 2026-11-16
-**Status:** Implemented, storyboard included (see `docs/modules.md`, Music clips). Video export is later.
+**Status:** Implemented, storyboard and video export included (see `docs/modules.md`, Music clips).
 
 ## Goal
 
@@ -159,11 +159,11 @@ Shots    [ Intro      ][ Verse    ]
                        ↑ snapped to a beat
 ```
 
-## Later: video export
+## Video export (implemented)
 
-There is no export in the first version: a Clip is shown live with **Present** (in the app or over a screen share).
+**Export video** in the timeline toolbar writes an MP4 (H.264 + AAC) of what Present shows, at 720p to 4K and 24, 30 or 60 fps, faster than real time.
 
-Export comes later as a **recomposition through ffmpeg**: the Clip is translated into a filter graph (`overlay` with time-based `enable` for items appearing and disappearing, `zoompan` for the camera, fades for transitions) and encoded with the probed hardware encoder, faster than real time. Images and videos map directly; notes, PDFs, YouTube and embeds must be rasterised to stills or skipped. Real-time screen recording of Present is rejected: slow, machine-dependent, and uncertain inside the WebView2 window.
+The frames are **painted by the renderer, not recomposed by an ffmpeg filter graph**: the board painter (`renderBoardCanvas`, the one behind the storyboard thumbnails and the image export) already draws every kind of item — notes, palettes, cards — the way the board does, while a filter graph would have to rasterise all of them anyway and redo the camera with `zoompan`, whose sub-pixel steps shake. Items that do not move are painted once at the sharpness the tightest framing needs, then only placed at each frame; videos are seeked frame by frame from a proxy cut to their range. The frames stream to the core as JPEG and ffmpeg encodes them with the probed hardware encoder, mixing the music (lowered where a video plays with its sound on) and those videos' sound. Real-time screen recording of Present stays rejected: slow, machine-dependent, and uncertain inside the WebView2 window.
 
 ## Storyboard mode (implemented)
 

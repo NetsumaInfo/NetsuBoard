@@ -397,24 +397,41 @@ async function paintItem(ctx: CanvasRenderingContext2D, item: BoardItem): Promis
   else if (CARD_KINDS.has(item.kind)) paintCard(ctx, item);
   else {
     const src = await mediaSource(item);
-    if (!src) {
-      paintCard(ctx, item);
-    } else {
-      const nat = naturalSize(src);
-      const crop = item.crop;
-      const sx = crop ? crop.x * nat.w : 0;
-      const sy = crop ? crop.y * nat.h : 0;
-      const sw = crop ? Math.max(1, crop.w * nat.w) : nat.w;
-      const sh = crop ? Math.max(1, crop.h * nat.h) : nat.h;
-      try {
-        ctx.drawImage(src, sx, sy, sw, sh, 0, 0, item.w, item.h);
-      } catch {
-        paintCard(ctx, item);
-      }
-      ctx.filter = "none";
-    }
+    if (!src) paintCard(ctx, item);
+    else drawSource(ctx, item, src);
   }
   ctx.restore();
+}
+
+// The item's picture in its own box (transform already applied), cropped as on the board.
+function drawSource(ctx: CanvasRenderingContext2D, item: BoardItem, src: CanvasImageSource): void {
+  const nat = naturalSize(src);
+  const crop = item.crop;
+  const sx = crop ? crop.x * nat.w : 0;
+  const sy = crop ? crop.y * nat.h : 0;
+  const sw = crop ? Math.max(1, crop.w * nat.w) : nat.w;
+  const sh = crop ? Math.max(1, crop.h * nat.h) : nat.h;
+  try {
+    ctx.drawImage(src, sx, sy, sw, sh, 0, 0, item.w, item.h);
+  } catch {
+    paintCard(ctx, item);
+  }
+  ctx.filter = "none";
+}
+
+// One item painted from a picture the caller already holds (a video the Animatic export seeks
+// frame by frame), with the item's place, rotation, mirror, crop and opacity. Board coordinates.
+export function paintItemSource(ctx: CanvasRenderingContext2D, item: BoardItem, src: CanvasImageSource): void {
+  ctx.save();
+  ctx.globalAlpha *= item.opacity ?? 1;
+  applyItemTransform(ctx, item);
+  drawSource(ctx, item, src);
+  ctx.restore();
+}
+
+// Address of a file a canvas may read back (the core's HTTP server, which grants CORS).
+export function readableMediaUrl(ref: string): string {
+  return readableSrc(ref);
 }
 
 function paintHead(ctx: CanvasRenderingContext2D, type: string, tx: number, ty: number, ang: number, len: number, color: string, w: number): void {

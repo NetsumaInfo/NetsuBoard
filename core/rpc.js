@@ -17,6 +17,7 @@ const turbo = require("./turbo"); // panier temps réel : shader GLSL libplacebo
 const shaderUpscale = require("./shaderUpscale"); // moteur d'upscale unique de NetsuBoard (GPU, sans IA)
 const exportMod = require("./export"); // export fichier piloté par profil (remux/encode, GPU/CPU, merge)
 const loopExport = require("./loopExport"); // board clip → looping animated image (animated WebP, GIF)
+const animaticExport = require("./animaticExport"); // Animatic → MP4, frames painted by the renderer
 const audioLang = require("./audioLang"); // normalisation des étiquettes de langue des pistes audio
 const { createReferenceStore, scanFolder, writeExportFile } = require("./reference");
 const { createUpscaleLedger } = require("./upscaleLedger"); // registre des sorties d'upscale (anti double production)
@@ -242,6 +243,11 @@ function createRpc() {
     "reference:estimateLoop": ([opts]) => loopExport.estimateLoop(opts || {}),
     // The whole board as a looping animated image: still layers and playing clips, stacked.
     "reference:exportBoardLoop": ([opts]) => loopExport.exportBoardLoop(ev, opts || {}),
+    // An Animatic as a video: the renderer opens the export, streams its frames, then closes it.
+    "reference:animaticExportStart": ([opts]) => animaticExport.startAnimaticExport(opts || {}),
+    "reference:animaticExportFrames": ([id, frames]) => animaticExport.writeAnimaticFrames(id, frames),
+    "reference:animaticExportFinish": ([id]) => animaticExport.finishAnimaticExport(id),
+    "reference:animaticExportCancel": () => animaticExport.cancelAnimaticExport(),
     // AI agents: core/mcp.js calls agent:call, the board answers with agent:reply (cf. core/agent.js).
     "agent:status": () => agent.status(),
     "agent:setEnabled": ([on]) => agent.setEnabled(on),
