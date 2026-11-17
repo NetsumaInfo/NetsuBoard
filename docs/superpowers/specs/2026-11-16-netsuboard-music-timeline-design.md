@@ -1,7 +1,7 @@
 # NetsuBoard Music Clips Design
 
 **Date:** 2026-11-16
-**Status:** First version and its comfort pass implemented (see `docs/modules.md`, Music clips). Storyboard mode and video export are later.
+**Status:** Implemented, storyboard included (see `docs/modules.md`, Music clips). Video export is later.
 
 ## Goal
 
@@ -165,7 +165,7 @@ There is no export in the first version: a Clip is shown live with **Present** (
 
 Export comes later as a **recomposition through ffmpeg**: the Clip is translated into a filter graph (`overlay` with time-based `enable` for items appearing and disappearing, `zoompan` for the camera, fades for transitions) and encoded with the probed hardware encoder, faster than real time. Images and videos map directly; notes, PDFs, YouTube and embeds must be rasterised to stills or skipped. Real-time screen recording of Present is rejected: slow, machine-dependent, and uncertain inside the WebView2 window.
 
-## Later: storyboard mode
+## Storyboard mode (implemented)
 
 A third mode, kept for a later version. It is a grid of thumbnails, one per shot, each showing what the camera sees, read like a comic strip. It gives an overview of the whole presentation at a glance and lets shots be reordered by dragging. It is a reading and ordering tool, not an editing one: framings and items are still edited in the board view.
 
