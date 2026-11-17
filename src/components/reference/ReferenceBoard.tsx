@@ -49,6 +49,7 @@ import { itemToPngBlob } from "./boardRender";
 import { primeBoardThumbs } from "./boardImageLod";
 import { posterTime } from "./boardVideoLod";
 import { registerViewDriver, useClipPlayer } from "./clip/clipPlayer";
+import { copyIntoAnimatic, readDrag } from "./clip/clipDnd";
 import { ClipFramings, ClipLetterbox, PinnedLongItems } from "./clip/ClipStage";
 
 const clampScale = (s: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, s));
@@ -850,6 +851,9 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
         const dropExtra = dropSource ? { sourceUrl: dropSource } : undefined;
         const r = rect();
         const dropAt = screenToBoard(useBoard.getState().view, e.clientX - (r?.left ?? 0), e.clientY - (r?.top ?? 0));
+        // Mood board items dragged from the Animatic panel: copied here, around the drop point.
+        const animatic = readDrag(e.dataTransfer);
+        if (animatic) { copyIntoAnimatic(animatic, dropAt); return; }
         if (dirs.length) {
           // Un dossier n'a pas de contenu exploitable dans `files` : on ne garde que les vrais fichiers.
           const files = dropped.filter((f) => f.type || f.size);

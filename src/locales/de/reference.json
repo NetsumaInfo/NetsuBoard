@@ -1268,12 +1268,12 @@
     "showTimeline": "Timeline einblenden",
     "hideTimeline": "Timeline ausblenden",
     "keySpace": "Leertaste",
-    "keysHint": "Leertaste: Wiedergabe · M: schneiden · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom · Rechtsklick auf einen Shot: Optionen",
+    "keysHint": "Leertaste: Wiedergabe · M: schneiden · I / O: Auswahl tritt hier ein / geht hier · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom",
     "toLongOrBack": "Spur Lang ↔ Shot",
     "librarySearch": "Suchen",
     "libraryFilter": "Typ",
     "libraryNoMatch": "Keine Treffer",
-    "libraryHint": "Klick: in den aktuellen Shot kopieren",
+    "libraryHint": "Aufs Board oder einen Shot ziehen · Doppelklick: hinzufügen · Strg / Umschalt: mehrere",
     "isMusic": "Musik des Animatic",
     "useAsMusic": "Musik",
     "filter": {
@@ -1282,6 +1282,37 @@
       "video": "Videos",
       "audio": "Töne",
       "text": "Notizen"
-    }
+    },
+    "dropHere": "Hier ablegen",
+    "libraryPicked_one": "{{count}} ausgewählt",
+    "libraryPicked_other": "{{count}} ausgewählt",
+    "libraryToShot": "Zum Shot",
+    "libraryClear": "Auswahl aufheben",
+    "librarySelectAll": "Alles auswählen",
+    "markIn": "Tritt hier ein (I)",
+    "markOut": "Geht hier (O)",
+    "markedIn_one": "{{count}} Element tritt bei {{time}} ein",
+    "markedIn_other": "{{count}} Elemente treten bei {{time}} ein",
+    "markedOut_one": "{{count}} Element geht bei {{time}}",
+    "markedOut_other": "{{count}} Elemente gehen bei {{time}}",
+    "timing": "Dauer",
+    "cascade": "Gestaffelte Auftritte",
+    "resetTiming": "Ganzer Shot",
+    "fx": "Erscheinen",
+    "fxHint": "Effekt, Dauer und Deckkraft",
+    "fxMany_one": "{{count}} Element",
+    "fxMany_other": "{{count}} Elemente",
+    "fxKind": "Effekt",
+    "fxKinds": {
+      "fade": "Blende",
+      "zoom": "Zoom",
+      "slide": "Gleiten",
+      "cut": "Hart"
+    },
+    "fxDuration": "Effektdauer",
+    "fxOpacity": "Deckkraft",
+    "fxReset": "Standard",
+    "fxDurationValue": "Dauer {{value}} s",
+    "fxOpacityValue": "Deckkraft {{value}} %"
   }
 }

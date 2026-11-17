@@ -1268,12 +1268,12 @@
     "showTimeline": "Mostrar la timeline",
     "hideTimeline": "Ocultar la timeline",
     "keySpace": "Espacio",
-    "keysHint": "Espacio: reproducir · M: cortar · ← →: plano anterior / siguiente · Ctrl + rueda: zoom · clic derecho en un plano: opciones",
+    "keysHint": "Espacio: reproducir · M: cortar · I / O: la selección entra / sale aquí · ← →: plano anterior / siguiente · Ctrl + rueda: zoom",
     "toLongOrBack": "Pista Largos ↔ plano",
     "librarySearch": "Buscar",
     "libraryFilter": "Tipo",
     "libraryNoMatch": "Sin resultados",
-    "libraryHint": "Clic: copiar al plano actual",
+    "libraryHint": "Arrastra al tablero o a un plano · doble clic: añadir · Ctrl / Mayús: varios",
     "isMusic": "Música del Animatic",
     "useAsMusic": "Música",
     "filter": {
@@ -1282,6 +1282,37 @@
       "video": "Vídeos",
       "audio": "Sonidos",
       "text": "Notas"
-    }
+    },
+    "dropHere": "Suelta aquí",
+    "libraryPicked_one": "{{count}} seleccionado",
+    "libraryPicked_other": "{{count}} seleccionados",
+    "libraryToShot": "Al plano",
+    "libraryClear": "Quitar la selección",
+    "librarySelectAll": "Seleccionar todo",
+    "markIn": "Entra aquí (I)",
+    "markOut": "Sale aquí (O)",
+    "markedIn_one": "{{count}} elemento entra en {{time}}",
+    "markedIn_other": "{{count}} elementos entran en {{time}}",
+    "markedOut_one": "{{count}} elemento sale en {{time}}",
+    "markedOut_other": "{{count}} elementos salen en {{time}}",
+    "timing": "Duración",
+    "cascade": "Entradas en cascada",
+    "resetTiming": "Todo el plano",
+    "fx": "Aparición",
+    "fxHint": "Efecto, duración y opacidad",
+    "fxMany_one": "{{count}} elemento",
+    "fxMany_other": "{{count}} elementos",
+    "fxKind": "Efecto",
+    "fxKinds": {
+      "fade": "Fundido",
+      "zoom": "Zoom",
+      "slide": "Desliz",
+      "cut": "Seco"
+    },
+    "fxDuration": "Duración del efecto",
+    "fxOpacity": "Opacidad",
+    "fxReset": "Por defecto",
+    "fxDurationValue": "Duración {{value}} s",
+    "fxOpacityValue": "Opacidad {{value}} %"
   }
 }

@@ -203,8 +203,10 @@ export function setFollow(on: boolean) {
 // ── Present ─────────────────────────────────────────────────────────────────
 
 function onKey(e: KeyboardEvent) {
-  if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); stopPresent(); }
-  else if (e.key === " ") { e.preventDefault(); e.stopPropagation(); togglePlay(); }
+  // stopImmediatePropagation: the board shortcuts listen on the same window, and Escape there
+  // would also leave the Animatic.
+  if (e.key === "Escape") { e.preventDefault(); e.stopImmediatePropagation(); stopPresent(); }
+  else if (e.key === " ") { e.preventDefault(); e.stopImmediatePropagation(); togglePlay(); }
 }
 function onFullscreen() {
   if (!document.fullscreenElement && get().presenting) stopPresent();

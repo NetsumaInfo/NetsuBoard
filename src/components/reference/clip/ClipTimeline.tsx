@@ -14,13 +14,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBoard } from "../useReferenceBoard";
 import {
-  addToShot, clipDuration, cutAt, neighbourShotStart, patchShot, pruneClip, shotIndexAt,
+  addToShot, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, patchShot, pruneClip, shotIndexAt,
   snapTime, toLong, unassigned, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
 import { framingFromView, seek, setClipMusic, setFollow, startPresent, togglePlay, useClipPlayer } from "./clipPlayer";
 import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
-import { ShotTransition } from "./timelineMenus";
+import { FxMenu, ShotTransition } from "./timelineMenus";
 import { ExpandedRow, LongRow, ShotsRow } from "./timelineRows";
 
 const AUDIO_EXT = /\.(mp3|wav|m4a|aac|flac|ogg|opus|wma|aiff?)$/i;
@@ -79,6 +79,17 @@ export function ClipTimeline() {
   const latest = useCallback(() => readClip(openClipRaw(useBoard.getState())), []);
   const snapT = useCallback((x: number, c: ClipData) =>
     (c.snap ? snapTime(x, c.beats, Math.max(0.03, (6 / Math.max(1, width)) * dur)) : x), [dur, width]);
+  // The given items enter or leave at the playhead (snapped), with a line saying what happened.
+  const markAt = useCallback((which: "in" | "out", ids: string[]) => {
+    const c = latest();
+    if (!c || !ids.length || !clipId) return;
+    const at = snapT(useClipPlayer.getState().time, c);
+    useBoard.getState().patchClip(clipId, which === "in" ? markIn(c, ids, at) : markOut(c, ids, at));
+    useBoard.getState().setNotice({
+      text: t(which === "in" ? "clip.markedIn" : "clip.markedOut", { count: ids.length, time: formatTime(at) }),
+      kind: "ok",
+    });
+  }, [latest, snapT, clipId, t]);
 
   // Zoom around a time that stays under the same screen x.
   const zoomTo = useCallback((next: number, anchorTime?: number, anchorX?: number) => {
@@ -105,6 +116,15 @@ export function ClipTimeline() {
         e.preventDefault();
         const next = cutAt(c, snapT(useClipPlayer.getState().time, c));
         if (next !== c) useBoard.getState().patchClip(clipId, next);
+        return;
+      }
+      // I / O: the selected items enter or leave at the playhead, all at once.
+      const k = e.key.toLowerCase();
+      if ((k === "i" || k === "o") && !readonly) {
+        const ids = useBoard.getState().selectedIds;
+        if (!ids.length) return;
+        e.preventDefault();
+        markAt(k === "i" ? "in" : "out", ids);
         return;
       }
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !useBoard.getState().selectedIds.length) {
@@ -215,6 +235,13 @@ export function ClipTimeline() {
         <TipButton label={t("clip.toLong")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(toLong(c, sel)); }}>
           <NetsuIcon name="lane-long" />
         </TipButton>
+        <TipButton label={t("clip.markIn")} disabled={readonly || !sel.length} onClick={() => markAt("in", sel)}>
+          <NetsuIcon name="mark-in" />
+        </TipButton>
+        <TipButton label={t("clip.markOut")} disabled={readonly || !sel.length} onClick={() => markAt("out", sel)}>
+          <NetsuIcon name="mark-out" />
+        </TipButton>
+        {!readonly && <FxMenu clip={clip} ids={sel} commit={commit} />}
         <Popover>
           <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
             <NetsuIcon name="framing" /> {t("clip.framing")}

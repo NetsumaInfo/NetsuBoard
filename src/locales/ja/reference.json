@@ -1268,12 +1268,12 @@
     "showTimeline": "タイムラインを表示",
     "hideTimeline": "タイムラインを隠す",
     "keySpace": "スペース",
-    "keysHint": "スペース: 再生 · M: カット · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム · ショットを右クリック: オプション",
+    "keysHint": "スペース: 再生 · M: カット · I / O: 選択がここで登場 / 退場 · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム",
     "toLongOrBack": "ロングトラック ↔ ショット",
     "librarySearch": "検索",
     "libraryFilter": "種類",
     "libraryNoMatch": "一致なし",
-    "libraryHint": "クリック: 現在のショットにコピー",
+    "libraryHint": "ボードかショットへドラッグ · ダブルクリック: 追加 · Ctrl / Shift: 複数",
     "isMusic": "Animatic の音楽",
     "useAsMusic": "音楽",
     "filter": {
@@ -1282,6 +1282,37 @@
       "video": "動画",
       "audio": "サウンド",
       "text": "ノート"
-    }
+    },
+    "dropHere": "ここにドロップ",
+    "libraryPicked_one": "{{count}} 個選択",
+    "libraryPicked_other": "{{count}} 個選択",
+    "libraryToShot": "ショットへ",
+    "libraryClear": "選択を解除",
+    "librarySelectAll": "すべて選択",
+    "markIn": "ここで登場 (I)",
+    "markOut": "ここで退場 (O)",
+    "markedIn_one": "{{count}} 個が {{time}} に登場",
+    "markedIn_other": "{{count}} 個が {{time}} に登場",
+    "markedOut_one": "{{count}} 個が {{time}} に退場",
+    "markedOut_other": "{{count}} 個が {{time}} に退場",
+    "timing": "タイミング",
+    "cascade": "順番に登場",
+    "resetTiming": "ショット全体",
+    "fx": "登場の仕方",
+    "fxHint": "効果、長さ、不透明度",
+    "fxMany_one": "{{count}} 個",
+    "fxMany_other": "{{count}} 個",
+    "fxKind": "効果",
+    "fxKinds": {
+      "fade": "フェード",
+      "zoom": "ズーム",
+      "slide": "スライド",
+      "cut": "カット"
+    },
+    "fxDuration": "効果の長さ",
+    "fxOpacity": "不透明度",
+    "fxReset": "既定",
+    "fxDurationValue": "長さ {{value}} 秒",
+    "fxOpacityValue": "不透明度 {{value}} %"
   }
 }

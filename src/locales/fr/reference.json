@@ -1268,12 +1268,12 @@
     "showTimeline": "Afficher la timeline",
     "hideTimeline": "Masquer la timeline",
     "keySpace": "Espace",
-    "keysHint": "Espace : lecture · M : couper · ← → : plan précédent / suivant · Ctrl + molette : zoom · clic droit sur un plan : options",
+    "keysHint": "Espace : lecture · M : couper · I / O : la sélection entre / sort ici · ← → : plan précédent / suivant · Ctrl + molette : zoom",
     "toLongOrBack": "Piste Longs ↔ plan",
     "librarySearch": "Rechercher",
     "libraryFilter": "Type",
     "libraryNoMatch": "Aucun résultat",
-    "libraryHint": "Clic : copier dans le plan en cours",
+    "libraryHint": "Glisse vers le board ou un plan · double-clic : ajouter · Ctrl / Maj : plusieurs",
     "isMusic": "Musique de l’Animatic",
     "useAsMusic": "Musique",
     "filter": {
@@ -1282,6 +1282,37 @@
       "video": "Vidéos",
       "audio": "Sons",
       "text": "Notes"
-    }
+    },
+    "dropHere": "Lâcher ici",
+    "libraryPicked_one": "{{count}} sélectionné",
+    "libraryPicked_other": "{{count}} sélectionnés",
+    "libraryToShot": "Au plan",
+    "libraryClear": "Tout désélectionner",
+    "librarySelectAll": "Tout sélectionner",
+    "markIn": "Entre ici (I)",
+    "markOut": "Sort ici (O)",
+    "markedIn_one": "{{count}} élément entre à {{time}}",
+    "markedIn_other": "{{count}} éléments entrent à {{time}}",
+    "markedOut_one": "{{count}} élément sort à {{time}}",
+    "markedOut_other": "{{count}} éléments sortent à {{time}}",
+    "timing": "Durée",
+    "cascade": "Entrées en cascade",
+    "resetTiming": "Tout le plan",
+    "fx": "Apparition",
+    "fxHint": "Effet, durée et opacité",
+    "fxMany_one": "{{count}} élément",
+    "fxMany_other": "{{count}} éléments",
+    "fxKind": "Effet",
+    "fxKinds": {
+      "fade": "Fondu",
+      "zoom": "Zoom",
+      "slide": "Glisse",
+      "cut": "Sec"
+    },
+    "fxDuration": "Durée de l'effet",
+    "fxOpacity": "Opacité",
+    "fxReset": "Par défaut",
+    "fxDurationValue": "Durée {{value}} s",
+    "fxOpacityValue": "Opacité {{value}} %"
   }
 }

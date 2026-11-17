@@ -26,12 +26,23 @@ import { startLive } from "./liveSite";
 import { frameTitleFactor, noteTextFactor } from "./boardTextZoom";
 import { useBoard } from "./useReferenceBoard";
 import { registerPlayer } from "./playhead";
-import { clipLook, useClipPlayer } from "./clip/clipPlayer";
+import { clipLook, useClipPlayer, type ClipLook } from "./clip/clipPlayer";
 import { openClipId, openClipRaw, readClip } from "./clip/clipSelectors";
-import type { ClipVideo } from "./clip/clipModel";
+import { fxOf, type ClipFx, type ClipVideo } from "./clip/clipModel";
 import { ClipTile } from "./clip/ClipTile";
 
 const EMPTY_CLIP_VIDEO: ClipVideo = {};
+
+// CSS of an item's entrance and exit in an Animatic: a transition, and where it comes from while
+// hidden (Present). The move is CSS only, as the board's animations must be.
+function clipFxStyle(look: ClipLook, fx: Required<ClipFx> | null): React.CSSProperties {
+  if (look === "none" || !fx) return {};
+  const d = fx.kind === "cut" ? 0 : fx.dur;
+  const transition = `opacity ${d}s ease, transform ${d}s cubic-bezier(0.2, 0.8, 0.2, 1)`;
+  if (look !== "hidden") return { transition };
+  const from = fx.kind === "zoom" ? "scale(0.82)" : fx.kind === "slide" ? "translateY(12%)" : undefined;
+  return { transition, transform: from };
+}
 import { shapeBBox, shifted } from "./drawGeometry";
 import { YoutubeItem } from "./YoutubeItem";
 import { EmbedItem } from "./EmbedItem";
@@ -1351,7 +1362,14 @@ export const BoardItem = memo(function BoardItem({
   // Inside a clip: absent at the playhead = a selectable ghost while editing, gone in Present.
   const look = useClipPlayer((s) => clipLook(s, item.id));
   const presenting = useClipPlayer((s) => s.presenting);
-  const lookOpacity = look === "ghost" ? 0.15 : look === "hidden" ? 0 : 1;
+  // Its appearance in the Animatic (clip/clipModel ClipFx): effect, duration, opacity.
+  const fx = useBoard(useShallow((s) => {
+    if (look === "none") return null;
+    const c = readClip(openClipRaw(s));
+    return c ? fxOf(c, item.id) : null;
+  }));
+  const lookOpacity = look === "ghost" ? 0.15 : look === "hidden" ? 0 : look === "on" ? fx?.opacity ?? 1 : 1;
+  const fxStyle = clipFxStyle(look, fx);
 
   return (
     <div
@@ -1418,14 +1436,14 @@ export const BoardItem = memo(function BoardItem({
           // Markdown block: its own hairline border and soft shadow, matching radius (see TextBlock).
           item.kind === "text" && noteMode(item) === "block" && "shadow-[0_1px_2px_rgba(0,0,0,0.08),0_8px_18px_-8px_rgba(0,0,0,0.25)]",
           item.kind === "text" && noteMode(item) === "block" && !selected && "ring-0",
-          // Clip ghost / hidden: on this inner layer, so it multiplies with the item's own opacity.
-          look !== "none" && "transition-opacity duration-300",
         )}
         style={{
           boxShadow: selected
             ? `0 0 0 ${2 * selPx}px var(--color-primary), 0 0 0 ${3.5 * selPx}px color-mix(in srgb, black 60%, transparent)`
             : undefined,
+          // Clip ghost / hidden: on this inner layer, so it multiplies with the item's own opacity.
           opacity: lookOpacity === 1 ? undefined : lookOpacity,
+          ...fxStyle,
           background: item.kind === "text" && noteMode(item) === "text" ? item.bg : undefined,
           borderRadius: item.kind === "text" && noteMode(item) === "block" ? blockRadius(item) : undefined,
         }}

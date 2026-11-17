@@ -1268,12 +1268,12 @@
     "showTimeline": "显示时间线",
     "hideTimeline": "隐藏时间线",
     "keySpace": "空格",
-    "keysHint": "空格：播放 · M：剪切 · ← →：上一个 / 下一个镜头 · Ctrl + 滚轮：缩放 · 右键单击镜头：选项",
+    "keysHint": "空格：播放 · M：剪切 · I / O：所选在此出现 / 离开 · ← →：上一个 / 下一个镜头 · Ctrl + 滚轮：缩放",
     "toLongOrBack": "长轨道 ↔ 镜头",
     "librarySearch": "搜索",
     "libraryFilter": "类型",
     "libraryNoMatch": "无匹配结果",
-    "libraryHint": "单击：复制到当前镜头",
+    "libraryHint": "拖到画板或镜头上 · 双击：添加 · Ctrl / Shift：多选",
     "isMusic": "Animatic 的音乐",
     "useAsMusic": "音乐",
     "filter": {
@@ -1282,6 +1282,37 @@
       "video": "视频",
       "audio": "声音",
       "text": "便签"
-    }
+    },
+    "dropHere": "拖放到这里",
+    "libraryPicked_one": "已选 {{count}} 个",
+    "libraryPicked_other": "已选 {{count}} 个",
+    "libraryToShot": "加入镜头",
+    "libraryClear": "取消选择",
+    "librarySelectAll": "全选",
+    "markIn": "从这里出现 (I)",
+    "markOut": "在这里离开 (O)",
+    "markedIn_one": "{{count}} 个元素在 {{time}} 出现",
+    "markedIn_other": "{{count}} 个元素在 {{time}} 出现",
+    "markedOut_one": "{{count}} 个元素在 {{time}} 离开",
+    "markedOut_other": "{{count}} 个元素在 {{time}} 离开",
+    "timing": "时长",
+    "cascade": "依次出现",
+    "resetTiming": "整个镜头",
+    "fx": "出现方式",
+    "fxHint": "效果、时长和不透明度",
+    "fxMany_one": "{{count}} 个元素",
+    "fxMany_other": "{{count}} 个元素",
+    "fxKind": "效果",
+    "fxKinds": {
+      "fade": "淡入",
+      "zoom": "缩放",
+      "slide": "滑入",
+      "cut": "硬切"
+    },
+    "fxDuration": "效果时长",
+    "fxOpacity": "不透明度",
+    "fxReset": "默认",
+    "fxDurationValue": "时长 {{value}} 秒",
+    "fxOpacityValue": "不透明度 {{value}} %"
   }
 }

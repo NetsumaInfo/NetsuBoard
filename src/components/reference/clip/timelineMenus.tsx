@@ -9,8 +9,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BoardItem } from "../referenceShared";
 import {
-  DEFAULT_GLIDE, MIN_SHOT, SPEED_MAX, SPEED_MIN, fitSpeed, patchShot, setVideo,
-  type ClipData, type PinCorner, type VideoLoop,
+  DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, fitSpeed, fxOf, patchShot, setFx, setVideo,
+  type ClipData, type FxKind, type PinCorner, type VideoLoop,
 } from "./clipModel";
 
 export type Commit = (next: ClipData, tag?: string | null) => void;
@@ -76,6 +76,72 @@ export function PinMenu({ corner, size, onChange }: { corner: PinCorner | null; 
             </label>
             <Button size="sm" variant="ghost" className="mt-1 w-full" onClick={() => onChange(null)}>{t("clip.unpin")}</Button>
           </>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+const FX_KINDS: FxKind[] = ["fade", "zoom", "slide", "cut"];
+const FX_ICONS: Record<FxKind, string> = { fade: "eye", zoom: "zoom-in", slide: "move-up", cut: "cut" };
+
+// How the given items appear and leave: effect, duration, opacity. Shows the first item's values;
+// a change applies to all of them at once.
+export function FxMenu({ clip, ids, commit, compact }: { clip: ClipData; ids: string[]; commit: Commit; compact?: boolean }) {
+  const { t } = useTranslation("reference");
+  const f = ids.length ? fxOf(clip, ids[0]) : fxOf(clip, "");
+  const set = (patch: Parameters<typeof setFx>[2], tag?: string) => commit(setFx(clip, ids, patch), tag);
+  const changed = ids.some((id) => clip.fx?.[id]);
+  const trigger = compact
+    ? <button type="button" aria-label={t("clip.fx")} className={cn("rounded p-0.5 hover:bg-foreground/15", changed && "bg-foreground/20")} />
+    : <Button variant="ghost" size="sm" className="gap-1.5" disabled={!ids.length} />;
+  return (
+    <Popover>
+      <Tooltip>
+        <TooltipTrigger render={<PopoverTrigger render={trigger} />}>
+          <NetsuIcon name="sparkles" className={compact ? "size-3" : undefined} />
+          {!compact && t("clip.fx")}
+        </TooltipTrigger>
+        <TooltipContent side="top">{ids.length > 1 ? t("clip.fxMany", { count: ids.length }) : t("clip.fxHint")}</TooltipContent>
+      </Tooltip>
+      <PopoverContent side="top" className="w-64 space-y-3 p-2.5 text-[11px]">
+        <div className="space-y-1">
+          <div className="text-muted-foreground">{ids.length > 1 ? t("clip.fxMany", { count: ids.length }) : t("clip.fxKind")}</div>
+          <div className="grid grid-cols-4 gap-1">
+            {FX_KINDS.map((k) => (
+              <Button key={k} size="sm" variant={f.kind === k ? "default" : "ghost"} className="h-auto flex-col gap-0.5 py-1.5" onClick={() => set({ kind: k })}>
+                <NetsuIcon name={FX_ICONS[k]} />
+                <span className="text-[10px]">{t(`clip.fxKinds.${k}`)}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+        <label className="block space-y-1">
+          <span className="flex justify-between text-muted-foreground">
+            <span>{t("clip.fxDuration")}</span>
+            <span className="tabular-nums text-foreground">{f.kind === "cut" ? "—" : `${f.dur.toFixed(2)} s`}</span>
+          </span>
+          <input
+            type="range" min={0.05} max={FX_DUR_MAX} step={0.05} value={f.dur} disabled={f.kind === "cut"}
+            onChange={(e) => set({ dur: Number(e.target.value) }, "clip-fx-dur")}
+            className="w-full accent-[#a78bfa] disabled:opacity-40"
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className="flex justify-between text-muted-foreground">
+            <span>{t("clip.fxOpacity")}</span>
+            <span className="tabular-nums text-foreground">{Math.round(f.opacity * 100)} %</span>
+          </span>
+          <input
+            type="range" min={0.05} max={1} step={0.05} value={f.opacity}
+            onChange={(e) => set({ opacity: Number(e.target.value) }, "clip-fx-opacity")}
+            className="w-full accent-[#a78bfa]"
+          />
+        </label>
+        {changed && (
+          <Button size="sm" variant="ghost" className="w-full" onClick={() => set({ kind: "fade", dur: DEFAULT_FX_DUR, opacity: 1 })}>
+            {t("clip.fxReset")}
+          </Button>
         )}
       </PopoverContent>
     </Popover>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  addToShot, cameraAt, clipDuration, cutAt, deleteShot, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
+  addToShot, cameraAt, cascade, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
@@ -137,6 +137,45 @@ describe("clip model", () => {
     expect(unassigned(toLong(clip(), ["a"]), ["a", "b", "c"])).toEqual(["c"]);
     expect(rulerStep(100)).toBe(1);
     expect(rulerStep(10)).toBe(10);
+  });
+
+  it("marks the entry and the exit of several items at the playhead", () => {
+    let c = cutAt(clip(), 10);
+    c = markIn(c, ["a", "b"], 12);
+    expect(presentAt(c, 11).has("a")).toBe(false);
+    expect(presentAt(c, 12.5).has("a") && presentAt(c, 12.5).has("b")).toBe(true);
+    c = markOut(c, ["a"], 16);
+    expect(presentAt(c, 17).has("a")).toBe(false);
+    expect(presentAt(c, 17).has("b")).toBe(true);
+    c = toLong(c, ["b"], [2, 20]);
+    c = markIn(c, ["b"], 5);
+    expect(c.long[0].start).toBe(5);
+  });
+
+  it("brings an item into the shot under the playhead when it enters there", () => {
+    let c = cutAt(clip(), 10);
+    c = removeFromShot(c, 1, ["a"]);
+    c = markIn(c, ["a"], 14);
+    expect(presentAt(c, 15).has("a")).toBe(true);
+  });
+
+  it("cascades entries on the beats, else evenly, and resets them", () => {
+    let c = { ...clip(), beats: [0, 0.5, 1, 1.5, 2] };
+    c = cascade(c, 0, ["b", "a"]);
+    expect(c.shots[0].items.find((s) => s.id === "a")?.delay).toBeCloseTo(0.5);
+    c = cascade({ ...c, beats: [] }, 0, ["a", "b"]);
+    expect(c.shots[0].items.find((s) => s.id === "b")?.delay).toBeCloseTo(5);
+    c = resetTiming(c, 0, ["a", "b"]);
+    expect(c.shots[0].items.every((s) => s.delay == null)).toBe(true);
+  });
+
+  it("stores only appearance settings that differ from the default", () => {
+    let c = setFx(clip(), ["a", "b"], { kind: "zoom", dur: 9 });
+    expect(c.fx?.a).toEqual({ kind: "zoom", dur: 2 });
+    expect(fxOf(c, "b").kind).toBe("zoom");
+    c = setFx(c, ["a"], { kind: "fade", dur: 0.3 });
+    expect(c.fx?.a).toBeUndefined();
+    expect(fxOf(c, "a")).toEqual({ kind: "fade", dur: 0.3, opacity: 1 });
   });
 
   it("normalises a damaged clip", () => {

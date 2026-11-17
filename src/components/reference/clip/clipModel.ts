@@ -51,6 +51,12 @@ export interface ClipVideo {
   loop?: VideoLoop;
 }
 
+// How an item appears and leaves in the Animatic. Unset = a fade of DEFAULT_FX_DUR, full opacity.
+export type FxKind = "fade" | "zoom" | "slide" | "cut";
+export interface ClipFx { kind?: FxKind; dur?: number; opacity?: number }
+export const DEFAULT_FX_DUR = 0.3;
+export const FX_DUR_MAX = 2;
+
 export interface ClipMusic { ref: string; name: string; dur: number }
 
 export interface ClipData {
@@ -63,6 +69,7 @@ export interface ClipData {
   shots: Shot[];
   long: LongItem[];
   videos: Record<string, ClipVideo>;
+  fx?: Record<string, ClipFx>;
 }
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -133,6 +140,7 @@ export function normalizeClip(raw: unknown): ClipData | null {
     shots: sorted,
     long: Array.isArray(c.long) ? c.long.filter((l) => l && typeof l.id === "string") : [],
     videos: c.videos && typeof c.videos === "object" ? c.videos : {},
+    ...(c.fx && typeof c.fx === "object" ? { fx: c.fx } : {}),
   };
 }
 
@@ -390,6 +398,82 @@ export function setVideo(clip: ClipData, id: string, patch: Partial<ClipVideo>):
   return { ...clip, videos };
 }
 
+// ── Several items at once ───────────────────────────────────────────────────
+
+export function fxOf(clip: ClipData, id: string): Required<ClipFx> {
+  const f = clip.fx?.[id] ?? {};
+  return { kind: f.kind ?? "fade", dur: f.dur ?? DEFAULT_FX_DUR, opacity: f.opacity ?? 1 };
+}
+
+// Appearance settings for several items; defaults are dropped so the document stays small.
+export function setFx(clip: ClipData, ids: string[], patch: ClipFx): ClipData {
+  const fx = { ...(clip.fx ?? {}) };
+  for (const id of ids) {
+    const next: ClipFx = { ...(fx[id] ?? {}), ...patch };
+    if (next.dur != null) next.dur = Math.min(FX_DUR_MAX, Math.max(0, next.dur));
+    if (next.opacity != null) next.opacity = Math.min(1, Math.max(0.05, next.opacity));
+    if (next.kind === "fade") delete next.kind;
+    if (next.dur === DEFAULT_FX_DUR) delete next.dur;
+    if (next.opacity === 1) delete next.opacity;
+    if (Object.keys(next).length) fx[id] = next; else delete fx[id];
+  }
+  return { ...clip, fx };
+}
+
+// The selected items enter at t: a Long item starts there; an item of the shot under t waits until
+// t; an item not in that shot joins it, entering at t.
+export function markIn(clip: ClipData, ids: string[], t: number): ClipData {
+  let next = clip;
+  const i = shotIndexAt(clip, t);
+  for (const id of ids) {
+    const l = next.long.find((x) => x.id === id);
+    if (l) { next = setLongSpan(next, id, t, Math.max(l.end, t + MIN_SHOT)); continue; }
+    if (!next.shots[i].items.some((si) => si.id === id)) next = addToShot(next, i, [id]);
+    next = setShotItemTiming(next, i, id, { delay: t - next.shots[i].start });
+  }
+  return next;
+}
+
+// The selected items leave at t: a Long item ends there; an item of the shot under t leaves early.
+export function markOut(clip: ClipData, ids: string[], t: number): ClipData {
+  let next = clip;
+  const i = shotIndexAt(clip, t);
+  for (const id of ids) {
+    const l = next.long.find((x) => x.id === id);
+    if (l) { next = setLongSpan(next, id, l.start, t); continue; }
+    if (next.shots[i].items.some((si) => si.id === id)) {
+      next = setShotItemTiming(next, i, id, { early: shotEnd(next, i) - t });
+    }
+  }
+  return next;
+}
+
+// Items of a shot enter one after another, in the given order: on the beats when the track has
+// some, else spread evenly over the first half of the shot. Their exits are kept.
+export function cascade(clip: ClipData, index: number, ordered: string[]): ClipData {
+  const shot = clip.shots[index];
+  if (!shot) return clip;
+  const s = shot.start, e = shotEnd(clip, index);
+  const ids = ordered.filter((id) => shot.items.some((si) => si.id === id));
+  if (ids.length < 2) return clip;
+  const beats = (clip.beats ?? []).filter((b) => b >= s - 0.01 && b < e - MIN_SHOT);
+  const even = ((e - s) * 0.5) / ids.length;
+  let next = clip;
+  ids.forEach((id, k) => {
+    const at = beats.length >= ids.length ? beats[k] : s + k * even;
+    next = setShotItemTiming(next, index, id, { delay: Math.max(0, at - s) });
+  });
+  return next;
+}
+
+// Back to the whole shot for the given items.
+export function resetTiming(clip: ClipData, index: number, ids: string[]): ClipData {
+  const shot = clip.shots[index];
+  if (!shot) return clip;
+  const set = new Set(ids);
+  return patchShot(clip, index, { items: shot.items.map((si) => (set.has(si.id) ? { id: si.id } : si)) });
+}
+
 // Speed that makes a range of `rangeSec` fill a bar of `barSec`, clamped to the allowed range.
 export function fitSpeed(rangeSec: number, barSec: number): number {
   if (!(rangeSec > 0) || !(barSec > 0)) return 1;
@@ -422,7 +506,9 @@ export function pruneClip(clip: ClipData, alive: Set<string>): ClipData {
   if (long.length !== clip.long.length) changed = true;
   const videos = Object.fromEntries(Object.entries(clip.videos).filter(([id]) => alive.has(id)));
   if (Object.keys(videos).length !== Object.keys(clip.videos).length) changed = true;
-  return changed ? { ...clip, shots, long, videos } : clip;
+  const fx = clip.fx ? Object.fromEntries(Object.entries(clip.fx).filter(([id]) => alive.has(id))) : undefined;
+  if (fx && Object.keys(fx).length !== Object.keys(clip.fx!).length) changed = true;
+  return changed ? { ...clip, shots, long, videos, ...(fx ? { fx } : {}) } : clip;
 }
 
 // When the music changes length, shots past the new end are merged away and Long bars clamped.

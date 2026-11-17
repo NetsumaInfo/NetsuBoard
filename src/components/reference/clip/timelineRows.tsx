@@ -12,12 +12,13 @@ import {
 import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
 import {
-  deleteShot, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, setLongPin, setLongSpan,
+  cascade, deleteShot, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
   setShotItemTiming, shotEnd, shotItemSpan, toLong, addToShot, type ClipData,
 } from "./clipModel";
 import { framingFromView, seek, useClipPlayer } from "./clipPlayer";
 import { Bar, MiniButton, itemName } from "./timelineParts";
-import { PinMenu, VideoMenu, type Commit } from "./timelineMenus";
+import { dropOnLong, dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
+import { FxMenu, PinMenu, VideoMenu, type Commit } from "./timelineMenus";
 
 type Drag = (e: ReactPointerEvent, onMove: (dt: number) => void, onEnd?: () => void) => void;
 
@@ -36,11 +37,42 @@ interface RowProps {
 
 const xOf = (sec: number, dur: number, width: number) => (sec / dur) * width;
 
+// Items in reading order on the board: top to bottom, then left to right (rows of a mood board).
+export function boardOrder(ids: string[], byId: Map<string, BoardItem>): string[] {
+  return [...ids].sort((a, b) => {
+    const p = byId.get(a), q = byId.get(b);
+    if (!p || !q) return 0;
+    return Math.abs(p.y - q.y) > Math.min(p.h, q.h) / 2 ? p.y - q.y : p.x - q.x;
+  });
+}
+
+// A lane that takes items dragged from the mood board panel, lit while one hovers it.
+function useDropZone(readonly: boolean, onDrop: (ids: string[], e: React.DragEvent) => void) {
+  const [over, setOver] = useState(false);
+  if (readonly) return { over: false, props: {} };
+  return {
+    over,
+    props: {
+      onDragOver: (e: React.DragEvent) => { if (isAnimaticDrag(e.dataTransfer)) { e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = "copy"; setOver(true); } },
+      onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setOver(false); },
+      onDrop: (e: React.DragEvent) => {
+        setOver(false);
+        const ids = readDrag(e.dataTransfer);
+        if (!ids) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onDrop(ids, e);
+      },
+    },
+  };
+}
+
 export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snapT, byId, selectedIds }: RowProps) {
   const { t } = useTranslation("reference");
+  const zone = useDropZone(readonly, (ids) => dropOnLong(ids));
   return (
-    <div className="flex min-h-7 flex-col gap-0.5 py-0.5">
-      {clip.long.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t("clip.longEmpty")}</div>}
+    <div {...zone.props} className={cn("flex min-h-7 flex-col gap-0.5 py-0.5", zone.over && "bg-sky-500/15 outline-1 outline-dashed outline-sky-500")}>
+      {clip.long.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t(zone.over ? "clip.dropHere" : "clip.longEmpty")}</div>}
       {clip.long.map((l) => (
         <div key={l.id} className="relative h-6">
           <Bar
@@ -75,18 +107,44 @@ export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snap
   );
 }
 
-export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, snapT, selectedIds, shotAtHead }: RowProps & { shotAtHead: number }) {
+export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, snapT, selectedIds, byId, shotAtHead }: RowProps & { shotAtHead: number }) {
   const { t } = useTranslation("reference");
   const expanded = useClipPlayer((s) => s.expanded);
   const [menuShot, setMenuShot] = useState(0);
   const [renaming, setRenaming] = useState<string | null>(null);
   const name = (i: number) => clip.shots[i].label || t("clip.shotN", { n: i + 1 });
   const at = (i: number, fn: (c: ClipData, i: number) => ClipData) => { const c = latest(); if (c) commit(fn(c, i)); };
+  // Mood board items dropped on a shot go into that shot.
+  const [dropShot, setDropShot] = useState<number | null>(null);
+  const shotUnder = (e: React.DragEvent) => {
+    const idx = (e.target as HTMLElement).closest("[data-shot]")?.getAttribute("data-shot");
+    return idx == null ? null : Number(idx);
+  };
+  const dropProps = readonly ? {} : {
+    onDragOver: (e: React.DragEvent) => {
+      if (!isAnimaticDrag(e.dataTransfer)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = "copy";
+      setDropShot(shotUnder(e));
+    },
+    onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropShot(null); },
+    onDrop: (e: React.DragEvent) => {
+      const ids = readDrag(e.dataTransfer);
+      const i = shotUnder(e);
+      setDropShot(null);
+      if (!ids || i == null) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dropOnShot(ids, clip.shots[i].start);
+    },
+  };
 
   return (
     <ContextMenu>
       <ContextMenuTrigger
         className="relative block h-9"
+        {...dropProps}
         onContextMenuCapture={(e) => {
           const idx = (e.target as HTMLElement).closest("[data-shot]")?.getAttribute("data-shot");
           if (idx == null) return;
@@ -104,6 +162,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
               className={cn(
                 "absolute top-0.5 flex h-8 items-center gap-1 overflow-hidden rounded-md border px-1",
                 i === shotAtHead ? "border-[#a78bfa] bg-[#a78bfa]/25" : "border-border bg-muted/60 hover:bg-muted",
+                dropShot === i && "border-dashed border-primary bg-primary/25",
               )}
               style={{ left: a, width: Math.max(4, b - a - 1) }}
             >
@@ -181,6 +240,15 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
           >
             <NetsuIcon name="add" /> {t("clip.addToShot")}
           </ContextMenuItem>
+          <ContextMenuItem
+            disabled={(clip.shots[menuShot]?.items.length ?? 0) < 2}
+            onClick={() => at(menuShot, (c, k) => cascade(c, k, boardOrder(c.shots[k].items.map((si) => si.id), byId)))}
+          >
+            <NetsuIcon name="cascade" /> {t("clip.cascade")}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => at(menuShot, (c, k) => resetTiming(c, k, c.shots[k].items.map((si) => si.id)))}>
+            <NetsuIcon name="reset" /> {t("clip.resetTiming")}
+          </ContextMenuItem>
           <ContextMenuItem onClick={() => { const r = framingFromView(); if (r) at(menuShot, (c, k) => patchShot(c, k, { from: r, to: r })); }}>
             <NetsuIcon name="framing" /> {t("clip.frameBoth")}
           </ContextMenuItem>
@@ -194,7 +262,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
                 <NetsuIcon name="glide" /> {t("clip.glide")}
               </ContextMenuItem>
               <ContextMenuItem onClick={() => at(menuShot, mergeShot)}>
-                <NetsuIcon name="back" /> {t("clip.mergePrev")}
+                <NetsuIcon name="merge-shot" /> {t("clip.mergePrev")}
               </ContextMenuItem>
             </>
           )}
@@ -212,9 +280,10 @@ export function ExpandedRow({ clip, width, dur, readonly, commit, latest, drag, 
   const { t } = useTranslation("reference");
   const s = clip.shots[index];
   const start = s.start, end = shotEnd(clip, index);
+  const zone = useDropZone(readonly, (ids) => dropOnShot(ids, start));
   return (
-    <div className="flex flex-col gap-0.5 py-0.5">
-      {s.items.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t("clip.shotEmpty")}</div>}
+    <div {...zone.props} className={cn("flex flex-col gap-0.5 py-0.5", zone.over && "bg-primary/10 outline-1 outline-dashed outline-primary")}>
+      {s.items.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t(zone.over ? "clip.dropHere" : "clip.shotEmpty")}</div>}
       {s.items.map((si) => {
         const [a, b] = shotItemSpan(clip, index, si);
         const it = byId.get(si.id);
@@ -231,6 +300,7 @@ export function ExpandedRow({ clip, width, dur, readonly, commit, latest, drag, 
               onRight={readonly ? undefined : (e) => { const b0 = b; drag(e, (dt) => { const c = latest(); if (c) commit(setShotItemTiming(c, index, si.id, { early: end - snapT(b0 + dt, c) }), "clip-item"); }); }}
               extra={!readonly && (
                 <>
+                  <FxMenu clip={clip} ids={selectedIds.includes(si.id) ? selectedIds : [si.id]} commit={commit} compact />
                   {it?.kind === "video" && <VideoMenu clip={clip} item={it} bar={b - a} commit={commit} />}
                   <MiniButton label={t("clip.toLong")} onClick={() => { const c = latest(); if (c) commit(toLong(c, [si.id])); }}>
                     <NetsuIcon name="lane-long" className="size-3" />

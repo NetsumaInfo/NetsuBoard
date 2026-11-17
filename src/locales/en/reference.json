@@ -1268,12 +1268,12 @@
     "showTimeline": "Show the timeline",
     "hideTimeline": "Hide the timeline",
     "keySpace": "Space",
-    "keysHint": "Space: play · M: cut · ← →: previous / next shot · Ctrl + wheel: zoom · right-click a shot: options",
+    "keysHint": "Space: play · M: cut · I / O: selection enters / leaves here · ← →: previous / next shot · Ctrl + wheel: zoom",
     "toLongOrBack": "Long lane ↔ shot",
     "librarySearch": "Search",
     "libraryFilter": "Type",
     "libraryNoMatch": "No match",
-    "libraryHint": "Click: copy into the current shot",
+    "libraryHint": "Drag onto the board or a shot · double-click: add · Ctrl / Shift: several",
     "isMusic": "Music of the Animatic",
     "useAsMusic": "Music",
     "filter": {
@@ -1282,6 +1282,37 @@
       "video": "Videos",
       "audio": "Sounds",
       "text": "Notes"
-    }
+    },
+    "dropHere": "Drop here",
+    "libraryPicked_one": "{{count}} selected",
+    "libraryPicked_other": "{{count}} selected",
+    "libraryToShot": "To shot",
+    "libraryClear": "Clear selection",
+    "librarySelectAll": "Select all",
+    "markIn": "Enters here (I)",
+    "markOut": "Leaves here (O)",
+    "markedIn_one": "{{count}} item enters at {{time}}",
+    "markedIn_other": "{{count}} items enter at {{time}}",
+    "markedOut_one": "{{count}} item leaves at {{time}}",
+    "markedOut_other": "{{count}} items leave at {{time}}",
+    "timing": "Timing",
+    "cascade": "Staggered entries",
+    "resetTiming": "Whole shot",
+    "fx": "Appearance",
+    "fxHint": "Effect, duration and opacity",
+    "fxMany_one": "{{count}} item",
+    "fxMany_other": "{{count}} items",
+    "fxKind": "Effect",
+    "fxKinds": {
+      "fade": "Fade",
+      "zoom": "Zoom",
+      "slide": "Slide",
+      "cut": "Cut"
+    },
+    "fxDuration": "Effect duration",
+    "fxOpacity": "Opacity",
+    "fxReset": "Default",
+    "fxDurationValue": "Duration {{value}} s",
+    "fxOpacityValue": "Opacity {{value}} %"
   }
 }
