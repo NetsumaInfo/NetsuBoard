@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBoard } from "../useReferenceBoard";
 import {
   addMark, addToShot, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, nudgeCut, patchShot, pruneClip, shotIndexAt,
@@ -287,95 +288,97 @@ export function ClipTimeline() {
           <TooltipContent side="top">{t("clip.resizeHint")}</TooltipContent>
         </Tooltip>
       )}
-      <div className="flex h-10 items-center gap-1 overflow-x-auto px-2">
-        <TipButton label={`${playing ? t("clip.pause") : t("clip.play")} (${t("clip.keySpace")})`} onClick={togglePlay} active={playing}>
-          <NetsuIcon name="play-pause" on={playing} />
-        </TipButton>
-        <TimeLabel dur={dur} />
-        <Separator orientation="vertical" className="mx-1 h-5" />
-        <Tooltip>
-          <TooltipTrigger render={<Button variant="ghost" size="sm" className="max-w-56 gap-1.5" onClick={() => void chooseMusic()} disabled={readonly} />}>
-            <NetsuIcon name="music" />
-            <span className="truncate">{clip.music?.name ?? t("clip.addMusic")}</span>
-          </TooltipTrigger>
-          <TooltipContent side="top">{clip.music ? t("clip.changeMusic") : t("clip.addMusicHint")}</TooltipContent>
-        </Tooltip>
-        {analysing && <Spinner className="size-3.5" />}
-        {clip.music && <VolumeControl volume={musicVolume} muted={musicMuted} onVolume={setMusicVolume} onToggleMute={toggleMusicMute} />}
-        {musicError && clip.music && (
-          <span role="alert" className="flex shrink-0 items-center gap-1 text-destructive">
-            <NetsuIcon name="warning" className="size-3.5" /> {t("clip.musicError")}
-          </span>
-        )}
-        <TipButton
-          label={clip.bpm ? t("clip.snapBpm", { bpm: Math.round(clip.bpm) }) : t("clip.snap")}
-          active={clip.snap}
-          disabled={readonly}
-          onClick={() => commit({ ...clip, snap: !clip.snap })}
-        >
-          <NetsuIcon name="snap" />
-        </TipButton>
-        <TempoMenu
-          clip={clip} commit={commit} readonly={readonly} playing={playing} onDetect={redetectBeats}
-          time={() => useClipPlayer.getState().time}
-        />
-        <Separator orientation="vertical" className="mx-1 h-5" />
-        <TipButton label={t("clip.cut")} onClick={() => { const c = latest(); if (c) commit(cutAt(c, snapBeat(useClipPlayer.getState().time, c))); }} disabled={readonly}>
-          <NetsuIcon name="cut" />
-        </TipButton>
-        <TipButton label={t("clip.addToShot")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(addToShot(c, shotIndexAt(c, useClipPlayer.getState().time), sel)); }}>
-          <NetsuIcon name="add" />
-        </TipButton>
-        <TipButton label={t("clip.toLong")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(toLong(c, sel)); }}>
-          <NetsuIcon name="lane-long" />
-        </TipButton>
-        <TipButton label={t("clip.markIn")} disabled={readonly || !sel.length} onClick={() => markAt("in", sel)}>
-          <NetsuIcon name="mark-in" />
-        </TipButton>
-        <TipButton label={t("clip.markOut")} disabled={readonly || !sel.length} onClick={() => markAt("out", sel)}>
-          <NetsuIcon name="mark-out" />
-        </TipButton>
-        {!readonly && <FxMenu clip={clip} ids={sel} commit={commit} />}
-        <Popover>
-          <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
-            <NetsuIcon name="framing" /> {t("clip.framing")}
-          </PopoverTrigger>
-          <PopoverContent side="top" className="w-60 p-1.5">
-            <div className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">{t("clip.framingHint")}</div>
-            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("both")}>{t("clip.frameBoth")}</Button>
-            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("from")}>{t("clip.frameStart")}</Button>
-            <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("to")}>{t("clip.frameEnd")}</Button>
-          </PopoverContent>
-        </Popover>
-        <ShotTransition clip={clip} index={shotAtHead} readonly={readonly} commit={commit} />
-        <BlockMenu
-          clip={clip}
-          commit={commit}
-          readonly={readonly}
-          time={() => useClipPlayer.getState().time}
-          picked={boardOrder(sel, byId).map((id) => { const it = byId.get(id)!; return { id, box: { x: it.x, y: it.y, w: it.w, h: it.h } }; })}
-        />
-        {copiedShot !== null && !readonly && (
-          <TipButton label={t("clip.pasteShot", { name: copiedShot })} onClick={() => pasteShot()}>
-            <NetsuIcon name="paste" />
+      <div className="flex h-10 items-center gap-1 px-2">
+        {/* Editing tools scroll sideways when the window is narrow; the view controls and Present stay. */}
+        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto [scrollbar-width:thin]">
+          <TipButton label={`${playing ? t("clip.pause") : t("clip.play")} (${t("clip.keySpace")})`} onClick={togglePlay} active={playing}>
+            <NetsuIcon name="play-pause" on={playing} />
           </TipButton>
-        )}
-        {outside.length > 0 && !readonly && (
+          <TimeLabel dur={dur} />
+          <Separator orientation="vertical" className="mx-1 h-5" />
           <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="outline" size="sm" className="shrink-0 gap-1.5 border-dashed"
-                  onClick={() => { const c = latest(); if (c) commit(addToShot(c, shotIndexAt(c, useClipPlayer.getState().time), outside)); }}
-                />
-              }
-            >
-              {t("clip.outside", { count: outside.length })}
+            <TooltipTrigger render={<Button variant="ghost" size="sm" className="max-w-56 gap-1.5" onClick={() => void chooseMusic()} disabled={readonly} />}>
+              <NetsuIcon name="music" />
+              <span className="truncate">{clip.music?.name ?? t("clip.addMusic")}</span>
             </TooltipTrigger>
-            <TooltipContent side="top">{t("clip.outsideHint")}</TooltipContent>
+            <TooltipContent side="top">{clip.music ? t("clip.changeMusic") : t("clip.addMusicHint")}</TooltipContent>
           </Tooltip>
-        )}
-        <div className="flex-1" />
+          {analysing && <Spinner className="size-3.5" />}
+          {clip.music && <VolumeControl volume={musicVolume} muted={musicMuted} onVolume={setMusicVolume} onToggleMute={toggleMusicMute} />}
+          {musicError && clip.music && (
+            <span role="alert" className="flex shrink-0 items-center gap-1 text-destructive">
+              <NetsuIcon name="warning" className="size-3.5" /> {t("clip.musicError")}
+            </span>
+          )}
+          <TipButton
+            label={clip.bpm ? t("clip.snapBpm", { bpm: Math.round(clip.bpm) }) : t("clip.snap")}
+            active={clip.snap}
+            disabled={readonly}
+            onClick={() => commit({ ...clip, snap: !clip.snap })}
+          >
+            <NetsuIcon name="snap" />
+          </TipButton>
+          <TempoMenu
+            clip={clip} commit={commit} readonly={readonly} playing={playing} onDetect={redetectBeats}
+            time={() => useClipPlayer.getState().time}
+          />
+          <Separator orientation="vertical" className="mx-1 h-5" />
+          <TipButton label={t("clip.cut")} onClick={() => { const c = latest(); if (c) commit(cutAt(c, snapBeat(useClipPlayer.getState().time, c))); }} disabled={readonly}>
+            <NetsuIcon name="cut" />
+          </TipButton>
+          <TipButton label={t("clip.addToShot")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(addToShot(c, shotIndexAt(c, useClipPlayer.getState().time), sel)); }}>
+            <NetsuIcon name="add" />
+          </TipButton>
+          <TipButton label={t("clip.toLong")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(toLong(c, sel)); }}>
+            <NetsuIcon name="lane-long" />
+          </TipButton>
+          <TipButton label={t("clip.markIn")} disabled={readonly || !sel.length} onClick={() => markAt("in", sel)}>
+            <NetsuIcon name="mark-in" />
+          </TipButton>
+          <TipButton label={t("clip.markOut")} disabled={readonly || !sel.length} onClick={() => markAt("out", sel)}>
+            <NetsuIcon name="mark-out" />
+          </TipButton>
+          {!readonly && <FxMenu clip={clip} ids={sel} commit={commit} />}
+          <Popover>
+            <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
+              <NetsuIcon name="framing" /> {t("clip.framing")}
+            </PopoverTrigger>
+            <PopoverContent side="top" className="w-60 p-1.5">
+              <div className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">{t("clip.framingHint")}</div>
+              <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("both")}>{t("clip.frameBoth")}</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("from")}>{t("clip.frameStart")}</Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("to")}>{t("clip.frameEnd")}</Button>
+            </PopoverContent>
+          </Popover>
+          <ShotTransition clip={clip} index={shotAtHead} readonly={readonly} commit={commit} />
+          <BlockMenu
+            clip={clip}
+            commit={commit}
+            readonly={readonly}
+            time={() => useClipPlayer.getState().time}
+            picked={boardOrder(sel, byId).map((id) => { const it = byId.get(id)!; return { id, box: { x: it.x, y: it.y, w: it.w, h: it.h } }; })}
+          />
+          {copiedShot !== null && !readonly && (
+            <TipButton label={t("clip.pasteShot", { name: copiedShot })} onClick={() => pasteShot()}>
+              <NetsuIcon name="paste" />
+            </TipButton>
+          )}
+          {outside.length > 0 && !readonly && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="outline" size="sm" className="shrink-0 gap-1.5 border-dashed"
+                    onClick={() => { const c = latest(); if (c) commit(addToShot(c, shotIndexAt(c, useClipPlayer.getState().time), outside)); }}
+                  />
+                }
+              >
+                {t("clip.outside", { count: outside.length })}
+              </TooltipTrigger>
+              <TooltipContent side="top">{t("clip.outsideHint")}</TooltipContent>
+            </Tooltip>
+          )}
+        </div>
         {!folded && !storyboard && (
           <>
             <TipButton label={t("clip.zoomOut")} disabled={zoom <= 1} onClick={() => zoomTo(zoom / 1.6)}>
@@ -401,9 +404,23 @@ export function ClipTimeline() {
         <TipButton label={t(folded ? "clip.showTimeline" : "clip.hideTimeline")} onClick={() => useClipPlayer.setState({ folded: !folded })}>
           <NetsuIcon name="chevron-toggle" on={!folded} />
         </TipButton>
-        <Button size="sm" className="shrink-0 gap-1.5" onClick={() => startPresent()}>
-          <NetsuIcon name="monitor-play" /> {t("clip.present")}
-        </Button>
+        <div className="flex shrink-0">
+          <Button size="sm" className="gap-1.5 rounded-r-none" onClick={() => startPresent()}>
+            <NetsuIcon name="monitor-play" /> {t("clip.present")}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button size="sm" className="rounded-l-none border-l border-primary-foreground/20 px-1.5" aria-label={t("clip.presentFrom")} />}>
+              <NetsuIcon name="chevron-down" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top">
+              <DropdownMenuItem onClick={() => startPresent()}>{t("clip.presentStart")}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => startPresent(useClipPlayer.getState().time)}>{t("clip.presentHere")}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { const c = latest(); if (c) startPresent(c.shots[shotIndexAt(c, useClipPlayer.getState().time)].start); }}>
+                {t("clip.presentShot")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {!folded && storyboard && (
@@ -444,7 +461,7 @@ export function ClipTimeline() {
             </Row>
             <Row label={t("clip.music")} width={width}>
               <div className="relative h-12 cursor-text" onPointerDown={seekFrom}>
-                <Waveform clip={clip} width={width} />
+                <Waveform clip={clip} width={width} scroller={scrollRef} />
                 {!clip.music && (
                   <span className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-muted-foreground">{t("clip.noMusic")}</span>
                 )}

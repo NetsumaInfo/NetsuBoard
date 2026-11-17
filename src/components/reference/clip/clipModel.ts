@@ -20,6 +20,8 @@ export interface Shot {
   id: string;
   start: number;
   label?: string;
+  // What the shot is about, for the storyboard (a line of intent: "slow push on her face").
+  note?: string;
   // Camera framings, 16:9 rectangles in board coordinates. The camera moves from `from` to `to`
   // during the shot; equal framings give a static shot.
   from: ClipRect;
@@ -440,7 +442,7 @@ export function duplicateShot(clip: ClipData, index: number): ClipData {
   const mid = (s.start + shotEnd(clip, index)) / 2;
   const c = cutAt(clip, mid);
   if (c === clip) return clip;
-  const copy = () => ({ from: { ...s.from }, to: { ...s.to }, label: s.label, items: s.items.map((si) => ({ ...si })) });
+  const copy = () => ({ from: { ...s.from }, to: { ...s.to }, label: s.label, note: s.note, items: s.items.map((si) => ({ ...si })) });
   return patchShot(patchShot(c, index, copy()), index + 1, { ...copy(), transition: "cut" });
 }
 
@@ -796,7 +798,7 @@ export function cutAtMarks(clip: ClipData): ClipData {
 
 // What a copied shot carries: its content, its length, and the settings of its items.
 export interface ShotPiece {
-  shot: Pick<Shot, "from" | "to" | "items" | "label" | "transition" | "glide">;
+  shot: Pick<Shot, "from" | "to" | "items" | "label" | "note" | "transition" | "glide">;
   len: number;
   videos: Record<string, ClipVideo>;
   fx: Record<string, ClipFx>;
@@ -808,7 +810,7 @@ export function copyShotPiece(clip: ClipData, index: number): ShotPiece | null {
   const ids = new Set(s.items.map((si) => si.id));
   const pick = <T,>(rec: Record<string, T> | undefined) => Object.fromEntries(Object.entries(rec ?? {}).filter(([id]) => ids.has(id)));
   return {
-    shot: { from: { ...s.from }, to: { ...s.to }, items: s.items.map((si) => ({ ...si })), label: s.label, transition: s.transition, glide: s.glide },
+    shot: { from: { ...s.from }, to: { ...s.to }, items: s.items.map((si) => ({ ...si })), label: s.label, note: s.note, transition: s.transition, glide: s.glide },
     len: shotEnd(clip, index) - s.start,
     videos: pick(clip.videos),
     fx: pick(clip.fx),

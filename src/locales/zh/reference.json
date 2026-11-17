@@ -1369,6 +1369,16 @@
     "emptyKeyCut": "剪切",
     "emptyKeyMark": "标记",
     "emptyKeyShot": "播放镜头",
-    "keyShift": "Shift"
+    "keyShift": "Shift",
+    "saveSheet": "导出为图片",
+    "sheetSaved": "故事板已导出",
+    "sheetFailed": "导出失败：{{error}}",
+    "note": "镜头备注",
+    "notePlaceholder": "画面内容、意图…",
+    "addNote": "添加备注",
+    "presentFrom": "从…开始演示",
+    "presentStart": "从头开始",
+    "presentHere": "从播放头开始",
+    "presentShot": "从此镜头开始"
   }
 }

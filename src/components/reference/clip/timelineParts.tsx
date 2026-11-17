@@ -106,42 +106,67 @@ export function Ruler({ dur, width }: { dur: number; width: number }) {
   );
 }
 
-export function Waveform({ clip, width }: { clip: ClipData; width: number }) {
+// The waveform and the beat grid, drawn for the visible part of the track only: the canvas stays
+// the size of the screen and is redrawn as the tracks scroll, so it is sharp at any zoom.
+export function Waveform({ clip, width, scroller }: { clip: ClipData; width: number; scroller: React.RefObject<HTMLDivElement | null> }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const wave = useClipPlayer((s) => s.wave);
   const peaks = wave && wave.ref === clip.music?.ref ? wave.peaks : null;
   const dur = clipDuration(clip);
   useEffect(() => {
     const c = ref.current;
+    const el = scroller.current;
     if (!c || !width) return;
-    const dpr = window.devicePixelRatio || 1;
-    const h = 48;
-    // Canvas size is capped: a zoomed-in timeline stretches the drawing rather than allocating it.
-    const w = Math.min(width, 8000);
-    c.width = Math.floor(w * dpr);
-    c.height = Math.floor(h * dpr);
-    c.style.width = `${width}px`;
-    c.style.height = `${h}px`;
-    const g = c.getContext("2d");
-    if (!g) return;
-    g.scale(dpr, dpr);
-    g.clearRect(0, 0, w, h);
-    g.fillStyle = getComputedStyle(c).color;
-    if (peaks?.length) {
-      g.globalAlpha = 0.55;
-      for (let x = 0; x < w; x++) {
-        const p = peaks[Math.floor((x / w) * peaks.length)] ?? 0;
-        const bar = Math.max(1, p * (h - 6));
-        g.fillRect(x, (h - bar) / 2, 1, bar);
+    let frame = 0;
+    const draw = () => {
+      frame = 0;
+      const dpr = window.devicePixelRatio || 1;
+      const h = 48;
+      const left = Math.max(0, Math.min(width, el?.scrollLeft ?? 0));
+      const w = Math.max(1, Math.min(width - left, (el?.clientWidth ?? width) - LABEL_W));
+      c.width = Math.floor(w * dpr);
+      c.height = Math.floor(h * dpr);
+      c.style.left = `${left}px`;
+      c.style.width = `${w}px`;
+      c.style.height = `${h}px`;
+      const g = c.getContext("2d");
+      if (!g) return;
+      g.scale(dpr, dpr);
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = getComputedStyle(c).color;
+      if (peaks?.length) {
+        g.globalAlpha = 0.55;
+        const per = peaks.length / width;
+        for (let x = 0; x < w; x++) {
+          // Zoomed out, several peaks fall in one pixel: the loudest one is drawn.
+          const i0 = Math.floor((left + x) * per), i1 = Math.max(i0 + 1, Math.floor((left + x + 1) * per));
+          let p = 0;
+          for (let i = i0; i < i1 && i < peaks.length; i++) p = Math.max(p, peaks[i]);
+          const bar = Math.max(1, p * (h - 6));
+          g.fillRect(x, (h - bar) / 2, 1, bar);
+        }
       }
-    }
-    if (clip.beats?.length) {
-      g.globalAlpha = 0.45;
-      g.fillStyle = "#a78bfa";
-      for (const b of clip.beats) g.fillRect(Math.round((b / dur) * w), h - 6, 1, 6);
-    }
-  }, [peaks, width, clip.beats, dur]);
-  return <canvas ref={ref} className="pointer-events-none absolute inset-0 text-foreground" />;
+      if (clip.beats?.length) {
+        g.globalAlpha = 0.45;
+        g.fillStyle = "#a78bfa";
+        for (const b of clip.beats) {
+          const x = Math.round((b / dur) * width - left);
+          if (x >= 0 && x < w) g.fillRect(x, h - 6, 1, 6);
+        }
+      }
+    };
+    draw();
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(draw); };
+    el?.addEventListener("scroll", onScroll, { passive: true });
+    const ro = el ? new ResizeObserver(onScroll) : null;
+    if (el) ro!.observe(el);
+    return () => {
+      el?.removeEventListener("scroll", onScroll);
+      ro?.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [peaks, width, clip.beats, dur, scroller]);
+  return <canvas ref={ref} className="pointer-events-none absolute top-0 text-foreground" />;
 }
 
 // A bar of the Long lane or of an expanded shot. Click selects (Ctrl / Shift: adds or removes), drag

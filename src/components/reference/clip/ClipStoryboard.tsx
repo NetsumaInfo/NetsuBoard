@@ -1,16 +1,23 @@
 // Storyboard: the shots of the Animatic as cards, each with what its camera sees, read like a comic
 // strip. Click to go to a shot, double-click its name to rename it, drag a card (or Ctrl+← →) to
 // reorder (the time slots stay; the content moves), drop mood board items on a card to put them in
-// that shot.
+// that shot. Each card carries a note (what the shot is about); the whole board exports as one
+// picture.
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { nr } from "@/lib/bridge";
+import { Button } from "@/components/ui/button";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
+import { Spinner } from "@/components/ui/spinner";
+import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
 import {
-  cameraMoveOf, deleteShot, duplicateShot, formatTime, moveShot, shotEnd, type ClipData,
+  cameraMoveOf, clipDuration, deleteShot, duplicateShot, formatTime, moveShot, patchShot, shotEnd, type ClipData,
 } from "./clipModel";
+import { openClipCard } from "./clipSelectors";
+import { renderStoryboardSheet } from "./storyboardSheet";
 import { seek, useClipPlayer } from "./clipPlayer";
 import { dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
 import { useShotThumb } from "./shotThumbs";
@@ -24,22 +31,52 @@ const MOVE_ICON: Record<string, string> = { static: "framing", zoomIn: "zoom-in"
 export function ClipStoryboard({ clip, items, readonly, commit, shotAtHead }: {
   clip: ClipData; items: BoardItem[]; readonly: boolean; commit: Commit; shotAtHead: number;
 }) {
+  const { t } = useTranslation("reference");
   const [over, setOver] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const title = useBoard((s) => openClipCard(s)?.title) || t("clip.defaultName");
+  const save = async () => {
+    const api = nr.reference;
+    const dest = await nr.saveFile(`${title.replace(/[\\/:*?"<>|]+/g, "_")}.png`);
+    if (!dest || !api) return;
+    setSaving(true);
+    try {
+      const subtitle = [clip.music?.name, t("clip.shotCount", { count: clip.shots.length }), formatTime(clipDuration(clip))].filter(Boolean).join(" · ");
+      const canvas = await renderStoryboardSheet(clip, items, { title, subtitle, shot: (n) => t("clip.shotN", { n }) });
+      const url = canvas.toDataURL("image/png");
+      const res = await api.writeFile(dest, url.slice(url.indexOf(",") + 1), "base64");
+      if (!res.ok) throw new Error(res.error || "write failed");
+      useBoard.getState().setNotice({ kind: "ok", text: t("clip.sheetSaved") });
+    } catch (e) {
+      useBoard.getState().setNotice({ kind: "error", text: t("clip.sheetFailed", { error: e instanceof Error ? e.message : String(e) }) });
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] gap-3 p-3">
-      {clip.shots.map((s, i) => (
-        <ShotCard
-          key={s.id}
-          clip={clip}
-          index={i}
-          items={items}
-          current={i === shotAtHead}
-          over={over === i}
-          readonly={readonly}
-          commit={commit}
-          onOver={setOver}
-        />
-      ))}
+    <div className="p-3 pt-2">
+      <div className="mb-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+        <span>{t("clip.shotCount", { count: clip.shots.length })} · {formatTime(clipDuration(clip))}</span>
+        <div className="flex-1" />
+        <Button variant="ghost" size="sm" className="gap-1.5" disabled={saving} onClick={() => void save()}>
+          {saving ? <Spinner className="size-3.5" /> : <NetsuIcon name="export-image-png" />} {t("clip.saveSheet")}
+        </Button>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))] gap-3">
+        {clip.shots.map((s, i) => (
+          <ShotCard
+            key={s.id}
+            clip={clip}
+            index={i}
+            items={items}
+            current={i === shotAtHead}
+            over={over === i}
+            readonly={readonly}
+            commit={commit}
+            onOver={setOver}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -128,6 +165,7 @@ function ShotCard({ clip, index, items, current, over, readonly, commit, onOver 
           <div className="truncate text-[10px] tabular-nums text-muted-foreground">
             {formatTime(s.start)} – {formatTime(end)} · {t("clip.itemCount", { count: s.items.length })}
           </div>
+          <ShotNote clip={clip} index={index} readonly={readonly} commit={commit} />
         </div>
         {!readonly && (
           <span className="flex shrink-0 gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
@@ -153,4 +191,47 @@ function ShotCard({ clip, index, items, current, over, readonly, commit, onOver 
 // Progress of the playhead inside a shot, 0 outside it.
 function useClipPlayerTime(start: number, end: number): number {
   return useClipPlayer((st) => (st.time >= start && st.time < end ? (st.time - start) / (end - start) : 0));
+}
+
+// The intent of a shot, in a line or two: shown on its card and on the exported sheet.
+function ShotNote({ clip, index, readonly, commit }: { clip: ClipData; index: number; readonly: boolean; commit: Commit }) {
+  const { t } = useTranslation("reference");
+  const [editing, setEditing] = useState(false);
+  const note = clip.shots[index].note;
+  if (editing) {
+    return (
+      <textarea
+        autoFocus
+        rows={2}
+        defaultValue={note ?? ""}
+        placeholder={t("clip.notePlaceholder")}
+        aria-label={t("clip.note")}
+        className="mt-1 w-full resize-none rounded bg-muted px-1 py-0.5 text-[11px] outline-none ring-1 ring-primary"
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Escape") setEditing(false);
+          if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); }
+        }}
+        onBlur={(e) => {
+          setEditing(false);
+          const text = e.target.value.trim();
+          if (text !== (note ?? "")) commit(patchShot(clip, index, { note: text || undefined }));
+        }}
+      />
+    );
+  }
+  if (!note && readonly) return null;
+  return (
+    <button
+      type="button"
+      disabled={readonly}
+      onClick={() => setEditing(true)}
+      className={cn(
+        "mt-0.5 block w-full text-left text-[11px] leading-snug",
+        note ? "line-clamp-2 text-foreground/80" : "text-muted-foreground/70 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
+      )}
+    >
+      {note || t("clip.addNote")}
+    </button>
+  );
 }

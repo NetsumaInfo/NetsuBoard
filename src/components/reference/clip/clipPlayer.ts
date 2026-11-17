@@ -292,9 +292,9 @@ function onFullscreen() {
   if (!document.fullscreenElement && get().presenting) stopPresent();
 }
 
-// Full-screen render from the start. Called right after entering the clip from its card, so the
-// level may still be switching: the start waits one frame for the board to mount.
-export function startPresent() {
+// Full-screen render from `from` (the start by default). Called right after entering the clip from
+// its card, so the level may still be switching: the start waits one frame for the board to mount.
+export function startPresent(from = 0) {
   requestAnimationFrame(() => {
     if (!currentClip()) return;
     viewBeforePresent = useBoard.getState().view;
@@ -303,7 +303,7 @@ export function startPresent() {
     document.addEventListener("fullscreenchange", onFullscreen);
     void document.documentElement.requestFullscreen?.().catch(() => undefined);
     // The board re-lays out at full size before the first framing is computed.
-    setTimeout(() => { seek(0); play(); }, 120);
+    setTimeout(() => { seek(from); play(); }, 120);
   });
 }
 
@@ -358,7 +358,9 @@ async function analyseMusic(ref: string) {
     const decoded = await ctx.decodeAudioData(buf);
     void ctx.close();
     const channels = Array.from({ length: decoded.numberOfChannels }, (_, i) => decoded.getChannelData(i));
-    const result = analyse(mixDown(channels), decoded.sampleRate);
+    // About 60 peaks a second, so the waveform stays sharp when the timeline is zoomed in.
+    const buckets = Math.min(24000, Math.max(2000, Math.round(decoded.duration * 60)));
+    const result = analyse(mixDown(channels), decoded.sampleRate, buckets);
     if (audioRef !== ref) return;
     detected = { ref, beats: result.beats, bpm: result.bpm };
     set({ wave: { ref, peaks: result.peaks } });

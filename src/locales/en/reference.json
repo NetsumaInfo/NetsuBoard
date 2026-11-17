@@ -1369,6 +1369,16 @@
     "emptyKeyCut": "cut",
     "emptyKeyMark": "mark",
     "emptyKeyShot": "play the shot",
-    "keyShift": "Shift"
+    "keyShift": "Shift",
+    "saveSheet": "Export as image",
+    "sheetSaved": "Storyboard exported",
+    "sheetFailed": "Export failed: {{error}}",
+    "note": "Shot note",
+    "notePlaceholder": "What we see, the intent…",
+    "addNote": "Add a note",
+    "presentFrom": "Present from…",
+    "presentStart": "From the start",
+    "presentHere": "From the playhead",
+    "presentShot": "From this shot"
   }
 }

@@ -5,6 +5,7 @@ import {
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
 import { analyse, computePeaks } from "@/components/reference/clip/audioAnalysis";
+import { wrapText } from "@/components/reference/clip/wrapText";
 import { copyFolderContent } from "@/components/reference/boardFolders";
 
 const F = { x: 0, y: 0, w: 1600, h: 900 };
@@ -372,5 +373,15 @@ describe("clip marks and shot copies", () => {
     // Pasted at the very start of a shot: no empty sliver before it.
     const head = pasteShotPiece(dst, 0, piece, new Map());
     expect(head.shots.map((s) => s.start)).toEqual([0, 5, 10, 15]);
+  });
+});
+
+describe("storyboard sheet text", () => {
+  const measure = (s: string) => s.length * 10;
+  it("wraps on words, cuts long words and ends with an ellipsis", () => {
+    expect(wrapText("slow push on her face", 100, measure)).toEqual(["slow push", "on her", "face"]);
+    expect(wrapText("abcdefghijklmn", 50, measure)).toEqual(["abcde", "fghij", "klmn"]);
+    expect(wrapText("one two three four five six seven", 100, measure, 2)).toEqual(["one two", "three fou…"]);
+    expect(wrapText("   ", 100, measure)).toEqual([]);
   });
 });

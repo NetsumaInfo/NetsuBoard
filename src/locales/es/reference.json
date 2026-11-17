@@ -1369,6 +1369,16 @@
     "emptyKeyCut": "cortar",
     "emptyKeyMark": "marca",
     "emptyKeyShot": "reproducir el plano",
-    "keyShift": "Mayús"
+    "keyShift": "Mayús",
+    "saveSheet": "Exportar como imagen",
+    "sheetSaved": "Storyboard exportado",
+    "sheetFailed": "No se pudo exportar: {{error}}",
+    "note": "Nota del plano",
+    "notePlaceholder": "Lo que se ve, la intención…",
+    "addNote": "Añadir una nota",
+    "presentFrom": "Presentar desde…",
+    "presentStart": "Desde el principio",
+    "presentHere": "Desde el cabezal",
+    "presentShot": "Desde este plano"
   }
 }

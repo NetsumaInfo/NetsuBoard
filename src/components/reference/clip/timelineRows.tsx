@@ -234,11 +234,24 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
                   className="min-w-0 flex-1 truncate text-left font-medium"
                   onClick={() => seek(s.start + 0.001)}
                   onDoubleClick={() => !readonly && setRenaming(s.id)}
+                  onKeyDown={(e) => {
+                    if (readonly) return;
+                    // F2 renames; Delete removes the shot (kept from the board, which would delete items).
+                    if (e.key === "F2") { e.preventDefault(); setRenaming(s.id); }
+                    else if ((e.key === "Delete" || e.key === "Backspace") && clip.shots.length > 1) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      at(i, deleteShot);
+                    }
+                  }}
                 >
                   {name(i)}
                 </button>
               )}
-              <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground">{s.items.length}</span>
+              <span className="ml-auto shrink-0 text-[10px] tabular-nums text-muted-foreground">
+                {b - a > 160 && `${(shotEnd(clip, i) - s.start).toFixed(1)} s · `}
+                {s.items.length}
+              </span>
             </div>
           );
         })}

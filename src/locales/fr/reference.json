@@ -1369,6 +1369,16 @@
     "emptyKeyCut": "couper",
     "emptyKeyMark": "repère",
     "emptyKeyShot": "lire le plan",
-    "keyShift": "Maj"
+    "keyShift": "Maj",
+    "saveSheet": "Exporter en image",
+    "sheetSaved": "Storyboard exporté",
+    "sheetFailed": "Export impossible : {{error}}",
+    "note": "Note du plan",
+    "notePlaceholder": "Ce qu'on voit, l'intention…",
+    "addNote": "Ajouter une note",
+    "presentFrom": "Présenter depuis…",
+    "presentStart": "Depuis le début",
+    "presentHere": "Depuis la tête de lecture",
+    "presentShot": "Depuis ce plan"
   }
 }

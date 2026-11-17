@@ -1369,6 +1369,16 @@
     "emptyKeyCut": "schneiden",
     "emptyKeyMark": "Marke",
     "emptyKeyShot": "Shot abspielen",
-    "keyShift": "Umschalt"
+    "keyShift": "Umschalt",
+    "saveSheet": "Als Bild exportieren",
+    "sheetSaved": "Storyboard exportiert",
+    "sheetFailed": "Export fehlgeschlagen: {{error}}",
+    "note": "Shot-Notiz",
+    "notePlaceholder": "Was man sieht, die Absicht…",
+    "addNote": "Notiz hinzufügen",
+    "presentFrom": "Präsentieren ab…",
+    "presentStart": "Von Anfang an",
+    "presentHere": "Ab dem Abspielkopf",
+    "presentShot": "Ab diesem Shot"
   }
 }
