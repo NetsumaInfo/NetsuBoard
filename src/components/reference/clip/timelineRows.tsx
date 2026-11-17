@@ -14,12 +14,13 @@ import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
 import {
   cameraMove, cameraMoveOf, cascade, deleteShot, duplicateShot, frameOnItems, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
-  setShotItemTiming, shotEnd, shotItemSpan, toLong, addToShot, type CameraMove, type ClipData,
+  setShotItemTiming, shiftLong, shiftShotItems, shotEnd, shotItemSpan, toLong, addToShot, type CameraMove, type ClipData,
 } from "./clipModel";
 import { framingFromView, play, seek, setLoop, useClipPlayer } from "./clipPlayer";
 import { Bar, MiniButton, itemName } from "./timelineParts";
 import { dropOnLong, dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
 import { FxMenu, PinMenu, VideoMenu, type Commit } from "./timelineMenus";
+import { useShotThumb } from "./shotThumbs";
 
 const CAMERA_MOVES: CameraMove[] = ["static", "zoomIn", "zoomOut", "panLeft", "panRight"];
 
@@ -39,6 +40,20 @@ interface RowProps {
 }
 
 const xOf = (sec: number, dur: number, width: number) => (sec / dur) * width;
+
+// Click on a bar: Ctrl / Shift adds or removes it; a plain click on a bar already in a group keeps
+// the group, so the whole group can be dragged.
+function pickBar(id: string, additive: boolean) {
+  const st = useBoard.getState();
+  if (additive) st.toggleSelect(id);
+  else if (!st.selectedIds.includes(id)) st.select(id);
+}
+
+// The bars a drag moves: the selected ones of the same lane when the grabbed bar is one of them.
+function dragged(id: string, lane: string[]): string[] {
+  const sel = useBoard.getState().selectedIds;
+  return sel.includes(id) ? lane.filter((x) => sel.includes(x)) : [id];
+}
 
 // Items in reading order on the board: top to bottom, then left to right (rows of a mood board).
 export function boardOrder(ids: string[], byId: Map<string, BoardItem>): string[] {
@@ -84,11 +99,15 @@ export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snap
             label={itemName(byId.get(l.id), t)}
             tone="long"
             selected={selectedIds.includes(l.id)}
-            onSelect={() => useBoard.getState().select(l.id)}
+            onSelect={(add) => pickBar(l.id, add)}
             onMove={readonly ? undefined : (e) => {
-              const s0 = l.start, len = l.end - l.start;
-              drag(e, (dt) => { const c = latest(); if (c) { const s = snapT(s0 + dt, c); commit(setLongSpan(c, l.id, s, s + len), "clip-long"); } });
+              const origin = latest();
+              if (!origin) return;
+              const ids = dragged(l.id, origin.long.map((x) => x.id));
+              const s0 = l.start;
+              drag(e, (dt) => commit(shiftLong(origin, ids, snapT(s0 + dt, origin) - s0), "clip-long"));
             }}
+            onDelete={readonly ? undefined : () => { const c = latest(); if (c) commit({ ...c, long: c.long.filter((x) => x.id !== l.id) }); }}
             onLeft={readonly ? undefined : (e) => { const s0 = l.start; drag(e, (dt) => { const c = latest(); if (c) commit(setLongSpan(c, l.id, snapT(s0 + dt, c), l.end), "clip-long"); }); }}
             onRight={readonly ? undefined : (e) => { const e0 = l.end; drag(e, (dt) => { const c = latest(); if (c) commit(setLongSpan(c, l.id, l.start, snapT(e0 + dt, c)), "clip-long"); }); }}
             extra={!readonly && (
@@ -110,7 +129,17 @@ export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snap
   );
 }
 
-export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, snapT, selectedIds, byId, shotAtHead }: RowProps & { shotAtHead: number }) {
+// What the camera of a shot sees, small, at the start of its block when there is room.
+function ShotThumb({ clip, index, items }: { clip: ClipData; index: number; items: BoardItem[] }) {
+  const url = useShotThumb(clip, index, items, 96);
+  return (
+    <span className="relative h-6 w-[43px] shrink-0 overflow-hidden rounded-sm bg-black/60">
+      {url && <img src={url} alt="" draggable={false} className="size-full object-cover" />}
+    </span>
+  );
+}
+
+export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, snapT, selectedIds, byId, shotAtHead, items }: RowProps & { shotAtHead: number; items: BoardItem[] }) {
   const { t } = useTranslation("reference");
   const expanded = useClipPlayer((s) => s.expanded);
   const [menuShot, setMenuShot] = useState(0);
@@ -178,6 +207,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
               >
                 <NetsuIcon name="chevron-toggle" on={open} className="size-3" />
               </button>
+              {b - a > 110 && <ShotThumb clip={clip} index={i} items={items} />}
               {renaming === s.id ? (
                 <input
                   autoFocus
@@ -327,7 +357,15 @@ export function ExpandedRow({ clip, width, dur, readonly, commit, latest, drag, 
               label={itemName(it, t)}
               tone="item"
               selected={selectedIds.includes(si.id)}
-              onSelect={() => useBoard.getState().select(si.id)}
+              onSelect={(add) => pickBar(si.id, add)}
+              onMove={readonly ? undefined : (e) => {
+                const origin = latest();
+                if (!origin) return;
+                const ids = dragged(si.id, origin.shots[index].items.map((x) => x.id));
+                const a0 = a;
+                drag(e, (dt) => commit(shiftShotItems(origin, index, ids, snapT(a0 + dt, origin) - a0), "clip-item"));
+              }}
+              onDelete={readonly ? undefined : () => { const c = latest(); if (c) commit(removeFromShot(c, index, [si.id])); }}
               onLeft={readonly ? undefined : (e) => { const a0 = a; drag(e, (dt) => { const c = latest(); if (c) commit(setShotItemTiming(c, index, si.id, { delay: snapT(a0 + dt, c) - start }), "clip-item"); }); }}
               onRight={readonly ? undefined : (e) => { const b0 = b; drag(e, (dt) => { const c = latest(); if (c) commit(setShotItemTiming(c, index, si.id, { early: end - snapT(b0 + dt, c) }), "clip-item"); }); }}
               extra={!readonly && (

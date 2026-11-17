@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  addToShot, beatsToSeconds, remapClip, setVideo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
+  addToShot, beatGrid, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
@@ -275,5 +275,56 @@ describe("audio analysis", () => {
     expect(a.beats.length).toBeGreaterThan(18);
     const offBeat = a.beats.map((t) => Math.abs(t * 2 - Math.round(t * 2)) / 2);
     expect(Math.max(...offBeat.slice(1, -1))).toBeLessThan(0.05);
+  });
+});
+
+describe("clip timing tools", () => {
+  it("snaps to beats, cuts, the end and extra points", () => {
+    let c = cutAt({ ...clip(20), beats: [1, 2, 3] }, 7);
+    const pts = snapPoints(c, [12.5]);
+    expect(pts).toEqual([0, 1, 2, 3, 7, 12.5, 20]);
+    expect(snapTime(12.4, pts, 0.2)).toBe(12.5);
+    expect(snapTime(6.9, pts, 0.2)).toBe(7);
+    c = { ...c, beats: undefined };
+    expect(snapPoints(c)).toEqual([0, 7, 20]);
+  });
+
+  it("nudges the nearest cut by one beat, or a step without beats", () => {
+    let c = cutAt(cutAt({ ...clip(20), beats: [0, 2, 4, 6, 8, 10, 12] }, 4), 10);
+    const r = nudgeCut(c, 9.5, 1)!;
+    expect(r.at).toBe(12);
+    expect(r.clip.shots[2].start).toBe(12);
+    expect(nudgeCut(c, 3, -1)!.at).toBe(2);
+    c = { ...c, beats: undefined };
+    expect(nudgeCut(c, 3, 1, 0.5)!.at).toBeCloseTo(4.5);
+    expect(nudgeCut(clip(), 3, 1)).toBeNull();
+  });
+
+  it("reads a tempo from taps and builds a grid on an anchor", () => {
+    expect(tapTempo([0, 0.5])).toBeNull();
+    expect(tapTempo([0, 0.5, 1, 1.5, 2.1])).toBe(120);
+    const g = beatGrid(120, 1.25, 4);
+    expect(g).toEqual([0.25, 0.75, 1.25, 1.75, 2.25, 2.75, 3.25, 3.75]);
+    expect(beatGrid(0, 0, 10)).toEqual([]);
+    const c = setTempo(clip(4), 60, 0.5);
+    expect(c.bpm).toBe(60);
+    expect(c.beats).toEqual([0.5, 1.5, 2.5, 3.5]);
+  });
+
+  it("slides items of a shot together, kept inside the shot", () => {
+    let c = setShotItemTiming(clip(20), 0, "a", { delay: 2, early: 10 }); // a: 2–10
+    c = setShotItemTiming(c, 0, "b", { delay: 4, early: 4 }); // b: 4–16
+    const moved = shiftShotItems(c, 0, ["a", "b"], 10);
+    expect(shotItemSpan(moved, 0, moved.shots[0].items[0])).toEqual([6, 14]);
+    expect(shotItemSpan(moved, 0, moved.shots[0].items[1])).toEqual([8, 20]);
+    const back = shiftShotItems(c, 0, ["a"], -5);
+    expect(back.shots[0].items[0]).toEqual({ id: "a", early: 12 });
+  });
+
+  it("slides Long items together inside the track", () => {
+    let c = toLong(clip(20), ["a"], [2, 6]);
+    c = toLong(c, ["b"], [10, 18]);
+    const m = shiftLong(c, ["a", "b"], 5);
+    expect(m.long.map((l) => [l.start, l.end])).toEqual([[4, 8], [12, 20]]);
   });
 });

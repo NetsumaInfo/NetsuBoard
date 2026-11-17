@@ -1264,7 +1264,7 @@
     "showTimeline": "显示时间线",
     "hideTimeline": "隐藏时间线",
     "keySpace": "空格",
-    "keysHint": "空格：播放 · M：剪切 · I / O：所选在此出现 / 离开 · L：循环 · ← →：上一个 / 下一个镜头 · Ctrl + 滚轮：缩放",
+    "keysHint": "空格：播放 · Shift + 空格：播放镜头 · M：剪切 · I / O：所选在此出现 / 离开 · L：循环 · ← →：上一个 / 下一个镜头 · Shift + ← →：剪切点移动一拍 · Ctrl + 滚轮：缩放",
     "toLongOrBack": "长轨道 ↔ 镜头",
     "librarySearch": "搜索",
     "libraryFilter": "类型",
@@ -1336,6 +1336,22 @@
     "duplicateShot": "复制镜头",
     "loopShot": "循环播放此镜头",
     "itemCount_one": "{{count}} 个元素",
-    "itemCount_other": "{{count}} 个元素"
+    "itemCount_other": "{{count}} 个元素",
+    "tempo": "节拍",
+    "tempoHint": "音乐节拍：敲击、输入或检测",
+    "bpmValue": "{{bpm}} BPM",
+    "tap": "敲击",
+    "tapHint": "跟着节奏敲击，至少 3 次",
+    "tapCount_one": "{{count}} 次敲击",
+    "tapCount_other": "{{count}} 次敲击",
+    "beatHere": "第一拍在此",
+    "detectTempo": "检测",
+    "resize": "时间线高度",
+    "resizeHint": "拖动以改变高度 · 双击：自动",
+    "loops": {
+      "loop": "循环",
+      "pingpong": "往返",
+      "once": "一次"
+    }
   }
 }

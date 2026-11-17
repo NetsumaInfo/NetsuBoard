@@ -146,6 +146,8 @@ function applyTime(t: number) {
 }
 
 let loopRange: [number, number] | null = null;
+// Playback stops here (a shot preview), then the playhead goes back to where the preview began.
+let stopAt: { end: number; back: number } | null = null;
 function armLoop(clip: ClipData, t: number) {
   const i = shotIndexAt(clip, t);
   loopRange = [clip.shots[i].start + 0.001, shotEnd(clip, i)];
@@ -165,6 +167,13 @@ function tick() {
   const dur = clipDuration(clip);
   let t = hasMusic(clip) ? audio!.currentTime : clockFrom + (performance.now() - clockAt) / 1000;
   // Loop on the shot that was under the playhead when the loop started.
+  if (stopAt && t >= stopAt.end) {
+    const back = stopAt.back;
+    stopAt = null;
+    pause();
+    seek(back);
+    return;
+  }
   if (loopRange && get().loop && t >= loopRange[1]) {
     seek(loopRange[0]);
     raf = requestAnimationFrame(tick);
@@ -199,6 +208,7 @@ export function play() {
 }
 
 export function pause() {
+  stopAt = null;
   audio?.pause();
   if (raf) cancelAnimationFrame(raf);
   raf = 0;
@@ -209,6 +219,18 @@ export function pause() {
 
 export function togglePlay() {
   if (get().playing) pause(); else play();
+}
+
+// Plays the shot under the playhead once from its start, then comes back to its start (Shift+Space).
+export function previewShot() {
+  const clip = currentClip();
+  if (!clip) return;
+  if (get().playing) pause();
+  const i = shotIndexAt(clip, get().time);
+  const start = clip.shots[i].start;
+  seek(start + 0.001);
+  play();
+  stopAt = { end: shotEnd(clip, i), back: start + 0.001 };
 }
 
 export function seek(t: number) {
@@ -323,6 +345,9 @@ function loadMusic(clip: ClipData | null) {
   void analyseMusic(ref);
 }
 
+// Last detection result per track, so "detect again" does not decode the file a second time.
+let detected: { ref: string; beats: number[]; bpm: number | null } | null = null;
+
 // Waveform always; beats only when the clip does not already carry them for this track.
 async function analyseMusic(ref: string) {
   set({ analysing: true });
@@ -335,6 +360,7 @@ async function analyseMusic(ref: string) {
     const channels = Array.from({ length: decoded.numberOfChannels }, (_, i) => decoded.getChannelData(i));
     const result = analyse(mixDown(channels), decoded.sampleRate);
     if (audioRef !== ref) return;
+    detected = { ref, beats: result.beats, bpm: result.bpm };
     set({ wave: { ref, peaks: result.peaks } });
     const id = get().clipId;
     const clip = currentClip();
@@ -352,6 +378,20 @@ async function analyseMusic(ref: string) {
   } finally {
     if (audioRef === ref) set({ analysing: false });
   }
+}
+
+// Puts back the grid found in the music, replacing a tempo set by hand.
+export function redetectBeats() {
+  const id = get().clipId;
+  const clip = currentClip();
+  if (!id || !clip?.music) return;
+  if (detected?.ref === clip.music.ref) {
+    useBoard.getState().patchClip(id, { ...clip, beats: detected.beats, bpm: detected.bpm ?? undefined });
+    return;
+  }
+  // Not analysed yet (still decoding, or failed): clearing the grid lets the next analysis fill it.
+  useBoard.getState().patchClip(id, { ...clip, beats: undefined, bpm: undefined });
+  void analyseMusic(clip.music.ref);
 }
 
 // Sets the track of the open Animatic (a picked file, a dropped file, a sound of the mood board).

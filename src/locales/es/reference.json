@@ -1264,7 +1264,7 @@
     "showTimeline": "Mostrar la timeline",
     "hideTimeline": "Ocultar la timeline",
     "keySpace": "Espacio",
-    "keysHint": "Espacio: reproducir · M: cortar · I / O: la selección entra / sale aquí · L: bucle · ← →: plano anterior / siguiente · Ctrl + rueda: zoom",
+    "keysHint": "Espacio: reproducir · Mayús + Espacio: reproducir el plano · M: cortar · I / O: la selección entra / sale aquí · L: bucle · ← →: plano anterior / siguiente · Mayús + ← →: mover el corte un tiempo · Ctrl + rueda: zoom",
     "toLongOrBack": "Pista Largos ↔ plano",
     "librarySearch": "Buscar",
     "libraryFilter": "Tipo",
@@ -1336,6 +1336,22 @@
     "duplicateShot": "Duplicar el plano",
     "loopShot": "Reproducir este plano en bucle",
     "itemCount_one": "{{count}} elemento",
-    "itemCount_other": "{{count}} elementos"
+    "itemCount_other": "{{count}} elementos",
+    "tempo": "Tempo",
+    "tempoHint": "Tempo de la música: marcar, escribir o detectar",
+    "bpmValue": "{{bpm}} BPM",
+    "tap": "Marcar",
+    "tapHint": "Marca al ritmo, al menos 3 veces",
+    "tapCount_one": "{{count}} toque",
+    "tapCount_other": "{{count}} toques",
+    "beatHere": "Primer tiempo aquí",
+    "detectTempo": "Detectar",
+    "resize": "Altura de la línea de tiempo",
+    "resizeHint": "Arrastra para cambiar la altura · Doble clic: automática",
+    "loops": {
+      "loop": "Bucle",
+      "pingpong": "Ida y vuelta",
+      "once": "Una vez"
+    }
   }
 }

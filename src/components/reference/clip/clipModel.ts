@@ -227,6 +227,62 @@ export function snapTime(t: number, beats: number[] | undefined, tolerance: numb
   return Math.abs(best - t) <= tolerance ? best : t;
 }
 
+// Times a dragged edge sticks to: the beats, every cut, both ends of the track, and any extra time
+// (the playhead). Sorted, for `snapTime`.
+export function snapPoints(clip: ClipData, extra: number[] = []): number[] {
+  const pts = [...(clip.beats ?? []), ...clip.shots.map((s) => s.start), clipDuration(clip), ...extra];
+  return pts.filter((x) => Number.isFinite(x)).sort((a, b) => a - b);
+}
+
+// Moves the cut nearest to t to the next (dir 1) or previous (dir -1) beat; without a beat grid,
+// by `step` seconds. Returns the new clip and where the cut now is, or null when there is no cut.
+export function nudgeCut(clip: ClipData, t: number, dir: -1 | 1, step = 0.1): { clip: ClipData; at: number } | null {
+  if (clip.shots.length < 2) return null;
+  let index = 1;
+  for (let k = 2; k < clip.shots.length; k++) {
+    if (Math.abs(clip.shots[k].start - t) < Math.abs(clip.shots[index].start - t)) index = k;
+  }
+  const from = clip.shots[index].start;
+  const beats = clip.beats ?? [];
+  const target = beats.length
+    ? (dir > 0 ? beats.find((b) => b > from + 0.01) : [...beats].reverse().find((b) => b < from - 0.01)) ?? from + dir * step
+    : from + dir * step;
+  const next = moveBoundary(clip, index, target);
+  return { clip: next, at: next.shots[index].start };
+}
+
+// ── Tempo by hand ───────────────────────────────────────────────────────────
+
+export const BPM_MIN = 30;
+export const BPM_MAX = 300;
+
+// Tempo from tapped times (seconds, in order): the median interval, so one late tap does not
+// throw it off. Null under three taps.
+export function tapTempo(taps: number[]): number | null {
+  if (taps.length < 3) return null;
+  const gaps = taps.slice(1).map((x, i) => x - taps[i]).filter((g) => g > 0).sort((a, b) => a - b);
+  if (!gaps.length) return null;
+  const mid = gaps[Math.floor(gaps.length / 2)];
+  const bpm = 60 / mid;
+  return bpm >= BPM_MIN && bpm <= BPM_MAX ? Math.round(bpm * 10) / 10 : null;
+}
+
+// A regular grid at `bpm` with a beat on `anchor`, covering the track.
+export function beatGrid(bpm: number, anchor: number, dur: number): number[] {
+  if (!(bpm >= BPM_MIN && bpm <= BPM_MAX) || !(dur > 0)) return [];
+  const step = 60 / bpm;
+  const first = anchor - Math.floor(anchor / step) * step;
+  const out: number[] = [];
+  for (let t = first; t < dur; t += step) out.push(Math.round(t * 1000) / 1000);
+  return out;
+}
+
+// Replaces the detected grid with a tempo set by hand (typed or tapped), a beat on `anchor`.
+export function setTempo(clip: ClipData, bpm: number, anchor: number): ClipData {
+  const b = Math.min(BPM_MAX, Math.max(BPM_MIN, bpm));
+  return { ...clip, bpm: b, beats: beatGrid(b, anchor, clipDuration(clip)) };
+}
+
 // ── Edits (each returns a new clip) ─────────────────────────────────────────
 
 // Cuts the shot under t in two. The new shot starts at t, framed where the camera is, and takes
@@ -573,6 +629,44 @@ export function cascade(clip: ClipData, index: number, ordered: string[]): ClipD
     next = setShotItemTiming(next, index, id, { delay: Math.max(0, at - s) });
   });
   return next;
+}
+
+// Slides items of a shot together by dt seconds, each keeping its length; dt is clamped so none of
+// them leaves the shot.
+export function shiftShotItems(clip: ClipData, index: number, ids: string[], dt: number): ClipData {
+  const shot = clip.shots[index];
+  if (!shot) return clip;
+  const s = shot.start, e = shotEnd(clip, index);
+  const set = new Set(ids);
+  const moving = shot.items.filter((si) => set.has(si.id));
+  if (!moving.length) return clip;
+  let lo = -Infinity, hi = Infinity;
+  for (const si of moving) {
+    const [a, b] = shotItemSpan(clip, index, si);
+    lo = Math.max(lo, s - a);
+    hi = Math.min(hi, e - b);
+  }
+  const d = Math.min(hi, Math.max(lo, dt));
+  return patchShot(clip, index, {
+    items: shot.items.map((si) => {
+      if (!set.has(si.id)) return si;
+      const [a, b] = shotItemSpan(clip, index, si);
+      const delay = a + d - s, early = e - (b + d);
+      return { id: si.id, ...(delay > 0.001 ? { delay } : {}), ...(early > 0.001 ? { early } : {}) };
+    }),
+  });
+}
+
+// Slides Long items together by dt seconds, each keeping its length, inside the track.
+export function shiftLong(clip: ClipData, ids: string[], dt: number): ClipData {
+  const set = new Set(ids);
+  const moving = clip.long.filter((l) => set.has(l.id));
+  if (!moving.length) return clip;
+  const dur = clipDuration(clip);
+  const lo = Math.max(...moving.map((l) => -l.start));
+  const hi = Math.min(...moving.map((l) => dur - l.end));
+  const d = Math.min(hi, Math.max(lo, dt));
+  return { ...clip, long: clip.long.map((l) => (set.has(l.id) ? { ...l, start: l.start + d, end: l.end + d } : l)) };
 }
 
 // Back to the whole shot for the given items.

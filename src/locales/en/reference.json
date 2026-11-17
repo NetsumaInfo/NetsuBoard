@@ -1264,7 +1264,7 @@
     "showTimeline": "Show the timeline",
     "hideTimeline": "Hide the timeline",
     "keySpace": "Space",
-    "keysHint": "Space: play · M: cut · I / O: selection enters / leaves here · L: loop · ← →: previous / next shot · Ctrl + wheel: zoom",
+    "keysHint": "Space: play · Shift + Space: play the shot · M: cut · I / O: selection enters / leaves here · L: loop · ← →: previous / next shot · Shift + ← →: move the cut by one beat · Ctrl + wheel: zoom",
     "toLongOrBack": "Long lane ↔ shot",
     "librarySearch": "Search",
     "libraryFilter": "Type",
@@ -1336,6 +1336,22 @@
     "duplicateShot": "Duplicate shot",
     "loopShot": "Play this shot in a loop",
     "itemCount_one": "{{count}} item",
-    "itemCount_other": "{{count}} items"
+    "itemCount_other": "{{count}} items",
+    "tempo": "Tempo",
+    "tempoHint": "Track tempo: tap, type or detect",
+    "bpmValue": "{{bpm}} BPM",
+    "tap": "Tap",
+    "tapHint": "Tap along, at least 3 times",
+    "tapCount_one": "{{count}} tap",
+    "tapCount_other": "{{count}} taps",
+    "beatHere": "First beat here",
+    "detectTempo": "Detect",
+    "resize": "Timeline height",
+    "resizeHint": "Drag to change the height · Double-click: auto",
+    "loops": {
+      "loop": "Loop",
+      "pingpong": "Ping-pong",
+      "once": "Once"
+    }
   }
 }

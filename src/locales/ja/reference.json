@@ -1264,7 +1264,7 @@
     "showTimeline": "タイムラインを表示",
     "hideTimeline": "タイムラインを隠す",
     "keySpace": "スペース",
-    "keysHint": "スペース: 再生 · M: カット · I / O: 選択がここで登場 / 退場 · L: ループ · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム",
+    "keysHint": "スペース: 再生 · Shift + スペース: ショットを再生 · M: カット · I / O: 選択がここで登場 / 退場 · L: ループ · ← →: 前 / 次のショット · Shift + ← →: カットを 1 拍移動 · Ctrl + ホイール: ズーム",
     "toLongOrBack": "ロングトラック ↔ ショット",
     "librarySearch": "検索",
     "libraryFilter": "種類",
@@ -1336,6 +1336,22 @@
     "duplicateShot": "ショットを複製",
     "loopShot": "このショットをループ再生",
     "itemCount_one": "{{count}} 個",
-    "itemCount_other": "{{count}} 個"
+    "itemCount_other": "{{count}} 個",
+    "tempo": "テンポ",
+    "tempoHint": "曲のテンポ：タップ、入力、または検出",
+    "bpmValue": "{{bpm}} BPM",
+    "tap": "タップ",
+    "tapHint": "リズムに合わせて 3 回以上タップ",
+    "tapCount_one": "{{count}} タップ",
+    "tapCount_other": "{{count}} タップ",
+    "beatHere": "ここを 1 拍目に",
+    "detectTempo": "検出",
+    "resize": "タイムラインの高さ",
+    "resizeHint": "ドラッグで高さを変更 · ダブルクリック: 自動",
+    "loops": {
+      "loop": "ループ",
+      "pingpong": "往復",
+      "once": "1 回"
+    }
   }
 }

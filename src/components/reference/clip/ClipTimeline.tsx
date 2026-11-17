@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { nr } from "@/lib/bridge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Separator } from "@/components/ui/separator";
@@ -14,21 +15,31 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBoard } from "../useReferenceBoard";
 import {
-  addToShot, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, patchShot, pruneClip, shotIndexAt,
-  snapTime, toLong, unassigned, type ClipData,
+  addToShot, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, nudgeCut, patchShot, pruneClip, shotIndexAt,
+  snapPoints, snapTime, toLong, unassigned, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
 import {
-  framingFromView, seek, setClipMusic, setFollow, setLoop, setMusicVolume, startPresent, toggleMusicMute, togglePlay, useClipPlayer,
+  framingFromView, previewShot, redetectBeats, seek, setClipMusic, setFollow, setLoop, setMusicVolume, startPresent, toggleMusicMute, togglePlay,
+  useClipPlayer,
 } from "./clipPlayer";
 import { VolumeControl } from "../VolumeControl";
 import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
-import { BlockMenu, FxMenu, ShotTransition } from "./timelineMenus";
+import { BlockMenu, FxMenu, ShotTransition, TempoMenu } from "./timelineMenus";
 import { ClipStoryboard } from "./ClipStoryboard";
 import { ExpandedRow, LongRow, ShotsRow, boardOrder } from "./timelineRows";
 
 const AUDIO_EXT = /\.(mp3|wav|m4a|aac|flac|ogg|opus|wma|aiff?)$/i;
 const ZOOM_MAX = 40;
+// Height of the tracks area, set by dragging the top edge of the timeline (this device only).
+const HEIGHT_KEY = "netsuboard.animatic.height";
+const HEIGHT_MIN = 72;
+function readHeight(): number | null {
+  try {
+    const v = Number(localStorage.getItem(HEIGHT_KEY));
+    return v >= HEIGHT_MIN ? v : null;
+  } catch { return null; }
+}
 
 const typing = (el: EventTarget | null) => {
   const e = el as HTMLElement | null;
@@ -78,6 +89,29 @@ export function ClipTimeline() {
     return () => ro.disconnect();
   }, [clipId, folded, storyboard]);
   const width = view * zoom;
+  // null = sized by its content, up to 40 % of the window.
+  const [height, setHeight] = useState<number | null>(readHeight);
+  const resize = (e: ReactPointerEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const y0 = e.clientY;
+    const h0 = (e.currentTarget.parentElement?.querySelector("[data-tracks]") as HTMLElement | null)?.offsetHeight ?? 200;
+    const max = window.innerHeight * 0.75;
+    let last = h0;
+    const move = (ev: PointerEvent) => { last = Math.round(Math.min(max, Math.max(HEIGHT_MIN, h0 - (ev.clientY - y0)))); setHeight(last); };
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      try { localStorage.setItem(HEIGHT_KEY, String(last)); } catch { /* private window: the height lasts the session */ }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+  const autoHeight = () => {
+    setHeight(null);
+    try { localStorage.removeItem(HEIGHT_KEY); } catch { /* nothing stored */ }
+  };
+  const tracksStyle = height ? { height, maxHeight: "75vh" } : undefined;
 
   const dur = clip ? clipDuration(clip) : 1;
   const drag = useTimeDrag(width, dur);
@@ -85,19 +119,23 @@ export function ClipTimeline() {
     if (clipId && !readonly) useBoard.getState().patchClip(clipId, next, { tag });
   }, [clipId, readonly]);
   const latest = useCallback(() => readClip(openClipRaw(useBoard.getState())), []);
+  // Snapping reach: 6 screen pixels. A dragged edge sticks to beats, cuts and the playhead; a cut or
+  // a mark made at the playhead sticks to beats only.
+  const reach = Math.max(0.03, (6 / Math.max(1, width)) * dur);
   const snapT = useCallback((x: number, c: ClipData) =>
-    (c.snap ? snapTime(x, c.beats, Math.max(0.03, (6 / Math.max(1, width)) * dur)) : x), [dur, width]);
+    (c.snap ? snapTime(x, snapPoints(c, [useClipPlayer.getState().time]), reach) : x), [reach]);
+  const snapBeat = useCallback((x: number, c: ClipData) => (c.snap ? snapTime(x, c.beats, reach) : x), [reach]);
   // The given items enter or leave at the playhead (snapped), with a line saying what happened.
   const markAt = useCallback((which: "in" | "out", ids: string[]) => {
     const c = latest();
     if (!c || !ids.length || !clipId) return;
-    const at = snapT(useClipPlayer.getState().time, c);
+    const at = snapBeat(useClipPlayer.getState().time, c);
     useBoard.getState().patchClip(clipId, which === "in" ? markIn(c, ids, at) : markOut(c, ids, at));
     useBoard.getState().setNotice({
       text: t(which === "in" ? "clip.markedIn" : "clip.markedOut", { count: ids.length, time: formatTime(at) }),
       kind: "ok",
     });
-  }, [latest, snapT, clipId, t]);
+  }, [latest, snapBeat, clipId, t]);
 
   // Zoom around a time that stays under the same screen x.
   const zoomTo = useCallback((next: number, anchorTime?: number, anchorX?: number) => {
@@ -122,7 +160,7 @@ export function ClipTimeline() {
       if (e.code === "Space") { if (!e.repeat) { spaceDown = true; spaceUsed = false; } return; }
       if ((e.key === "m" || e.key === "M") && !readonly) {
         e.preventDefault();
-        const next = cutAt(c, snapT(useClipPlayer.getState().time, c));
+        const next = cutAt(c, snapBeat(useClipPlayer.getState().time, c));
         if (next !== c) useBoard.getState().patchClip(clipId, next);
         return;
       }
@@ -139,7 +177,17 @@ export function ClipTimeline() {
       if (e.key === "Home" || e.key === "End") { e.preventDefault(); seek(e.key === "Home" ? 0 : clipDuration(c)); return; }
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !useBoard.getState().selectedIds.length) {
         e.preventDefault();
-        seek(neighbourShotStart(c, useClipPlayer.getState().time, e.key === "ArrowLeft" ? -1 : 1) + 0.001);
+        const dir = e.key === "ArrowLeft" ? -1 : 1;
+        // Shift: the cut nearest the playhead moves by one beat, and the playhead goes with it.
+        if (e.shiftKey) {
+          if (readonly) return;
+          const r = nudgeCut(c, useClipPlayer.getState().time, dir);
+          if (!r || r.clip === c) return;
+          useBoard.getState().patchClip(clipId, r.clip, { tag: "clip-nudge" });
+          seek(r.at + 0.001);
+          return;
+        }
+        seek(neighbourShotStart(c, useClipPlayer.getState().time, dir) + 0.001);
       }
     };
     const onUp = (e: KeyboardEvent) => {
@@ -147,7 +195,11 @@ export function ClipTimeline() {
       spaceDown = false;
       // A focused button takes its own Space (a click); playing on top of it would undo the click.
       const onButton = (e.target as HTMLElement | null)?.closest?.("button,[role=button],[role=menuitem]");
-      if (!spaceUsed && !typing(e.target) && !onButton) { e.preventDefault(); togglePlay(); }
+      if (!spaceUsed && !typing(e.target) && !onButton) {
+        e.preventDefault();
+        // Shift+Space: the shot under the playhead, once, from its start.
+        if (e.shiftKey) previewShot(); else togglePlay();
+      }
     };
     // A pointer pressed while Space is held is a pan, not a play.
     const onPointer = () => { if (spaceDown) spaceUsed = true; };
@@ -159,7 +211,7 @@ export function ClipTimeline() {
       window.removeEventListener("keyup", onUp);
       window.removeEventListener("pointerdown", onPointer, true);
     };
-  }, [clipId, readonly, snapT, latest]);
+  }, [clipId, readonly, snapBeat, latest, markAt]);
 
   // While playing, the playhead stays in view: the tracks page along when it nears the right edge.
   useEffect(() => useClipPlayer.subscribe((s) => {
@@ -208,6 +260,23 @@ export function ClipTimeline() {
       onDragOver={(e) => { if (Array.from(e.dataTransfer.items).some((i) => i.kind === "file")) e.preventDefault(); }}
       onDrop={(e) => void dropMusic(e)}
     >
+      {!folded && (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <div
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label={t("clip.resize")}
+                className="absolute inset-x-0 -top-1 z-40 h-2 cursor-ns-resize hover:bg-primary/40"
+                onPointerDown={resize}
+                onDoubleClick={autoHeight}
+              />
+            }
+          />
+          <TooltipContent side="top">{t("clip.resizeHint")}</TooltipContent>
+        </Tooltip>
+      )}
       <div className="flex h-10 items-center gap-1 overflow-x-auto px-2">
         <TipButton label={`${playing ? t("clip.pause") : t("clip.play")} (${t("clip.keySpace")})`} onClick={togglePlay} active={playing}>
           <NetsuIcon name="play-pause" on={playing} />
@@ -236,8 +305,12 @@ export function ClipTimeline() {
         >
           <NetsuIcon name="snap" />
         </TipButton>
+        <TempoMenu
+          clip={clip} commit={commit} readonly={readonly} playing={playing} onDetect={redetectBeats}
+          time={() => useClipPlayer.getState().time}
+        />
         <Separator orientation="vertical" className="mx-1 h-5" />
-        <TipButton label={t("clip.cut")} onClick={() => { const c = latest(); if (c) commit(cutAt(c, snapT(useClipPlayer.getState().time, c))); }} disabled={readonly}>
+        <TipButton label={t("clip.cut")} onClick={() => { const c = latest(); if (c) commit(cutAt(c, snapBeat(useClipPlayer.getState().time, c))); }} disabled={readonly}>
           <NetsuIcon name="cut" />
         </TipButton>
         <TipButton label={t("clip.addToShot")} disabled={readonly || !sel.length} onClick={() => { const c = latest(); if (c) commit(addToShot(c, shotIndexAt(c, useClipPlayer.getState().time), sel)); }}>
@@ -319,14 +392,16 @@ export function ClipTimeline() {
       </div>
 
       {!folded && storyboard && (
-        <div className="max-h-[45vh] overflow-y-auto border-t border-border/50">
+        <div data-tracks className={cn("overflow-y-auto border-t border-border/50", !height && "max-h-[45vh]")} style={tracksStyle}>
           <ClipStoryboard clip={clip} items={items} readonly={readonly} commit={commit} shotAtHead={shotAtHead} />
         </div>
       )}
       {!folded && !storyboard && (
         <div
           ref={scrollRef}
-          className="relative max-h-[40vh] overflow-auto pb-2"
+          data-tracks
+          className={cn("relative overflow-auto pb-2", !height && "max-h-[40vh]")}
+          style={tracksStyle}
           onWheel={(e) => {
             if (!e.ctrlKey && !e.metaKey) return;
             e.preventDefault();
@@ -349,7 +424,7 @@ export function ClipTimeline() {
               </div>
             </Row>
             <Row label={t("clip.long")} width={width}><LongRow {...rowProps} /></Row>
-            <Row label={t("clip.shots")} width={width}><ShotsRow {...rowProps} shotAtHead={shotAtHead} /></Row>
+            <Row label={t("clip.shots")} width={width}><ShotsRow {...rowProps} shotAtHead={shotAtHead} items={items} /></Row>
             {expandedIndex >= 0 && (
               <Row label={clip.shots[expandedIndex].label || t("clip.shotN", { n: expandedIndex + 1 })} width={width}>
                 <ExpandedRow {...rowProps} index={expandedIndex} />

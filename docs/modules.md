@@ -73,7 +73,10 @@ Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`.
 - Per-item appearance (`fx`: fade, zoom, slide or cut, duration, opacity) is CSS on the item's inner layer (`clipFxStyle` in `BoardItem.tsx`); the hidden pose only applies in Present.
 - Mood board panel (`ClipLibrary.tsx`, `clipDnd.ts`): a searchable, filterable, multi-select list; a drag carries the source ids under `application/x-netsu-animatic` and lands on the board, a shot, a storyboard card or the Long lane. Items are copied, their layout kept around the drop point.
 - Storyboard (`ClipStoryboard.tsx`) and the Animatic card show what each shot's camera sees, rendered off screen by `renderBoardCanvas` with `rect` (`shotThumbs.tsx`: debounced, queued one at a time, cached by content).
-- Keys inside an Animatic: Space (short press) play, M cut, I / O mark, L loop the shot, ← → previous / next shot, Home / End. In Present: Escape, Space, ← →.
+- Snapping (when on): a dragged edge or bar sticks to the beats, every cut, the track ends and the playhead (`snapPoints`); a cut or mark made at the playhead sticks to beats only. Bars of one lane move together when several are selected (Ctrl / Shift click; `shiftShotItems`, `shiftLong`), take the keyboard focus, and Delete takes a focused bar off its lane, never off the board.
+- Tempo by hand (`TempoMenu`): typed, tapped (`tapTempo`, median interval), halved or doubled, first beat under the playhead (`setTempo` rebuilds the grid with `beatGrid`); **Detect** puts back the analysed grid (`redetectBeats`, kept from the last decode).
+- The timeline's height is dragged from its top edge and kept per device (`netsuboard.animatic.height`); double-click goes back to automatic. Shot blocks show what their camera sees when wide enough.
+- Keys inside an Animatic: Space (short press) play, Shift+Space play the shot under the playhead once from its start (`previewShot`), M cut, I / O mark, L loop the shot, ← → previous / next shot, Shift+← → move the nearest cut by one beat (`nudgeCut`), Home / End. In Present: Escape, Space, ← →.
 
 ## PDF cards (`boardPdf.ts` + `PdfViewer.tsx`)
 

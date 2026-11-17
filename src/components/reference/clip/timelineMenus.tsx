@@ -1,15 +1,18 @@
 // Popovers of the Animatic timeline: the transition into a shot, pinning a Long item to the screen,
 // and how a video plays inside the Animatic.
 
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { NumberSpin } from "@/components/ui/number-spin";
 import { Button } from "@/components/ui/button";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BoardItem } from "../referenceShared";
 import {
-  DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cutOnBeats, fitSpeed, fxOf, patchShot, setFx, setVideo, shotsPerItem,
+  BPM_MAX, BPM_MIN, DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cutOnBeats, fitSpeed, fxOf, patchShot,
+  setFx, setTempo, setVideo, shotsPerItem, tapTempo,
   type ClipData, type FxKind, type PinCorner, type VideoLoop,
 } from "./clipModel";
 
@@ -238,10 +241,65 @@ export function VideoMenu({ clip, item, bar, commit }: { clip: ClipData; item: B
           <div className="flex gap-1">
             {LOOPS.map((l) => (
               <Button key={l} size="sm" variant={loop === l ? "default" : "ghost"} className="flex-1 gap-1" onClick={() => commit(setVideo(clip, item.id, { loop: l }))}>
-                <NetsuIcon name={`seq-loop-mode-${l}`} /> {t(`clip.loop.${l}`)}
+                <NetsuIcon name={`seq-loop-mode-${l}`} /> {t(`clip.loops.${l}`)}
               </Button>
             ))}
           </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Tempo of the track by hand, for when detection misses: type it, tap it, halve or double it, put
+// the first beat under the playhead, or go back to what was detected.
+export function TempoMenu({ clip, commit, readonly, time, playing, onDetect }: {
+  clip: ClipData; commit: Commit; readonly: boolean; time: () => number; playing: boolean; onDetect: () => void;
+}) {
+  const { t } = useTranslation("reference");
+  const taps = useRef<number[]>([]);
+  const [tapCount, setTapCount] = useState(0);
+  const bpm = clip.bpm ?? null;
+  const anchor = clip.beats?.[0] ?? 0;
+  const apply = (b: number, at = anchor, tag: string | null = null) => commit(setTempo(clip, b, at), tag);
+  const tap = () => {
+    const now = performance.now() / 1000;
+    const prev = taps.current;
+    // A pause of two seconds starts a new count.
+    taps.current = prev.length && now - prev[prev.length - 1] > 2 ? [now] : [...prev, now].slice(-12);
+    setTapCount(taps.current.length);
+    const found = tapTempo(taps.current);
+    // While the music plays, the last tap is a beat: the grid lines up on it.
+    if (found) apply(found, playing ? time() : anchor, "clip-tempo");
+  };
+  return (
+    <Popover onOpenChange={(open) => { if (!open) { taps.current = []; setTapCount(0); } }}>
+      <Tooltip>
+        <TooltipTrigger render={<PopoverTrigger render={<Button variant="ghost" size="sm" className="shrink-0 gap-1.5 tabular-nums" disabled={readonly} />} />}>
+          <NetsuIcon name="tempo" />
+          {bpm ? t("clip.bpmValue", { bpm: Math.round(bpm) }) : t("clip.tempo")}
+        </TooltipTrigger>
+        <TooltipContent side="top">{t("clip.tempoHint")}</TooltipContent>
+      </Tooltip>
+      <PopoverContent side="top" className="w-64 space-y-2.5 p-2.5 text-[11px]">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">{t("clip.tempo")}</span>
+          <NumberSpin
+            value={bpm ?? 120} min={BPM_MIN} max={BPM_MAX} step={0.1} ariaLabel={t("clip.tempo")}
+            className="h-7 w-20" onCommit={(v) => apply(v)}
+          />
+          <span className="text-muted-foreground">BPM</span>
+          <div className="flex-1" />
+          <Button size="sm" variant="ghost" className="px-2" disabled={!bpm} onClick={() => bpm && apply(bpm / 2)}>÷2</Button>
+          <Button size="sm" variant="ghost" className="px-2" disabled={!bpm} onClick={() => bpm && apply(bpm * 2)}>×2</Button>
+        </div>
+        <Button variant="outline" className="h-12 w-full flex-col gap-0" onClick={tap}>
+          <span className="text-sm font-medium">{t("clip.tap")}</span>
+          <span className="text-[10px] text-muted-foreground">{tapCount ? t("clip.tapCount", { count: tapCount }) : t("clip.tapHint")}</span>
+        </Button>
+        <div className="flex gap-1">
+          <Button size="sm" variant="ghost" className="flex-1" disabled={!bpm} onClick={() => bpm && apply(bpm, time())}>{t("clip.beatHere")}</Button>
+          <Button size="sm" variant="ghost" className="flex-1" disabled={!clip.music} onClick={onDetect}>{t("clip.detectTempo")}</Button>
         </div>
       </PopoverContent>
     </Popover>

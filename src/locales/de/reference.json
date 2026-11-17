@@ -1264,7 +1264,7 @@
     "showTimeline": "Timeline einblenden",
     "hideTimeline": "Timeline ausblenden",
     "keySpace": "Leertaste",
-    "keysHint": "Leertaste: Wiedergabe · M: schneiden · I / O: Auswahl tritt hier ein / geht hier · L: Schleife · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom",
+    "keysHint": "Leertaste: Wiedergabe · Umschalt + Leertaste: Shot abspielen · M: schneiden · I / O: Auswahl tritt hier ein / geht hier · L: Schleife · ← →: vorheriger / nächster Shot · Umschalt + ← →: Schnitt um einen Schlag verschieben · Strg + Mausrad: Zoom",
     "toLongOrBack": "Spur Lang ↔ Shot",
     "librarySearch": "Suchen",
     "libraryFilter": "Typ",
@@ -1336,6 +1336,22 @@
     "duplicateShot": "Shot duplizieren",
     "loopShot": "Diesen Shot in Schleife abspielen",
     "itemCount_one": "{{count}} Element",
-    "itemCount_other": "{{count}} Elemente"
+    "itemCount_other": "{{count}} Elemente",
+    "tempo": "Tempo",
+    "tempoHint": "Tempo der Musik: tippen, eingeben oder erkennen",
+    "bpmValue": "{{bpm}} BPM",
+    "tap": "Tippen",
+    "tapHint": "Im Takt tippen, mindestens 3-mal",
+    "tapCount_one": "{{count}} Tipp",
+    "tapCount_other": "{{count}} Tipps",
+    "beatHere": "Erster Schlag hier",
+    "detectTempo": "Erkennen",
+    "resize": "Höhe der Timeline",
+    "resizeHint": "Ziehen, um die Höhe zu ändern · Doppelklick: automatisch",
+    "loops": {
+      "loop": "Schleife",
+      "pingpong": "Hin und zurück",
+      "once": "Einmal"
+    }
   }
 }

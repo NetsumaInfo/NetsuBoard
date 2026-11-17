@@ -144,24 +144,47 @@ export function Waveform({ clip, width }: { clip: ClipData; width: number }) {
   return <canvas ref={ref} className="pointer-events-none absolute inset-0 text-foreground" />;
 }
 
-export function Bar({ left, width, label, tone, selected, onSelect, onMove, onLeft, onRight, extra }: {
+// A bar of the Long lane or of an expanded shot. Click selects (Ctrl / Shift: adds or removes), drag
+// moves, the edges trim. It takes the keyboard focus: Enter selects, Delete takes it off the lane.
+export function Bar({ left, width, label, tone, selected, onSelect, onMove, onLeft, onRight, onDelete, extra }: {
   left: number; width: number; label: string; tone: "long" | "item"; selected: boolean;
-  onSelect: () => void;
+  onSelect: (additive: boolean) => void;
   onMove?: (e: ReactPointerEvent) => void;
   onLeft?: (e: ReactPointerEvent) => void;
   onRight?: (e: ReactPointerEvent) => void;
+  onDelete?: () => void;
   extra?: ReactNode;
 }) {
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      aria-pressed={selected}
       className={cn(
-        "group absolute top-0 flex h-6 items-center gap-1 overflow-hidden rounded px-2",
+        "group absolute top-0 flex h-6 items-center gap-1 overflow-hidden rounded px-2 outline-none focus-visible:ring-2 focus-visible:ring-ring",
         tone === "long" ? "bg-sky-500/30 text-foreground" : "bg-[#a78bfa]/35 text-foreground",
         selected && "ring-1 ring-primary",
         onMove && "cursor-grab",
       )}
       style={{ left, width: Math.max(8, width) }}
-      onPointerDown={(e) => { if (e.button !== 0) return; e.stopPropagation(); onSelect(); onMove?.(e); }}
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        const additive = e.ctrlKey || e.metaKey || e.shiftKey;
+        onSelect(additive);
+        if (!additive) onMove?.(e);
+      }}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter") { e.preventDefault(); onSelect(e.ctrlKey || e.shiftKey); }
+        else if ((e.key === "Delete" || e.key === "Backspace") && onDelete) {
+          // Kept away from the board shortcut, which would delete the item itself.
+          e.preventDefault();
+          e.stopPropagation();
+          onDelete();
+        }
+      }}
     >
       {onLeft && <span className="absolute inset-y-0 left-0 w-1.5 cursor-ew-resize bg-foreground/20 opacity-0 group-hover:opacity-100" onPointerDown={(e) => { e.stopPropagation(); onLeft(e); }} />}
       <span className="min-w-0 flex-1 truncate">{label}</span>
