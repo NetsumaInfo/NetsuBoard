@@ -18,10 +18,11 @@ import {
   snapTime, toLong, unassigned, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
-import { framingFromView, seek, setClipMusic, setFollow, startPresent, togglePlay, useClipPlayer } from "./clipPlayer";
+import { framingFromView, seek, setClipMusic, setFollow, setLoop, startPresent, togglePlay, useClipPlayer } from "./clipPlayer";
 import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
-import { FxMenu, ShotTransition } from "./timelineMenus";
-import { ExpandedRow, LongRow, ShotsRow } from "./timelineRows";
+import { BlockMenu, FxMenu, ShotTransition } from "./timelineMenus";
+import { ClipStoryboard } from "./ClipStoryboard";
+import { ExpandedRow, LongRow, ShotsRow, boardOrder } from "./timelineRows";
 
 const AUDIO_EXT = /\.(mp3|wav|m4a|aac|flac|ogg|opus|wma|aiff?)$/i;
 const ZOOM_MAX = 40;
@@ -45,6 +46,8 @@ export function ClipTimeline() {
   const library = useClipPlayer((s) => s.library);
   const musicError = useClipPlayer((s) => s.musicError);
   const folded = useClipPlayer((s) => s.folded);
+  const loop = useClipPlayer((s) => s.loop);
+  const storyboard = useClipPlayer((s) => s.storyboard);
   const shotAtHead = useClipPlayer((s) => {
     const c = readClip(raw);
     return c ? shotIndexAt(c, s.time) : 0;
@@ -68,7 +71,7 @@ export function ClipTimeline() {
     const ro = new ResizeObserver(() => setView(Math.max(1, el.clientWidth - LABEL_W - 8)));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [clipId, folded]);
+  }, [clipId, folded, storyboard]);
   const width = view * zoom;
 
   const dur = clip ? clipDuration(clip) : 1;
@@ -127,6 +130,8 @@ export function ClipTimeline() {
         markAt(k === "i" ? "in" : "out", ids);
         return;
       }
+      if (k === "l") { e.preventDefault(); setLoop(!useClipPlayer.getState().loop); return; }
+      if (e.key === "Home" || e.key === "End") { e.preventDefault(); seek(e.key === "Home" ? 0 : clipDuration(c)); return; }
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !useBoard.getState().selectedIds.length) {
         e.preventDefault();
         seek(neighbourShotStart(c, useClipPlayer.getState().time, e.key === "ArrowLeft" ? -1 : 1) + 0.001);
@@ -254,6 +259,13 @@ export function ClipTimeline() {
           </PopoverContent>
         </Popover>
         <ShotTransition clip={clip} index={shotAtHead} readonly={readonly} commit={commit} />
+        <BlockMenu
+          clip={clip}
+          commit={commit}
+          readonly={readonly}
+          time={() => useClipPlayer.getState().time}
+          picked={boardOrder(sel, byId).map((id) => { const it = byId.get(id)!; return { id, box: { x: it.x, y: it.y, w: it.w, h: it.h } }; })}
+        />
         {outside.length > 0 && !readonly && (
           <Tooltip>
             <TooltipTrigger
@@ -270,7 +282,7 @@ export function ClipTimeline() {
           </Tooltip>
         )}
         <div className="flex-1" />
-        {!folded && (
+        {!folded && !storyboard && (
           <>
             <TipButton label={t("clip.zoomOut")} disabled={zoom <= 1} onClick={() => zoomTo(zoom / 1.6)}>
               <NetsuIcon name="zoom-out" />
@@ -280,6 +292,12 @@ export function ClipTimeline() {
             </TipButton>
           </>
         )}
+        <TipButton label={t("clip.loop")} active={loop} onClick={() => setLoop(!loop)}>
+          <NetsuIcon name="seq-loop-mode-loop" />
+        </TipButton>
+        <TipButton label={t(storyboard ? "clip.showLanes" : "clip.storyboard")} active={storyboard} onClick={() => useClipPlayer.setState({ storyboard: !storyboard, folded: false })}>
+          <NetsuIcon name="storyboard" />
+        </TipButton>
         <TipButton label={t("clip.library")} active={library} onClick={() => useClipPlayer.setState({ library: !library })}>
           <NetsuIcon name="gallery" />
         </TipButton>
@@ -294,7 +312,12 @@ export function ClipTimeline() {
         </Button>
       </div>
 
-      {!folded && (
+      {!folded && storyboard && (
+        <div className="max-h-[45vh] overflow-y-auto border-t border-border/50">
+          <ClipStoryboard clip={clip} items={items} readonly={readonly} commit={commit} shotAtHead={shotAtHead} />
+        </div>
+      )}
+      {!folded && !storyboard && (
         <div
           ref={scrollRef}
           className="relative max-h-[40vh] overflow-auto pb-2"

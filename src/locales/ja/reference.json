@@ -1237,11 +1237,7 @@
     "videoSpeed": "速度",
     "fitToBar": "バーに合わせる",
     "videoLoop": "範囲が短い場合",
-    "loop": {
-      "loop": "ループ",
-      "pingpong": "往復",
-      "once": "1 回"
-    },
+    "loop": "ショットをループ (L)",
     "kind": {
       "image": "画像",
       "video": "動画",
@@ -1268,7 +1264,7 @@
     "showTimeline": "タイムラインを表示",
     "hideTimeline": "タイムラインを隠す",
     "keySpace": "スペース",
-    "keysHint": "スペース: 再生 · M: カット · I / O: 選択がここで登場 / 退場 · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム",
+    "keysHint": "スペース: 再生 · M: カット · I / O: 選択がここで登場 / 退場 · L: ループ · ← →: 前 / 次のショット · Ctrl + ホイール: ズーム",
     "toLongOrBack": "ロングトラック ↔ ショット",
     "librarySearch": "検索",
     "libraryFilter": "種類",
@@ -1313,6 +1309,33 @@
     "fxOpacity": "不透明度",
     "fxReset": "既定",
     "fxDurationValue": "長さ {{value}} 秒",
-    "fxOpacityValue": "不透明度 {{value}} %"
+    "fxOpacityValue": "不透明度 {{value}} %",
+    "storyboard": "絵コンテ",
+    "showLanes": "トラック",
+    "block": "分割",
+    "perItem": "要素ごとに 1 ショット",
+    "perItemHint_one": "{{count}} 個選択中: 再生ヘッドから、その要素に合わせたショット",
+    "perItemHint_other": "{{count}} 個選択中: 再生ヘッドから、それぞれに合わせたショットを順に",
+    "perItemNeedsSelection": "先にボードで要素を選択",
+    "everyBeats_one": "{{count}} 拍",
+    "everyBeats_other": "{{count}} 拍",
+    "everySeconds_one": "{{count}} 秒",
+    "everySeconds_other": "{{count}} 秒",
+    "cutOnBeats": "拍で分割",
+    "cutOnBeatsHint": "新しいショットの間隔",
+    "needsBeats": "拍を検出するには音楽を追加",
+    "frameOnItems": "要素に合わせる",
+    "cameraMove": "カメラワーク",
+    "moves": {
+      "static": "固定",
+      "zoomIn": "ズームイン",
+      "zoomOut": "ズームアウト",
+      "panLeft": "左へパン",
+      "panRight": "右へパン"
+    },
+    "duplicateShot": "ショットを複製",
+    "loopShot": "このショットをループ再生",
+    "itemCount_one": "{{count}} 個",
+    "itemCount_other": "{{count}} 個"
   }
 }

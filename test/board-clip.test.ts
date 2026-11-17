@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  addToShot, cameraAt, cascade, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
+  addToShot, beatsToSeconds, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
@@ -176,6 +176,46 @@ describe("clip model", () => {
     c = setFx(c, ["a"], { kind: "fade", dur: 0.3 });
     expect(c.fx?.a).toBeUndefined();
     expect(fxOf(c, "a")).toEqual({ kind: "fade", dur: 0.3, opacity: 1 });
+  });
+
+  it("makes one shot per item, each framed on it", () => {
+    const boxes = [{ id: "a", box: { x: 0, y: 0, w: 100, h: 100 } }, { id: "b", box: { x: 500, y: 0, w: 100, h: 100 } }, { id: "c", box: { x: 0, y: 500, w: 100, h: 100 } }];
+    let c = toLong(clip(), ["b"]);
+    c = shotsPerItem(c, 5, boxes, 4);
+    expect(c.shots.map((s) => s.start)).toEqual([0, 5, 9, 13]);
+    expect(c.shots.slice(1).map((s) => s.items.map((x) => x.id))).toEqual([["a"], ["b"], ["c"]]);
+    expect(c.shots[2].from.x + c.shots[2].from.w / 2).toBeCloseTo(550);
+    expect(c.long).toEqual([]);
+    // Not enough room: the items that do not fit are left out.
+    expect(shotsPerItem(clip(), 18, boxes, 4).shots.length).toBe(2);
+  });
+
+  it("cuts every n beats and converts beats to seconds", () => {
+    const c = { ...clip(), bpm: 120, beats: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4] };
+    expect(cutOnBeats(c, 4).shots.map((s) => s.start)).toEqual([0, 2, 4]);
+    expect(beatsToSeconds(c, 4)).toBe(2);
+    expect(beatsToSeconds(clip(), 4)).toBeNull();
+  });
+
+  it("applies and recognises ready-made camera moves", () => {
+    let c = cameraMove(clip(), 0, "zoomIn");
+    expect(c.shots[0].to.w).toBeCloseTo(F.w * 0.72);
+    expect(cameraMoveOf(c.shots[0])).toBe("zoomIn");
+    c = cameraMove(c, 0, "panRight");
+    expect(cameraMoveOf(c.shots[0])).toBe("panRight");
+    expect(cameraMoveOf(cameraMove(c, 0, "static").shots[0])).toBe("static");
+  });
+
+  it("frames a shot on its items, duplicates and reorders shots", () => {
+    let c = frameOnItems(clip(), 0, [{ x: 0, y: 0, w: 160, h: 90 }]);
+    expect(c.shots[0].from.w / c.shots[0].from.h).toBeCloseTo(16 / 9);
+    c = duplicateShot(c, 0);
+    expect(c.shots).toHaveLength(2);
+    expect(c.shots[1].items.map((s) => s.id)).toEqual(["a", "b"]);
+    c = patchShot(c, 1, { label: "B" });
+    const moved = moveShot(c, 1, 0);
+    expect(moved.shots.map((s) => s.label)).toEqual(["B", undefined]);
+    expect(moved.shots.map((s) => s.start)).toEqual([0, 10]);
   });
 
   it("normalises a damaged clip", () => {

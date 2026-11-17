@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BoardItem } from "../referenceShared";
 import {
-  DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, fitSpeed, fxOf, patchShot, setFx, setVideo,
+  DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cutOnBeats, fitSpeed, fxOf, patchShot, setFx, setVideo, shotsPerItem,
   type ClipData, type FxKind, type PinCorner, type VideoLoop,
 } from "./clipModel";
 
@@ -143,6 +143,53 @@ export function FxMenu({ clip, ids, commit, compact }: { clip: ClipData; ids: st
             {t("clip.fxReset")}
           </Button>
         )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// Fast blocking: one shot per selected item from the playhead, or a cut every n beats.
+export function BlockMenu({ clip, commit, picked, time, readonly }: {
+  clip: ClipData; commit: Commit; picked: { id: string; box: { x: number; y: number; w: number; h: number } }[];
+  time: () => number; readonly: boolean;
+}) {
+  const { t } = useTranslation("reference");
+  const tempo = !!clip.bpm;
+  const steps = tempo ? [2, 4, 8] : [1, 2, 4];
+  const seconds = (n: number) => (tempo ? beatsToSeconds(clip, n)! : n);
+  return (
+    <Popover>
+      <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
+        <NetsuIcon name="shots-from-items" /> {t("clip.block")}
+      </PopoverTrigger>
+      <PopoverContent side="top" className="w-72 space-y-3 p-2.5 text-[11px]">
+        <section className="space-y-1.5">
+          <div className="font-medium text-foreground">{t("clip.perItem")}</div>
+          <p className="text-muted-foreground">
+            {picked.length ? t("clip.perItemHint", { count: picked.length }) : t("clip.perItemNeedsSelection")}
+          </p>
+          <div className="flex gap-1">
+            {steps.map((n) => (
+              <Button
+                key={n} size="sm" variant="outline" className="flex-1" disabled={!picked.length}
+                onClick={() => commit(shotsPerItem(clip, time(), picked, seconds(n)))}
+              >
+                {t(tempo ? "clip.everyBeats" : "clip.everySeconds", { count: n })}
+              </Button>
+            ))}
+          </div>
+        </section>
+        <section className="space-y-1.5">
+          <div className="font-medium text-foreground">{t("clip.cutOnBeats")}</div>
+          <p className="text-muted-foreground">{clip.beats?.length ? t("clip.cutOnBeatsHint") : t("clip.needsBeats")}</p>
+          <div className="flex gap-1">
+            {[4, 8, 16].map((n) => (
+              <Button key={n} size="sm" variant="outline" className="flex-1" disabled={!clip.beats?.length} onClick={() => commit(cutOnBeats(clip, n))}>
+                {t("clip.everyBeats", { count: n })}
+              </Button>
+            ))}
+          </div>
+        </section>
       </PopoverContent>
     </Popover>
   );

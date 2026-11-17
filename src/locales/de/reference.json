@@ -1237,11 +1237,7 @@
     "videoSpeed": "Geschwindigkeit",
     "fitToBar": "An Balken anpassen",
     "videoLoop": "Wenn der Bereich kürzer ist",
-    "loop": {
-      "loop": "Schleife",
-      "pingpong": "Hin und zurück",
-      "once": "Einmal"
-    },
+    "loop": "Shot wiederholen (L)",
     "kind": {
       "image": "Bild",
       "video": "Video",
@@ -1268,7 +1264,7 @@
     "showTimeline": "Timeline einblenden",
     "hideTimeline": "Timeline ausblenden",
     "keySpace": "Leertaste",
-    "keysHint": "Leertaste: Wiedergabe · M: schneiden · I / O: Auswahl tritt hier ein / geht hier · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom",
+    "keysHint": "Leertaste: Wiedergabe · M: schneiden · I / O: Auswahl tritt hier ein / geht hier · L: Schleife · ← →: vorheriger / nächster Shot · Strg + Mausrad: Zoom",
     "toLongOrBack": "Spur Lang ↔ Shot",
     "librarySearch": "Suchen",
     "libraryFilter": "Typ",
@@ -1313,6 +1309,33 @@
     "fxOpacity": "Deckkraft",
     "fxReset": "Standard",
     "fxDurationValue": "Dauer {{value}} s",
-    "fxOpacityValue": "Deckkraft {{value}} %"
+    "fxOpacityValue": "Deckkraft {{value}} %",
+    "storyboard": "Storyboard",
+    "showLanes": "Spuren",
+    "block": "Aufteilen",
+    "perItem": "Ein Shot pro Element",
+    "perItemHint_one": "{{count}} Element ausgewählt: ein Shot darauf, ab dem Abspielkopf",
+    "perItemHint_other": "{{count}} Elemente ausgewählt: je ein Shot darauf, nacheinander, ab dem Abspielkopf",
+    "perItemNeedsSelection": "Wähle zuerst Elemente auf dem Board aus",
+    "everyBeats_one": "{{count}} Schlag",
+    "everyBeats_other": "{{count}} Schläge",
+    "everySeconds_one": "{{count}} s",
+    "everySeconds_other": "{{count}} s",
+    "cutOnBeats": "Im Takt schneiden",
+    "cutOnBeatsHint": "Ein neuer Shot alle",
+    "needsBeats": "Füge Musik hinzu, um den Takt zu erkennen",
+    "frameOnItems": "Auf seine Elemente ausrichten",
+    "cameraMove": "Kamerabewegung",
+    "moves": {
+      "static": "Fest",
+      "zoomIn": "Heranzoomen",
+      "zoomOut": "Herauszoomen",
+      "panLeft": "Schwenk nach links",
+      "panRight": "Schwenk nach rechts"
+    },
+    "duplicateShot": "Shot duplizieren",
+    "loopShot": "Diesen Shot in Schleife abspielen",
+    "itemCount_one": "{{count}} Element",
+    "itemCount_other": "{{count}} Elemente"
   }
 }

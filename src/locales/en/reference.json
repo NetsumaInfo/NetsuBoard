@@ -1237,11 +1237,7 @@
     "videoSpeed": "Speed",
     "fitToBar": "Fit to bar",
     "videoLoop": "If the range is shorter",
-    "loop": {
-      "loop": "Loop",
-      "pingpong": "Ping-pong",
-      "once": "Once"
-    },
+    "loop": "Loop the shot (L)",
     "kind": {
       "image": "Image",
       "video": "Video",
@@ -1268,7 +1264,7 @@
     "showTimeline": "Show the timeline",
     "hideTimeline": "Hide the timeline",
     "keySpace": "Space",
-    "keysHint": "Space: play · M: cut · I / O: selection enters / leaves here · ← →: previous / next shot · Ctrl + wheel: zoom",
+    "keysHint": "Space: play · M: cut · I / O: selection enters / leaves here · L: loop · ← →: previous / next shot · Ctrl + wheel: zoom",
     "toLongOrBack": "Long lane ↔ shot",
     "librarySearch": "Search",
     "libraryFilter": "Type",
@@ -1313,6 +1309,33 @@
     "fxOpacity": "Opacity",
     "fxReset": "Default",
     "fxDurationValue": "Duration {{value}} s",
-    "fxOpacityValue": "Opacity {{value}} %"
+    "fxOpacityValue": "Opacity {{value}} %",
+    "storyboard": "Storyboard",
+    "showLanes": "Lanes",
+    "block": "Blocking",
+    "perItem": "One shot per item",
+    "perItemHint_one": "{{count}} item selected: one shot framed on it, from the playhead",
+    "perItemHint_other": "{{count}} items selected: one shot framed on each, in a row, from the playhead",
+    "perItemNeedsSelection": "Select items on the board first",
+    "everyBeats_one": "{{count}} beat",
+    "everyBeats_other": "{{count}} beats",
+    "everySeconds_one": "{{count}} s",
+    "everySeconds_other": "{{count}} s",
+    "cutOnBeats": "Cut on the beats",
+    "cutOnBeatsHint": "A new shot every",
+    "needsBeats": "Add music to detect the beats",
+    "frameOnItems": "Frame on its items",
+    "cameraMove": "Camera move",
+    "moves": {
+      "static": "Static",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "panLeft": "Pan left",
+      "panRight": "Pan right"
+    },
+    "duplicateShot": "Duplicate shot",
+    "loopShot": "Play this shot in a loop",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items"
   }
 }

@@ -4,11 +4,12 @@
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
-import { CLIP_ASPECT, cameraAt, patchShot, shotIndexAt, type ClipData, type ClipRect, type PinCorner } from "./clipModel";
+import { CLIP_ASPECT, cameraAt, clipDuration, patchShot, shotIndexAt, type ClipData, type ClipRect, type PinCorner } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
-import { useClipPlayer } from "./clipPlayer";
+import { seek, useClipPlayer } from "./clipPlayer";
 
 function useOpenClip(): { id: string | null; clip: ClipData | null } {
   const id = useBoard((s) => openClipId(s));
@@ -144,9 +145,26 @@ function Letterbox() {
   const { t } = useTranslation("reference");
   const { ref, size, frame } = useScreenFrame();
   const bar = "absolute bg-black";
+  // The pointer wakes a thin progress bar and the cursor; both go away after a moment of rest.
+  const [awake, setAwake] = useState(false);
+  const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wake = () => {
+    setAwake(true);
+    if (idle.current) clearTimeout(idle.current);
+    idle.current = setTimeout(() => setAwake(false), 2200);
+  };
+  useEffect(() => () => { if (idle.current) clearTimeout(idle.current); }, []);
   return (
     // Shields the board: in Present nothing is selectable, dragged or zoomed.
-    <div ref={ref} className="absolute inset-0 z-50 cursor-none" onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()} onContextMenu={(e) => e.preventDefault()}>
+    <div
+      ref={ref}
+      className={cn("absolute inset-0 z-50", !awake && "cursor-none")}
+      onPointerMove={wake}
+      onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <PresentProgress frame={frame} visible={awake} />
       <div className={bar} style={{ left: 0, top: 0, width: size.w, height: frame.y }} />
       <div className={bar} style={{ left: 0, top: frame.y + frame.h, width: size.w, height: Math.max(0, size.h - frame.y - frame.h) }} />
       <div className={bar} style={{ left: 0, top: frame.y, width: frame.x, height: frame.h }} />
@@ -154,6 +172,32 @@ function Letterbox() {
       <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white/80 animate-out fade-out fill-mode-forwards delay-[2500ms] duration-700">
         {t("clip.presentHint")}
       </div>
+    </div>
+  );
+}
+
+// Progress along the Animatic, at the bottom of the frame: shot boundaries as ticks, a click goes
+// there. It sits over the picture only while the pointer moves.
+function PresentProgress({ frame, visible }: { frame: { x: number; y: number; w: number; h: number }; visible: boolean }) {
+  const { clip } = useOpenClip();
+  const time = useClipPlayer((s) => s.time);
+  if (!clip || !frame.w) return null;
+  const dur = clipDuration(clip);
+  return (
+    <div
+      className={cn("absolute h-6 cursor-pointer transition-opacity duration-300", visible ? "opacity-100" : "pointer-events-none opacity-0")}
+      style={{ left: frame.x + 16, width: frame.w - 32, top: frame.y + frame.h - 28 }}
+      onPointerDown={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        seek(((e.clientX - r.left) / r.width) * dur);
+      }}
+    >
+      <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full bg-white/25">
+        <div className="h-full bg-white" style={{ width: `${(time / dur) * 100}%` }} />
+      </div>
+      {clip.shots.slice(1).map((s) => (
+        <span key={s.id} className="absolute top-1/2 h-2.5 w-px -translate-y-1/2 bg-white/60" style={{ left: `${(s.start / dur) * 100}%` }} />
+      ))}
     </div>
   );
 }

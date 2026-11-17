@@ -1,5 +1,5 @@
-// Closed clip on the mood board: a poster (the first shot), name, duration and shot count. Moving
-// the mouse across the card scrubs through the shots' posters — stills only, no playback. The play
+// Closed clip on the mood board: what its camera sees in the first shot, name, duration and shot count. Moving
+// the mouse across the card scrubs through the shots — stills only, no playback. The play
 // button opens the clip straight into Present.
 
 import { useMemo, useState } from "react";
@@ -13,6 +13,7 @@ import type { BoardItem } from "../referenceShared";
 import { clipDuration, formatTime } from "./clipModel";
 import { readClip } from "./clipSelectors";
 import { startPresent } from "./clipPlayer";
+import { useShotThumb } from "./shotThumbs";
 
 // Poster of a shot: its first image (in paint order), else nothing.
 function posters(item: BoardItem, children: BoardItem[]): string[] {
@@ -31,9 +32,13 @@ export function ClipTile({ item }: { item: BoardItem }) {
   const color = item.color ?? "#a78bfa";
   const shots = useBoard(useShallow((s) => posters(item, folderChildren(item.id, s.stash))));
   const fallback = useBoard((s) => folderChildren(item.id, s.stash).find((c) => c.kind === "image" && c.src && !c.missing)?.src ?? "");
+  const children = useBoard(useShallow((s) => folderChildren(item.id, s.stash)));
   const clip = useMemo(() => readClip(item.clip), [item.clip]);
   const [hover, setHover] = useState<number | null>(null);
-  const poster = (hover != null ? shots[hover] : shots[0]) || shots.find(Boolean) || fallback;
+  // What the camera sees in the shot under the mouse (the first shot at rest); the shot's first
+  // image stands in while it renders.
+  const camera = useShotThumb(clip, hover ?? 0, children, 360);
+  const poster = camera || (hover != null ? shots[hover] : shots[0]) || shots.find(Boolean) || fallback;
   const label = item.text || t("clip.defaultName");
   const count = clip?.shots.length ?? 0;
 

@@ -7,18 +7,21 @@ import { cn } from "@/lib/utils";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger,
+  ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
+  ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
 import {
-  cascade, deleteShot, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
-  setShotItemTiming, shotEnd, shotItemSpan, toLong, addToShot, type ClipData,
+  cameraMove, cameraMoveOf, cascade, deleteShot, duplicateShot, frameOnItems, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
+  setShotItemTiming, shotEnd, shotItemSpan, toLong, addToShot, type CameraMove, type ClipData,
 } from "./clipModel";
-import { framingFromView, seek, useClipPlayer } from "./clipPlayer";
+import { framingFromView, play, seek, setLoop, useClipPlayer } from "./clipPlayer";
 import { Bar, MiniButton, itemName } from "./timelineParts";
 import { dropOnLong, dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
 import { FxMenu, PinMenu, VideoMenu, type Commit } from "./timelineMenus";
+
+const CAMERA_MOVES: CameraMove[] = ["static", "zoomIn", "zoomOut", "panLeft", "panRight"];
 
 type Drag = (e: ReactPointerEvent, onMove: (dt: number) => void, onEnd?: () => void) => void;
 
@@ -251,6 +254,35 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
           </ContextMenuItem>
           <ContextMenuItem onClick={() => { const r = framingFromView(); if (r) at(menuShot, (c, k) => patchShot(c, k, { from: r, to: r })); }}>
             <NetsuIcon name="framing" /> {t("clip.frameBoth")}
+          </ContextMenuItem>
+          <ContextMenuItem
+            disabled={!clip.shots[menuShot]?.items.length}
+            onClick={() => at(menuShot, (c, k) => frameOnItems(c, k, c.shots[k].items.flatMap((si) => {
+              const it = byId.get(si.id);
+              return it ? [{ x: it.x, y: it.y, w: it.w, h: it.h }] : [];
+            })))}
+          >
+            <NetsuIcon name="framing" /> {t("clip.frameOnItems")}
+          </ContextMenuItem>
+          <ContextMenuSub>
+            <ContextMenuSubTrigger><NetsuIcon name="camera-move" /> {t("clip.cameraMove")}</ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              {CAMERA_MOVES.map((m) => (
+                <ContextMenuCheckboxItem
+                  key={m}
+                  checked={!!clip.shots[menuShot] && cameraMoveOf(clip.shots[menuShot]) === m}
+                  onCheckedChange={() => at(menuShot, (c, k) => cameraMove(c, k, m))}
+                >
+                  {t(`clip.moves.${m}`)}
+                </ContextMenuCheckboxItem>
+              ))}
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuItem onClick={() => at(menuShot, duplicateShot)}>
+            <NetsuIcon name="duplicate" /> {t("clip.duplicateShot")}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => { seek(clip.shots[menuShot].start + 0.001); setLoop(true); play(); }}>
+            <NetsuIcon name="seq-loop-mode-loop" /> {t("clip.loopShot")}
           </ContextMenuItem>
           {menuShot > 0 && (
             <>

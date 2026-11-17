@@ -1237,11 +1237,7 @@
     "videoSpeed": "Vitesse",
     "fitToBar": "Caler sur la barre",
     "videoLoop": "Si l'extrait est plus court",
-    "loop": {
-      "loop": "Boucle",
-      "pingpong": "Aller-retour",
-      "once": "Une fois"
-    },
+    "loop": "Boucler le plan (L)",
     "kind": {
       "image": "Image",
       "video": "Vidéo",
@@ -1268,7 +1264,7 @@
     "showTimeline": "Afficher la timeline",
     "hideTimeline": "Masquer la timeline",
     "keySpace": "Espace",
-    "keysHint": "Espace : lecture · M : couper · I / O : la sélection entre / sort ici · ← → : plan précédent / suivant · Ctrl + molette : zoom",
+    "keysHint": "Espace : lecture · M : couper · I / O : la sélection entre / sort ici · L : boucle · ← → : plan précédent / suivant · Ctrl + molette : zoom",
     "toLongOrBack": "Piste Longs ↔ plan",
     "librarySearch": "Rechercher",
     "libraryFilter": "Type",
@@ -1313,6 +1309,33 @@
     "fxOpacity": "Opacité",
     "fxReset": "Par défaut",
     "fxDurationValue": "Durée {{value}} s",
-    "fxOpacityValue": "Opacité {{value}} %"
+    "fxOpacityValue": "Opacité {{value}} %",
+    "storyboard": "Storyboard",
+    "showLanes": "Pistes",
+    "block": "Découpe",
+    "perItem": "Un plan par élément",
+    "perItemHint_one": "{{count}} élément sélectionné : un plan cadré sur lui, depuis la tête de lecture",
+    "perItemHint_other": "{{count}} éléments sélectionnés : un plan cadré sur chacun, à la suite, depuis la tête de lecture",
+    "perItemNeedsSelection": "Sélectionne des éléments sur le board d'abord",
+    "everyBeats_one": "{{count}} temps",
+    "everyBeats_other": "{{count}} temps",
+    "everySeconds_one": "{{count}} s",
+    "everySeconds_other": "{{count}} s",
+    "cutOnBeats": "Découper sur les temps",
+    "cutOnBeatsHint": "Un nouveau plan tous les",
+    "needsBeats": "Ajoute une musique pour détecter les temps",
+    "frameOnItems": "Cadrer sur ses éléments",
+    "cameraMove": "Mouvement de caméra",
+    "moves": {
+      "static": "Fixe",
+      "zoomIn": "Zoom avant",
+      "zoomOut": "Zoom arrière",
+      "panLeft": "Panoramique gauche",
+      "panRight": "Panoramique droite"
+    },
+    "duplicateShot": "Dupliquer le plan",
+    "loopShot": "Lire ce plan en boucle",
+    "itemCount_one": "{{count}} élément",
+    "itemCount_other": "{{count}} éléments"
   }
 }

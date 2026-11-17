@@ -284,6 +284,115 @@ export function deleteShot(clip: ClipData, index: number): ClipData {
   return { ...clip, shots: clip.shots.filter((_, k) => k !== index) };
 }
 
+// ── Fast blocking ───────────────────────────────────────────────────────────
+
+// Length of `beats` beats at the detected tempo, else null.
+export function beatsToSeconds(clip: ClipData, beats: number): number | null {
+  return clip.bpm && clip.bpm > 0 ? (60 / clip.bpm) * beats : null;
+}
+
+// One shot per item from t0: each shot shows its item alone, framed on it, `step` seconds long
+// (the last one runs to the end). Shots after t0 are replaced; Long items are kept. Items that do
+// not fit before the end are dropped.
+export function shotsPerItem(clip: ClipData, t0: number, items: { id: string; box: Box }[], step: number): ClipData {
+  const dur = clipDuration(clip);
+  if (!items.length || !(step > 0)) return clip;
+  let c = clip;
+  const at = Math.max(0, Math.min(t0, dur - MIN_SHOT));
+  if (at - c.shots[shotIndexAt(c, at)].start >= MIN_SHOT) c = cutAt(c, at);
+  const i0 = shotIndexAt(c, at + 0.001);
+  c = { ...c, shots: c.shots.slice(0, i0 + 1) };
+  for (let k = 1; k < items.length; k++) {
+    const t = at + k * step;
+    if (t > dur - MIN_SHOT) break;
+    c = cutAt(c, t);
+  }
+  const shots = c.shots.map((s, i) => {
+    const k = i - i0;
+    if (k < 0 || k >= items.length) return s;
+    const f = frameAround(items[k].box);
+    return { ...s, items: [{ id: items[k].id }], from: f, to: f, transition: "cut" as const };
+  });
+  // An item lives in one lane: those now in a shot leave the Long lane.
+  const placed = new Set(items.map((it) => it.id));
+  return { ...c, shots, long: c.long.filter((l) => !placed.has(l.id)) };
+}
+
+// Cuts a shot every `every` beats of the detected grid, where no boundary is already close.
+export function cutOnBeats(clip: ClipData, every: number): ClipData {
+  const beats = clip.beats ?? [];
+  if (!beats.length || every < 1) return clip;
+  let c = clip;
+  for (let k = every; k < beats.length; k += every) {
+    const t = beats[k];
+    if (c.shots.some((s) => Math.abs(s.start - t) < MIN_SHOT)) continue;
+    c = cutAt(c, t);
+  }
+  return c;
+}
+
+export type CameraMove = "static" | "zoomIn" | "zoomOut" | "panLeft" | "panRight";
+
+const shrink = (r: ClipRect, k: number): ClipRect => ({ x: r.x + (r.w * (1 - k)) / 2, y: r.y + (r.h * (1 - k)) / 2, w: r.w * k, h: r.h * k });
+const shift = (r: ClipRect, dx: number): ClipRect => ({ ...r, x: r.x + dx });
+
+// A ready-made camera move for a shot, built around its current start framing.
+export function cameraMove(clip: ClipData, index: number, move: CameraMove): ClipData {
+  const s = clip.shots[index];
+  if (!s) return clip;
+  const a = s.from;
+  const d = a.w * 0.12;
+  const set = (from: ClipRect, to: ClipRect) => patchShot(clip, index, { from, to });
+  switch (move) {
+    case "static": return set(a, a);
+    case "zoomIn": return set(a, shrink(a, 0.72));
+    case "zoomOut": return set(shrink(a, 0.72), a);
+    case "panLeft": return set(shift(a, d), shift(a, -d));
+    case "panRight": return set(shift(a, -d), shift(a, d));
+  }
+}
+
+// Which ready-made move a shot's framings match, if any (for the menu's check marks).
+export function cameraMoveOf(shot: Shot): CameraMove | null {
+  const { from: a, to: b } = shot;
+  const near = (x: number, y: number) => Math.abs(x - y) < Math.max(1, a.w * 0.01);
+  if (near(a.x, b.x) && near(a.y, b.y) && near(a.w, b.w)) return "static";
+  if (near(a.w, b.w)) return b.x < a.x ? "panLeft" : "panRight";
+  return b.w < a.w ? "zoomIn" : "zoomOut";
+}
+
+// Shot framed on its items (both framings, a static shot).
+export function frameOnItems(clip: ClipData, index: number, boxes: Box[]): ClipData {
+  const box = boundsOfBoxes(boxes);
+  if (!box) return clip;
+  const f = frameAround(box);
+  return patchShot(clip, index, { from: f, to: { ...f } });
+}
+
+// A copy of a shot right after it: the shot is cut in two at its middle and both halves show the
+// same thing.
+export function duplicateShot(clip: ClipData, index: number): ClipData {
+  const s = clip.shots[index];
+  if (!s) return clip;
+  const mid = (s.start + shotEnd(clip, index)) / 2;
+  const c = cutAt(clip, mid);
+  if (c === clip) return clip;
+  const copy = () => ({ from: { ...s.from }, to: { ...s.to }, label: s.label, items: s.items.map((si) => ({ ...si })) });
+  return patchShot(patchShot(c, index, copy()), index + 1, { ...copy(), transition: "cut" });
+}
+
+// Moves the content of a shot (framings, items, name, transition) to another place in the order;
+// the time slots stay where they are.
+export function moveShot(clip: ClipData, from: number, to: number): ClipData {
+  const n = clip.shots.length;
+  if (from === to || from < 0 || to < 0 || from >= n || to >= n) return clip;
+  const starts = clip.shots.map((s) => s.start);
+  const order = [...clip.shots];
+  const [moved] = order.splice(from, 1);
+  order.splice(to, 0, moved);
+  return { ...clip, shots: order.map((s, i) => ({ ...s, start: starts[i] })) };
+}
+
 // Start of the shot before or after the one under t (for the arrow keys).
 export function neighbourShotStart(clip: ClipData, t: number, dir: -1 | 1): number {
   const i = shotIndexAt(clip, t);

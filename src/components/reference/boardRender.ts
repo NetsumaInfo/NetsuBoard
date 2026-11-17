@@ -30,6 +30,8 @@ export interface RenderOptions {
   paint?: Set<string>;
   // Draw layer on top; default = only when the whole board is rendered.
   shapes?: boolean;
+  // Exactly this board area, no margin: what an Animatic camera sees (clip/shotThumbs).
+  rect?: { x: number; y: number; w: number; h: number };
 }
 
 const DEFAULT_MARGIN = 0.03;
@@ -521,6 +523,12 @@ function paintShape(ctx: CanvasRenderingContext2D, s: DrawShape): void {
 // Where the content lands in the output: `scale` from board units to pixels, `dx/dy` the offset
 // applied before it. Shared by the canvas render and by whatever composes over it.
 export function exportLayout(items: BoardItem[], opts: RenderOptions = {}): { outW: number; outH: number; scale: number; dx: number; dy: number } {
+  if (opts.rect) {
+    const r = opts.rect;
+    const outW = Math.max(1, Math.round(opts.width ?? r.w));
+    const scale = outW / Math.max(1, r.w);
+    return { outW, outH: Math.max(1, Math.round(r.h * scale)), scale, dx: -r.x, dy: -r.y };
+  }
   const marginRatio = opts.marginRatio ?? DEFAULT_MARGIN;
   const bounds = contentBounds(items, opts.only);
   const margin = Math.max(bounds.w, bounds.h) * marginRatio;

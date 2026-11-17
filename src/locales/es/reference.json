@@ -1237,11 +1237,7 @@
     "videoSpeed": "Velocidad",
     "fitToBar": "Ajustar a la barra",
     "videoLoop": "Si el rango es más corto",
-    "loop": {
-      "loop": "Bucle",
-      "pingpong": "Ida y vuelta",
-      "once": "Una vez"
-    },
+    "loop": "Repetir el plano (L)",
     "kind": {
       "image": "Imagen",
       "video": "Vídeo",
@@ -1268,7 +1264,7 @@
     "showTimeline": "Mostrar la timeline",
     "hideTimeline": "Ocultar la timeline",
     "keySpace": "Espacio",
-    "keysHint": "Espacio: reproducir · M: cortar · I / O: la selección entra / sale aquí · ← →: plano anterior / siguiente · Ctrl + rueda: zoom",
+    "keysHint": "Espacio: reproducir · M: cortar · I / O: la selección entra / sale aquí · L: bucle · ← →: plano anterior / siguiente · Ctrl + rueda: zoom",
     "toLongOrBack": "Pista Largos ↔ plano",
     "librarySearch": "Buscar",
     "libraryFilter": "Tipo",
@@ -1313,6 +1309,33 @@
     "fxOpacity": "Opacidad",
     "fxReset": "Por defecto",
     "fxDurationValue": "Duración {{value}} s",
-    "fxOpacityValue": "Opacidad {{value}} %"
+    "fxOpacityValue": "Opacidad {{value}} %",
+    "storyboard": "Storyboard",
+    "showLanes": "Pistas",
+    "block": "Corte",
+    "perItem": "Un plano por elemento",
+    "perItemHint_one": "{{count}} elemento seleccionado: un plano encuadrado en él, desde el cabezal",
+    "perItemHint_other": "{{count}} elementos seleccionados: un plano encuadrado en cada uno, seguidos, desde el cabezal",
+    "perItemNeedsSelection": "Selecciona elementos en el tablero primero",
+    "everyBeats_one": "{{count}} tiempo",
+    "everyBeats_other": "{{count}} tiempos",
+    "everySeconds_one": "{{count}} s",
+    "everySeconds_other": "{{count}} s",
+    "cutOnBeats": "Cortar en los tiempos",
+    "cutOnBeatsHint": "Un plano nuevo cada",
+    "needsBeats": "Añade música para detectar los tiempos",
+    "frameOnItems": "Encuadrar en sus elementos",
+    "cameraMove": "Movimiento de cámara",
+    "moves": {
+      "static": "Fijo",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "panLeft": "Paneo a la izquierda",
+      "panRight": "Paneo a la derecha"
+    },
+    "duplicateShot": "Duplicar el plano",
+    "loopShot": "Reproducir este plano en bucle",
+    "itemCount_one": "{{count}} elemento",
+    "itemCount_other": "{{count}} elementos"
   }
 }

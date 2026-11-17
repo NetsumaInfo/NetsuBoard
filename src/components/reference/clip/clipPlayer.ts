@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { useBoard } from "../useReferenceBoard";
 import { displaySrc, type BoardView } from "../referenceShared";
 import {
-  CLIP_ASPECT, addToShot, animatedIds, cameraAt, clipDuration, fitToDuration, presentAt, shotIndexAt, viewForRect,
+  CLIP_ASPECT, addToShot, animatedIds, cameraAt, clipDuration, fitToDuration, presentAt, shotEnd, shotIndexAt, viewForRect,
   type ClipData, type ClipRect,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
@@ -49,6 +49,10 @@ export interface ClipPlayerState {
   musicError: boolean;
   // Timeline folded down to its toolbar, to give the board room.
   folded: boolean;
+  // Playback loops on the shot under the playhead.
+  loop: boolean;
+  // The tracks area shows the shots as cards instead of lanes.
+  storyboard: boolean;
 }
 
 export const useClipPlayer = create<ClipPlayerState>(() => ({
@@ -65,6 +69,8 @@ export const useClipPlayer = create<ClipPlayerState>(() => ({
   library: false,
   musicError: false,
   folded: false,
+  loop: false,
+  storyboard: false,
 }));
 
 const set = useClipPlayer.setState;
@@ -126,12 +132,31 @@ function applyTime(t: number) {
   }
 }
 
+let loopRange: [number, number] | null = null;
+function armLoop(clip: ClipData, t: number) {
+  const i = shotIndexAt(clip, t);
+  loopRange = [clip.shots[i].start + 0.001, shotEnd(clip, i)];
+}
+
+// Loops playback on the shot under the playhead (key L).
+export function setLoop(on: boolean) {
+  set({ loop: on });
+  const clip = currentClip();
+  if (on && clip) armLoop(clip, get().time);
+}
+
 function tick() {
   raf = 0;
   const clip = currentClip();
   if (!clip || !get().playing) return;
   const dur = clipDuration(clip);
   let t = hasMusic(clip) ? audio!.currentTime : clockFrom + (performance.now() - clockAt) / 1000;
+  // Loop on the shot that was under the playhead when the loop started.
+  if (loopRange && get().loop && t >= loopRange[1]) {
+    seek(loopRange[0]);
+    raf = requestAnimationFrame(tick);
+    return;
+  }
   if (t >= dur) {
     t = dur;
     applyTime(t);
@@ -148,6 +173,7 @@ export function play() {
   const dur = clipDuration(clip);
   let t = get().time;
   if (t >= dur - 0.05) t = 0;
+  armLoop(clip, t);
   if (hasMusic(clip)) {
     audio!.currentTime = t;
     void audio!.play().catch(() => undefined);
