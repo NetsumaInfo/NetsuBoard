@@ -29,7 +29,6 @@ export function ShotTransition({ clip, index, readonly, commit }: { clip: ClipDa
         <NetsuIcon name={glide ? "glide" : "cut"} /> {t(glide ? "clip.glide" : "clip.cutTransition")}
       </PopoverTrigger>
       <PopoverContent side="top" className="w-56 p-2">
-        <div className="pb-1.5 text-[11px] text-muted-foreground">{t("clip.transitionHint")}</div>
         <div className="flex gap-1">
           <Button size="sm" variant={glide ? "ghost" : "default"} className="flex-1" onClick={() => commit(patchShot(clip, index, { transition: "cut" }))}>{t("clip.cutTransition")}</Button>
           <Button size="sm" variant={glide ? "default" : "ghost"} className="flex-1" onClick={() => commit(patchShot(clip, index, { transition: "glide", glide: s.glide ?? DEFAULT_GLIDE }))}>{t("clip.glide")}</Button>
@@ -63,7 +62,6 @@ export function PinMenu({ corner, size, onChange }: { corner: PinCorner | null; 
         <TooltipContent side="top">{t("clip.pin")}</TooltipContent>
       </Tooltip>
       <PopoverContent side="top" className="w-52 p-2">
-        <div className="pb-1.5 text-[11px] text-muted-foreground">{t("clip.pinHint")}</div>
         <div className="grid grid-cols-2 gap-1">
           {CORNERS.map((c) => (
             <Button key={c} size="sm" variant={corner === c ? "default" : "ghost"} onClick={() => onChange({ corner: c, size })}>
@@ -168,9 +166,7 @@ export function BlockMenu({ clip, commit, picked, time, readonly }: {
       <PopoverContent side="top" className="w-72 space-y-3 p-2.5 text-[11px]">
         <section className="space-y-1.5">
           <div className="font-medium text-foreground">{t("clip.perItem")}</div>
-          <p className="text-muted-foreground">
-            {picked.length ? t("clip.perItemHint", { count: picked.length }) : t("clip.perItemNeedsSelection")}
-          </p>
+          {!picked.length && <p className="text-muted-foreground">{t("clip.perItemNeedsSelection")}</p>}
           <div className="flex gap-1">
             {steps.map((n) => (
               <Button
@@ -184,7 +180,7 @@ export function BlockMenu({ clip, commit, picked, time, readonly }: {
         </section>
         <section className="space-y-1.5">
           <div className="font-medium text-foreground">{t("clip.cutOnBeats")}</div>
-          <p className="text-muted-foreground">{clip.beats?.length ? t("clip.cutOnBeatsHint") : t("clip.needsBeats")}</p>
+          {!clip.beats?.length && <p className="text-muted-foreground">{t("clip.needsBeats")}</p>}
           <div className="flex gap-1">
             {[4, 8, 16].map((n) => (
               <Button key={n} size="sm" variant="outline" className="flex-1" disabled={!clip.beats?.length} onClick={() => commit(cutOnBeats(clip, n))}>
@@ -195,7 +191,7 @@ export function BlockMenu({ clip, commit, picked, time, readonly }: {
         </section>
         <section className="space-y-1.5">
           <div className="font-medium text-foreground">{t("clip.cutAtMarks")}</div>
-          <p className="text-muted-foreground">{clip.marks?.length ? t("clip.cutAtMarksHint", { count: clip.marks.length }) : t("clip.marksHow")}</p>
+          {!clip.marks?.length && <p className="text-muted-foreground">{t("clip.noMarks")}</p>}
           <Button size="sm" variant="outline" className="w-full" disabled={!clip.marks?.length} onClick={() => commit(cutAtMarks(clip))}>
             {t("clip.cutAtMarks")}
           </Button>
@@ -302,7 +298,7 @@ export function TempoMenu({ clip, commit, readonly, time, playing, onDetect }: {
         </div>
         <Button variant="outline" className="h-12 w-full flex-col gap-0" onClick={tap}>
           <span className="text-sm font-medium">{t("clip.tap")}</span>
-          <span className="text-[10px] text-muted-foreground">{tapCount ? t("clip.tapCount", { count: tapCount }) : t("clip.tapHint")}</span>
+          {tapCount > 0 && <span className="text-[10px] text-muted-foreground">{t("clip.tapCount", { count: tapCount })}</span>}
         </Button>
         <div className="flex gap-1">
           <Button size="sm" variant="ghost" className="flex-1" disabled={!bpm} onClick={() => bpm && apply(bpm, time())}>{t("clip.beatHere")}</Button>

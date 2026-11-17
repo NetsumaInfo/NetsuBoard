@@ -362,7 +362,6 @@ export function ClipTimeline() {
               <NetsuIcon name="framing" /> {t("clip.framing")}
             </PopoverTrigger>
             <PopoverContent side="top" className="w-60 p-1.5">
-              <div className="px-2 pb-1 pt-1 text-[11px] text-muted-foreground">{t("clip.framingHint")}</div>
               <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("both")}>{t("clip.frameBoth")}</Button>
               <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("from")}>{t("clip.frameStart")}</Button>
               <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => frameHere("to")}>{t("clip.frameEnd")}</Button>
@@ -499,7 +498,6 @@ export function ClipTimeline() {
             <MarkLines clip={clip} width={width} dur={dur} />
             <Playhead dur={dur} width={width} />
           </div>
-          <p className="sticky left-0 px-2 pt-1 text-[10px] text-muted-foreground">{t("clip.keysHint")}</p>
         </div>
       )}
     </div>

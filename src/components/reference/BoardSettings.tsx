@@ -121,6 +121,30 @@ const SEQ_MARGIN: { label: string; v: number }[] = [
   { label: "2 s", v: 2 },
 ];
 
+// A list of keys that cannot be changed: what each does, then its keys.
+function FixedKeys({ title, rows }: { title: string; rows: { keys: string[]; desc: string }[] }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="text-xs font-semibold text-foreground">{title}</h3>
+      <ul className="flex flex-col gap-1.5">
+        {rows.map((s, i) => (
+          <li key={`${s.keys.join("-")}-${i}`} className="flex items-center justify-between gap-3 text-xs">
+            <span className="text-muted-foreground">{s.desc}</span>
+            <span className="flex shrink-0 items-center gap-1">
+              {s.keys.map((k, j) => (
+                <span key={`${k}-${j}`} className="flex items-center gap-1">
+                  {j > 0 && <span className="text-[10px] text-muted-foreground">+</span>}
+                  <Kbd>{k}</Kbd>
+                </span>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 // Bouton segment (choix exclusif) à la DA shadcn, sans dépendance ToggleGroup ici.
 function Seg({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -248,6 +272,25 @@ export function BoardSettings({ tab, onCapturingChange }: {
     { keys: [t("settings.keyBgDrag")], desc: t("settings.gestureMarquee") },
     { keys: [t("settings.keyShift"), t("settings.keyStroke")], desc: t("settings.gestureConstrain") },
     { keys: [t("settings.keyEsc")], desc: t("settings.gestureExitDraw") },
+  ];
+  // Keys of an open Animatic (clip/ClipTimeline, ClipStoryboard, timelineRows, clipPlayer): fixed,
+  // listed here rather than printed under the timeline.
+  const ANIMATIC_SHORTCUTS: { keys: string[]; desc: string }[] = [
+    { keys: [t("settings.keySpace")], desc: t("settings.animPlay") },
+    { keys: [t("settings.keyShift"), t("settings.keySpace")], desc: t("settings.animPlayShot") },
+    { keys: ["M"], desc: t("settings.animCut") },
+    { keys: ["K"], desc: t("settings.animMark") },
+    { keys: ["I / O"], desc: t("settings.animInOut") },
+    { keys: ["L"], desc: t("settings.animLoop") },
+    { keys: ["← →"], desc: t("settings.animShots") },
+    { keys: [t("settings.keyShift"), "← →"], desc: t("settings.animNudge") },
+    { keys: [t("settings.keyHome")], desc: t("settings.animEnds") },
+    { keys: ["Ctrl", "← →"], desc: t("settings.animReorder") },
+    { keys: ["F2"], desc: t("settings.animRename") },
+    { keys: [t("settings.keyDelete")], desc: t("settings.animDelete") },
+    { keys: ["Alt", t("settings.keyDrag")], desc: t("settings.animFree") },
+    { keys: ["Ctrl", t("settings.keyWheel")], desc: t("settings.animZoom") },
+    { keys: [t("settings.keyEsc")], desc: t("settings.animExit") },
   ];
   const background = useBoard((s) => s.background);
   const setBackground = useBoard((s) => s.setBackground);
@@ -1023,24 +1066,11 @@ export function BoardSettings({ tab, onCapturingChange }: {
         <Separator />
 
         {/* Gestes / raccourcis inhérents (non modifiables) */}
-        <section className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold text-foreground">{t("settings.gestures")}</h3>
-          <ul className="flex flex-col gap-1.5">
-            {FIXED_SHORTCUTS.map((s, i) => (
-              <li key={`${s.keys.join("-")}-${i}`} className="flex items-center justify-between gap-3 text-xs">
-                <span className="text-muted-foreground">{s.desc}</span>
-                <span className="flex shrink-0 items-center gap-1">
-                  {s.keys.map((k, j) => (
-                    <span key={k} className="flex items-center gap-1">
-                      {j > 0 && <span className="text-[10px] text-muted-foreground">+</span>}
-                      <Kbd>{k}</Kbd>
-                    </span>
-                  ))}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <FixedKeys title={t("settings.gestures")} rows={FIXED_SHORTCUTS} />
+
+        <Separator />
+
+        <FixedKeys title={t("settings.animaticKeys")} rows={ANIMATIC_SHORTCUTS} />
         </>)}
     </div>
   );

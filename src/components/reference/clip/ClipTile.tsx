@@ -81,7 +81,6 @@ export function ClipTile({ item }: { item: BoardItem }) {
             {clip ? `${formatTime(clipDuration(clip))} · ${t("clip.shotCount", { count })}` : null}
             {clip?.music?.name ? ` · ${clip.music.name}` : ""}
           </div>
-          <div className="truncate text-[11px] opacity-60">{t("clip.openHint")}</div>
         </div>
       </div>
       <div className="absolute right-2 top-2 flex gap-1.5" onPointerDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>

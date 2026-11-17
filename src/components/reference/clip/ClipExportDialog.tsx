@@ -8,7 +8,7 @@ import { fmtBytes } from "@/lib/utils";
 import { errorText } from "@/lib/errorText";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -114,7 +114,6 @@ export function ClipExportDialog({ clip, open, onOpenChange }: { clip: ClipData;
           <DialogTitle className="flex items-center gap-2">
             <NetsuIcon name="render" busy={busy} /> {t("clip.export.title")}
           </DialogTitle>
-          <DialogDescription>{t("clip.export.subtitle")}</DialogDescription>
         </DialogHeader>
 
         <div className={`space-y-4 ${busy ? "pointer-events-none opacity-60" : ""}`}>

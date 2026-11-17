@@ -160,8 +160,7 @@ export function ClipLibrary() {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <p className="flex-1 text-[11px] leading-snug text-muted-foreground">{t("clip.libraryHint")}</p>
+          <div className="flex items-center justify-end gap-2">
             {shown.length > 1 && (
               <Button size="xs" variant="ghost" onClick={() => setPicked(new Set(shown.map((it) => it.id)))}>{t("clip.librarySelectAll")}</Button>
             )}

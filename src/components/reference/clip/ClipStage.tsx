@@ -142,7 +142,6 @@ export function ClipLetterbox() {
 }
 
 function Letterbox() {
-  const { t } = useTranslation("reference");
   const { ref, size, frame } = useScreenFrame();
   const bar = "absolute bg-black";
   // The pointer wakes a thin progress bar and the cursor; both go away after a moment of rest.
@@ -169,9 +168,6 @@ function Letterbox() {
       <div className={bar} style={{ left: 0, top: frame.y + frame.h, width: size.w, height: Math.max(0, size.h - frame.y - frame.h) }} />
       <div className={bar} style={{ left: 0, top: frame.y, width: frame.x, height: frame.h }} />
       <div className={bar} style={{ left: frame.x + frame.w, top: frame.y, width: Math.max(0, size.w - frame.x - frame.w), height: frame.h }} />
-      <div className="pointer-events-none absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white/80 animate-out fade-out fill-mode-forwards delay-[2500ms] duration-700">
-        {t("clip.presentHint")}
-      </div>
     </div>
   );
 }
