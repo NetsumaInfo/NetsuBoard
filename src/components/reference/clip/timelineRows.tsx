@@ -1,29 +1,27 @@
 // Lanes of the Animatic timeline: the Long lane, the shots (with their right-click menu and inline
 // rename) and the items of the expanded shot.
 
-import { useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { NetsuIcon } from "@/components/ui/netsu-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  ContextMenu, ContextMenuCheckboxItem, ContextMenuContent, ContextMenuItem, ContextMenuSeparator,
-  ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger,
+  ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
 import {
-  cameraMove, cameraMoveOf, cascade, deleteShot, duplicateShot, frameOnItems, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
-  setShotItemTiming, shiftLong, shiftShotItems, shotEnd, shotItemSpan, toLong, addToShot, type CameraMove, type ClipData,
+  cascade, deleteShot, duplicateShot, frameOnItems, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
+  setShotItemTiming, shiftLong, shiftShotItems, shotEnd, shotItemSpan, toLong, addToShot, type ClipData,
 } from "./clipModel";
-import { framingFromView, play, seek, setLoop, useClipPlayer } from "./clipPlayer";
+import { play, seek, setLoop, useClipPlayer } from "./clipPlayer";
 import { Bar, MiniButton, itemName } from "./timelineParts";
-import { dropOnLong, dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
+import { dropAsShot, dropOnLong, dropOnShot, isAnimaticDrag, itemsToShot, readDrag } from "./clipDnd";
+import { registerItemDropTarget } from "../boardDropTarget";
 import { FxMenu, PinMenu, VideoMenu, type Commit } from "./timelineMenus";
 import { useShotThumb } from "./shotThumbs";
 import { copyShot, pasteShot, useShotClipboard } from "./clipClipboard";
-
-const CAMERA_MOVES: CameraMove[] = ["static", "zoomIn", "zoomOut", "panLeft", "panRight"];
 
 type Drag = (e: ReactPointerEvent, onMove: (dt: number) => void, onEnd?: () => void) => void;
 
@@ -149,35 +147,55 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
   const name = (i: number) => clip.shots[i].label || t("clip.shotN", { n: i + 1 });
   const copied = useShotClipboard((s) => s.copied?.name ?? null);
   const at = (i: number, fn: (c: ClipData, i: number) => ClipData) => { const c = latest(); if (c) commit(fn(c, i)); };
-  // Mood board items dropped on a shot go into that shot.
-  const [dropShot, setDropShot] = useState<number | null>(null);
-  const shotUnder = (e: React.DragEvent) => {
-    const idx = (e.target as HTMLElement).closest("[data-shot]")?.getAttribute("data-shot");
-    return idx == null ? null : Number(idx);
+  // Items dropped on the lane (from the board or the mood board panel) make a new shot where they
+  // land; a line shows where while they are dragged over it.
+  const laneRef = useRef<HTMLElement | null>(null);
+  const [insertAt, setInsertAt] = useState<number | null>(null);
+  const timeAt = (clientX: number) => {
+    const r = laneRef.current?.getBoundingClientRect();
+    const c = latest();
+    if (!r || !c) return 0;
+    return snapT(Math.min(dur, Math.max(0, ((clientX - r.left) / Math.max(1, r.width)) * dur)), c);
   };
+  const timeAtRef = useRef(timeAt);
+  timeAtRef.current = timeAt;
+  useEffect(() => {
+    if (readonly) return;
+    return registerItemDropTarget({
+      over: (x, y) => {
+        const lane = laneRef.current;
+        const view = lane?.closest("[data-tracks]");
+        if (!lane || !view) return false;
+        const a = lane.getBoundingClientRect(), b = view.getBoundingClientRect();
+        return x >= Math.max(a.left, b.left) && x <= Math.min(a.right, b.right) && y >= a.top - 6 && y <= a.bottom + 6;
+      },
+      hover: (x) => setInsertAt(x == null ? null : timeAtRef.current(x)),
+      drop: (x, ids) => itemsToShot(ids, timeAtRef.current(x)),
+    });
+  }, [readonly]);
   const dropProps = readonly ? {} : {
     onDragOver: (e: React.DragEvent) => {
       if (!isAnimaticDrag(e.dataTransfer)) return;
       e.preventDefault();
       e.stopPropagation();
       e.dataTransfer.dropEffect = "copy";
-      setDropShot(shotUnder(e));
+      setInsertAt(timeAt(e.clientX));
     },
-    onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropShot(null); },
+    onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setInsertAt(null); },
     onDrop: (e: React.DragEvent) => {
       const ids = readDrag(e.dataTransfer);
-      const i = shotUnder(e);
-      setDropShot(null);
-      if (!ids || i == null) return;
+      setInsertAt(null);
+      if (!ids) return;
       e.preventDefault();
       e.stopPropagation();
-      dropOnShot(ids, clip.shots[i].start);
+      dropAsShot(ids, timeAt(e.clientX));
     },
   };
 
   return (
     <ContextMenu>
       <ContextMenuTrigger
+        ref={(el: HTMLElement | null) => { laneRef.current = el; }}
         className="relative block h-9"
         {...dropProps}
         onContextMenuCapture={(e) => {
@@ -197,7 +215,6 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
               className={cn(
                 "absolute top-0.5 flex h-8 items-center gap-1 overflow-hidden rounded-md border px-1",
                 i === shotAtHead ? "border-[#a78bfa] bg-[#a78bfa]/25" : "border-border bg-muted/60 hover:bg-muted",
-                dropShot === i && "border-dashed border-primary bg-primary/25",
               )}
               style={{ left: a, width: Math.max(4, b - a - 1) }}
             >
@@ -256,6 +273,11 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
             </div>
           );
         })}
+        {insertAt != null && (
+          <div className="pointer-events-none absolute inset-y-0 z-20 w-0.5 -translate-x-1/2 bg-primary" style={{ left: xOf(insertAt, dur, width) }}>
+            <NetsuIcon name="add" className="absolute -top-1 left-1/2 size-3.5 -translate-x-1/2 rounded-full bg-primary text-primary-foreground" />
+          </div>
+        )}
         {/* Boundaries: drag to move (snapped), double-click to merge. */}
         {!readonly && clip.shots.slice(1).map((s, k) => {
           const i = k + 1;
@@ -298,9 +320,6 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
           <ContextMenuItem onClick={() => at(menuShot, (c, k) => resetTiming(c, k, c.shots[k].items.map((si) => si.id)))}>
             <NetsuIcon name="reset" /> {t("clip.resetTiming")}
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => { const r = framingFromView(); if (r) at(menuShot, (c, k) => patchShot(c, k, { from: r, to: r })); }}>
-            <NetsuIcon name="framing" /> {t("clip.frameBoth")}
-          </ContextMenuItem>
           <ContextMenuItem
             disabled={!clip.shots[menuShot]?.items.length}
             onClick={() => at(menuShot, (c, k) => frameOnItems(c, k, c.shots[k].items.flatMap((si) => {
@@ -310,20 +329,6 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
           >
             <NetsuIcon name="framing" /> {t("clip.frameOnItems")}
           </ContextMenuItem>
-          <ContextMenuSub>
-            <ContextMenuSubTrigger><NetsuIcon name="camera-move" /> {t("clip.cameraMove")}</ContextMenuSubTrigger>
-            <ContextMenuSubContent>
-              {CAMERA_MOVES.map((m) => (
-                <ContextMenuCheckboxItem
-                  key={m}
-                  checked={!!clip.shots[menuShot] && cameraMoveOf(clip.shots[menuShot]) === m}
-                  onCheckedChange={() => at(menuShot, (c, k) => cameraMove(c, k, m))}
-                >
-                  {t(`clip.moves.${m}`)}
-                </ContextMenuCheckboxItem>
-              ))}
-            </ContextMenuSubContent>
-          </ContextMenuSub>
           <ContextMenuItem onClick={() => at(menuShot, duplicateShot)}>
             <NetsuIcon name="duplicate" /> {t("clip.duplicateShot")}
           </ContextMenuItem>
@@ -339,12 +344,6 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
           {menuShot > 0 && (
             <>
               <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => at(menuShot, (c, k) => patchShot(c, k, { transition: "cut" }))}>
-                <NetsuIcon name="cut" /> {t("clip.cutTransition")}
-              </ContextMenuItem>
-              <ContextMenuItem onClick={() => at(menuShot, (c, k) => patchShot(c, k, { transition: "glide" }))}>
-                <NetsuIcon name="glide" /> {t("clip.glide")}
-              </ContextMenuItem>
               <ContextMenuItem onClick={() => at(menuShot, mergeShot)}>
                 <NetsuIcon name="merge-shot" /> {t("clip.mergePrev")}
               </ContextMenuItem>

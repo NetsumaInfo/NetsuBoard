@@ -8,7 +8,7 @@ import type { BoardItem } from "../referenceShared";
 import { clipDuration, formatTime, rulerStep, type ClipData } from "./clipModel";
 import { useClipPlayer } from "./clipPlayer";
 
-export const LABEL_W = 76;
+export const LABEL_W = 108;
 
 export function TipButton({ label, onClick, active, disabled, children, className }: {
   label: string; onClick: () => void; active?: boolean; disabled?: boolean; children: ReactNode; className?: string;
@@ -43,7 +43,7 @@ export function itemName(it: BoardItem | undefined, t: (k: string) => string): s
 }
 
 // A lane: its name stays pinned on the left while the tracks scroll sideways.
-export function Row({ label, width, children }: { label: string; width: number; children: ReactNode }) {
+export function Row({ label, width, children }: { label: ReactNode; width: number; children: ReactNode }) {
   return (
     <div className="flex items-stretch border-b border-border/50 last:border-b-0">
       <div

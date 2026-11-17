@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addMark, addToShot, beatGrid, copyShotPiece, cutAtMarks, pasteShotPiece, patchMark, removeMark, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, setLongPin, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
-  setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
+  setShotItemTiming, setVideo, shotFromItems, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
 import { analyse, computePeaks } from "@/components/reference/clip/audioAnalysis";
 import { wrapText } from "@/components/reference/clip/wrapText";
@@ -399,5 +399,39 @@ describe("clip over collaboration", () => {
     c = addMark(c, 12, "Chorus");
     const back = normalizeClip(JSON.parse(JSON.stringify(c)));
     expect(back).toEqual(c);
+  });
+});
+
+describe("shotFromItems", () => {
+  const box = { x: 100, y: 100, w: 200, h: 100 };
+  const base = () => makeClip({ x: 0, y: 0, w: 1600, h: 900 }, ["a", "b"]);
+
+  it("starts a new shot at the drop, for its length, and the shot it lands in carries on", () => {
+    const { clip, index } = shotFromItems(base(), 10, ["x"], [box], 2);
+    expect(clip.shots.map((s) => s.start)).toEqual([0, 10, 12]);
+    expect(index).toBe(1);
+    expect(clip.shots[1].items).toEqual([{ id: "x" }]);
+    expect(clip.shots[1].from.w).toBeLessThan(900);
+    expect(clip.shots[2].items.map((s) => s.id)).toEqual(["a", "b"]);
+  });
+
+  it("takes the place of a shot when dropped at its start", () => {
+    const { clip, index } = shotFromItems(base(), 0.1, ["x"], [box], 2);
+    expect(clip.shots.map((s) => s.start)).toEqual([0, 2]);
+    expect(index).toBe(0);
+    expect(clip.shots[0].items).toEqual([{ id: "x" }]);
+    expect(clip.shots[1].items.map((s) => s.id)).toEqual(["a", "b"]);
+  });
+
+  it("runs to the next cut when that comes first", () => {
+    const c = cutAt(base(), 11);
+    const { clip } = shotFromItems(c, 10, ["x"], [box], 4);
+    expect(clip.shots.map((s) => s.start)).toEqual([0, 10, 11]);
+    expect(clip.shots[1].items).toEqual([{ id: "x" }]);
+  });
+
+  it("does nothing without items", () => {
+    const c = base();
+    expect(shotFromItems(c, 10, [], [], 2).clip).toBe(c);
   });
 });

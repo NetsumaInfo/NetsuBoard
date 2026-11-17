@@ -434,6 +434,34 @@ export function frameOnItems(clip: ClipData, index: number, boxes: Box[]): ClipD
   return patchShot(clip, index, { from: f, to: { ...f } });
 }
 
+// Items dropped on the shots lane at t: a new shot starts there, shows only them, framed on them,
+// for `len` seconds (or up to the next cut when that comes first); the shot it lands in carries on
+// after it with what it showed. Dropped at the very start of a shot, the new one takes its place
+// and the old one carries on after it.
+export function shotFromItems(clip: ClipData, t: number, ids: string[], boxes: Box[], len: number): { clip: ClipData; index: number } {
+  const box = boundsOfBoxes(boxes);
+  if (!ids.length || !box) return { clip, index: shotIndexAt(clip, t) };
+  const dur = clipDuration(clip);
+  let i = shotIndexAt(clip, t);
+  let start = Math.max(0, Math.min(t, dur - MIN_SHOT));
+  // Too close to the shot's start for a shot of its own before it: the new one starts with it.
+  if (start - clip.shots[i].start < MIN_SHOT) start = clip.shots[i].start;
+  const end = shotEnd(clip, i);
+  let next = clip;
+  const stop = start + Math.max(MIN_SHOT, len);
+  // The rest of the shot after the new one, unless almost nothing of it would be left.
+  if (end - stop >= MIN_SHOT) next = cutAt(next, stop);
+  if (start > next.shots[i].start) {
+    const cut = cutAt(next, start);
+    if (cut !== next) {
+      next = cut;
+      i += 1;
+    }
+  }
+  const f = frameAround(box);
+  return { clip: patchShot(next, i, { items: ids.map((id) => ({ id })), from: f, to: { ...f }, transition: "cut" }), index: i };
+}
+
 // A copy of a shot right after it: the shot is cut in two at its middle and both halves show the
 // same thing.
 export function duplicateShot(clip: ClipData, index: number): ClipData {

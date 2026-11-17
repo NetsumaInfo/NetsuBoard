@@ -1,5 +1,6 @@
-// Popovers of the Animatic timeline: the transition into a shot, pinning a Long item to the screen,
-// and how a video plays inside the Animatic.
+// Popovers of the Animatic timeline: the shot under the playhead (framing, camera move, transition),
+// the music (track, tempo), appearance effects, automatic cuts, pinning a Long item to the screen and
+// how a video plays inside the Animatic. Toolbar triggers are icons; what they open is spelled out.
 
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,38 +12,84 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BoardItem } from "../referenceShared";
 import {
-  BPM_MAX, BPM_MIN, DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cutOnBeats, fitSpeed, fxOf, patchShot,
-  cutAtMarks, setFx, setTempo, setVideo, shotsPerItem, tapTempo,
-  type ClipData, type FxKind, type PinCorner, type VideoLoop,
+  BPM_MAX, BPM_MIN, DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cameraMove, cameraMoveOf, cutOnBeats, fitSpeed, fxOf,
+  patchShot, cutAtMarks, setFx, setTempo, setVideo, shotsPerItem, tapTempo,
+  type CameraMove, type ClipData, type FxKind, type PinCorner, type VideoLoop,
 } from "./clipModel";
 
 export type Commit = (next: ClipData, tag?: string | null) => void;
 
-export function ShotTransition({ clip, index, readonly, commit }: { clip: ClipData; index: number; readonly: boolean; commit: Commit }) {
+const CAMERA_MOVES: CameraMove[] = ["static", "zoomIn", "zoomOut", "panLeft", "panRight"];
+const SECTION = "text-[11px] font-medium text-muted-foreground";
+
+// Toolbar icon that opens a popover, with its name as tooltip.
+function IconTrigger({ label, icon, disabled }: { label: string; icon: string; disabled?: boolean }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<PopoverTrigger render={<Button variant="ghost" size="icon-sm" aria-label={label} disabled={disabled} />} />}>
+        <NetsuIcon name={icon} />
+      </TooltipTrigger>
+      <TooltipContent side="top">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+// The shot under the playhead: where the camera looks (what the screen shows now), how it moves,
+// and how it arrives from the shot before.
+export function ShotMenu({ clip, index, readonly, commit, frameHere }: {
+  clip: ClipData; index: number; readonly: boolean; commit: Commit; frameHere: (which: "from" | "to" | "both") => void;
+}) {
   const { t } = useTranslation("reference");
-  if (index < 1) return null;
   const s = clip.shots[index];
+  if (!s) return null;
   const glide = s.transition === "glide";
+  const move = cameraMoveOf(s);
   return (
     <Popover>
-      <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
-        <NetsuIcon name={glide ? "glide" : "cut"} /> {t(glide ? "clip.glide" : "clip.cutTransition")}
-      </PopoverTrigger>
-      <PopoverContent side="top" className="w-56 p-2">
-        <div className="flex gap-1">
-          <Button size="sm" variant={glide ? "ghost" : "default"} className="flex-1" onClick={() => commit(patchShot(clip, index, { transition: "cut" }))}>{t("clip.cutTransition")}</Button>
-          <Button size="sm" variant={glide ? "default" : "ghost"} className="flex-1" onClick={() => commit(patchShot(clip, index, { transition: "glide", glide: s.glide ?? DEFAULT_GLIDE }))}>{t("clip.glide")}</Button>
-        </div>
-        {glide && (
-          <label className="mt-2 flex items-center gap-2 text-[11px]">
-            <span className="text-muted-foreground">{t("clip.glideDuration")}</span>
-            <input
-              type="range" min={0.1} max={3} step={0.1} value={s.glide ?? DEFAULT_GLIDE}
-              onChange={(e) => commit(patchShot(clip, index, { glide: Number(e.target.value) }), "clip-glide")}
-              className="flex-1 accent-[#a78bfa]"
-            />
-            <span className="w-8 tabular-nums">{(s.glide ?? DEFAULT_GLIDE).toFixed(1)} s</span>
-          </label>
+      <IconTrigger label={t("clip.shotSettings")} icon="camera-move" disabled={readonly} />
+      <PopoverContent side="top" className="w-72 space-y-3 p-2.5 text-[11px]">
+        <div className="truncate text-xs font-semibold">{s.label || t("clip.shotN", { n: index + 1 })}</div>
+        <section className="space-y-1">
+          <div className={SECTION}>{t("clip.framing")}</div>
+          <div className="grid grid-cols-3 gap-1">
+            <Button size="sm" variant="outline" onClick={() => frameHere("both")}>{t("clip.frameBothShort")}</Button>
+            <Button size="sm" variant="outline" onClick={() => frameHere("from")}>{t("clip.frameStartShort")}</Button>
+            <Button size="sm" variant="outline" onClick={() => frameHere("to")}>{t("clip.frameEndShort")}</Button>
+          </div>
+        </section>
+        <section className="space-y-1">
+          <div className={SECTION}>{t("clip.cameraMove")}</div>
+          <div className="grid grid-cols-2 gap-1">
+            {CAMERA_MOVES.map((m) => (
+              <Button key={m} size="sm" variant={move === m ? "default" : "ghost"} className="justify-start text-xs" onClick={() => commit(cameraMove(clip, index, m))}>
+                {t(`clip.moves.${m}`)}
+              </Button>
+            ))}
+          </div>
+        </section>
+        {index > 0 && (
+          <section className="space-y-1">
+            <div className={SECTION}>{t("clip.transition")}</div>
+            <div className="flex gap-1">
+              <Button size="sm" variant={glide ? "ghost" : "default"} className="flex-1 gap-1.5" onClick={() => commit(patchShot(clip, index, { transition: "cut" }))}>
+                <NetsuIcon name="cut" /> {t("clip.cutTransition")}
+              </Button>
+              <Button size="sm" variant={glide ? "default" : "ghost"} className="flex-1 gap-1.5" onClick={() => commit(patchShot(clip, index, { transition: "glide", glide: s.glide ?? DEFAULT_GLIDE }))}>
+                <NetsuIcon name="glide" /> {t("clip.glide")}
+              </Button>
+            </div>
+            {glide && (
+              <label className="flex items-center gap-2">
+                <span className="text-muted-foreground">{t("clip.glideDuration")}</span>
+                <input
+                  type="range" min={0.1} max={3} step={0.1} value={s.glide ?? DEFAULT_GLIDE}
+                  onChange={(e) => commit(patchShot(clip, index, { glide: Number(e.target.value) }), "clip-glide")}
+                  className="flex-1 accent-[#a78bfa]"
+                />
+                <span className="w-8 tabular-nums">{(s.glide ?? DEFAULT_GLIDE).toFixed(1)} s</span>
+              </label>
+            )}
+          </section>
         )}
       </PopoverContent>
     </Popover>
@@ -95,15 +142,14 @@ export function FxMenu({ clip, ids, commit, compact }: { clip: ClipData; ids: st
   const changed = ids.some((id) => clip.fx?.[id]);
   const trigger = compact
     ? <button type="button" aria-label={t("clip.fx")} className={cn("rounded p-0.5 hover:bg-foreground/15", changed && "bg-foreground/20")} />
-    : <Button variant="ghost" size="sm" className="gap-1.5" disabled={!ids.length} />;
+    : <Button variant="ghost" size="icon-sm" aria-label={t("clip.fx")} disabled={!ids.length} />;
   return (
     <Popover>
       <Tooltip>
         <TooltipTrigger render={<PopoverTrigger render={trigger} />}>
           <NetsuIcon name="sparkles" className={compact ? "size-3" : undefined} />
-          {!compact && t("clip.fx")}
         </TooltipTrigger>
-        <TooltipContent side="top">{ids.length > 1 ? t("clip.fxMany", { count: ids.length }) : t("clip.fxHint")}</TooltipContent>
+        <TooltipContent side="top">{ids.length > 1 ? t("clip.fxMany", { count: ids.length }) : t("clip.fx")}</TooltipContent>
       </Tooltip>
       <PopoverContent side="top" className="w-64 space-y-3 p-2.5 text-[11px]">
         <div className="space-y-1">
@@ -160,9 +206,7 @@ export function BlockMenu({ clip, commit, picked, time, readonly }: {
   const seconds = (n: number) => (tempo ? beatsToSeconds(clip, n)! : n);
   return (
     <Popover>
-      <PopoverTrigger render={<Button variant="ghost" size="sm" className="gap-1.5" disabled={readonly} />}>
-        <NetsuIcon name="shots-from-items" /> {t("clip.block")}
-      </PopoverTrigger>
+      <IconTrigger label={t("clip.block")} icon="shots-from-items" disabled={readonly} />
       <PopoverContent side="top" className="w-72 space-y-3 p-2.5 text-[11px]">
         <section className="space-y-1.5">
           <div className="font-medium text-foreground">{t("clip.perItem")}</div>
@@ -256,8 +300,8 @@ export function VideoMenu({ clip, item, bar, commit }: { clip: ClipData; item: B
 
 // Tempo of the track by hand, for when detection misses: type it, tap it, halve or double it, put
 // the first beat under the playhead, or go back to what was detected.
-export function TempoMenu({ clip, commit, readonly, time, playing, onDetect }: {
-  clip: ClipData; commit: Commit; readonly: boolean; time: () => number; playing: boolean; onDetect: () => void;
+function TempoPanel({ clip, commit, time, playing, onDetect }: {
+  clip: ClipData; commit: Commit; time: () => number; playing: boolean; onDetect: () => void;
 }) {
   const { t } = useTranslation("reference");
   const taps = useRef<number[]>([]);
@@ -276,34 +320,50 @@ export function TempoMenu({ clip, commit, readonly, time, playing, onDetect }: {
     if (found) apply(found, playing ? time() : anchor, "clip-tempo");
   };
   return (
-    <Popover onOpenChange={(open) => { if (!open) { taps.current = []; setTapCount(0); } }}>
-      <Tooltip>
-        <TooltipTrigger render={<PopoverTrigger render={<Button variant="ghost" size="sm" className="shrink-0 gap-1.5 tabular-nums" disabled={readonly} />} />}>
-          <NetsuIcon name="tempo" />
-          {bpm ? t("clip.bpmValue", { bpm: Math.round(bpm) }) : t("clip.tempo")}
-        </TooltipTrigger>
-        <TooltipContent side="top">{t("clip.tempoHint")}</TooltipContent>
-      </Tooltip>
-      <PopoverContent side="top" className="w-64 space-y-2.5 p-2.5 text-[11px]">
+    <section className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <span className={SECTION}>{t("clip.tempo")}</span>
+        <NumberSpin
+          value={bpm ?? 120} min={BPM_MIN} max={BPM_MAX} step={0.1} ariaLabel={t("clip.tempo")}
+          className="h-7 w-20" onCommit={(v) => apply(v)}
+        />
+        <span className="text-muted-foreground">BPM</span>
+        <div className="flex-1" />
+        <Button size="sm" variant="ghost" className="px-2" disabled={!bpm} onClick={() => bpm && apply(bpm / 2)}>÷2</Button>
+        <Button size="sm" variant="ghost" className="px-2" disabled={!bpm} onClick={() => bpm && apply(bpm * 2)}>×2</Button>
+      </div>
+      <Button variant="outline" className="h-11 w-full flex-col gap-0" onClick={tap}>
+        <span className="text-sm font-medium">{t("clip.tap")}</span>
+        {tapCount > 0 && <span className="text-[10px] text-muted-foreground">{t("clip.tapCount", { count: tapCount })}</span>}
+      </Button>
+      <div className="flex gap-1">
+        <Button size="sm" variant="ghost" className="flex-1" disabled={!bpm} onClick={() => bpm && apply(bpm, time())}>{t("clip.beatHere")}</Button>
+        <Button size="sm" variant="ghost" className="flex-1" disabled={!clip.music} onClick={onDetect}>{t("clip.detectTempo")}</Button>
+      </div>
+    </section>
+  );
+}
+
+// The music lane's name opens this: the track, changing it, its tempo.
+export function MusicMenu({ clip, commit, readonly, time, playing, onDetect, onChoose }: {
+  clip: ClipData; commit: Commit; readonly: boolean; time: () => number; playing: boolean; onDetect: () => void; onChoose: () => void;
+}) {
+  const { t } = useTranslation("reference");
+  return (
+    <Popover>
+      <PopoverTrigger
+        render={<button type="button" disabled={readonly} className="flex min-w-0 items-center gap-0.5 rounded px-1 py-0.5 hover:bg-muted hover:text-foreground disabled:pointer-events-none" />}
+      >
+        <span className="truncate">{t("clip.music")}</span>
+        <NetsuIcon name="chevron-down" className="size-3 shrink-0" />
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" className="w-72 space-y-3 p-2.5 text-[11px]">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">{t("clip.tempo")}</span>
-          <NumberSpin
-            value={bpm ?? 120} min={BPM_MIN} max={BPM_MAX} step={0.1} ariaLabel={t("clip.tempo")}
-            className="h-7 w-20" onCommit={(v) => apply(v)}
-          />
-          <span className="text-muted-foreground">BPM</span>
-          <div className="flex-1" />
-          <Button size="sm" variant="ghost" className="px-2" disabled={!bpm} onClick={() => bpm && apply(bpm / 2)}>÷2</Button>
-          <Button size="sm" variant="ghost" className="px-2" disabled={!bpm} onClick={() => bpm && apply(bpm * 2)}>×2</Button>
+          <NetsuIcon name="music" className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-xs font-semibold">{clip.music?.name ?? t("clip.noMusicShort")}</span>
+          <Button size="sm" variant="outline" onClick={onChoose}>{clip.music ? t("clip.changeMusicShort") : t("clip.addMusic")}</Button>
         </div>
-        <Button variant="outline" className="h-12 w-full flex-col gap-0" onClick={tap}>
-          <span className="text-sm font-medium">{t("clip.tap")}</span>
-          {tapCount > 0 && <span className="text-[10px] text-muted-foreground">{t("clip.tapCount", { count: tapCount })}</span>}
-        </Button>
-        <div className="flex gap-1">
-          <Button size="sm" variant="ghost" className="flex-1" disabled={!bpm} onClick={() => bpm && apply(bpm, time())}>{t("clip.beatHere")}</Button>
-          <Button size="sm" variant="ghost" className="flex-1" disabled={!clip.music} onClick={onDetect}>{t("clip.detectTempo")}</Button>
-        </div>
+        {clip.music && <TempoPanel clip={clip} commit={commit} time={time} playing={playing} onDetect={onDetect} />}
       </PopoverContent>
     </Popover>
   );

@@ -3,9 +3,9 @@
 
 import { useBoard } from "../useReferenceBoard";
 import { topZ, uid, type BoardItem } from "../referenceShared";
-import { boundsOfBoxes, toLong } from "./clipModel";
+import { MIN_SHOT, beatsToSeconds, boundsOfBoxes, pruneClip, shotFromItems, toLong, type ClipData } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
-import { seek, viewCentre } from "./clipPlayer";
+import { frameCamera, seek, viewCentre } from "./clipPlayer";
 
 export const ANIMATIC_MIME = "application/x-netsu-animatic";
 
@@ -53,4 +53,41 @@ export function dropOnLong(ids: string[]) {
   const clipId = openClipId(s);
   const clip = readClip(openClipRaw(s));
   if (clipId && clip && added.length) s.patchClip(clipId, toLong(clip, added), { record: false });
+}
+
+// Length of a shot made by a drop: one bar of the music's tempo, else two seconds.
+export function dropShotLength(clip: ClipData): number {
+  const bar = beatsToSeconds(clip, 4);
+  return bar && bar >= MIN_SHOT ? bar : 2;
+}
+
+// Items of the open Animatic shown in a new shot starting at t (dropped on the shots lane); the
+// playhead goes there and the board frames it.
+export function itemsToShot(ids: string[], t: number) {
+  const s = useBoard.getState();
+  const clipId = openClipId(s);
+  const clip = readClip(openClipRaw(s));
+  const byId = new Map(s.items.map((it) => [it.id, it]));
+  const placed = ids.filter((id) => byId.has(id));
+  if (!clipId || !clip || !placed.length) return;
+  const boxes = placed.map((id) => { const it = byId.get(id)!; return { x: it.x, y: it.y, w: it.w, h: it.h }; });
+  const { clip: next, index } = shotFromItems(clip, t, placed, boxes, dropShotLength(clip));
+  if (next === clip) return;
+  s.patchClip(clipId, next);
+  seek(next.shots[index].start + 0.001);
+  frameCamera();
+}
+
+// Mood board items dropped on the shots lane: copied in, then shown in a new shot of their own
+// (not also in the shot under the playhead, which new items otherwise join).
+export function dropAsShot(ids: string[], t: number) {
+  const added = copyIntoAnimatic(ids);
+  if (!added.length) return;
+  const s = useBoard.getState();
+  const clipId = openClipId(s);
+  const clip = readClip(openClipRaw(s));
+  if (!clipId || !clip) return;
+  const fresh = new Set(added);
+  s.patchClip(clipId, pruneClip(clip, new Set(s.items.map((it) => it.id).filter((id) => !fresh.has(id)))), { record: false });
+  itemsToShot(added, t);
 }

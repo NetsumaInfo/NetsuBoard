@@ -13,6 +13,7 @@ import { rotatedBBox } from "./boardArrange";
 import { snapMove, snapValue, snapCandidates, type SnapGuide, type SnapRect } from "./boardSnap";
 import { clearLive, setLiveGeom, setLiveGuides } from "./boardLive";
 import { frameHugRect, frameHugStart, geomBox, linkedFrame, type FrameHug } from "./boardFrames";
+import { itemDropTarget } from "./boardDropTarget";
 
 export type ResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
 type Mode = { type: "move" } | { type: "rotate" } | { type: "resize"; handle: ResizeHandle };
@@ -57,6 +58,10 @@ interface Drag {
   // A move only starts once the pointer left the press point by MOVE_SLOP screen pixels: a click, or
   // the jitter of a double-click, never nudges the item, never commits, never costs an undo step.
   moved: boolean;
+  // Last pointer position (client pixels) and whether it is over a target that takes dropped items.
+  px: number;
+  py: number;
+  overTarget: boolean;
 }
 
 const MOVE_SLOP = 3;
@@ -267,6 +272,9 @@ export function usePointerTransform(
         pointerId: e.pointerId,
         cap,
         moved: mode.type !== "move",
+        px: e.clientX,
+        py: e.clientY,
+        overTarget: false,
       };
       setDragging(true);
       if (carry.length && carryRaf.current == null) carryRaf.current = requestAnimationFrame(carryTick);
@@ -282,6 +290,14 @@ export function usePointerTransform(
       if (!d.moved) {
         if (Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < MOVE_SLOP) return;
         d.moved = true;
+      }
+      if (d.mode.type === "move") {
+        d.px = e.clientX;
+        d.py = e.clientY;
+        const target = itemDropTarget();
+        const over = !!target?.over(e.clientX, e.clientY);
+        if (over || d.overTarget) target?.hover(over ? e.clientX : null);
+        d.overTarget = over;
       }
       // Delta écran → delta board (compense le zoom).
       const dxs = (e.clientX - d.startX) / d.scale;
@@ -389,7 +405,17 @@ export function usePointerTransform(
       const d = drag.current;
       if (!d) return;
       try { d.cap.releasePointerCapture?.(d.pointerId); } catch { /* noop */ }
-      const keep = commit && d.moved;
+      // Released over a target outside the board (the Animatic's shots lane): the items go back to
+      // their place and the target takes them.
+      const target = d.overTarget ? itemDropTarget() : null;
+      target?.hover(null);
+      const handOver = !!target && commit && d.moved && target.over(d.px, d.py);
+      const keep = commit && d.moved && !handOver;
+      if (handOver && opts?.id) {
+        const ids = [opts.id, ...d.carry.map((c) => c.id)];
+        const { px } = d;
+        queueMicrotask(() => target!.drop(px, ids));
+      }
       const hugged = keep && d.hug?.geom ? { id: d.hug.id, geom: { ...d.hug.geom } } : undefined;
       stopCarry();
       drag.current = null;
