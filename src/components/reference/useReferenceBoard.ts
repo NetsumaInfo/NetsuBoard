@@ -27,7 +27,7 @@ import {
   bottomZ,
 } from "./referenceShared";
 import { copyFolderContent, foldFrame, parkInto, sceneItems, splitLevel, switchLevel, unfoldFrame, FOLDER_W, FOLDER_H } from "./boardFolders";
-import { boundsOfBoxes, frameAround, makeClip, remapClip, type ClipData } from "./clip/clipModel";
+import { NEW_CLIP_LENGTH, boundsOfBoxes, frameAround, makeClip, remapClip, type ClipData } from "./clip/clipModel";
 import { noteMode } from "./blockModel";
 import { frameContentIds } from "./boardFrames";
 import {
@@ -1143,7 +1143,8 @@ export const useBoard = create<BoardState>((set, get) => ({
       w: FOLDER_W * 1.4, h: FOLDER_H, rotation: 0, z: top,
       text: i18n.t("reference:clip.defaultName"), fontSize: 14, color: "#a78bfa", fillMode: "tint",
       folder: true, openW: frame.w, openH: frame.h,
-      clip: makeClip(frame, copies.map((c) => c.id)),
+      // One shot of a few seconds: shots are added after it (+), a music sets the length instead.
+      clip: { ...makeClip(frame, copies.map((c) => c.id)), length: NEW_CLIP_LENGTH },
     };
     set((st) => {
       recordHistory(st.items, null);

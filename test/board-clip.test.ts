@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addMark, addToShot, beatGrid, copyShotPiece, cutAtMarks, pasteShotPiece, patchMark, removeMark, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, setLongPin, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
-  setShotItemTiming, setVideo, shotFromItems, snapTime, toLong, viewForRect, type ClipData,
+  setShotItemTiming, setVideo, shotFromItems, insertShot, setLength, setShotLength, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
 import { analyse, computePeaks } from "@/components/reference/clip/audioAnalysis";
 import { wrapText } from "@/components/reference/clip/wrapText";
@@ -433,5 +433,52 @@ describe("shotFromItems", () => {
   it("does nothing without items", () => {
     const c = base();
     expect(shotFromItems(c, 10, [], [], 2).clip).toBe(c);
+  });
+});
+
+describe("shot lengths without music", () => {
+  const base = () => makeClip({ x: 0, y: 0, w: 1600, h: 900 }, ["a"]);
+
+  it("adds a shot after the one given, continuing it, and the track grows", () => {
+    const { clip, index } = insertShot(base(), 0, 3);
+    expect(index).toBe(1);
+    expect(clip.shots.map((s) => s.start)).toEqual([0, 30]);
+    expect(clipDuration(clip)).toBe(33);
+    expect(clip.shots[1].items).toEqual([{ id: "a" }]);
+    expect(clip.shots[1].from).toEqual(clip.shots[0].to);
+  });
+
+  it("pushes the shots after an inserted one", () => {
+    const c = cutAt(base(), 10);
+    const { clip } = insertShot(c, 0, 2);
+    expect(clip.shots.map((s) => s.start)).toEqual([0, 10, 12]);
+    expect(clipDuration(clip)).toBe(32);
+  });
+
+  it("sets a shot's length: the shots after it follow, the track follows them", () => {
+    const c = cutAt(base(), 10);
+    const longer = setShotLength(c, 0, 15);
+    expect(longer.shots.map((s) => s.start)).toEqual([0, 15]);
+    expect(clipDuration(longer)).toBe(35);
+    const shorter = setShotLength(c, 1, 5);
+    expect(clipDuration(shorter)).toBe(15);
+  });
+
+  it("sets the track length, never before the last shot starts", () => {
+    const c = cutAt(base(), 10);
+    expect(clipDuration(setLength(c, 12))).toBe(12);
+    expect(clipDuration(setLength(c, 2))).toBeCloseTo(10 + 0.25);
+  });
+
+  it("keeps the music's length when there is music", () => {
+    const c = { ...base(), music: { ref: "m", name: "m", dur: 40 } };
+    expect(setLength(c, 10)).toBe(c);
+    const { clip } = insertShot(c, 0, 4);
+    expect(clip.shots.map((s) => s.start)).toEqual([0, 36]);
+    expect(clipDuration(clip)).toBe(40);
+  });
+
+  it("keeps the length through normalizeClip", () => {
+    expect(clipDuration(normalizeClip(setLength(base(), 12))!)).toBe(12);
   });
 });

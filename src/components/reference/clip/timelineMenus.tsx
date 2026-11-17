@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { BoardItem } from "../referenceShared";
 import {
   BPM_MAX, BPM_MIN, DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cameraMove, cameraMoveOf, cutOnBeats, fitSpeed, fxOf,
-  patchShot, cutAtMarks, setFx, setTempo, setVideo, shotsPerItem, tapTempo,
+  patchShot, cutAtMarks, setFx, setShotLength, setTempo, setVideo, shotEnd, shotsPerItem, tapTempo,
   type CameraMove, type ClipData, type FxKind, type PinCorner, type VideoLoop,
 } from "./clipModel";
 
@@ -48,7 +48,16 @@ export function ShotMenu({ clip, index, readonly, commit, frameHere }: {
     <Popover>
       <IconTrigger label={t("clip.shotSettings")} icon="camera-move" disabled={readonly} />
       <PopoverContent side="top" className="w-72 space-y-3 p-2.5 text-[11px]">
-        <div className="truncate text-xs font-semibold">{s.label || t("clip.shotN", { n: index + 1 })}</div>
+        <div className="flex items-center gap-2">
+          <span className="min-w-0 flex-1 truncate text-xs font-semibold">{s.label || t("clip.shotN", { n: index + 1 })}</span>
+          <span className="text-muted-foreground">{t("clip.shotLength")}</span>
+          <NumberSpin
+            value={Math.round((shotEnd(clip, index) - s.start) * 10) / 10} min={0.3} max={600} step={0.1}
+            ariaLabel={t("clip.shotLength")} className="h-7 w-20"
+            onCommit={(v) => commit(setShotLength(clip, index, v))}
+          />
+          <span className="text-muted-foreground">s</span>
+        </div>
         <section className="space-y-1">
           <div className={SECTION}>{t("clip.framing")}</div>
           <div className="grid grid-cols-3 gap-1">

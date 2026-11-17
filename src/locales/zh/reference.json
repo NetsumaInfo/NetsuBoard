@@ -1386,6 +1386,8 @@
     "frameStartShort": "起点在此",
     "frameEndShort": "终点在此",
     "noMusicShort": "无音乐",
-    "changeMusicShort": "更换"
+    "changeMusicShort": "更换",
+    "addShot": "添加镜头",
+    "shotLength": "时长"
   }
 }

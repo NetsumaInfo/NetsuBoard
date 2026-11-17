@@ -1386,6 +1386,8 @@
     "frameStartShort": "開始をここ",
     "frameEndShort": "終了をここ",
     "noMusicShort": "音楽なし",
-    "changeMusicShort": "変更"
+    "changeMusicShort": "変更",
+    "addShot": "ショットを追加",
+    "shotLength": "長さ"
   }
 }

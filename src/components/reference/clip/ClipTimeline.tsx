@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useBoard } from "../useReferenceBoard";
 import {
-  addMark, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, nudgeCut, patchShot, pruneClip, shotIndexAt,
+  addMark, clipDuration, cutAt, formatTime, insertShot, markIn, markOut, neighbourShotStart, nudgeCut, patchShot, pruneClip, shotIndexAt,
   snapPoints, snapTime, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
@@ -28,6 +28,7 @@ import { LABEL_W, Playhead, dragIsFree, Row, Ruler, TimeLabel, TipButton, Wavefo
 import { BlockMenu, FxMenu, MusicMenu, ShotMenu } from "./timelineMenus";
 import { ClipStoryboard } from "./ClipStoryboard";
 import { ClipExportDialog } from "./ClipExportDialog";
+import { dropShotLength } from "./clipDnd";
 import { ExpandedRow, LongRow, ShotsRow, boardOrder } from "./timelineRows";
 import { MarkLines, RulerMarks } from "./ClipMarks";
 
@@ -261,6 +262,15 @@ export function ClipTimeline() {
     const i = shotIndexAt(c, useClipPlayer.getState().time);
     commit(patchShot(c, i, which === "both" ? { from: r, to: r } : { [which]: r }));
   };
+  // A new shot after the one under the playhead, continuing it; the playhead goes to it.
+  const addShot = () => {
+    const c = latest();
+    if (!c) return;
+    const r = insertShot(c, shotIndexAt(c, useClipPlayer.getState().time), dropShotLength(c));
+    if (r.clip === c) return;
+    commit(r.clip);
+    seek(r.clip.shots[r.index].start + 0.001);
+  };
   const sel = selectedIds.filter((id) => byId.has(id));
   const expandedIndex = expanded ? clip.shots.findIndex((s) => s.id === expanded) : -1;
   const rowProps = { clip, width, dur, readonly, commit, latest, drag, snapT, byId, selectedIds };
@@ -469,7 +479,21 @@ export function ClipTimeline() {
               </div>
             </Row>
             <Row label={t("clip.long")} width={width}><LongRow {...rowProps} /></Row>
-            <Row label={t("clip.shots")} width={width}><ShotsRow {...rowProps} shotAtHead={shotAtHead} items={items} /></Row>
+            <Row
+              width={width}
+              label={(
+                <span className="flex w-full items-center justify-between gap-1">
+                  <span className="truncate px-1">{t("clip.shots")}</span>
+                  {!readonly && (
+                    <TipButton label={t("clip.addShot")} className="size-6" onClick={addShot}>
+                      <NetsuIcon name="add" />
+                    </TipButton>
+                  )}
+                </span>
+              )}
+            >
+              <ShotsRow {...rowProps} shotAtHead={shotAtHead} items={items} />
+            </Row>
             {expandedIndex >= 0 && (
               <Row label={clip.shots[expandedIndex].label || t("clip.shotN", { n: expandedIndex + 1 })} width={width}>
                 <ExpandedRow {...rowProps} index={expandedIndex} />

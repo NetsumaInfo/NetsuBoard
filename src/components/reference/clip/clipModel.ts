@@ -3,8 +3,11 @@
 // the timeline document, what is on screen at a given time, where the camera is, snapping.
 
 export const CLIP_ASPECT = 16 / 9;
-// A clip without music still has a timeline to cut into shots.
+// A clip without music still has a timeline to cut into shots; its length is then set by hand.
 export const DEFAULT_DURATION = 30;
+export const MAX_LENGTH = 3600;
+// Length of a new Animatic without music: one shot, a few seconds long.
+export const NEW_CLIP_LENGTH = 4;
 export const MIN_SHOT = 0.25;
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 4;
@@ -76,12 +79,15 @@ export interface ClipData {
   videos: Record<string, ClipVideo>;
   fx?: Record<string, ClipFx>;
   marks?: ClipMark[];
+  // Length of the track when there is no music (seconds); unset = DEFAULT_DURATION.
+  length?: number;
 }
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
 export function clipDuration(clip: ClipData): number {
-  return clip.music?.dur && clip.music.dur > 0 ? clip.music.dur : DEFAULT_DURATION;
+  if (clip.music?.dur && clip.music.dur > 0) return clip.music.dur;
+  return clip.length && clip.length > 0 ? clip.length : DEFAULT_DURATION;
 }
 
 // ── Rectangles ──────────────────────────────────────────────────────────────
@@ -147,6 +153,7 @@ export function normalizeClip(raw: unknown): ClipData | null {
     long: Array.isArray(c.long) ? c.long.filter((l) => l && typeof l.id === "string") : [],
     videos: c.videos && typeof c.videos === "object" ? c.videos : {},
     ...(c.fx && typeof c.fx === "object" ? { fx: c.fx } : {}),
+    ...(typeof c.length === "number" && c.length > 0 ? { length: c.length } : {}),
     ...(Array.isArray(c.marks)
       ? { marks: c.marks.filter((m) => m && typeof m.id === "string" && typeof m.t === "number").sort((a, b) => a.t - b.t) }
       : {}),
@@ -321,6 +328,61 @@ export function moveBoundary(clip: ClipData, index: number, t: number): ClipData
   if (hi < lo) return clip;
   const start = Math.min(hi, Math.max(lo, t));
   return { ...clip, shots: clip.shots.map((s, k) => (k === index ? { ...s, start } : s)) };
+}
+
+// ── Lengths ─────────────────────────────────────────────────────────────────
+
+// Shots and Long bars from `at` on move by `delta` seconds (the track grows or shrinks behind them).
+function rippleFrom(clip: ClipData, at: number, delta: number): ClipData {
+  const shift = (t: number) => (t >= at - 1e-6 ? t + delta : t);
+  return {
+    ...clip,
+    shots: clip.shots.map((s) => (s.start >= at - 1e-6 && s.start > 0 ? { ...s, start: s.start + delta } : s)),
+    long: clip.long.map((l) => ({ ...l, start: shift(l.start), end: l.end >= at - 1e-6 ? l.end + delta : l.end })),
+    ...(clip.marks ? { marks: clip.marks.map((m) => ({ ...m, t: shift(m.t) })) } : {}),
+  };
+}
+
+// Length of the track without music, kept past the last shot's start; what lies past the end is
+// brought back inside (`fitToDuration`). With music the track is the music's: nothing changes.
+export function setLength(clip: ClipData, len: number): ClipData {
+  if (clip.music?.dur) return clip;
+  const last = clip.shots[clip.shots.length - 1].start;
+  const length = Math.round(Math.min(MAX_LENGTH, Math.max(last + MIN_SHOT, MIN_SHOT, len)) * 1000) / 1000;
+  return fitToDuration({ ...clip, length });
+}
+
+// A shot of `len` seconds right after shot `index`, continuing it (same items, framed where it
+// ends). Without music the shots after it move along and the track grows; with music the track
+// cannot grow, so the shot takes the end of the one before it.
+export function insertShot(clip: ClipData, index: number, len: number): { clip: ClipData; index: number } {
+  const shot = clip.shots[index];
+  if (!shot) return { clip, index };
+  const end = shotEnd(clip, index);
+  if (clip.music?.dur) {
+    const t = Math.max(shot.start + MIN_SHOT, end - Math.max(MIN_SHOT, len));
+    const next = cutAt(clip, t);
+    return next === clip ? { clip, index } : { clip: next, index: index + 1 };
+  }
+  const L = Math.max(MIN_SHOT, len);
+  const moved = rippleFrom(clip, end, L);
+  const added: Shot = { id: uid(), start: end, from: { ...shot.to }, to: { ...shot.to }, items: shot.items.map((si) => ({ id: si.id })), transition: "cut" };
+  const shots = [...moved.shots.slice(0, index + 1), added, ...moved.shots.slice(index + 1)];
+  return { clip: { ...moved, shots, length: clipDuration(clip) + L }, index: index + 1 };
+}
+
+// Shot `index` lasts `len` seconds. Without music the shots after it follow and the track follows
+// them; with music its end cut moves (between its neighbours), and the last shot keeps the music's end.
+export function setShotLength(clip: ClipData, index: number, len: number): ClipData {
+  const shot = clip.shots[index];
+  if (!shot) return clip;
+  const L = Math.max(MIN_SHOT, len);
+  if (clip.music?.dur) return index + 1 < clip.shots.length ? moveBoundary(clip, index + 1, shot.start + L) : clip;
+  const end = shotEnd(clip, index);
+  const delta = Math.min(MAX_LENGTH - clipDuration(clip), shot.start + L - end);
+  if (Math.abs(delta) < 1e-6) return clip;
+  const moved = rippleFrom(clip, end, delta);
+  return fitToDuration({ ...moved, length: clipDuration(clip) + delta });
 }
 
 // Removes the boundary at the start of shot `index`: the shot merges into the previous one, whose

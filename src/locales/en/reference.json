@@ -1386,6 +1386,8 @@
     "frameStartShort": "Start here",
     "frameEndShort": "End here",
     "noMusicShort": "No music",
-    "changeMusicShort": "Change"
+    "changeMusicShort": "Change",
+    "addShot": "Add a shot",
+    "shotLength": "Length"
   }
 }

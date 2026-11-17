@@ -1386,6 +1386,8 @@
     "frameStartShort": "Inicio aquí",
     "frameEndShort": "Fin aquí",
     "noMusicShort": "Sin música",
-    "changeMusicShort": "Cambiar"
+    "changeMusicShort": "Cambiar",
+    "addShot": "Añadir un plano",
+    "shotLength": "Duración"
   }
 }
