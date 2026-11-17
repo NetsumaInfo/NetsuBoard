@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  addToShot, beatsToSeconds, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
+  addToShot, beatsToSeconds, remapClip, setVideo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
 import { analyse, computePeaks } from "@/components/reference/clip/audioAnalysis";
+import { copyFolderContent } from "@/components/reference/boardFolders";
 
 const F = { x: 0, y: 0, w: 1600, h: 900 };
 const G = { x: 1600, y: 0, w: 800, h: 450 };
@@ -216,6 +217,31 @@ describe("clip model", () => {
     const moved = moveShot(c, 1, 0);
     expect(moved.shots.map((s) => s.label)).toEqual(["B", undefined]);
     expect(moved.shots.map((s) => s.start)).toEqual([0, 10]);
+  });
+
+  it("points a duplicated timeline at the copied items", () => {
+    const c = setFx(setVideo(toLong(clip(), ["b"]), "a", { speed: 2 }), ["a"], { kind: "zoom" });
+    const ids = new Map([["a", "a2"], ["b", "b2"]]);
+    const d = remapClip(c, ids);
+    expect(d.shots[0].items.map((s) => s.id)).toEqual(["a2"]);
+    expect(d.shots[0].id).not.toBe(c.shots[0].id);
+    expect(d.long[0].id).toBe("b2");
+    expect(d.videos.a2?.speed).toBe(2);
+    expect(d.fx?.a2?.kind).toBe("zoom");
+  });
+
+  it("copies everything a folder holds, nested folders included", () => {
+    let n = 0;
+    const base = { ref: "", src: "", x: 0, y: 0, w: 10, h: 10, rotation: 0, z: 0 };
+    const stash = [
+      { ...base, id: "x", kind: "text" as const, parent: "f" },
+      { ...base, id: "g", kind: "frame" as const, folder: true, parent: "f" },
+      { ...base, id: "y", kind: "image" as const, parent: "g" },
+      { ...base, id: "z", kind: "image" as const },
+    ];
+    const { items, ids } = copyFolderContent("f", "f2", stash, () => `n${++n}`);
+    expect(items.map((it) => it.parent)).toEqual(["f2", "f2", ids.get("g")]);
+    expect(ids.size).toBe(3);
   });
 
   it("normalises a damaged clip", () => {

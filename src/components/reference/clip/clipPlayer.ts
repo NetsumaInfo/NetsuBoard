@@ -53,6 +53,17 @@ export interface ClipPlayerState {
   loop: boolean;
   // The tracks area shows the shots as cards instead of lanes.
   storyboard: boolean;
+  // Music level on this device (kept in localStorage), and muted while working.
+  musicVolume: number;
+  musicMuted: boolean;
+}
+
+const VOLUME_KEY = "netsuboard.animatic.volume";
+function readVolume(): number {
+  try {
+    const v = Number(localStorage.getItem(VOLUME_KEY));
+    return Number.isFinite(v) && localStorage.getItem(VOLUME_KEY) != null ? Math.min(1, Math.max(0, v)) : 1;
+  } catch { return 1; }
 }
 
 export const useClipPlayer = create<ClipPlayerState>(() => ({
@@ -71,6 +82,8 @@ export const useClipPlayer = create<ClipPlayerState>(() => ({
   folded: false,
   loop: false,
   storyboard: false,
+  musicVolume: readVolume(),
+  musicMuted: false,
 }));
 
 const set = useClipPlayer.setState;
@@ -128,7 +141,7 @@ function applyTime(t: number) {
   }
   if (audio) {
     const talking = [...present].some((id) => clip.videos[id]?.sound);
-    audio.volume = talking ? 0.25 : 1;
+    audio.volume = get().musicMuted ? 0 : get().musicVolume * (talking ? 0.25 : 1);
   }
 }
 
@@ -219,6 +232,19 @@ export function clipLook(s: ClipPlayerState, id: string): ClipLook {
   if (drives && s.pinned.has(id)) return "hidden";
   if (s.present.has(id)) return "on";
   return s.presenting ? "hidden" : "ghost";
+}
+
+// Music level of the Animatic on this device.
+export function setMusicVolume(v: number) {
+  const musicVolume = Math.min(1, Math.max(0, v));
+  set({ musicVolume, musicMuted: false });
+  try { localStorage.setItem(VOLUME_KEY, String(musicVolume)); } catch { /* private window: the level lasts the session */ }
+  applyTime(get().time);
+}
+
+export function toggleMusicMute() {
+  set({ musicMuted: !get().musicMuted });
+  applyTime(get().time);
 }
 
 export function setFollow(on: boolean) {

@@ -132,6 +132,25 @@ export function switchLevel(items: BoardItem[], stash: BoardItem[], from: string
   return splitLevel(sceneItems(items, stash, from), to);
 }
 
+// Copies everything a folder holds (sub-folders included) under a new folder id, for a duplicated
+// folder card. `ids` maps each old id to its copy's id.
+export function copyFolderContent(fromId: string, toId: string, stash: BoardItem[], newId: () => string): { items: BoardItem[]; ids: Map<string, string> } {
+  const ids = new Map<string, string>();
+  const out: BoardItem[] = [];
+  const walk = (from: string, to: string, depth: number) => {
+    if (depth > MAX_DEPTH) return;
+    for (const it of stash) {
+      if (it.parent !== from) continue;
+      const id = newId();
+      ids.set(it.id, id);
+      out.push({ ...it, id, parent: to });
+      if (it.folder) walk(it.id, id, depth + 1);
+    }
+  };
+  walk(fromId, toId, 0);
+  return { items: out, ids };
+}
+
 // Children of a folder, in paint order.
 export function folderChildren(folderId: string, stash: BoardItem[]): BoardItem[] {
   return stash.filter((it) => it.parent === folderId && it.kind !== "draw").sort((a, b) => a.z - b.z);

@@ -18,7 +18,10 @@ import {
   snapTime, toLong, unassigned, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
-import { framingFromView, seek, setClipMusic, setFollow, setLoop, startPresent, togglePlay, useClipPlayer } from "./clipPlayer";
+import {
+  framingFromView, seek, setClipMusic, setFollow, setLoop, setMusicVolume, startPresent, toggleMusicMute, togglePlay, useClipPlayer,
+} from "./clipPlayer";
+import { VolumeControl } from "../VolumeControl";
 import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeDrag } from "./timelineParts";
 import { BlockMenu, FxMenu, ShotTransition } from "./timelineMenus";
 import { ClipStoryboard } from "./ClipStoryboard";
@@ -48,6 +51,8 @@ export function ClipTimeline() {
   const folded = useClipPlayer((s) => s.folded);
   const loop = useClipPlayer((s) => s.loop);
   const storyboard = useClipPlayer((s) => s.storyboard);
+  const musicVolume = useClipPlayer((s) => s.musicVolume);
+  const musicMuted = useClipPlayer((s) => s.musicMuted);
   const shotAtHead = useClipPlayer((s) => {
     const c = readClip(raw);
     return c ? shotIndexAt(c, s.time) : 0;
@@ -217,6 +222,7 @@ export function ClipTimeline() {
           <TooltipContent side="top">{clip.music ? t("clip.changeMusic") : t("clip.addMusicHint")}</TooltipContent>
         </Tooltip>
         {analysing && <Spinner className="size-3.5" />}
+        {clip.music && <VolumeControl volume={musicVolume} muted={musicMuted} onVolume={setMusicVolume} onToggleMute={toggleMusicMute} />}
         {musicError && clip.music && (
           <span role="alert" className="flex shrink-0 items-center gap-1 text-destructive">
             <NetsuIcon name="warning" className="size-3.5" /> {t("clip.musicError")}

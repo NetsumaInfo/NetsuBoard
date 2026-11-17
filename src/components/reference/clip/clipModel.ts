@@ -603,6 +603,20 @@ export function itemBar(clip: ClipData, id: string): [number, number] | null {
   return a < b ? [a, b] : null;
 }
 
+// The same timeline for copied items (a duplicated Animatic): every item id goes through `ids`.
+export function remapClip(clip: ClipData, ids: Map<string, string>): ClipData {
+  const m = (id: string) => ids.get(id) ?? id;
+  const keys = <T,>(rec: Record<string, T> | undefined) =>
+    rec ? Object.fromEntries(Object.entries(rec).map(([k, v]) => [m(k), v])) : undefined;
+  return {
+    ...clip,
+    shots: clip.shots.map((s) => ({ ...s, id: uid(), items: s.items.map((si) => ({ ...si, id: m(si.id) })) })),
+    long: clip.long.map((l) => ({ ...l, id: m(l.id) })),
+    videos: keys(clip.videos) ?? {},
+    ...(clip.fx ? { fx: keys(clip.fx) } : {}),
+  };
+}
+
 // Drops references to items that no longer exist in the clip's level.
 export function pruneClip(clip: ClipData, alive: Set<string>): ClipData {
   let changed = false;

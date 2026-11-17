@@ -26,8 +26,8 @@ import {
   topZ,
   bottomZ,
 } from "./referenceShared";
-import { foldFrame, parkInto, sceneItems, splitLevel, switchLevel, unfoldFrame, FOLDER_W, FOLDER_H } from "./boardFolders";
-import { boundsOfBoxes, frameAround, makeClip, type ClipData } from "./clip/clipModel";
+import { copyFolderContent, foldFrame, parkInto, sceneItems, splitLevel, switchLevel, unfoldFrame, FOLDER_W, FOLDER_H } from "./boardFolders";
+import { boundsOfBoxes, frameAround, makeClip, remapClip, type ClipData } from "./clip/clipModel";
 import { noteMode } from "./blockModel";
 import { frameContentIds } from "./boardFrames";
 import {
@@ -334,6 +334,20 @@ function reconcile(items: BoardItem[], s: BoardState) {
   return { selectedIds, selectedId, editingId, croppingId, drawSel };
 }
 
+// Duplicated folder cards take a copy of what they hold, and an Animatic's timeline is pointed at
+// those copies: the duplicate is a version that lives on its own. `copies[i]` is the copy of `srcs[i]`.
+function withFolderContent(copies: BoardItem[], srcs: BoardItem[], stash: BoardItem[]) {
+  let nextStash = stash;
+  const cards = copies.map((copy, i) => {
+    const src = srcs[i];
+    if (!src.folder) return copy;
+    const { items, ids } = copyFolderContent(src.id, copy.id, stash, uid);
+    if (items.length) nextStash = [...nextStash, ...items];
+    return copy.clip ? { ...copy, clip: remapClip(copy.clip, ids), text: copy.text ? `${copy.text} 2` : copy.text } : copy;
+  });
+  return { cards, stash: nextStash };
+}
+
 function isReadOnlyCollaborator(state: Pick<BoardState, "collabProjectId" | "collabRole">): boolean {
   return state.collabProjectId !== null && state.collabRole === "viewer";
 }
@@ -455,7 +469,8 @@ export const useBoard = create<BoardState>((set, get) => ({
       recordHistory(s.items, null);
       const top = topZ(s.items) + 1;
       const copy: BoardItem = { ...src, id: uid(), x: src.x + 24, y: src.y + 24, z: top };
-      return { items: [...s.items, copy], selectedId: copy.id, selectedIds: [copy.id], dirty: true };
+      const deep = withFolderContent([copy], [src], s.stash);
+      return { items: [...s.items, ...deep.cards], stash: deep.stash, selectedId: copy.id, selectedIds: [copy.id], dirty: true };
     }),
 
   duplicateItems: (ids) =>
@@ -473,9 +488,10 @@ export const useBoard = create<BoardState>((set, get) => ({
         return { ...src, id, x: src.x + 24, y: src.y + 24, z: ++z };
       });
       const shapes = s.items.find((it) => it.kind === "draw")?.shapes ?? [];
-      const items = withLinkCopies([...s.items, ...copies], linksWithin(shapes, wanted), idMap);
+      const deep = withFolderContent(copies, picked, s.stash);
+      const items = withLinkCopies([...s.items, ...deep.cards], linksWithin(shapes, wanted), idMap);
       const sel = copies.map((c) => c.id);
-      return { items, selectedIds: sel, selectedId: sel[sel.length - 1] ?? null, drawSel: EMPTY_DRAW_SEL, dirty: true };
+      return { items, stash: deep.stash, selectedIds: sel, selectedId: sel[sel.length - 1] ?? null, drawSel: EMPTY_DRAW_SEL, dirty: true };
     }),
 
   // Frame courante d'une séquence (lecteur). NE marque PAS `dirty` : l'avance auto à 12 fps
