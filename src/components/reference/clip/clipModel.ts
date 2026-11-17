@@ -548,6 +548,30 @@ export function moveShot(clip: ClipData, from: number, to: number): ClipData {
   return { ...clip, shots: order.map((s, i) => ({ ...s, start: starts[i] })) };
 }
 
+// A shot dragged to another place in the order, taking its length with it: the shots in between
+// close the gap or make room, the track keeps its length. The first shot has no transition.
+export function reorderShot(clip: ClipData, from: number, to: number): ClipData {
+  const n = clip.shots.length;
+  if (from === to || from < 0 || to < 0 || from >= n || to >= n) return clip;
+  const lengths = clip.shots.map((_, i) => shotEnd(clip, i) - clip.shots[i].start);
+  const order = clip.shots.map((s, i) => ({ s, len: lengths[i] }));
+  const [moved] = order.splice(from, 1);
+  order.splice(to, 0, moved);
+  let t = 0;
+  const shots = order.map(({ s, len }, i) => {
+    const start = t;
+    t += len;
+    return { ...s, start, ...(i === 0 ? { transition: "cut" as const } : {}) };
+  });
+  return { ...clip, shots };
+}
+
+// Items taken out of shot `from` and shown in shot `to` instead, for the whole of it.
+export function moveItemsToShot(clip: ClipData, from: number, to: number, ids: string[]): ClipData {
+  if (from === to || !clip.shots[from] || !clip.shots[to] || !ids.length) return clip;
+  return addToShot(removeFromShot(clip, from, ids), to, ids);
+}
+
 // Start of the shot before or after the one under t (for the arrow keys).
 export function neighbourShotStart(clip: ClipData, t: number, dir: -1 | 1): number {
   const i = shotIndexAt(clip, t);

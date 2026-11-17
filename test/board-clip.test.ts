@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addMark, addToShot, beatGrid, copyShotPiece, cutAtMarks, pasteShotPiece, patchMark, removeMark, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, setLongPin, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
-  setShotItemTiming, setVideo, shotFromItems, insertShot, setLength, setShotLength, snapTime, toLong, viewForRect, type ClipData,
+  setShotItemTiming, setVideo, shotFromItems, insertShot, setLength, setShotLength, reorderShot, moveItemsToShot, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
 import { analyse, computePeaks } from "@/components/reference/clip/audioAnalysis";
 import { wrapText } from "@/components/reference/clip/wrapText";
@@ -480,5 +480,28 @@ describe("shot lengths without music", () => {
 
   it("keeps the length through normalizeClip", () => {
     expect(clipDuration(normalizeClip(setLength(base(), 12))!)).toBe(12);
+  });
+});
+
+describe("moving in the timeline", () => {
+  const three = () => {
+    let c = makeClip({ x: 0, y: 0, w: 1600, h: 900 }, ["a"]);
+    c = cutAt(cutAt(c, 4), 10); // lengths 4, 6, 20
+    return patchShot(patchShot(patchShot(c, 0, { label: "A" }), 1, { label: "B" }), 2, { label: "C" });
+  };
+
+  it("moves a shot with its length; the others close the gap", () => {
+    const c = reorderShot(three(), 0, 2);
+    expect(c.shots.map((s) => s.label)).toEqual(["B", "C", "A"]);
+    expect(c.shots.map((s) => s.start)).toEqual([0, 6, 26]);
+    expect(clipDuration(c)).toBe(30);
+    expect(c.shots[0].transition).toBe("cut");
+  });
+
+  it("moves items from one shot to another", () => {
+    const c = moveItemsToShot(three(), 0, 2, ["a"]);
+    expect(c.shots[0].items).toEqual([]);
+    expect(c.shots[2].items.map((s) => s.id)).toEqual(["a"]);
+    expect(moveItemsToShot(c, 1, 1, ["a"])).toBe(c);
   });
 });

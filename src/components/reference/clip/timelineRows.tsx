@@ -13,7 +13,7 @@ import { useBoard } from "../useReferenceBoard";
 import type { BoardItem } from "../referenceShared";
 import {
   cascade, deleteShot, duplicateShot, frameOnItems, longToShot, mergeShot, moveBoundary, patchShot, removeFromShot, resetTiming, setLongPin, setLongSpan,
-  setShotItemTiming, shiftLong, shiftShotItems, shotEnd, shotItemSpan, toLong, addToShot, type ClipData,
+  moveItemsToShot, reorderShot, setShotItemTiming, shiftLong, shiftShotItems, shotEnd, shotItemSpan, toLong, addToShot, type ClipData,
 } from "./clipModel";
 import { play, seek, setLoop, useClipPlayer } from "./clipPlayer";
 import { Bar, MiniButton, itemName } from "./timelineParts";
@@ -88,7 +88,7 @@ export function LongRow({ clip, width, dur, readonly, commit, latest, drag, snap
   const { t } = useTranslation("reference");
   const zone = useDropZone(readonly, (ids) => dropOnLong(ids));
   return (
-    <div {...zone.props} className={cn("flex min-h-7 flex-col gap-0.5 py-0.5", zone.over && "bg-sky-500/15 outline-1 outline-dashed outline-sky-500")}>
+    <div {...zone.props} data-lane-long className={cn("flex min-h-7 flex-col gap-0.5 py-0.5 data-[drop-target]:bg-sky-500/15 data-[drop-target]:outline-1 data-[drop-target]:outline-dashed data-[drop-target]:outline-sky-500", zone.over && "bg-sky-500/15 outline-1 outline-dashed outline-sky-500")}>
       {clip.long.length === 0 && <div className="flex h-6 items-center px-2 text-muted-foreground">{t(zone.over ? "clip.dropHere" : "clip.longEmpty")}</div>}
       {clip.long.map((l) => (
         <div key={l.id} className="relative h-6">
@@ -173,6 +173,53 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
       drop: (x, ids) => itemsToShot(ids, timeAtRef.current(x)),
     });
   }, [readonly]);
+  // A shot block dragged along the lane moves to the place under the pointer, with its length; a
+  // line shows where. A press that does not move stays a click (seek, rename, expand).
+  const [moving, setMoving] = useState<{ from: number; dx: number; to: number } | null>(null);
+  const justMoved = useRef(false);
+  const slotAt = (from: number, clientX: number) => {
+    const r = laneRef.current?.getBoundingClientRect();
+    const c = latest();
+    if (!r || !c) return from;
+    const t = ((clientX - r.left) / Math.max(1, r.width)) * dur;
+    let to = 0;
+    c.shots.forEach((sh, k) => { if (k !== from && (sh.start + shotEnd(c, k)) / 2 < t) to += 1; });
+    return to;
+  };
+  const startShotDrag = (e: ReactPointerEvent, i: number) => {
+    if (readonly || e.button !== 0 || (e.target as HTMLElement).closest("[data-no-drag]")) return;
+    const x0 = e.clientX;
+    let active = false;
+    const move = (ev: PointerEvent) => {
+      if (!active && Math.abs(ev.clientX - x0) < 4) return;
+      active = true;
+      setMoving({ from: i, dx: ev.clientX - x0, to: slotAt(i, ev.clientX) });
+    };
+    const up = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      if (!active) return;
+      justMoved.current = true;
+      setTimeout(() => { justMoved.current = false; }, 0);
+      const to = slotAt(i, ev.clientX);
+      setMoving(null);
+      const c = latest();
+      if (!c || to === i) return;
+      const next = reorderShot(c, i, to);
+      commit(next);
+      seek(next.shots[to].start + 0.001);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+  };
+  const movingLine = (() => {
+    if (!moving) return null;
+    const others = clip.shots.filter((_, k) => k !== moving.from);
+    const at = moving.to < others.length ? others[moving.to].start : dur;
+    return xOf(at, dur, width);
+  })();
   const dropProps = readonly ? {} : {
     onDragOver: (e: React.DragEvent) => {
       if (!isAnimaticDrag(e.dataTransfer)) return;
@@ -215,13 +262,18 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
               className={cn(
                 "absolute top-0.5 flex h-8 items-center gap-1 overflow-hidden rounded-md border px-1",
                 i === shotAtHead ? "border-[#a78bfa] bg-[#a78bfa]/25" : "border-border bg-muted/60 hover:bg-muted",
+                "data-[drop-target]:border-dashed data-[drop-target]:border-primary data-[drop-target]:bg-primary/30",
+                !readonly && "cursor-grab",
+                moving?.from === i && "pointer-events-none z-30 cursor-grabbing opacity-70 shadow-lg",
               )}
-              style={{ left: a, width: Math.max(4, b - a - 1) }}
+              style={{ left: a, width: Math.max(4, b - a - 1), transform: moving?.from === i ? `translateX(${moving.dx}px)` : undefined }}
+              onPointerDown={(e) => startShotDrag(e, i)}
             >
               <button
                 type="button"
                 aria-label={t(open ? "clip.collapse" : "clip.expand")}
                 aria-expanded={open}
+                data-no-drag
                 className="shrink-0 rounded p-0.5 hover:bg-foreground/10"
                 onClick={() => useClipPlayer.setState({ expanded: open ? null : s.id })}
               >
@@ -231,6 +283,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
               {renaming === s.id ? (
                 <input
                   autoFocus
+                  data-no-drag
                   defaultValue={s.label ?? ""}
                   placeholder={t("clip.shotN", { n: i + 1 })}
                   aria-label={t("clip.rename")}
@@ -250,7 +303,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
                 <button
                   type="button"
                   className="min-w-0 flex-1 truncate text-left font-medium"
-                  onClick={() => seek(s.start + 0.001)}
+                  onClick={() => { if (!justMoved.current) seek(s.start + 0.001); }}
                   onDoubleClick={() => !readonly && setRenaming(s.id)}
                   onKeyDown={(e) => {
                     if (readonly) return;
@@ -273,6 +326,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
             </div>
           );
         })}
+        {movingLine != null && <div className="pointer-events-none absolute inset-y-0 z-20 w-0.5 -translate-x-1/2 bg-primary" style={{ left: movingLine }} />}
         {insertAt != null && (
           <div className="pointer-events-none absolute inset-y-0 z-20 w-0.5 -translate-x-1/2 bg-primary" style={{ left: xOf(insertAt, dur, width) }}>
             <NetsuIcon name="add" className="absolute -top-1 left-1/2 size-3.5 -translate-x-1/2 rounded-full bg-primary text-primary-foreground" />
@@ -385,7 +439,28 @@ export function ExpandedRow({ clip, width, dur, readonly, commit, latest, drag, 
                 if (!origin) return;
                 const ids = dragged(si.id, origin.shots[index].items.map((x) => x.id));
                 const a0 = a;
-                drag(e, (dt) => commit(shiftShotItems(origin, index, ids, snapT(a0 + dt, origin) - a0), "clip-item"));
+                // Over another shot block or the Long lane, the bar leaves its shot on release.
+                let target: Element | null = null;
+                const mark = (el: Element | null) => {
+                  if (el === target) return;
+                  target?.removeAttribute("data-drop-target");
+                  target = el;
+                  el?.setAttribute("data-drop-target", "");
+                };
+                const over = (ev: PointerEvent) => {
+                  const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-shot],[data-lane-long]") ?? null;
+                  mark(el && el.getAttribute("data-shot") !== String(index) ? el : null);
+                };
+                window.addEventListener("pointermove", over);
+                drag(e, (dt) => { if (!target) commit(shiftShotItems(origin, index, ids, snapT(a0 + dt, origin) - a0), "clip-item"); }, () => {
+                  window.removeEventListener("pointermove", over);
+                  const el = target;
+                  mark(null);
+                  const c = latest();
+                  if (!el || !c) return;
+                  if (el.hasAttribute("data-lane-long")) commit(toLong(c, ids));
+                  else commit(moveItemsToShot(c, index, Number(el.getAttribute("data-shot")), ids));
+                });
               }}
               onDelete={readonly ? undefined : () => { const c = latest(); if (c) commit(removeFromShot(c, index, [si.id])); }}
               onLeft={readonly ? undefined : (e) => { const a0 = a; drag(e, (dt) => { const c = latest(); if (c) commit(setShotItemTiming(c, index, si.id, { delay: snapT(a0 + dt, c) - start }), "clip-item"); }); }}
