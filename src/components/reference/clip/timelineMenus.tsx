@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { BoardItem } from "../referenceShared";
 import {
   BPM_MAX, BPM_MIN, DEFAULT_FX_DUR, DEFAULT_GLIDE, FX_DUR_MAX, MIN_SHOT, SPEED_MAX, SPEED_MIN, beatsToSeconds, cutOnBeats, fitSpeed, fxOf, patchShot,
-  setFx, setTempo, setVideo, shotsPerItem, tapTempo,
+  cutAtMarks, setFx, setTempo, setVideo, shotsPerItem, tapTempo,
   type ClipData, type FxKind, type PinCorner, type VideoLoop,
 } from "./clipModel";
 
@@ -192,6 +192,13 @@ export function BlockMenu({ clip, commit, picked, time, readonly }: {
               </Button>
             ))}
           </div>
+        </section>
+        <section className="space-y-1.5">
+          <div className="font-medium text-foreground">{t("clip.cutAtMarks")}</div>
+          <p className="text-muted-foreground">{clip.marks?.length ? t("clip.cutAtMarksHint", { count: clip.marks.length }) : t("clip.marksHow")}</p>
+          <Button size="sm" variant="outline" className="w-full" disabled={!clip.marks?.length} onClick={() => commit(cutAtMarks(clip))}>
+            {t("clip.cutAtMarks")}
+          </Button>
         </section>
       </PopoverContent>
     </Popover>

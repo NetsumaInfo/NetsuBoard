@@ -21,6 +21,7 @@ import { Bar, MiniButton, itemName } from "./timelineParts";
 import { dropOnLong, dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
 import { FxMenu, PinMenu, VideoMenu, type Commit } from "./timelineMenus";
 import { useShotThumb } from "./shotThumbs";
+import { copyShot, pasteShot, useShotClipboard } from "./clipClipboard";
 
 const CAMERA_MOVES: CameraMove[] = ["static", "zoomIn", "zoomOut", "panLeft", "panRight"];
 
@@ -145,6 +146,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
   const [menuShot, setMenuShot] = useState(0);
   const [renaming, setRenaming] = useState<string | null>(null);
   const name = (i: number) => clip.shots[i].label || t("clip.shotN", { n: i + 1 });
+  const copied = useShotClipboard((s) => s.copied?.name ?? null);
   const at = (i: number, fn: (c: ClipData, i: number) => ClipData) => { const c = latest(); if (c) commit(fn(c, i)); };
   // Mood board items dropped on a shot go into that shot.
   const [dropShot, setDropShot] = useState<number | null>(null);
@@ -207,7 +209,7 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
               >
                 <NetsuIcon name="chevron-toggle" on={open} className="size-3" />
               </button>
-              {b - a > 110 && <ShotThumb clip={clip} index={i} items={items} />}
+              {b - a > 110 && s.items.length > 0 && <ShotThumb clip={clip} index={i} items={items} />}
               {renaming === s.id ? (
                 <input
                   autoFocus
@@ -310,6 +312,12 @@ export function ShotsRow({ clip, width, dur, readonly, commit, latest, drag, sna
           </ContextMenuSub>
           <ContextMenuItem onClick={() => at(menuShot, duplicateShot)}>
             <NetsuIcon name="duplicate" /> {t("clip.duplicateShot")}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => copyShot(menuShot, name(menuShot))}>
+            <NetsuIcon name="copy-clipboard" /> {t("clip.copyShot")}
+          </ContextMenuItem>
+          <ContextMenuItem disabled={copied === null} onClick={() => pasteShot()}>
+            <NetsuIcon name="paste" /> {copied === null ? t("clip.pasteShotEmpty") : t("clip.pasteShot", { name: copied })}
           </ContextMenuItem>
           <ContextMenuItem onClick={() => { seek(clip.shots[menuShot].start + 0.001); setLoop(true); play(); }}>
             <NetsuIcon name="seq-loop-mode-loop" /> {t("clip.loopShot")}

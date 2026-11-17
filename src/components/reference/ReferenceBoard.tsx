@@ -51,6 +51,7 @@ import { posterTime } from "./boardVideoLod";
 import { registerViewDriver, useClipPlayer } from "./clip/clipPlayer";
 import { copyIntoAnimatic, readDrag } from "./clip/clipDnd";
 import { ClipFramings, ClipLetterbox, PinnedLongItems } from "./clip/ClipStage";
+import { ClipEmpty } from "./clip/ClipEmpty";
 
 const clampScale = (s: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, s));
 
@@ -943,6 +944,7 @@ export const ReferenceBoard = forwardRef<BoardHandle>(function ReferenceBoard(_p
       </div>
       <ClipLetterbox />
       <PinnedLongItems />
+      <ClipEmpty />
 
       {/* Guides de l'aimant : lignes fines tracées pendant un geste, dans le repère board. */}
       <SnapGuides view={view} />

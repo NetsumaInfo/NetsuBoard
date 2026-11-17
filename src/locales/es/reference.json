@@ -1264,7 +1264,7 @@
     "showTimeline": "Mostrar la timeline",
     "hideTimeline": "Ocultar la timeline",
     "keySpace": "Espacio",
-    "keysHint": "Espacio: reproducir · Mayús + Espacio: reproducir el plano · M: cortar · I / O: la selección entra / sale aquí · L: bucle · ← →: plano anterior / siguiente · Mayús + ← →: mover el corte un tiempo · Ctrl + rueda: zoom",
+    "keysHint": "Espacio: reproducir · Mayús + Espacio: reproducir el plano · M: cortar · K: marca · I / O: la selección entra / sale aquí · L: bucle · ← →: plano anterior / siguiente · Mayús + ← →: mover el corte un tiempo · Ctrl + rueda: zoom",
     "toLongOrBack": "Pista Largos ↔ plano",
     "librarySearch": "Buscar",
     "libraryFilter": "Tipo",
@@ -1352,6 +1352,23 @@
       "loop": "Bucle",
       "pingpong": "Ida y vuelta",
       "once": "Una vez"
-    }
+    },
+    "markN": "Marca {{n}}",
+    "removeMark": "Eliminar la marca",
+    "cutAtMarks": "Cortar en las marcas",
+    "cutAtMarksHint_one": "Un plano empieza en la marca y toma su nombre",
+    "cutAtMarksHint_other": "Un plano empieza en cada una de las {{count}} marcas y toma su nombre",
+    "marksHow": "Doble clic en la regla o K para poner una marca (intro, estrofa, drop)",
+    "copyShot": "Copiar el plano",
+    "pasteShot": "Pegar «{{name}}» aquí",
+    "pasteShotEmpty": "Pegar un plano",
+    "emptyTitle": "Animatic vacío",
+    "emptyStep1": "Añade imágenes o vídeos: suéltalos aquí o tómalos del mood board",
+    "emptyStep2": "Añade una música",
+    "emptyStep3": "Reprodúcela y corta al ritmo",
+    "emptyKeyCut": "cortar",
+    "emptyKeyMark": "marca",
+    "emptyKeyShot": "reproducir el plano",
+    "keyShift": "Mayús"
   }
 }

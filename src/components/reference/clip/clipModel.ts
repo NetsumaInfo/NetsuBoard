@@ -59,6 +59,9 @@ export const FX_DUR_MAX = 2;
 
 export interface ClipMusic { ref: string; name: string; dur: number }
 
+// A named point of the music (intro, verse, drop), shown on the ruler.
+export interface ClipMark { id: string; t: number; label?: string }
+
 export interface ClipData {
   v: 1;
   music?: ClipMusic;
@@ -70,6 +73,7 @@ export interface ClipData {
   long: LongItem[];
   videos: Record<string, ClipVideo>;
   fx?: Record<string, ClipFx>;
+  marks?: ClipMark[];
 }
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
@@ -141,6 +145,9 @@ export function normalizeClip(raw: unknown): ClipData | null {
     long: Array.isArray(c.long) ? c.long.filter((l) => l && typeof l.id === "string") : [],
     videos: c.videos && typeof c.videos === "object" ? c.videos : {},
     ...(c.fx && typeof c.fx === "object" ? { fx: c.fx } : {}),
+    ...(Array.isArray(c.marks)
+      ? { marks: c.marks.filter((m) => m && typeof m.id === "string" && typeof m.t === "number").sort((a, b) => a.t - b.t) }
+      : {}),
   };
 }
 
@@ -738,7 +745,100 @@ export function fitToDuration(clip: ClipData): ClipData {
   return {
     ...next,
     long: next.long.map((l) => ({ ...l, start: Math.min(l.start, dur - MIN_SHOT), end: Math.min(Math.max(l.end, l.start + MIN_SHOT), dur) })),
+    ...(next.marks ? { marks: next.marks.filter((m) => m.t < dur) } : {}),
   };
+}
+
+// ── Marks ───────────────────────────────────────────────────────────────────
+
+const byTime = (marks: ClipMark[]) => [...marks].sort((a, b) => a.t - b.t);
+
+export function addMark(clip: ClipData, t: number, label?: string): ClipData {
+  const at = Math.min(clipDuration(clip), Math.max(0, t));
+  if ((clip.marks ?? []).some((m) => Math.abs(m.t - at) < 0.05)) return clip;
+  return { ...clip, marks: byTime([...(clip.marks ?? []), { id: uid(), t: at, ...(label ? { label } : {}) }]) };
+}
+
+export function patchMark(clip: ClipData, id: string, patch: { t?: number; label?: string | null }): ClipData {
+  const dur = clipDuration(clip);
+  return {
+    ...clip,
+    marks: byTime((clip.marks ?? []).map((m) => {
+      if (m.id !== id) return m;
+      const next: ClipMark = { ...m };
+      if (patch.t != null) next.t = Math.min(dur, Math.max(0, patch.t));
+      if (patch.label !== undefined) { if (patch.label) next.label = patch.label; else delete next.label; }
+      return next;
+    })),
+  };
+}
+
+export function removeMark(clip: ClipData, id: string): ClipData {
+  const marks = (clip.marks ?? []).filter((m) => m.id !== id);
+  if (marks.length) return { ...clip, marks };
+  const { marks: _m, ...rest } = clip;
+  return rest;
+}
+
+// A shot starts on every mark (where no cut is already close); a new shot takes the mark's name.
+export function cutAtMarks(clip: ClipData): ClipData {
+  let c = clip;
+  for (const m of clip.marks ?? []) {
+    const near = c.shots.findIndex((s) => Math.abs(s.start - m.t) < MIN_SHOT);
+    if (near < 0) c = cutAt(c, m.t);
+    const i = c.shots.findIndex((s) => Math.abs(s.start - m.t) < MIN_SHOT);
+    if (i >= 0 && m.label && !c.shots[i].label) c = patchShot(c, i, { label: m.label });
+  }
+  return c;
+}
+
+// ── Copy and paste of a shot ────────────────────────────────────────────────
+
+// What a copied shot carries: its content, its length, and the settings of its items.
+export interface ShotPiece {
+  shot: Pick<Shot, "from" | "to" | "items" | "label" | "transition" | "glide">;
+  len: number;
+  videos: Record<string, ClipVideo>;
+  fx: Record<string, ClipFx>;
+}
+
+export function copyShotPiece(clip: ClipData, index: number): ShotPiece | null {
+  const s = clip.shots[index];
+  if (!s) return null;
+  const ids = new Set(s.items.map((si) => si.id));
+  const pick = <T,>(rec: Record<string, T> | undefined) => Object.fromEntries(Object.entries(rec ?? {}).filter(([id]) => ids.has(id)));
+  return {
+    shot: { from: { ...s.from }, to: { ...s.to }, items: s.items.map((si) => ({ ...si })), label: s.label, transition: s.transition, glide: s.glide },
+    len: shotEnd(clip, index) - s.start,
+    videos: pick(clip.videos),
+    fx: pick(clip.fx),
+  };
+}
+
+// Puts a copied shot at t for its length, over what was there; what was there goes on after it.
+// `ids` maps the copied item ids to the ids of their copies on this level.
+export function pasteShotPiece(clip: ClipData, t: number, piece: ShotPiece, ids: Map<string, string>): ClipData {
+  const dur = clipDuration(clip);
+  const at = Math.min(dur - MIN_SHOT, Math.max(0, t));
+  let c = clip;
+  if (at - c.shots[shotIndexAt(c, at)].start >= MIN_SHOT) c = cutAt(c, at);
+  const i = shotIndexAt(c, at + MIN_SHOT / 2);
+  const end = c.shots[i].start + piece.len;
+  if (shotEnd(c, i) - end >= MIN_SHOT && end - c.shots[i].start >= MIN_SHOT) c = cutAt(c, end);
+  const m = (id: string) => ids.get(id) ?? id;
+  const remap = <T,>(rec: Record<string, T>) => Object.fromEntries(Object.entries(rec).map(([k, v]) => [m(k), v]));
+  const pasted = {
+    ...piece.shot,
+    from: { ...piece.shot.from }, to: { ...piece.shot.to },
+    items: piece.shot.items.map((si) => ({ ...si, id: m(si.id) })),
+    transition: i === 0 ? "cut" as const : piece.shot.transition,
+  };
+  c = patchShot(c, i, pasted);
+  const videos = { ...c.videos, ...remap(piece.videos) };
+  const fx = { ...(c.fx ?? {}), ...remap(piece.fx) };
+  // Item timings were relative to the copied shot: clamp them to the slot they landed in.
+  for (const si of c.shots[i].items) c = setShotItemTiming(c, i, si.id, {});
+  return { ...c, videos, ...(Object.keys(fx).length ? { fx } : {}) };
 }
 
 export function formatTime(t: number): string {

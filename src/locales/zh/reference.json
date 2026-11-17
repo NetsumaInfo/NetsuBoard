@@ -1264,7 +1264,7 @@
     "showTimeline": "显示时间线",
     "hideTimeline": "隐藏时间线",
     "keySpace": "空格",
-    "keysHint": "空格：播放 · Shift + 空格：播放镜头 · M：剪切 · I / O：所选在此出现 / 离开 · L：循环 · ← →：上一个 / 下一个镜头 · Shift + ← →：剪切点移动一拍 · Ctrl + 滚轮：缩放",
+    "keysHint": "空格：播放 · Shift + 空格：播放镜头 · M：剪切 · K：标记 · I / O：所选在此出现 / 离开 · L：循环 · ← →：上一个 / 下一个镜头 · Shift + ← →：剪切点移动一拍 · Ctrl + 滚轮：缩放",
     "toLongOrBack": "长轨道 ↔ 镜头",
     "librarySearch": "搜索",
     "libraryFilter": "类型",
@@ -1352,6 +1352,23 @@
       "loop": "循环",
       "pingpong": "往返",
       "once": "一次"
-    }
+    },
+    "markN": "标记 {{n}}",
+    "removeMark": "删除标记",
+    "cutAtMarks": "在标记处剪切",
+    "cutAtMarksHint_one": "镜头从标记处开始并使用其名称",
+    "cutAtMarksHint_other": "在 {{count}} 个标记处各开始一个镜头并使用其名称",
+    "marksHow": "双击标尺或按 K 添加标记（前奏、主歌、高潮）",
+    "copyShot": "复制镜头",
+    "pasteShot": "在此粘贴“{{name}}”",
+    "pasteShotEmpty": "粘贴镜头",
+    "emptyTitle": "空的 Animatic",
+    "emptyStep1": "添加图片或视频：拖到这里，或从情绪板中选取",
+    "emptyStep2": "添加音乐",
+    "emptyStep3": "播放并跟着节奏剪切",
+    "emptyKeyCut": "剪切",
+    "emptyKeyMark": "标记",
+    "emptyKeyShot": "播放镜头",
+    "keyShift": "Shift"
   }
 }

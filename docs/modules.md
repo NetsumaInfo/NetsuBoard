@@ -76,7 +76,10 @@ Design: `docs/superpowers/specs/2026-11-16-netsuboard-music-timeline-design.md`.
 - Snapping (when on): a dragged edge or bar sticks to the beats, every cut, the track ends and the playhead (`snapPoints`); a cut or mark made at the playhead sticks to beats only. Bars of one lane move together when several are selected (Ctrl / Shift click; `shiftShotItems`, `shiftLong`), take the keyboard focus, and Delete takes a focused bar off its lane, never off the board.
 - Tempo by hand (`TempoMenu`): typed, tapped (`tapTempo`, median interval), halved or doubled, first beat under the playhead (`setTempo` rebuilds the grid with `beatGrid`); **Detect** puts back the analysed grid (`redetectBeats`, kept from the last decode).
 - The timeline's height is dragged from its top edge and kept per device (`netsuboard.animatic.height`); double-click goes back to automatic. Shot blocks show what their camera sees when wide enough.
-- Keys inside an Animatic: Space (short press) play, Shift+Space play the shot under the playhead once from its start (`previewShot`), M cut, I / O mark, L loop the shot, ← → previous / next shot, Shift+← → move the nearest cut by one beat (`nudgeCut`), Home / End. In Present: Escape, Space, ← →.
+- Marks (`clip.marks`, `ClipMarks.tsx`): named points of the music on the ruler (K or a double-click on the ruler adds one, drag moves it, double-click names it); **Cut on the marks** (`cutAtMarks`) starts a shot on each, named after it.
+- Copy / paste of a shot (`clipClipboard.ts`, session memory): the copy holds the shot and copies of its items; pasting into this or another Animatic adds new copies of those items where they were and puts the shot at the playhead for its length, over what was there (`pasteShotPiece`), in one undo step.
+- An empty Animatic shows how to fill it (`ClipEmpty.tsx`) until its first item lands. Storyboard cards reorder with Ctrl+← →.
+- Keys inside an Animatic: Space (short press) play, Shift+Space play the shot under the playhead once from its start (`previewShot`), M cut, K mark, I / O mark, L loop the shot, ← → previous / next shot, Shift+← → move the nearest cut by one beat (`nudgeCut`), Home / End. In Present: Escape, Space, ← →.
 
 ## PDF cards (`boardPdf.ts` + `PdfViewer.tsx`)
 

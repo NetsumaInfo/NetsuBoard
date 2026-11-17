@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  addToShot, beatGrid, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
+  addMark, addToShot, beatGrid, copyShotPiece, cutAtMarks, pasteShotPiece, patchMark, removeMark, beatsToSeconds, nudgeCut, remapClip, setTempo, shiftLong, shiftShotItems, shotItemSpan, snapPoints, tapTempo, cameraAt, cameraMove, cameraMoveOf, cascade, cutOnBeats, duplicateShot, frameOnItems, moveShot, patchShot, shotsPerItem, clipDuration, cutAt, deleteShot, fxOf, markIn, markOut, removeFromShot, resetTiming, setFx, fitSpeed, neighbourShotStart, rulerStep, unassigned, fitToDuration, frameAround, itemBar, laneOf,
   longToShot, makeClip, mergeShot, moveBoundary, normalizeClip, presentAt, pruneClip, setLongSpan,
   setShotItemTiming, setVideo, snapTime, toLong, viewForRect, type ClipData,
 } from "@/components/reference/clip/clipModel";
@@ -326,5 +326,51 @@ describe("clip timing tools", () => {
     c = toLong(c, ["b"], [10, 18]);
     const m = shiftLong(c, ["a", "b"], 5);
     expect(m.long.map((l) => [l.start, l.end])).toEqual([[4, 8], [12, 20]]);
+  });
+});
+
+describe("clip marks and shot copies", () => {
+  it("adds, moves, renames and removes marks in time order", () => {
+    let c = addMark(clip(20), 10, "Drop");
+    c = addMark(c, 4);
+    c = addMark(c, 4.01); // too close: ignored
+    expect(c.marks!.map((m) => m.t)).toEqual([4, 10]);
+    const id = c.marks![1].id;
+    c = patchMark(c, id, { t: 2, label: "Intro" });
+    expect(c.marks!.map((m) => [m.t, m.label])).toEqual([[2, "Intro"], [4, undefined]]);
+    c = patchMark(c, id, { label: null });
+    expect(c.marks![0].label).toBeUndefined();
+    c = removeMark(removeMark(c, id), c.marks![1].id);
+    expect(c.marks).toBeUndefined();
+    expect(normalizeClip({ ...clip(), marks: [{ id: "x", t: 5 }, { id: "y", t: 1 }, { t: 3 }] })!.marks!.map((m) => m.id)).toEqual(["y", "x"]);
+  });
+
+  it("cuts on the marks and names the new shots", () => {
+    let c = addMark(addMark(clip(20), 6, "Verse"), 12, "Drop");
+    c = cutAt(c, 12);
+    c = cutAtMarks(c);
+    expect(c.shots.map((s) => [s.start, s.label])).toEqual([[0, undefined], [6, "Verse"], [12, "Drop"]]);
+    expect(fitToDuration({ ...c, music: { ref: "m", name: "m", dur: 10 } }).marks!.map((m) => m.t)).toEqual([6]);
+  });
+
+  it("pastes a copied shot at a time, for its length, the rest going on after", () => {
+    let src = cutAt(clip(20), 5); // shot 0: 0–5
+    src = setShotItemTiming(src, 0, "a", { delay: 1 });
+    src = setVideo(src, "a", { speed: 2 });
+    src = patchShot(src, 0, { label: "Hero", from: G, to: G });
+    const piece = copyShotPiece(src, 0)!;
+    expect(piece.len).toBe(5);
+    expect(piece.videos).toEqual({ a: { speed: 2 } });
+
+    let dst = { ...makeClip(F, ["z"]), music: { ref: "m.mp3", name: "m", dur: 30 } };
+    dst = pasteShotPiece(dst, 10, piece, new Map([["a", "a2"], ["b", "b2"]]));
+    expect(dst.shots.map((s) => [s.start, s.label ?? null])).toEqual([[0, null], [10, "Hero"], [15, null]]);
+    expect(dst.shots[1].items).toEqual([{ id: "a2", delay: 1 }, { id: "b2" }]);
+    expect(dst.shots[1].from).toEqual(G);
+    expect(dst.shots[2].items.map((s) => s.id)).toEqual(["z"]);
+    expect(dst.videos).toEqual({ a2: { speed: 2 } });
+    // Pasted at the very start of a shot: no empty sliver before it.
+    const head = pasteShotPiece(dst, 0, piece, new Map());
+    expect(head.shots.map((s) => s.start)).toEqual([0, 5, 10, 15]);
   });
 });

@@ -1264,7 +1264,7 @@
     "showTimeline": "Afficher la timeline",
     "hideTimeline": "Masquer la timeline",
     "keySpace": "Espace",
-    "keysHint": "Espace : lecture · Maj + Espace : lire le plan · M : couper · I / O : la sélection entre / sort ici · L : boucle · ← → : plan précédent / suivant · Maj + ← → : décaler la coupe d'un temps · Ctrl + molette : zoom",
+    "keysHint": "Espace : lecture · Maj + Espace : lire le plan · M : couper · K : repère · I / O : la sélection entre / sort ici · L : boucle · ← → : plan précédent / suivant · Maj + ← → : décaler la coupe d'un temps · Ctrl + molette : zoom",
     "toLongOrBack": "Piste Longs ↔ plan",
     "librarySearch": "Rechercher",
     "libraryFilter": "Type",
@@ -1352,6 +1352,23 @@
       "loop": "Boucle",
       "pingpong": "Aller-retour",
       "once": "Une fois"
-    }
+    },
+    "markN": "Repère {{n}}",
+    "removeMark": "Supprimer le repère",
+    "cutAtMarks": "Couper sur les repères",
+    "cutAtMarksHint_one": "Un plan commence au repère et prend son nom",
+    "cutAtMarksHint_other": "Un plan commence à chacun des {{count}} repères et prend son nom",
+    "marksHow": "Double-clic sur la règle ou K pour poser un repère (intro, couplet, drop)",
+    "copyShot": "Copier le plan",
+    "pasteShot": "Coller « {{name}} » ici",
+    "pasteShotEmpty": "Coller un plan",
+    "emptyTitle": "Animatic vide",
+    "emptyStep1": "Ajoute des images ou des vidéos : glisse-les ici ou prends-les dans le mood board",
+    "emptyStep2": "Ajoute une musique",
+    "emptyStep3": "Lance la lecture et coupe en rythme",
+    "emptyKeyCut": "couper",
+    "emptyKeyMark": "repère",
+    "emptyKeyShot": "lire le plan",
+    "keyShift": "Maj"
   }
 }

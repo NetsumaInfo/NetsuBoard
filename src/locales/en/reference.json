@@ -1264,7 +1264,7 @@
     "showTimeline": "Show the timeline",
     "hideTimeline": "Hide the timeline",
     "keySpace": "Space",
-    "keysHint": "Space: play · Shift + Space: play the shot · M: cut · I / O: selection enters / leaves here · L: loop · ← →: previous / next shot · Shift + ← →: move the cut by one beat · Ctrl + wheel: zoom",
+    "keysHint": "Space: play · Shift + Space: play the shot · M: cut · K: mark · I / O: selection enters / leaves here · L: loop · ← →: previous / next shot · Shift + ← →: move the cut by one beat · Ctrl + wheel: zoom",
     "toLongOrBack": "Long lane ↔ shot",
     "librarySearch": "Search",
     "libraryFilter": "Type",
@@ -1352,6 +1352,23 @@
       "loop": "Loop",
       "pingpong": "Ping-pong",
       "once": "Once"
-    }
+    },
+    "markN": "Mark {{n}}",
+    "removeMark": "Delete the mark",
+    "cutAtMarks": "Cut on the marks",
+    "cutAtMarksHint_one": "A shot starts at the mark and takes its name",
+    "cutAtMarksHint_other": "A shot starts at each of the {{count}} marks and takes its name",
+    "marksHow": "Double-click the ruler or press K to add a mark (intro, verse, drop)",
+    "copyShot": "Copy the shot",
+    "pasteShot": "Paste “{{name}}” here",
+    "pasteShotEmpty": "Paste a shot",
+    "emptyTitle": "Empty Animatic",
+    "emptyStep1": "Add images or videos: drop them here or take them from the mood board",
+    "emptyStep2": "Add a music track",
+    "emptyStep3": "Play it and cut on the beat",
+    "emptyKeyCut": "cut",
+    "emptyKeyMark": "mark",
+    "emptyKeyShot": "play the shot",
+    "keyShift": "Shift"
   }
 }

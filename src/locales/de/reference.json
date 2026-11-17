@@ -1264,7 +1264,7 @@
     "showTimeline": "Timeline einblenden",
     "hideTimeline": "Timeline ausblenden",
     "keySpace": "Leertaste",
-    "keysHint": "Leertaste: Wiedergabe · Umschalt + Leertaste: Shot abspielen · M: schneiden · I / O: Auswahl tritt hier ein / geht hier · L: Schleife · ← →: vorheriger / nächster Shot · Umschalt + ← →: Schnitt um einen Schlag verschieben · Strg + Mausrad: Zoom",
+    "keysHint": "Leertaste: Wiedergabe · Umschalt + Leertaste: Shot abspielen · M: schneiden · K: Marke · I / O: Auswahl tritt hier ein / geht hier · L: Schleife · ← →: vorheriger / nächster Shot · Umschalt + ← →: Schnitt um einen Schlag verschieben · Strg + Mausrad: Zoom",
     "toLongOrBack": "Spur Lang ↔ Shot",
     "librarySearch": "Suchen",
     "libraryFilter": "Typ",
@@ -1352,6 +1352,23 @@
       "loop": "Schleife",
       "pingpong": "Hin und zurück",
       "once": "Einmal"
-    }
+    },
+    "markN": "Marke {{n}}",
+    "removeMark": "Marke löschen",
+    "cutAtMarks": "An den Marken schneiden",
+    "cutAtMarksHint_one": "Ein Shot beginnt an der Marke und übernimmt ihren Namen",
+    "cutAtMarksHint_other": "An jeder der {{count}} Marken beginnt ein Shot und übernimmt ihren Namen",
+    "marksHow": "Doppelklick auf das Lineal oder K, um eine Marke zu setzen (Intro, Strophe, Drop)",
+    "copyShot": "Shot kopieren",
+    "pasteShot": "„{{name}}“ hier einfügen",
+    "pasteShotEmpty": "Shot einfügen",
+    "emptyTitle": "Leeres Animatic",
+    "emptyStep1": "Bilder oder Videos hinzufügen: hierher ziehen oder aus dem Moodboard nehmen",
+    "emptyStep2": "Musik hinzufügen",
+    "emptyStep3": "Abspielen und im Takt schneiden",
+    "emptyKeyCut": "schneiden",
+    "emptyKeyMark": "Marke",
+    "emptyKeyShot": "Shot abspielen",
+    "keyShift": "Umschalt"
   }
 }

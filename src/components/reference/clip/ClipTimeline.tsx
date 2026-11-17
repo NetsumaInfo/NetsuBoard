@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useBoard } from "../useReferenceBoard";
 import {
-  addToShot, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, nudgeCut, patchShot, pruneClip, shotIndexAt,
+  addMark, addToShot, clipDuration, cutAt, formatTime, markIn, markOut, neighbourShotStart, nudgeCut, patchShot, pruneClip, shotIndexAt,
   snapPoints, snapTime, toLong, unassigned, type ClipData,
 } from "./clipModel";
 import { openClipId, openClipRaw, readClip } from "./clipSelectors";
@@ -28,6 +28,8 @@ import { LABEL_W, Playhead, Row, Ruler, TimeLabel, TipButton, Waveform, useTimeD
 import { BlockMenu, FxMenu, ShotTransition, TempoMenu } from "./timelineMenus";
 import { ClipStoryboard } from "./ClipStoryboard";
 import { ExpandedRow, LongRow, ShotsRow, boardOrder } from "./timelineRows";
+import { MarkLines, RulerMarks } from "./ClipMarks";
+import { pasteShot, useShotClipboard } from "./clipClipboard";
 
 const AUDIO_EXT = /\.(mp3|wav|m4a|aac|flac|ogg|opus|wma|aiff?)$/i;
 const ZOOM_MAX = 40;
@@ -64,6 +66,7 @@ export function ClipTimeline() {
   const storyboard = useClipPlayer((s) => s.storyboard);
   const musicVolume = useClipPlayer((s) => s.musicVolume);
   const musicMuted = useClipPlayer((s) => s.musicMuted);
+  const copiedShot = useShotClipboard((s) => s.copied?.name ?? null);
   const shotAtHead = useClipPlayer((s) => {
     const c = readClip(raw);
     return c ? shotIndexAt(c, s.time) : 0;
@@ -174,6 +177,13 @@ export function ClipTimeline() {
         return;
       }
       if (k === "l") { e.preventDefault(); setLoop(!useClipPlayer.getState().loop); return; }
+      // K: a mark on the music at the playhead.
+      if (k === "k" && !readonly) {
+        e.preventDefault();
+        const next = addMark(c, snapBeat(useClipPlayer.getState().time, c));
+        if (next !== c) useBoard.getState().patchClip(clipId, next);
+        return;
+      }
       if (e.key === "Home" || e.key === "End") { e.preventDefault(); seek(e.key === "Home" ? 0 : clipDuration(c)); return; }
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !useBoard.getState().selectedIds.length) {
         e.preventDefault();
@@ -345,6 +355,11 @@ export function ClipTimeline() {
           time={() => useClipPlayer.getState().time}
           picked={boardOrder(sel, byId).map((id) => { const it = byId.get(id)!; return { id, box: { x: it.x, y: it.y, w: it.w, h: it.h } }; })}
         />
+        {copiedShot !== null && !readonly && (
+          <TipButton label={t("clip.pasteShot", { name: copiedShot })} onClick={() => pasteShot()}>
+            <NetsuIcon name="paste" />
+          </TipButton>
+        )}
         {outside.length > 0 && !readonly && (
           <Tooltip>
             <TooltipTrigger
@@ -413,7 +428,19 @@ export function ClipTimeline() {
         >
           <div className="relative" style={{ width: LABEL_W + width + 8 }}>
             <Row label="" width={width}>
-              <div onPointerDown={seekFrom}><Ruler dur={dur} width={width} /></div>
+              <div
+                className="relative"
+                onPointerDown={seekFrom}
+                onDoubleClick={(e) => {
+                  if (readonly) return;
+                  const r = e.currentTarget.getBoundingClientRect();
+                  const c = latest();
+                  if (c) commit(addMark(c, snapT(((e.clientX - r.left) / r.width) * dur, c)));
+                }}
+              >
+                <Ruler dur={dur} width={width} />
+                <RulerMarks {...rowProps} />
+              </div>
             </Row>
             <Row label={t("clip.music")} width={width}>
               <div className="relative h-12 cursor-text" onPointerDown={seekFrom}>
@@ -430,6 +457,7 @@ export function ClipTimeline() {
                 <ExpandedRow {...rowProps} index={expandedIndex} />
               </Row>
             )}
+            <MarkLines clip={clip} width={width} dur={dur} />
             <Playhead dur={dur} width={width} />
           </div>
           <p className="sticky left-0 px-2 pt-1 text-[10px] text-muted-foreground">{t("clip.keysHint")}</p>

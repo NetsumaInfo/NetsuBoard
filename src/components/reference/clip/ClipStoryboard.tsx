@@ -1,6 +1,7 @@
 // Storyboard: the shots of the Animatic as cards, each with what its camera sees, read like a comic
-// strip. Click to go to a shot, double-click its name to rename it, drag a card to reorder (the
-// time slots stay; the content moves), drop mood board items on a card to put them in that shot.
+// strip. Click to go to a shot, double-click its name to rename it, drag a card (or Ctrl+← →) to
+// reorder (the time slots stay; the content moves), drop mood board items on a card to put them in
+// that shot.
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,7 @@ import { seek, useClipPlayer } from "./clipPlayer";
 import { dropOnShot, isAnimaticDrag, readDrag } from "./clipDnd";
 import { useShotThumb } from "./shotThumbs";
 import { MiniButton } from "./timelineParts";
+import { copyShot } from "./clipClipboard";
 import type { Commit } from "./timelineMenus";
 
 const SHOT_MIME = "application/x-netsu-shot";
@@ -64,6 +66,12 @@ function ShotCard({ clip, index, items, current, over, readonly, commit, onOver 
         if (e.dataTransfer.types.includes(SHOT_MIME) || isAnimaticDrag(e.dataTransfer)) { e.preventDefault(); onOver(index); }
       }}
       onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) onOver(null); }}
+      onKeyDown={(e) => {
+        if (readonly || renaming || !(e.ctrlKey || e.metaKey) || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        commit(moveShot(clip, index, index + (e.key === "ArrowLeft" ? -1 : 1)));
+      }}
       onDrop={(e) => {
         onOver(null);
         if (readonly) return;
@@ -123,6 +131,9 @@ function ShotCard({ clip, index, items, current, over, readonly, commit, onOver 
         </div>
         {!readonly && (
           <span className="flex shrink-0 gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
+            <MiniButton label={t("clip.copyShot")} onClick={() => copyShot(index, name)}>
+              <NetsuIcon name="copy-clipboard" className="size-3.5" />
+            </MiniButton>
             <MiniButton label={t("clip.duplicateShot")} onClick={() => commit(duplicateShot(clip, index))}>
               <NetsuIcon name="duplicate" className="size-3.5" />
             </MiniButton>
