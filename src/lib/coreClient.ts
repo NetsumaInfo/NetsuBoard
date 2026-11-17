@@ -441,7 +441,7 @@ const reference: RefApi = {
   animaticExportStart: (opts) => call("reference:animaticExportStart", [opts]),
   animaticExportFrames: (id, frames) => call("reference:animaticExportFrames", [id, frames]),
   animaticExportFinish: (id) => call("reference:animaticExportFinish", [id]),
-  animaticExportCancel: () => call("reference:animaticExportCancel", []),
+  animaticExportCancel: (id) => call("reference:animaticExportCancel", [id]),
   exportBoard: (scene, destPath, opts) => call("netsu:export", [scene, destPath, opts]),
   importBoard: (srcPath) => call("netsu:import", [srcPath]),
   onShareProgress: (cb) => on("netsu:progress", cb as (p: unknown) => void),

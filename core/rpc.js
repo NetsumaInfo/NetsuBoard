@@ -247,7 +247,7 @@ function createRpc() {
     "reference:animaticExportStart": ([opts]) => animaticExport.startAnimaticExport(opts || {}),
     "reference:animaticExportFrames": ([id, frames]) => animaticExport.writeAnimaticFrames(id, frames),
     "reference:animaticExportFinish": ([id]) => animaticExport.finishAnimaticExport(id),
-    "reference:animaticExportCancel": () => animaticExport.cancelAnimaticExport(),
+    "reference:animaticExportCancel": ([id]) => animaticExport.cancelAnimaticExport(id),
     // AI agents: core/mcp.js calls agent:call, the board answers with agent:reply (cf. core/agent.js).
     "agent:status": () => agent.status(),
     "agent:setEnabled": ([on]) => agent.setEnabled(on),

@@ -50,3 +50,17 @@ test('no duck span keeps the music as it is', () => {
   assert.equal(duckVolume([]), 'anull');
   assert.equal(duckVolume([[3, 3]]), 'anull');
 });
+
+test('only an encoder failure sends the export back to the CPU', () => {
+  const { hardwareFailure } = require('../core/animaticExport.js');
+  assert.ok(hardwareFailure('[h264_nvenc @ 0x1] OpenEncodeSessionEx failed: out of memory (10)'));
+  assert.ok(hardwareFailure('Error initializing output stream 0:0 -- Error while opening encoder'));
+  assert.ok(hardwareFailure('[h264_amf @ 0x2] encoder creation failed'));
+  assert.ok(!hardwareFailure('music.mp3: Invalid data found when processing input'));
+  assert.ok(!hardwareFailure('No space left on device'));
+});
+
+test('a cancel naming another export leaves the open one alone', async () => {
+  const { cancelAnimaticExport } = require('../core/animaticExport.js');
+  assert.deepEqual(await cancelAnimaticExport(12345), { ok: true, cancelled: false });
+});

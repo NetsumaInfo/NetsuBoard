@@ -1,7 +1,7 @@
 // Export of the open Animatic as an MP4: what Present shows, with the music. Size and frame rate
 // are kept on this device for the next export.
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { nr } from "@/lib/bridge";
 import { fmtBytes } from "@/lib/utils";
@@ -81,13 +81,16 @@ export function ClipExportDialog({ clip, open, onOpenChange }: { clip: ClipData;
         onOpenChange(false);
       } else if (!r.cancelled) setError(r.error || t("clip.export.failed"));
     } catch (e) {
+      // The export already closed itself in the core (exportAnimatic).
       setError(errorText(e));
-      void nr.reference?.animaticExportCancel();
     } finally {
-      abort.current = null;
+      if (abort.current === ctl) abort.current = null;
       setProgress(null);
     }
   }
+
+  // Unmounted mid-way (the Animatic closed under it): the export stops with it.
+  useEffect(() => () => abort.current?.abort(), []);
 
   // Closing while an export runs stops it: nothing would be left to report its end to.
   function close() {

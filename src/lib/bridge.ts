@@ -676,7 +676,8 @@ export interface RefApi {
   animaticExportStart(opts: AnimaticExportOpts): Promise<{ ok: boolean; id?: number; encoder?: string; width?: number; height?: number; fps?: number; audio?: boolean; error?: string }>;
   animaticExportFrames(id: number, frames: string[]): Promise<{ ok: boolean; error?: string; hardware?: boolean }>;
   animaticExportFinish(id: number): Promise<{ ok: boolean; path?: string; bytes?: number; error?: string; hardware?: boolean }>;
-  animaticExportCancel(): Promise<{ ok: boolean; cancelled: boolean }>;
+  // Without an id, whatever export is open.
+  animaticExportCancel(id?: number): Promise<{ ok: boolean; cancelled: boolean }>;
   // Partage « .netsu » : exporte la scène (items + vue) dans une archive à `destPath` selon `opts`
   // (mode complet / léger / liens, seuil d'embarquement, gel des liens distants). Importe une archive
   // → scène reconstruite (tokens d'assets → chemins locaux ; gros médias non retrouvés = placeholders).

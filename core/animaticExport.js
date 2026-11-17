@@ -99,13 +99,28 @@ const hasAudio = async (file) => {
 const isFile = (p) => typeof p === 'string' && !!p && !/^(https?:|data:|blob:|collab:)/i.test(p);
 
 /**
- * Opens an export: ffmpeg starts and waits for frames.
- * @param {{ out?: string, fps?: number, width?: number, height?: number, duration?: number, cpu?: boolean,
- *   music?: MusicTrack | null, sounds?: SoundPiece[] }} opts
+ * @typedef {{ out?: string, fps?: number, width?: number, height?: number, duration?: number, cpu?: boolean,
+ *   music?: MusicTrack | null, sounds?: SoundPiece[] }} StartOpts
  */
-async function startAnimaticExport(opts) {
+
+// Starts run one after the other: each one awaits probes before it holds the job, and two that
+// overlapped would both pass the check and leave one ffmpeg without a handle.
+/** @type {Promise<unknown>} */
+let startChain = Promise.resolve();
+
+/** Opens an export: ffmpeg starts and waits for frames. @param {StartOpts} opts */
+function startAnimaticExport(opts) {
+  const next = startChain.then(() => openExport(opts));
+  startChain = next.catch(() => {});
+  return next;
+}
+
+/** @param {StartOpts} opts */
+async function openExport(opts) {
   const o = opts || {};
-  if (job) return { ok: false, error: t('loopBusy') };
+  // Only the export dialog drives this, and it is modal: an export still open here was left by a
+  // window that reloaded or crashed mid-way. It is dropped rather than blocking every export after.
+  if (job) await cancelAnimaticExport();
   const fps = Math.min(60, Math.max(1, Math.round(Number(o.fps) || 30)));
   const even = (v) => Math.max(2, Math.min(MAX_SIDE, Math.round((Number(v) || 0) / 2) * 2));
   const width = even(o.width), height = even(o.height);
@@ -147,15 +162,41 @@ async function startAnimaticExport(opts) {
   // A write after ffmpeg died raises EPIPE on the stream: the next call reports the real cause.
   cp.stdin?.on('error', () => {});
   job = current;
+  touch(current);
   return { ok: true, id, encoder: resolved.encoder, width, height, fps, audio: !!music || sounds.length > 0 };
 }
 
+// No frame for this long: the window that drove the export is gone, the partial file goes too.
+const IDLE_MS = 300_000;
+/** @type {NodeJS.Timeout | null} */
+let idleTimer = null;
+function touch(current) {
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { if (job === current) void cancelAnimaticExport(); }, IDLE_MS);
+  idleTimer.unref?.();
+}
+
+// What ffmpeg says when the hardware encoder itself gave up (driver, session limit, no device). Any
+// other failure — an unreadable music file, a full disk — would fail the same way on the CPU.
+const HARDWARE_ERROR = /nvenc|\bamf\b|_amf|\bqsv\b|_qsv|\bmfx\b|cuda|d3d11|encode ?session|could not open encoder|error while opening encoder|error initializing output stream|no capable devices/i;
+
+/** @param {string} stderr */
+const hardwareFailure = (stderr) => HARDWARE_ERROR.test(stderr);
+
 function failure(current) {
-  return { ok: false, error: current.errTail.trim() || t('loopFailed', { code: 'ffmpeg' }), hardware: current.hardware };
+  const error = current.errTail.trim();
+  return {
+    ok: false,
+    error: error || t('loopFailed', { code: 'ffmpeg' }),
+    hardware: current.hardware && hardwareFailure(error),
+  };
 }
 
 async function drop(current) {
-  if (job === current) job = null;
+  if (job === current) {
+    job = null;
+    if (idleTimer) clearTimeout(idleTimer);
+  }
   await fsp.rm(current.tmp, { force: true }).catch(() => {});
 }
 
@@ -167,6 +208,7 @@ async function writeAnimaticFrames(id, frames) {
   const current = job;
   if (!current || current.id !== id) return { ok: false, error: t('sourceMissing') };
   const stdin = current.cp.stdin;
+  touch(current);
   for (const b64 of Array.isArray(frames) ? frames : []) {
     if (current.exited || !stdin || stdin.destroyed) {
       await current.done;
@@ -200,7 +242,10 @@ async function finishAnimaticExport(id) {
     await fsp.rm(current.out, { force: true });
     await fsp.rename(current.tmp, current.out);
     const bytes = (await fsp.stat(current.out)).size;
-    if (job === current) job = null;
+    if (job === current) {
+      job = null;
+      if (idleTimer) clearTimeout(idleTimer);
+    }
     return { ok: true, path: current.out, bytes };
   } catch (e) {
     await drop(current);
@@ -208,10 +253,14 @@ async function finishAnimaticExport(id) {
   }
 }
 
-/** Stops the export in progress and removes its partial file. */
-async function cancelAnimaticExport() {
+/**
+ * Stops the export in progress and removes its partial file. With an id, only that export: a late
+ * cancel from a run the user already left never stops the one started after it.
+ * @param {number} [id]
+ */
+async function cancelAnimaticExport(id) {
   const current = job;
-  if (!current) return { ok: true, cancelled: false };
+  if (!current || (id != null && current.id !== id)) return { ok: true, cancelled: false };
   current.cancelled = true;
   try { current.cp.stdin?.destroy(); } catch (_) { /* already closed */ }
   try { current.cp.kill('SIGKILL'); } catch (_) { /* already gone */ }
@@ -222,5 +271,5 @@ async function cancelAnimaticExport() {
 
 module.exports = {
   startAnimaticExport, writeAnimaticFrames, finishAnimaticExport, cancelAnimaticExport,
-  animaticArgs, atempoChain, duckVolume,
+  animaticArgs, atempoChain, duckVolume, hardwareFailure,
 };
